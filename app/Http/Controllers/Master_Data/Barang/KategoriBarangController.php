@@ -43,12 +43,18 @@ class KategoriBarangController extends Controller
                       Action
                       </button>
                       <ul class="dropdown-menu" style="">';
-                    $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
+                    if (auth()->user()->can('kategori_barang-edit')) {
+
+                        $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
-                    $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                    }
+                    if (auth()->user()->can('kategori_barang-delete')) {
+
+                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->detail.'"
                                 ><i class="ti ti-trash"></i> Delete</a>';
+                    }
 
                     return $btn;
                 })

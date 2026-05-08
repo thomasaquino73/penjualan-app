@@ -77,11 +77,12 @@
                                         </button>
 
                                         <div class="dropdown-menu">
-                                            <button class="dropdown-item restore "data-id="{{ $user->id }}"
-                                                data-name="{{ $user->fullname }}">
-                                                <i class="ti ti-undo me-1"></i> Restore
-                                            </button>
-
+                                            @canany(['user-restore'])
+                                                <button class="dropdown-item restore "data-id="{{ $user->id }}"
+                                                    data-name="{{ $user->fullname }}">
+                                                    <i class="ti ti-undo me-1"></i> Restore
+                                                </button>
+                                            @endcanany
 
                                         </div>
                                     </div>

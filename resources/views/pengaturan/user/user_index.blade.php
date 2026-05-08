@@ -130,9 +130,11 @@
                                     <i class="ti ti-plus me-1"></i> Add Data
                                 </a>
                             @endcanany
-                            <a href="{{ route('user.trash') }}" class="btn btn-secondary">
-                                <i class="ti ti-trash me-1"></i>
-                            </a>
+                            @canany(['user-trash'])
+                                <a href="{{ route('user.trash') }}" class="btn btn-secondary">
+                                    <i class="ti ti-trash me-1"></i>
+                                </a>
+                            @endcanany
                         </div>
                     </div>
 

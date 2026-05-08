@@ -13,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -99,6 +100,24 @@ Route::middleware('auth')->group(function () {
     Route::resource('satuan-barang', SatuanBarangController::class);
     Route::resource('kategori-barang', KategoriBarangController::class);
 
+});
+
+/*
+|--------------------------------------------------------------------------
+| Fallback (jika route tidak ditemukan)
+|--------------------------------------------------------------------------
+*/
+Route::fallback(function () {
+    Log::warning('Fallback route triggered', [
+        'url' => request()->fullUrl(),
+        'user_id' => auth()->check() ? auth()->id() : null,
+    ]);
+
+    if (! auth()->check()) {
+        return redirect()->route('login');
+    }
+
+    return response()->view('errors.404', [], 404);
 });
 
 require __DIR__.'/auth.php';

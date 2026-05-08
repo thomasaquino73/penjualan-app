@@ -17,6 +17,32 @@ use Yajra\DataTables\DataTables;
 
 class UserController extends Controller
 {
+     public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $routeName = $request->route()->getName();
+
+            $permissionMap = [
+                'user.index' => 'user-browse',
+                'user.show' => 'user-read',
+                'user.create' => 'user-create',
+                'user.store' => 'user-create',
+                'user.edit' => 'user-edit',
+                'user.update' => 'user-edit',
+                'user.destroy' => 'user-delete',
+                'user.trash' => 'user-trash',
+                'user.restore' => 'user-restore',
+            ];
+
+            if (isset($permissionMap[$routeName])) {
+                if (! $request->user()->can($permissionMap[$routeName])) {
+                    abort(403, 'Unauthorized action');
+                }
+            }
+
+            return $next($request);
+        });
+    }
     public function index(Request $request)
     {
         $data = User::with(['roles', 'creator', 'updater'])->where('active', '1');

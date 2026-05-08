@@ -12,6 +12,31 @@ use Yajra\DataTables\DataTables;
 
 class SatuanBarangController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $routeName = $request->route()->getName();
+
+            $permissionMap = [
+                'satuan-barang.index' => 'satuan_barang-browse',
+                'satuan-barang.show' => 'satuan_barang-read',
+                'satuan-barang.create' => 'satuan_barang-create',
+                'satuan-barang.store' => 'satuan_barang-create',
+                'satuan-barang.edit' => 'satuan_barang-edit',
+                'satuan-barang.update' => 'satuan_barang-edit',
+                'satuan-barang.destroy' => 'satuan_barang-delete',
+            ];
+
+            if (isset($permissionMap[$routeName])) {
+                if (! $request->user()->can($permissionMap[$routeName])) {
+                    abort(403, 'Unauthorized action');
+                }
+            }
+
+            return $next($request);
+        });
+    }
+
     public function index(Request $r)
     {
         $data = BasicCodeDetail::where('master_id', 3)->get();
@@ -43,12 +68,16 @@ class SatuanBarangController extends Controller
                       Action
                       </button>
                       <ul class="dropdown-menu" style="">';
-                    $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
+                    if (auth()->user()->can('satuan_barang-edit')) {
+                        $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
-                    $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                    }
+                    if (auth()->user()->can('satuan_barang-delete')) {
+                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->detail.'"
                                 ><i class="ti ti-trash"></i> Delete</a>';
+                    }
 
                     return $btn;
                 })

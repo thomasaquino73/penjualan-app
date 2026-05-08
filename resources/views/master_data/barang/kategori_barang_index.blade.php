@@ -19,9 +19,10 @@
         <div class="card-header d-flex justify-content-between">
             <h5 class="card-title mb-0"> {{ $title }}</h5>
             <div class="card-header-elements ms-auto">
-                <button type="button" id="create" class="btn btn-md btn-primary waves-effect waves-light"> <span
-                        class="tf-icon ti ti-plus ti-md me-1"></span>Add Data</button>
-
+                @if (auth()->user()->can('kategori_barang-create'))
+                    <button type="button" id="create" class="btn btn-md btn-primary waves-effect waves-light"> <span
+                            class="tf-icon ti ti-plus ti-md me-1"></span>Add Data</button>
+                @endif
             </div>
         </div>
         <div class="card-datatable table-responsive" style="padding: 20px">

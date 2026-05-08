@@ -242,7 +242,7 @@ class Sidebar extends Component
                 'pattern' => 'pengaturan.*',
                 'active' => true,
                 'roles' => ['SuperAdmin'],
-                'permissions' => ['user-browse'],
+                'permissions' => ['application_system-browse','login_background-browse','mata_uang-browse'],
             ],
 
         ];

@@ -88,11 +88,14 @@
                         </div>
 
                     </div>
-                    <div class="mt-3">
-                        <a href="{{ route('pengaturan.edit', $dataSistem->id) }}" class="btn btn-primary" id="savedata">
-                            <i class="fa fa-save me-1"></i> Change Data
-                        </a>
-                    </div>
+                    @if (auth()->user()->can('application_system-edit'))
+                        <div class="mt-3">
+                            <a href="{{ route('pengaturan.edit', $dataSistem->id) }}" class="btn btn-primary"
+                                id="savedata">
+                                <i class="fa fa-save me-1"></i> Change Data
+                            </a>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
