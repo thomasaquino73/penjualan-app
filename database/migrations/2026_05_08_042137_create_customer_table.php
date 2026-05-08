@@ -14,16 +14,16 @@ return new class extends Migration
         Schema::create('customer', function (Blueprint $table) {
             $table->id();
             $table->string('id_pelanggan')->unique();
-            $table->string('nama')->unique();
-            $table->string('alamat')->unique();
-            $table->string('alamat_pajak')->unique();
-            $table->string('kodepos')->unique();
-            $table->string('negara')->unique();
-            $table->string('telepon')->unique();
-            $table->string('personal_kontak')->unique();
-            $table->string('email')->unique();
-            $table->string('website')->unique();
-            $table->enum('status', ['Active', 'Not Active'])->default('Active');
+            $table->string('nama');
+            $table->string('alamat');
+            $table->string('alamat_pajak')->nullable();
+            $table->string('kodepos')->nullable();
+            $table->string('negara')->nullable();
+            $table->string('telepon')->nullable();
+            $table->string('personal_kontak')->nullable();
+            $table->string('email')->nullable();
+            $table->string('website')->nullable();
+            $table->tinyInteger('status')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();

@@ -17,7 +17,7 @@ use Yajra\DataTables\DataTables;
 
 class UserController extends Controller
 {
-     public function __construct()
+    public function __construct()
     {
         $this->middleware(function ($request, $next) {
             $routeName = $request->route()->getName();
@@ -43,6 +43,7 @@ class UserController extends Controller
             return $next($request);
         });
     }
+
     public function index(Request $request)
     {
         $data = User::with(['roles', 'creator', 'updater'])->where('active', '1');

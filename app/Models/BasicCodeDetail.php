@@ -10,8 +10,6 @@ class BasicCodeDetail extends Model
 {
     use HasFactory;
 
-    protected $connection = '';
-
     protected $table = 'basic_code_detail';
 
     protected $id = 'id';

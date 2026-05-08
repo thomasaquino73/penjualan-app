@@ -10,8 +10,6 @@ class BasicCodeMaster extends Model
 {
     use HasFactory;
 
-    protected $connection = '';
-
     protected $table = 'basic_code_master';
 
     protected $id = 'id';

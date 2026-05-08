@@ -142,26 +142,26 @@ class PengaturanSistemController extends Controller
                         <i class="ti ti-menu-2 ti-xs me-1"></i> Action
                       </button>
                       <ul class="dropdown-menu" style="">';
-                         if (auth()->user()->can('login_background-edit')) {
+                    if (auth()->user()->can('login_background-edit')) {
 
-                    $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
+                        $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="far fa-edit me-1"></i>Edit</a>';
-                         }
-                         if (auth()->user()->can('login_background-read')) {
+                    }
+                    if (auth()->user()->can('login_background-read')) {
 
-                    $btn .= '<a class="dropdown-item detail" href="javascript:void(0)"
+                        $btn .= '<a class="dropdown-item detail" href="javascript:void(0)"
                                 data-gambar="'.asset('image/login_background/'.$row->gambar).'"
                                 data-alias="'.$row->alias.'">
                                 <i class="far fa-eye me-1"></i>Detail
                             </a>';
-                         }
-                         if (auth()->user()->can('login_background-edit')) {
+                    }
+                    if (auth()->user()->can('login_background-edit')) {
 
-                    $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->alias.'"
                                 ><i class="fa fa-trash me-1"></i> Delete</a>';
-                         }
+                    }
 
                     return $btn;
                 })
@@ -350,16 +350,16 @@ class PengaturanSistemController extends Controller
                         <i class="ti ti-menu-2 ti-xs me-1"></i> Action
                       </button>
                       <ul class="dropdown-menu" style="">';
-                         if (auth()->user()->can('mata_uang-edit')) {
-                    $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
+                    if (auth()->user()->can('mata_uang-edit')) {
+                        $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="far fa-edit me-1"></i>Edit</a>';
-                         }
-                            if (auth()->user()->can('mata_uang-delete')) {
-                    $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                    }
+                    if (auth()->user()->can('mata_uang-delete')) {
+                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->detail.'"
                                 ><i class="fa fa-trash me-1"></i> Delete</a>';
-                            }
+                    }
 
                     return $btn;
                 })

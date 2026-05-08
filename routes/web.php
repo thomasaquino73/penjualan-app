@@ -96,7 +96,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/mata-uang/{id}', [PengaturanSistemController::class, 'mata_uang_destroy'])->name('pengaturan.mata_uang.delete');
 
     // Master Data
+    Route::get('/customer/generate-id', [CustomerController::class, 'generateId']);
     Route::resource('customer', CustomerController::class);
+    
     Route::resource('satuan-barang', SatuanBarangController::class);
     Route::resource('kategori-barang', KategoriBarangController::class);
 
