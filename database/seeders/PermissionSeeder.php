@@ -10,7 +10,7 @@ class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        $modules = ['role', 'user', 'permission','customer'];
+        $modules = ['role', 'user', 'permission','customer','barang'];
 
         $actions = ['browse', 'create', 'read', 'edit', 'delete','trash','restore'];
 

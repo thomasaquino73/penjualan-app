@@ -19,8 +19,8 @@ return new class extends Migration
             $table->string('website')->nullable();
             $table->string('logo')->nullable();
             $table->string('favicon')->nullable();
-            $table->text('deskripsi')->nullable();
-            $table->string('tahun_berdiri')->nullable();
+            $table->text('kodepos')->nullable();
+            $table->string('negara')->nullable();
             $table->timestamps();
         });
     }

@@ -53,19 +53,13 @@
                                         value="{{ $dataSistem->nama_instansi }}">
                                     <span class="text-danger error" id="nama_instansiError"></span>
                                 </div>
-                                <div class="col-md-6 mb-3 ">
-                                    <label>Address<small>*</small></label>
-                                    <input type="text" name="alamat" id="alamat" class="form-control"
-                                        value="{{ $dataSistem->alamat }}">
-                                    <span class="text-danger error" id="alamatError"></span>
-                                </div>
-                                <div class="col-md-6 mb-3 ">
+                                <div class="col-md-3 mb-3 ">
                                     <label>Phone Number<small>*</small></label>
                                     <input type="text" name="telepon" id="telepon" class="form-control"
                                         value="{{ $dataSistem->telepon }}">
                                     <span class="text-danger error" id="teleponError"></span>
                                 </div>
-                                <div class="col-md-6 mb-3 ">
+                                <div class="col-md-3 mb-3 ">
                                     <label>Email<small>*</small></label>
                                     <input type="text" name="email" id="email" class="form-control"
                                         value="{{ $dataSistem->email }}">
@@ -78,16 +72,22 @@
                                     <span class="text-danger error" id="websiteError"></span>
                                 </div>
                                 <div class="col-md-6 mb-3 ">
-                                    <label>Description<small>*</small></label>
-                                    <input type="text" name="deskripsi" id="deskripsi" class="form-control"
-                                        value="{{ $dataSistem->deskripsi }}">
-                                    <span class="text-danger error" id="deskripsiError"></span>
+                                    <label>Address<small>*</small></label>
+                                    <input type="text" name="alamat" id="alamat" class="form-control"
+                                        value="{{ $dataSistem->alamat }}">
+                                    <span class="text-danger error" id="alamatError"></span>
                                 </div>
                                 <div class="col-md-6 mb-3 ">
-                                    <label>Foundation Year<small>*</small></label>
-                                    <input type="text" name="tahun_berdiri" id="tahun_berdiri" class="form-control"
-                                        value="{{ $dataSistem->tahun_berdiri }}">
-                                    <span class="text-danger error" id="tahun_berdiriError"></span>
+                                    <label>Postal Code<small>*</small></label>
+                                    <input type="text" name="kodepos" id="kodepos" class="form-control"
+                                        value="{{ $dataSistem->kodepos }}">
+                                    <span class="text-danger error" id="kodeposError"></span>
+                                </div>
+                                <div class="col-md-6 mb-3 ">
+                                    <label>Country<small>*</small></label>
+                                    <input type="text" name="negara" id="negara" class="form-control"
+                                        value="{{ $dataSistem->negara }}">
+                                    <span class="text-danger error" id="negaraError"></span>
                                 </div>
 
                             </div>

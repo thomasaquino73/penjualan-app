@@ -26,6 +26,39 @@ class Sidebar extends Component
                 'roles' => ['Super Admin'],
             ],
               [
+                'type' => 'dropdown',
+                'name' => 'Manage Items',
+                'icon' => 'ti ti-box',
+                'roles' => ['Super Admin'],
+                'permissions' => ['role-browse', 'permission-browse'],
+                'children' => [
+
+                    [
+                        'name' => 'Items',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['customer-browse'],
+                    ],
+
+                    [
+                        'name' => 'Categories',
+                        'route' => 'permissions.index',
+                        'pattern' => 'permissions.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['permission-browse'],
+                    ],
+                    [
+                        'name' => 'Unit of goods',
+                        'route' => 'permissions.index',
+                        'pattern' => 'permissions.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['permission-browse'],
+                    ],
+
+                ],
+            ],
+              [
                 'type' => 'single',
                 'name' => 'Item Data',
                 'route' => 'customer.index',
