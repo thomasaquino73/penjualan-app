@@ -1,49 +1,47 @@
 @extends('layouts.app')
 @section('konten')
-    <div class="container-xxl flex-grow-1 container-p-y">
-        <div class="row g-4">
-            <h4><span class="text-muted fw-light">
-                    @foreach ($breadcrumb as $key => $item)
-                        @if (!empty($item['url']))
-                            <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
-                        @else
-                            {{ $item['label'] }}
-                        @endif
+    <div class="row g-4">
+        <h4><span class="text-muted fw-light">
+                @foreach ($breadcrumb as $key => $item)
+                    @if (!empty($item['url']))
+                        <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
+                    @else
+                        {{ $item['label'] }}
+                    @endif
 
-                        @if (!$loop->last)
-                            /
-                        @endif
-                    @endforeach
-                </span>
-            </h4>
-            <!-- Users List Table -->
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between">
-                        <h5 class="card-title mb-0">{{ $title }}</h5>
-                        <div class="card-header-elements ms-auto">
-                            {{-- @if (auth()->user()->can('role-create')) --}}
-                            {{-- <a href="{{ route('permissions.create') }}" type="button"
+                    @if (!$loop->last)
+                        /
+                    @endif
+                @endforeach
+            </span>
+        </h4>
+        <!-- Users List Table -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h5 class="card-title mb-0">{{ $title }}</h5>
+                    <div class="card-header-elements ms-auto">
+                        {{-- @if (auth()->user()->can('role-create')) --}}
+                        {{-- <a href="{{ route('permissions.create') }}" type="button"
                                 class="btn btn-md btn-primary waves-effect waves-light">
                                 <span class="tf-icon ti ti-plus ti-md me-1"></span>{{ __('mainpage.added') }}
                             </a> --}}
-                            {{-- @endif --}}
+                        {{-- @endif --}}
 
-                        </div>
                     </div>
-                    <div class="card-datatable table-responsive" style="padding: 20px">
-                        <table class="table table-bordered" id="table">
-                            <thead class="border-top" style="background-color: #AEDEFC; ">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Roles Name</th>
-                                    <th>Created</th>
-                                    <th>Updated</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
+                </div>
+                <div class="card-datatable table-responsive" style="padding: 20px">
+                    <table class="table table-bordered" id="table">
+                        <thead class="border-top" style="background-color: #AEDEFC; ">
+                            <tr>
+                                <th>#</th>
+                                <th>Roles Name</th>
+                                <th>Created</th>
+                                <th>Updated</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                    </table>
                 </div>
             </div>
         </div>
