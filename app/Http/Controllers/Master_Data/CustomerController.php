@@ -213,4 +213,92 @@ class CustomerController extends Controller
             ], 422);
         }
     }
+    public function trash(Request $r)
+    {
+        if ($r->ajax()) {
+            $query = Customer::where('status', 0)->get();
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('created_at', function ($row) {
+                    return $row->created_at
+                        ? (($row->creator->fullname ?? 'Unknown')).
+                        ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
+                        : 'N/A';
+                })
+                ->addColumn('updated_at', function ($row) {
+                    if ($row->updated_at) {
+                        $updaterName = $row->updater->fullname ?? 'Unknown';
+                        $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
+
+                        return $updaterName.
+                            ' <br><small class="text-muted">'.$timeAgo.'</small>';
+                    }
+
+                    return 'N/A';
+                })
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
+                        return '<span class="badge bg-info">Active</span>';
+                    } else {
+                        return '<span class="badge bg-danger">Not Active</span>';
+                    }
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '<div class="btn-group">
+                      <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                        Action
+                      </button>
+                      <ul class="dropdown-menu" style="">';
+
+                    if (auth()->user()->can('customer-restore')) {
+                        $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
+                            data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
+                    }
+
+
+                    return $btn;
+                })
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status'])
+                ->make(true);
+        }
+
+        $x = [
+            'title' => 'Deleted Customer List',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Deleted Customer', 'url' => ''],
+            ],
+        ];
+
+        return view('master_data.customer.customer_trash', $x);
+    }
+
+    public function restore($id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $album = Customer::find($id);
+            $album->status = 1;
+            $album->updated_by = Auth::id();
+            $album->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'redirect' => true,
+                'message' => 'Customer successfully restored.',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => true,
+                'redirect' => true,
+                'message' => 'Customer successfully restored.',
+            ]);
+        }
+    }
 }

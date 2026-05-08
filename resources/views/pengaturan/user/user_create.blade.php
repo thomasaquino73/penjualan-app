@@ -90,9 +90,9 @@
                                     <div class="mb-3">
                                         <label class="form-label me-1">Phone Number</label><small class="text-danger">*
                                             required</small>
-                                        <input type="text" class="form-control" id="phone_number" name="phone_number"
+                                        <input type="text" class="form-control" id="phone" name="phone"
                                             placeholder="ex: 0812***" />
-                                        <span class="error text-danger" id="phone_numberError"></span>
+                                        <span class="error text-danger" id="phoneError"></span>
                                     </div>
                                 </div>
                                 <div class="col-md-12">

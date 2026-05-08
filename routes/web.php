@@ -97,6 +97,8 @@ Route::middleware('auth')->group(function () {
 
     // Master Data
     Route::get('/customer/generate-id', [CustomerController::class, 'generateId']);
+    Route::get('/customer/trash', [CustomerController::class, 'trash'])->name('customer.trash');
+    Route::put('/customer/restore/{id}', [CustomerController::class, 'restore'])->name('customer.restore');
     Route::resource('customer', CustomerController::class);
     
     Route::resource('satuan-barang', SatuanBarangController::class);

@@ -20,31 +20,23 @@
             <h5 class="card-title mb-0">{{ $title }}</h5>
             <div class="col-12 col-lg-5 text-lg-end">
                 <div class="d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
-                    @canany(['customer-create'])
-                        <a href="{{ route('customer.create') }}" class="btn btn-primary">
-                            <i class="ti ti-plus me-1"></i> Add Data
-                        </a>
-                    @endcanany
-                    @canany(['customer-trash'])
-                        <a href="{{ route('customer.trash') }}" class="btn btn-secondary">
-                            <i class="ti ti-trash me-1"></i>
-                        </a>
-                    @endcanany
+                    <a href="{{ route('customer.index') }}" class="btn btn-secondary">
+                        <i class="ti ti-chevron-left me-1"></i> Back
+                    </a>
                 </div>
             </div>
         </div>
 
         <div class="card-datatable table-responsive p-3">
             <table class="table table-bordered" id="table">
-                <thead class="border-top" style="background-color: #AEDEFC; ">
-                    <tr>
+                <thead class="border-top" style="background-color: rgba(168, 35, 35, 0.664); ">
+                    <tr style=";font-color:white;">
                         <th>#</th>
                         <th>Customer ID</th>
                         <th>Customer Name</th>
                         <th>Customer Email</th>
                         <th>Customer Phone</th>
                         <th>Customer Address</th>
-                        <th>Status</th>
                         <th>Created</th>
                         <th>Updated</th>
                         <th>Action</th>
@@ -163,7 +155,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('customer.index') }}',
+                ajax: '{{ route('customer.trash') }}',
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -185,10 +177,6 @@
                     {
                         data: 'alamat',
                     },
-
-                    {
-                        data: 'status',
-                    },
                     {
                         data: 'created_at',
                     },
@@ -203,205 +191,57 @@
                     },
                 ]
             });
-
-            $('#create').click(function() {
-
-                $('#modals').modal('show');
-                $('#modal-title').html('Add Customer');
-                $('#savedata').html('<i class="fa fa-save me-1"></i> Save');
-
-                $('#postForm').trigger('reset');
-                $('#id').val('');
-
-                resetValidation();
-
-                // 🔥 AUTO GENERATE ID LANGSUNG KE MODAL
-                $.get('/customer/generate-id', function(res) {
-                    console.log(res); // 🔥 lihat di inspect
-                    $('#id_pelanggan').val(res.id_pelanggan);
-                });
-
-            });
-            $('#postForm').on('submit', function(e) {
-                e.preventDefault();
-                var form = this;
-                $.ajax({
-                    url: $(form).attr('action'),
-                    method: $(form).attr('method'),
-                    data: new FormData(form),
-                    processData: false,
-                    contentType: false,
-                    datatype: 'json',
-                    beforeSend: function(e) {
-                        $('#savedata').html(
-                            '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
-                    },
-                    complete: function(e) {
-                        $('#savedata').html(' <i class="fa fa-save me-1"></i>Save');
-                    },
-                    success: function(response) {
-                        $('#modals').modal('hide');
-                        table.draw();
-                        Swal.fire({
-                            icon: 'success',
-                            title: response.title,
-                            text: response.message,
-                            showClass: {
-                                popup: 'animate__animated animate__bounceIn'
-                            },
-                            customClass: {
-                                confirmButton: 'btn btn-primary waves-effect waves-light'
-                            },
-                            buttonsStyling: false
-                        });
-
-                    },
-                    error: function(xhr) {
-
-                        resetValidation();
-
-                        let message = 'Terjadi kesalahan';
-
-                        if (xhr.responseJSON) {
-
-                            // jika ada message dari controller
-                            if (xhr.responseJSON.message) {
-                                message = xhr.responseJSON.message;
-                            }
-
-                            // jika error validasi
-                            if (xhr.responseJSON.errors) {
-
-                                let errors = xhr.responseJSON.errors;
-                                let errorList = '';
-
-                                $.each(errors, function(key, value) {
-                                    errorList += value[0] + '<br>';
-                                    displayFieldError(key, value[0]);
-                                });
-
-                                message = errorList;
-                            }
-                        }
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal',
-                            html: message,
-                            customClass: {
-                                confirmButton: 'btn btn-danger'
-                            },
-                            buttonsStyling: false
-                        });
-                    }
-                });
-
-
-            });
-            $('body').on('click', '.editPost', function(a) {
-                $('#modals').modal('show');
-                $('#savedata').html('<i class="fa fa-save me-1"></i>Save');
-                resetValidation();
-
-                var id = $(this).data('id');
-
-                $.ajax({
-                    type: "GET",
-                    url: "/customer/" + id + "/edit",
-                    data: {
-                        id: id
-                    },
-                    dataType: 'json',
-                    success: function(data) {
-                        console.log(data);
-                        $('#modal-title').html('Edit Customer');
-                        $('#id').val(data.id);
-                        $('#id_pelanggan').val(data.id_pelanggan);
-                        $('#nama').val(data.nama);
-                        $('#alamat').val(data.alamat);
-                        $('#alamat_pajak').val(data.alamat_pajak);
-                        $('#kodepos').val(data.kodepos);
-                        $('#negara').val(data.negara);
-                        $('#telepon').val(data.telepon);
-                        $('#personal_kontak').val(data.personal_kontak);
-                        $('#email').val(data.email);
-                        $('#website').val(data.website);
-                        $('#status').val(data.status).trigger('change');
-                        resetValidation();
-                    }
-                });
-            });
-            $('body').on('click', '#delete', function() {
+            $('body').on('click', '.restore', function() {
                 let id = $(this).data('id');
-                let name = $(this).data('name');
                 let token = $("meta[name='csrf-token']").attr("content");
-
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: "Want to delete data: " + name,
-                    icon: 'warning',
+                    title: 'Restore this customer?',
+                    icon: 'question',
                     showCancelButton: true,
-                    confirmButtonText: 'Yes, delete it!',
+                    confirmButtonText: 'Yes, restore!',
                     cancelButtonText: 'Cancel',
                     customClass: {
-                        confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
-                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                        confirmButton: 'btn btn-success me-3 waves-effect waves-light',
+                        cancelButton: 'btn btn-secondary waves-effect waves-light'
                     },
                     buttonsStyling: false
-                }).then(function(result) {
+                }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/customer/${id}`,
-                            type: "DELETE",
-                            cache: false,
+                            url: `/customer/restore/${id}`,
+                            type: 'PUT',
                             data: {
                                 _token: token
                             },
                             success: function(response) {
                                 table.draw();
-                                toastr.success('Deleted Data Successfully', '', {
-                                    timeOut: 1500,
+                                toastr.success(response.message, '', {
+                                    timeOut: 2000,
                                     progressBar: true,
-                                    closeButton: false,
-                                    positionClass: 'toast-top-right',
+                                    positionClass: 'toast-top-right'
                                 });
+
                             },
-                            error: function(jqXHR, textStatus, errorThrown) {
+                            error: function(xhr) {
+                                let errMsg = 'Error restoring customer';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errMsg = xhr.responseJSON.message;
+                                }
                                 Swal.fire({
                                     icon: 'error',
-                                    title: 'Failed to delete',
-                                    text: 'An error occurred. Please try again later.',
+                                    title: 'Failed',
+                                    text: errMsg,
                                     timer: 5000,
                                     customClass: {
-                                        confirmButton: 'btn btn-primary waves-effect waves-light'
-                                    },
-                                    buttonsStyling: false
+                                        confirmButton: 'btn btn-info waves-effect waves-light'
+                                    }
                                 });
-                            }
-                        });
-                    } else if (result.dismiss === Swal.DismissReason.cancel) {
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'Cancelled',
-                            text: 'Your data is safe.',
-                            customClass: {
-                                confirmButton: 'btn btn-info waves-effect waves-light'
                             }
                         });
                     }
                 });
             });
-            $('body').on('click', '.detail', function() {
 
-                let gambar = $(this).data('gambar');
-                let alias = $(this).data('alias');
-
-                $('#detail_gambar').attr('src', gambar);
-                $('#detail_alias').text(alias);
-
-                $('#modalDetail').modal('show');
-
-            });
         });
     </script>
 @endpush

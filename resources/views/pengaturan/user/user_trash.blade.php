@@ -33,7 +33,7 @@
             </div>
             <div class="card-datatable table-responsive" style="padding: 20px">
                 <table class="table table-bordered" id="pengguna_table">
-                    <thead class="border-top" style="background-color: #AEDEFC; ">
+                    <thead class="border-top" style="   background-color: rgba(168, 35, 35, 0.664) !important; ">
                         <tr>
                             <th>#</th>
                             <th>Avatar</th>
@@ -77,7 +77,7 @@
                                         </button>
 
                                         <div class="dropdown-menu">
-                                            @canany(['user-restore'])
+                                            @canany(['user-trash'])
                                                 <button class="dropdown-item restore "data-id="{{ $user->id }}"
                                                     data-name="{{ $user->fullname }}">
                                                     <i class="ti ti-undo me-1"></i> Restore
