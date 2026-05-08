@@ -58,7 +58,7 @@ class PermissionsController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">';
-                    $btn .= '<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Action</button>';
+                    $btn .= '<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-menu-2 ti-xs me-1"></i> Choose Options</button>';
                     $btn .= '<div class="dropdown-menu">';
                     $btn .= '<a class="dropdown-item" href="'.route('permissions.edit', $row->id).'"><i class="fa fa-edit me-1"></i>Edit</a>';
                     $btn .= '<a class="dropdown-item " id="delete" href="javascript:void(0)" data-id="'.$row->id.'"  data-name="'.$row->name.'">';

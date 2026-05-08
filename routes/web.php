@@ -4,6 +4,7 @@ use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
 use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
 use App\Http\Controllers\Master_Data\Customer\CustomerController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengaturan\PengaturanSistemController;
 use App\Http\Controllers\Pengaturan\PermissionsController;
 use App\Http\Controllers\Pengaturan\RolesController;
@@ -48,6 +49,11 @@ Route::get('/verify-email/{id}/{hash}', function (Request $request, $id, $hash) 
     return redirect()->route('login')->with('status', 'Email Anda berhasil diverifikasi.');
 })->middleware('signed')->name('verification.verify');
 Route::middleware('auth')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+    Route::delete('/notifications/delete-read', [NotificationController::class, 'deleteRead'])->name('notifications.deleteRead');
+
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/change-password', [ProfileController::class, 'change_password'])->name('profile.changepassword');
     Route::get('/profile/{id}/edit', [ProfileController::class, 'edit'])->name('profile.edit');
