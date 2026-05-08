@@ -29,7 +29,7 @@
 
         <div class="card-datatable table-responsive p-3">
             <table class="table table-bordered" id="table">
-                <thead class="border-top" style="background-color: rgba(168, 35, 35, 0.664); ">
+                <thead class="border-top" style="background-color: #EA7B7B; ">
                     <tr style=";font-color:white;">
                         <th>#</th>
                         <th>Customer ID</th>

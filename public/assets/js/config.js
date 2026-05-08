@@ -5,49 +5,49 @@
  * ! To clear local storage: (https://www.leadshook.com/help/how-to-clear-local-storage-in-google-chrome-browser/).
  */
 
-'use strict';
+"use strict";
 
 // JS global variables
 window.config = {
-  colors: {
-    primary: '#7367f0',
-    secondary: '#a8aaae',
-    success: '#28c76f',
-    info: '#00cfe8',
-    warning: '#ff9f43',
-    danger: '#ea5455',
-    dark: '#4b4b4b',
-    black: '#000',
-    white: '#fff',
-    cardColor: '#fff',
-    bodyBg: '#f8f7fa',
-    bodyColor: '#6f6b7d',
-    headingColor: '#5d596c',
-    textMuted: '#a5a3ae',
-    borderColor: '#dbdade'
-  },
-  colors_label: {
-    primary: '#7367f029',
-    secondary: '#a8aaae29',
-    success: '#28c76f29',
-    info: '#00cfe829',
-    warning: '#ff9f4329',
-    danger: '#ea545529',
-    dark: '#4b4b4b29'
-  },
-  colors_dark: {
-    cardColor: '#2f3349',
-    bodyBg: '#25293c',
-    bodyColor: '#b6bee3',
-    headingColor: '#cfd3ec',
-    textMuted: '#7983bb',
-    borderColor: '#434968'
-  },
-  enableMenuLocalStorage: true // Enable menu state with local storage support
+    colors: {
+        primary: "#7367f0",
+        secondary: "#a8aaae",
+        success: "#28c76f",
+        info: "#00cfe8",
+        warning: "#ff9f43",
+        danger: "#ea5455",
+        dark: "#4b4b4b",
+        black: "#000",
+        white: "#fff",
+        cardColor: "#fff",
+        bodyBg: "#f8f7fa",
+        bodyColor: "#6f6b7d",
+        headingColor: "#5d596c",
+        textMuted: "#a5a3ae",
+        borderColor: "#dbdade",
+    },
+    colors_label: {
+        primary: "#7367f029",
+        secondary: "#a8aaae29",
+        success: "#28c76f29",
+        info: "#00cfe829",
+        warning: "#ff9f4329",
+        danger: "#ea545529",
+        dark: "#4b4b4b29",
+    },
+    colors_dark: {
+        cardColor: "#2f3349",
+        bodyBg: "#25293c",
+        bodyColor: "#b6bee3",
+        headingColor: "#cfd3ec",
+        textMuted: "#7983bb",
+        borderColor: "#434968",
+    },
+    enableMenuLocalStorage: true, // Enable menu state with local storage support
 };
 
-window.assetsPath = document.documentElement.getAttribute('data-assets-path');
-window.templateName = document.documentElement.getAttribute('data-template');
+window.assetsPath = document.documentElement.getAttribute("data-assets-path");
+window.templateName = document.documentElement.getAttribute("data-template");
 window.rtlSupport = true; // set true for rtl support (rtl + ltr), false for ltr only.
 
 /**
@@ -87,21 +87,33 @@ TemplateCustomizer.LANGUAGES.fr = { ... };
  * defaultShowDropdownOnHover : true, false (for horizontal layout only)
  */
 
-if (typeof TemplateCustomizer !== 'undefined') {
-  window.templateCustomizer = new TemplateCustomizer({
-    cssPath: assetsPath + 'vendor/css' + (rtlSupport ? '/rtl' : '') + '/',
-    themesPath: assetsPath + 'vendor/css' + (rtlSupport ? '/rtl' : '') + '/',
-    displayCustomizer: true,
-    lang: localStorage.getItem('templateCustomizer-' + templateName + '--Lang') || 'en', // Set default language here
-    // defaultTheme: 2,
-    // defaultStyle: 'system',
-    // defaultTextDir: 'rtl',
-    // defaultContentLayout: 'wide',
-    // defaultHeaderType: 'static',
-    // defaultMenuCollapsed: true,
-    // defaultNavbarType: 'sticky',
-    // defaultFooterFixed: false,
-    // defaultShowDropdownOnHover: false,
-    controls: ['rtl', 'style', 'headerType', 'contentLayout', 'layoutCollapsed', 'layoutNavbarOptions', 'themes']
-  });
+if (typeof TemplateCustomizer !== "undefined") {
+    window.templateCustomizer = new TemplateCustomizer({
+        cssPath: assetsPath + "vendor/css" + (rtlSupport ? "/rtl" : "") + "/",
+        themesPath:
+            assetsPath + "vendor/css" + (rtlSupport ? "/rtl" : "") + "/",
+        displayCustomizer: false,
+        lang:
+            localStorage.getItem(
+                "templateCustomizer-" + templateName + "--Lang",
+            ) || "en", // Set default language here
+        // defaultTheme: 2,
+        // defaultStyle: 'system',
+        // defaultTextDir: 'rtl',
+        // defaultContentLayout: 'wide',
+        // defaultHeaderType: 'static',
+        // defaultMenuCollapsed: true,
+        // defaultNavbarType: 'sticky',
+        // defaultFooterFixed: false,
+        // defaultShowDropdownOnHover: false,
+        controls: [
+            "rtl",
+            "style",
+            "headerType",
+            "contentLayout",
+            "layoutCollapsed",
+            "layoutNavbarOptions",
+            "themes",
+        ],
+    });
 }
