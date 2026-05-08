@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
 use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
@@ -50,6 +51,14 @@ Route::get('/verify-email/{id}/{hash}', function (Request $request, $id, $hash) 
     return redirect()->route('login')->with('status', 'Email Anda berhasil diverifikasi.');
 })->middleware('signed')->name('verification.verify');
 Route::middleware('auth')->group(function () {
+
+Route::prefix('token')->group(function () {
+            Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');
+            Route::post('/expire', [IdleController::class, 'expireToken'])->name('token.expire');
+            Route::get('/check', [IdleController::class, 'checkToken'])->name('token.check');
+        }); 
+
+        
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
