@@ -52,7 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::put('/profile', [ProfileController::class, 'ganti_password'])->name('ganti.password');
-    Route::get('/kartu/{id}', [ProfileController::class, 'cetak'])->name('cetak.kartu');
+    Route::get('/cetak-kartu/{id}', [ProfileController::class, 'cetak'])->name('cetak.kartu');
 
     // Pengaturan
     Route::resource('roles', RolesController::class);

@@ -147,6 +147,7 @@
                             <tr>
                                 <th width="40">#</th>
                                 <th>Avatar</th>
+                                <th>ID Number</th>
                                 <th>Fullname</th>
                                 <th>Username</th>
                                 <th>Email</th>
@@ -220,6 +221,9 @@
                     },
                     {
                         data: 'avatar'
+                    },
+                    {
+                        data: 'no_ID'
                     },
                     {
                         data: 'fullname',

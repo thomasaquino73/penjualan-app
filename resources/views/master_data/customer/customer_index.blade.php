@@ -30,6 +30,7 @@
                 <thead class="border-top" style="background-color: #AEDEFC; ">
                     <tr>
                         <th>#</th>
+                        <th>ID Number</th>
                         <th>Customer Name</th>
                         <th>Customer Email</th>
                         <th>Customer Phone</th>

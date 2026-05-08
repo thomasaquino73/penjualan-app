@@ -53,9 +53,17 @@
                                         </li>
                                     </ul>
                                 </div>
-                                <a href="{{ route('user.index') }}" class="btn btn-primary">
-                                    <i class="ti ti-chevron-left me-1"></i>Back
-                                </a>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('user.index') }}" class="btn btn-primary">
+                                        <i class="ti ti-chevron-left me-1"></i>Back
+                                    </a>
+
+                                    <a href="{{ route('cetak.kartu', Auth::user()->id) }}" target="_blank"
+                                        class="btn btn-primary">
+                                        <i class="ti ti-id-badge-2 me-1"></i>Cetak Kartu
+                                    </a>
+                                </div>
+
                             </div>
                         </div>
                     </div>

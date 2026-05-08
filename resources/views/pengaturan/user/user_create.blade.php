@@ -40,6 +40,15 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
+                                        <label class="form-label me-1">ID Number</label><small class="text-danger">*
+                                            required</small>
+                                        <input type="text" class="form-control" id="no_ID" name="no_ID"
+                                            placeholder="Enter ID number" />
+                                        <span class="error text-danger" id="no_IDError"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
                                         <label class="form-label me-1">Fullname</label><small class="text-danger">*
                                             required</small>
                                         <input type="text" class="form-control" id="fullname" name="fullname"
@@ -56,7 +65,7 @@
                                         <span class="error text-danger" id="nicknameError"></span>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label me-1">Gender</label><small class="text-danger">*
                                             required</small>
@@ -68,7 +77,7 @@
                                         <span class="error text-danger" id="genderError"></span>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label">Email</label><small class="text-danger">*
                                             required</small>

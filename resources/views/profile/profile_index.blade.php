@@ -117,12 +117,12 @@
                         <ul class="list-unstyled mb-4 mt-3">
                             <li class="d-flex align-items-center mb-3">
                                 <i class="ti ti-user text-heading"></i><span class="fw-medium mx-2 text-heading"><strong>
-                                        Nomor ID:</strong></span> <span>{{ $user->no_ID }}</span>
+                                        Fullname:</strong></span> <span>{{ $user->fullname }}</span>
                             </li>
                             <li class="d-flex align-items-center mb-3">
                                 <i class="ti ti-user text-heading"></i><span
-                                    class="fw-medium mx-2 text-heading"><strong>Nama Lengkap:</strong></span>
-                                <span>{{ $user->fullname }}</span>
+                                    class="fw-medium mx-2 text-heading"><strong>Nickname:</strong></span>
+                                <span>{{ $user->nickname }}</span>
                             </li>
                             <li class="d-flex align-items-center mb-3">
                                 <i

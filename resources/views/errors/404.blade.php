@@ -1,23 +1,23 @@
-@extends('layouts.app') {{-- pakai layout situs asli --}}
+@extends('layouts.app') {{-- use original site layout --}}
 
-@section('title', 'Halaman Tidak Ditemukan')
+@section('title', 'Page Not Found')
 
 @section('konten')
     <div class="container text-center" style="padding: 80px 20px;">
         <h1 class="display-1 text-danger">404</h1>
-        <h2 class="mb-3">Halaman Tidak Ditemukan</h2>
+        <h2 class="mb-3">Page Not Found</h2>
         <p class="mb-4">
-            Maaf, halaman yang Anda cari tidak tersedia atau telah dihapus.
+            Sorry, the page you are looking for is not available or has been removed.
         </p>
         <div>
-            {{-- Tombol kembali ke halaman sebelumnya --}}
+            {{-- Back button --}}
             <a href="{{ url()->previous() }}" class="btn btn-outline-primary me-2">
-                ← Kembali
+                ← Go Back
             </a>
 
-            {{-- Tombol ke beranda --}}
+            {{-- Home button --}}
             <a href="{{ url('/') }}" class="btn btn-primary">
-                Beranda
+                Home
             </a>
         </div>
     </div>

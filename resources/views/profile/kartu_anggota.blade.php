@@ -112,15 +112,15 @@
 
         <div class="instansi">
             {{ $company->nama_instansi }}<br>
-            <small style="font-size:8px">Seksi Pelayanan Kematian</small>
+            <small style="font-size:8px">Kartu Karyawan</small>
         </div>
 
         <div class="kode">
-            {{ $user->no_ID }}
+            {{ $user->fullname }}
         </div>
 
         <div class="nama ">
-            {{ $user->nama_lengkap }}
+            {{ $user->no_ID }}
         </div>
 
         <img src="{{ $user->avatar ? public_path($user->avatar) : public_path('image/no-images.jpg') }}" class="foto"

@@ -46,6 +46,12 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
+                                    <label class="form-label">ID Number <small class="text-danger">*</small></label>
+                                    <input type="text" class="form-control" name="no_ID"
+                                        value="{{ old('no_ID', $account->no_ID) }}">
+                                    <span class="error text-danger" id="no_IDError"></span>
+                                </div>
+                                <div class="col-md-6 mb-3">
                                     <label class="form-label">Full Name <small class="text-danger">*</small></label>
                                     <input type="text" class="form-control" name="fullname"
                                         value="{{ old('fullname', $account->fullname) }}">
@@ -59,7 +65,7 @@
                                     <span class="error text-danger" id="nicknameError"></span>
                                 </div>
 
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label class="form-label">Gender <small class="text-danger">*</small></label>
                                     <select name="gender" class="form-select select2" id="gender">
                                         <option value="Male" {{ $account->gender == 'Male' ? 'selected' : '' }}>Male
@@ -71,7 +77,7 @@
                                     <span class="error text-danger" id="genderError"></span>
                                 </div>
 
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label class="form-label">Email <small class="text-danger">*</small></label>
                                     <input type="text" class="form-control" name="email"
                                         value="{{ old('email', $account->email) }}">

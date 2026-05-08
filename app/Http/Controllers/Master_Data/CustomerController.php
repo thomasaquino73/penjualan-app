@@ -18,4 +18,16 @@ class CustomerController extends Controller
         ];
         return view('master_data.customer.customer_index', $x);
     }
+    public function create()
+    {
+        $x=[
+            'title' => 'Add Customer',
+              'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Customer', 'url' => route('customer.index')],
+                ['label' => 'Add Customer', 'url' => ''],
+            ],
+        ];
+        return view('master_data.customer.customer_create', $x);
+    }
 }
