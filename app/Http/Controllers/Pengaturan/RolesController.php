@@ -86,6 +86,10 @@ class RolesController extends Controller
                         $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)" data-id="'.$row['id'].'">
                                     <i class="far fa-edit me-1"></i> Edit</a>';
                     }
+                    if (auth()->user()->can('permission-edit')) {
+                        $btn .= '<a class="dropdown-item "  href="'.route('permissions.edit', $row['id']).'" data-id="'.$row['id'].'">
+                                    <i class="ti ti-shield-share me-1"></i> Permission</a>';
+                    }
 
                     if (auth()->user()->can('role-delete')) {
                         $btn .= '<a class="dropdown-item" id="delete" href="javascript:void(0)" data-id="'.$row['id'].'" data-name="'.$row['name'].'">

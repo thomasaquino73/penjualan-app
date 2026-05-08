@@ -60,9 +60,15 @@ class PermissionsController extends Controller
                     $btn = '<div class="btn-group">';
                     $btn .= '<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-menu-2 ti-xs me-1"></i> Choose Options</button>';
                     $btn .= '<div class="dropdown-menu">';
+                    if (auth()->user()->can('permission-edit')) {
+
                     $btn .= '<a class="dropdown-item" href="'.route('permissions.edit', $row->id).'"><i class="fa fa-edit me-1"></i>Edit</a>';
+                    }
+                    if (auth()->user()->can('permission-delete')) {
                     $btn .= '<a class="dropdown-item " id="delete" href="javascript:void(0)" data-id="'.$row->id.'"  data-name="'.$row->name.'">';
                     $btn .= '<i class="fa fa-trash me-1"></i> Delete</a>';
+                    }
+
                     $btn .= '</div></div>';
 
                     return $btn;

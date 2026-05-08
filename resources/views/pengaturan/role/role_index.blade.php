@@ -20,9 +20,11 @@
         <div class="card-header d-flex justify-content-between">
             <h5 class="card-title mb-0">{{ $title }}</h5>
             <div class="card-header-elements ms-auto">
-                <button type="button" id="create" class="btn btn-md btn-primary waves-effect waves-light">
-                    <span class="tf-icon ti ti-plus ti-md me-1"></span> Add Data
-                </button>
+                @can(['role-create'])
+                    <button type="button" id="create" class="btn btn-md btn-primary waves-effect waves-light">
+                        <span class="tf-icon ti ti-plus ti-md me-1"></span> Add Data
+                    </button>
+                @endcan
             </div>
         </div>
 
