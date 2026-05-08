@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\GuestEmailVerificationController;
-use App\Http\Controllers\Master_Data\CustomerController;
+use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
+use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
+use App\Http\Controllers\Master_Data\Customer\CustomerController;
 use App\Http\Controllers\Pengaturan\PengaturanSistemController;
 use App\Http\Controllers\Pengaturan\PermissionsController;
 use App\Http\Controllers\Pengaturan\RolesController;
@@ -83,6 +85,8 @@ Route::middleware('auth')->group(function () {
 
     // Master Data
     Route::resource('customer', CustomerController::class);
+    Route::resource('satuan-barang', SatuanBarangController::class);
+    Route::resource('kategori-barang', KategoriBarangController::class);
 
 
 
