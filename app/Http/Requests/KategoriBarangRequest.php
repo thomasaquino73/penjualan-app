@@ -30,12 +30,12 @@ class KategoriBarangRequest extends FormRequest
 
         ];
     }
-     public function message(): array
+
+    public function message(): array
     {
         return [
             'detail.required' => 'Categories Name is required',
             'detail.unique' => 'Categories Name already exists',
         ];
     }
-
 }

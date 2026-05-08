@@ -28,6 +28,11 @@ class BasicCodeMasterSeeder extends Seeder
                 'detail' => 'Satuan',
                 'description' => 'Daftar satuan barang',
             ],
+            [
+                'id' => '4',
+                'detail' => 'Mata Uang',
+                'description' => 'Daftar mata uang',
+            ],
 
         ]);
 

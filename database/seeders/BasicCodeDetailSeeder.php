@@ -83,6 +83,18 @@ class BasicCodeDetailSeeder extends Seeder
                 'detail' => 'KG',
                 'description' => '',
             ],
+            [
+                'id' => $i++,
+                'master_id' => '4',
+                'detail' => 'IDR',
+                'description' => 'Indonesia Rupiah',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '4',
+                'detail' => 'USD',
+                'description' => 'US Dollar',
+            ],
 
         ]);
     }

@@ -76,7 +76,16 @@ class Sidebar extends Component
                 'pattern' => 'customer.*',
                 'active' => true,
                 'roles' => ['Super Admin'],
-                'roles' => ['Super Admin', 'Data Entri'],
+                'permissions' => ['customer-browse'],
+            ],
+            [
+                'type' => 'single',
+                'name' => 'Sales',
+                'route' => 'customer.index',
+                'icon' => 'ti ti-tie',
+                'pattern' => 'customer.*',
+                'active' => true,
+                'roles' => ['Super Admin'],
                 'permissions' => ['customer-browse'],
             ],
             [

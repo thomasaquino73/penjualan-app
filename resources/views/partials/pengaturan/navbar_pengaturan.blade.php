@@ -13,5 +13,11 @@
             <i class="ti ti-layout-board ti-xs me-1"></i>Login Background
         </a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('pengaturan.mata_uang.*') ? 'active' : '' }}"
+            href="{{ route('pengaturan.mata_uang.index') }}">
+            <i class="ti ti-coins ti-xs me-1"></i>Currency
+        </a>
+    </li>
 
 </ul>

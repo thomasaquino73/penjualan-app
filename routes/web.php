@@ -3,7 +3,7 @@
 use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
 use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
-use App\Http\Controllers\Master_Data\Customer\CustomerController;
+use App\Http\Controllers\Master_Data\CustomerController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengaturan\PengaturanSistemController;
 use App\Http\Controllers\Pengaturan\PermissionsController;
@@ -88,6 +88,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/pengaturan-background/store', [PengaturanSistemController::class, 'login_background_store'])->name('pengaturan.background.store');
     Route::get('/pengaturan-background/{id}/edit', [PengaturanSistemController::class, 'login_background_edit'])->name('pengaturan.background.edit');
     Route::delete('/pengaturan-background/{id}', [PengaturanSistemController::class, 'login_background_destroy'])->name('pengaturan.background.delete');
+
+    Route::get('/mata-uang', [PengaturanSistemController::class, 'mata_uang_index'])->name('pengaturan.mata_uang.index');
+    Route::post('/mata-uang/store', [PengaturanSistemController::class, 'mata_uang_store'])->name('pengaturan.mata_uang.store');
+    Route::get('/mata-uang/{id}/edit', [PengaturanSistemController::class, 'mata_uang_edit'])->name('pengaturan.mata_uang.edit');
+    Route::delete('/mata-uang/{id}', [PengaturanSistemController::class, 'mata_uang_destroy'])->name('pengaturan.mata_uang.delete');
 
     // Master Data
     Route::resource('customer', CustomerController::class);

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Master_Data\Customer;
+namespace App\Http\Controllers\Master_Data;
 
 use App\Http\Controllers\Controller;
 

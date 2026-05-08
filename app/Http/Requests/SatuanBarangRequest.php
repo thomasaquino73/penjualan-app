@@ -30,7 +30,8 @@ class SatuanBarangRequest extends FormRequest
 
         ];
     }
-      public function message(): array
+
+    public function message(): array
     {
         return [
             'detail.required' => 'Unit Name is required',

@@ -41,8 +41,8 @@
                                 <thead style="background-color: #AEDEFC; ">
                                     <tr>
                                         <th>#</th>
-                                        <th>Avatar</th>
-                                        <th>Status</th>
+                                        <th>Currency</th>
+                                        <th>Description</th>
                                         <th>Created</th>
                                         <th>Updated</th>
                                         <th>Action</th>
@@ -68,25 +68,25 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="postForm" name="postForm" method="POST" action="{{ route('pengaturan.background.store') }}">
+                    <form id="postForm" name="postForm" method="POST" action="{{ route('pengaturan.mata_uang.store') }}">
                         @csrf
                         <input type="text" name="id" id="id" hidden>
                         <div class="row">
                             <div class="col-12 mb-3">
-                                <label for="gambar" class="form-label">Avatar<small>*</small></label>
-                                <input type="file" id="gambar" name="gambar" class="form-control"
-                                    placeholder="Masukkan Kode Iuran">
-                                <span class="error text-danger" id="gambarError"></span>
+                                <label for="detail" class="form-label">Currency<small>*</small></label>
+                                <input type="text" id="detail" name="detail" class="form-control"
+                                    placeholder="Enter Currency">
+                                <span class="error text-danger" id="detailError"></span>
 
                             </div>
                             <div class="col-12 mb-3">
-                                <label class="form-label">Status</label>
-                                <select name="status" id="status" class="form-control">
-                                    <option value="">Select Status</option>
-                                    <option value="1">Active</option>
-                                    <option value="2">Not Active</option>
-                                </select>
+                                <label for="description" class="form-label">Description<small>*</small></label>
+                                <input type="text" id="description" name="description" class="form-control"
+                                    placeholder="Enter Description">
+                                <span class="error text-danger" id="descriptionError"></span>
+
                             </div>
+
                         </div>
                 </div>
                 <div class="modal-footer">
@@ -101,28 +101,7 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="modalDetail" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-
-                <div class="modal-header">
-                    <h5 class="modal-title">Detail Background</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body text-center">
-
-                    <img id="detail_gambar" src="" class="img-fluid rounded shadow" style="max-height:400px;">
-
-                    <div class="mt-3">
-                        <span id="detail_alias" class="fw-bold"></span>
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
+    --}}
     <script>
         $(document).ready(function() {
             var table = new DataTable('#table', {
@@ -133,7 +112,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('pengaturan.background.index') }}',
+                ajax: '{{ route('pengaturan.mata_uang.index') }}',
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -141,10 +120,10 @@
                         searchable: false
                     },
                     {
-                        data: 'gambar',
+                        data: 'detail',
                     },
                     {
-                        data: 'status',
+                        data: 'description',
                     },
 
                     {
@@ -163,13 +142,11 @@
             });
 
             $('#create').click(function() {
-                let kodeOtomatis = 'IUR' + Date.now();
                 $('#modals').modal('show');
-                $('#modal-title').html('Add Avatar');
+                $('#modal-title').html('Add Currency');
                 $('#savedata').html('<i class="fa fa-save me-1"></i> Save');
                 $('#postForm').trigger('reset');
                 $('#id').val('');
-                $('#kode').val(kodeOtomatis);
                 resetValidation();
             });
             $('#postForm').on('submit', function(e) {
@@ -257,16 +234,17 @@
 
                 $.ajax({
                     type: "GET",
-                    url: "/pengaturan-background/" + id + "/edit",
+                    url: "/mata-uang/" + id + "/edit",
                     data: {
                         id: id
                     },
                     dataType: 'json',
                     success: function(data) {
                         console.log(data);
-                        $('#modal-title').html('Edit Avatar');
+                        $('#modal-title').html('Edit Currency');
                         $('#id').val(data.id);
-                        $('#status').val(data.status).trigger('change');
+                        $('#detail').val(data.detail);
+                        $('#description').val(data.description);
                         resetValidation();
                     }
                 });
@@ -291,7 +269,7 @@
                 }).then(function(result) {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/pengaturan-background/${id}`,
+                            url: `/mata-uang/${id}`,
                             type: "DELETE",
                             cache: false,
                             data: {
@@ -299,7 +277,7 @@
                             },
                             success: function(response) {
                                 table.draw();
-                                toastr.success('Data Berhasil dihapus', '', {
+                                toastr.success('Deleted Data Successfully', '', {
                                     timeOut: 1500,
                                     progressBar: true,
                                     closeButton: false,

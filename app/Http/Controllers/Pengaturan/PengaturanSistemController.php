@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Pengaturan;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SistemRequest;
+use App\Models\BasicCodeDetail;
 use App\Models\LoginBackground;
 use App\Models\PengaturanSistem;
 use Illuminate\Http\Request;
@@ -104,13 +105,13 @@ class PengaturanSistemController extends Controller
                 ->addIndexColumn()
                 ->addColumn('created_at', function ($row) {
                     return $row->created_at
-                        ? (($row->creator->nama_lengkap ?? 'Unknown')).
+                        ? (($row->creator->fullname ?? 'Unknown')).
                         ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
                         : 'N/A';
                 })
                 ->addColumn('updated_at', function ($row) {
                     if ($row->updated_at) {
-                        $updaterName = $row->updater->nama_lengkap ?? 'Unknown';
+                        $updaterName = $row->updater->fullname ?? 'Unknown';
                         $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
 
                         return $updaterName.
@@ -276,23 +277,27 @@ class PengaturanSistemController extends Controller
         DB::beginTransaction();
 
         try {
-
             $daftar = LoginBackground::findOrFail($id);
 
-            // path file gambar
-            $path = public_path('image/login_background/'.$daftar->gambar);
+            // ✅ cek apakah ada nama file
+            if (! empty($daftar->gambar)) {
 
-            // cek file ada atau tidak
-            if (file_exists($path)) {
-                unlink($path);
+                $path = public_path('image/login_background/'.$daftar->gambar);
+
+                // ✅ pastikan file benar-benar ada sebelum dihapus
+                if (file_exists($path) && is_file($path)) {
+                    unlink($path);
+                }
             }
 
+            // ✅ hapus data database
             $daftar->delete();
 
             DB::commit();
 
             return response()->json([
-                'message' => 'Gambar berhasil dihapus',
+                'action' => 'delete',
+                'message' => 'Image deleted successfully',
             ]);
 
         } catch (\Exception $e) {
@@ -300,7 +305,171 @@ class PengaturanSistemController extends Controller
             DB::rollBack();
 
             return response()->json([
-                'message' => 'Gagal menghapus Gambar',
+                'message' => 'Failed to delete image',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function mata_uang_index(Request $r)
+    {
+        if ($r->ajax()) {
+            $query = BasicCodeDetail::where('master_id', 4);
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('created_at', function ($row) {
+                    return $row->created_at
+                        ? (($row->creator->fullname ?? 'Unknown')).
+                        ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
+                        : 'N/A';
+                })
+                ->addColumn('updated_at', function ($row) {
+                    if ($row->updated_at) {
+                        $updaterName = $row->updater->fullname ?? 'Unknown';
+                        $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
+
+                        return $updaterName.
+                            ' <br><small class="text-muted">'.$timeAgo.'</small>';
+                    }
+
+                    return 'N/A';
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '<div class="btn-group">
+                      <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ti ti-menu-2 ti-xs me-1"></i> Action
+                      </button>
+                      <ul class="dropdown-menu" style="">';
+                    $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
+                            data-id="'.$row->id.'"> <i class="far fa-edit me-1"></i>Edit</a>';
+                    $btn .= '<a class="dropdown-item detail" href="javascript:void(0)"
+                                data-gambar="'.asset('image/login_background/'.$row->gambar).'"
+                                data-alias="'.$row->alias.'">
+                                <i class="far fa-eye me-1"></i>Detail
+                            </a>';
+                    $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                                data-id="'.$row->id.'"
+                                data-name="'.$row->detail.'"
+                                ><i class="fa fa-trash me-1"></i> Delete</a>';
+
+                    return $btn;
+                })
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'gambar'])
+                ->make(true);
+        }
+
+        $x = [
+            'title' => 'Currency',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Currency', 'url' => ''],
+            ],
+        ];
+
+        return view('pengaturan.mata_uang.index', $x);
+    }
+
+    public function mata_uang_edit(Request $request)
+    {
+
+        $where = [
+            'id' => $request->id,
+        ];
+        $data = BasicCodeDetail::where($where)->first();
+
+        return response()->json($data);
+    }
+
+    public function mata_uang_store(Request $request)
+    {
+        $id = $request->input('id');
+
+        // ✅ RULE VALIDASI
+        $rules = [
+            'detail' => 'required|unique:basic_code_detail,detail,'.$id.',id,master_id,4',
+            'description' => 'nullable',
+        ];
+
+        $validator = Validator::make($request->all(), $rules, [
+            'detail.required' => 'Detail is required',
+            'detail.unique' => 'Detail has already been taken',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+
+            // ✅ AMBIL DATA DARI INPUT (INI YANG BENAR)
+            $data = [
+                'detail' => $request->detail,
+                'description' => $request->description,
+                'master_id' => 4,
+            ];
+
+            if (! empty($id)) {
+
+                // ✅ UPDATE
+                $data['updated_at'] = now();
+                $data['updated_by'] = Auth::id();
+
+                DB::table('basic_code_detail')
+                    ->where('id', $id)
+                    ->update($data);
+
+                return response()->json([
+                    'action' => 'update',
+                    'message' => 'Data updated successfully',
+                ], 200);
+
+            } else {
+
+                // ✅ CREATE
+                $data['created_at'] = now();
+                $data['created_by'] = Auth::id();
+
+                DB::table('basic_code_detail')->insert($data);
+
+                return response()->json([
+                    'action' => 'create',
+                    'message' => 'Data created successfully',
+                ], 201);
+            }
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'error' => 'Error: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function mata_uang_destroy($id)
+    {
+        DB::beginTransaction();
+
+        try {
+
+            $daftar = BasicCodeDetail::findOrFail($id);
+
+            $daftar->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Data deleted successfully',
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Failed to delete data',
                 'error' => $e->getMessage(),
             ], 500);
         }
