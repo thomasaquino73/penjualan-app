@@ -21,9 +21,9 @@
             <div class="col-12 col-lg-5 text-lg-end">
                 <div class="d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
                     @canany(['customer-create'])
-                        <a href="{{ route('customer.create') }}" class="btn btn-primary">
+                        <button id="create" class="btn  btn-sm btn-primary">
                             <i class="ti ti-plus me-1"></i> Add Data
-                        </a>
+                        </button>
                     @endcanany
                     @canany(['customer-trash'])
                         <a href="{{ route('customer.trash') }}" class="btn btn-secondary">
@@ -38,7 +38,7 @@
             <table class="table table-bordered" id="table">
                 <thead class="border-top" style="background-color: #AEDEFC; ">
                     <tr>
-                        <th>#</th>
+                        <th >#</th>
                         <th>Customer ID</th>
                         <th>Customer Name</th>
                         <th>Customer Email</th>
@@ -405,3 +405,4 @@
         });
     </script>
 @endpush
+
