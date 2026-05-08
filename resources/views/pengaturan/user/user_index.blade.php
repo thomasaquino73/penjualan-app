@@ -143,7 +143,7 @@
             <div class="card-body p-3">
                 <div class="table-responsive">
                     <table class="display responsive nowrap" id="pengguna_table">
-                        <thead class="table-light">
+                        <thead class="table-light" style="background-color: #AEDEFC; ">
                             <tr>
                                 <th width="40">#</th>
                                 <th>Avatar</th>

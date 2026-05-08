@@ -38,7 +38,7 @@ class Sidebar extends Component
                         'route' => 'customer.index',
                         'pattern' => 'customer.*',
                         'roles' => ['Super Admin'],
-                        'permissions' => ['customer-browse'],
+                        'permissions' => ['barang-browse'],
                     ],
 
                     [
@@ -82,6 +82,107 @@ class Sidebar extends Component
             [
                 'type' => 'section',
                 'label' => 'TRANSACTIONS',
+                'roles' => ['Super Admin'],
+            ],
+             [
+                'type' => 'dropdown',
+                'name' => 'Manage Purchases',
+                'icon' => 'ti ti-shopping-cart',
+                'roles' => ['Super Admin'],
+                'permissions' => ['role-browse', 'permission-browse'],
+                'children' => [
+
+                    [
+                        'name' => 'Purchase Order',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['barang-browse'],
+                    ],
+                    [
+                        'name' => 'Purchase Receipt',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['barang-browse'],
+                    ],
+                    [
+                        'name' => 'Purchase Invoice',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['barang-browse'],
+                    ],
+                ],
+            ],
+              [
+                'type' => 'dropdown',
+                'name' => 'Manage Sales',
+                'icon' => 'ti ti-moneybag',
+                'roles' => ['Super Admin'],
+                'permissions' => ['role-browse', 'permission-browse'],
+                'children' => [
+
+                    [
+                        'name' => 'Sales Order',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['barang-browse'],
+                    ],
+
+                     [
+                        'name' => 'Proforma Invoice',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['barang-browse'],
+                    ],
+                     [
+                        'name' => 'Sales Invoice',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['barang-browse'],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'dropdown',
+                'name' => 'Manage Delivery',
+                'icon' => 'ti ti-truck-delivery',
+                'roles' => ['Super Admin'],
+                'permissions' => ['role-browse', 'permission-browse'],
+                'children' => [
+
+                    [
+                        'name' => 'Vehicle',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['barang-browse'],
+                    ],
+ [
+                        'name' => 'Warehouse',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['barang-browse'],
+                    ],
+                    [
+                        'name' => 'Delivery Order',
+                        'route' => 'kategori-barang.index',
+                        'pattern' => 'kategori-barang.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['kategori_barang-browse'],
+                    ],
+               
+
+                ],
+            ],
+            [
+                'type' => 'section',
+                'label' => 'REPORTS',
                 'roles' => ['Super Admin'],
             ],
             [
