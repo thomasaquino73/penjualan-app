@@ -94,7 +94,7 @@
                         <div class="mb-3 form-password-toggle">
                             <div class="d-flex justify-content-between">
                                 <label>Password</label>
-                                <a href="{{ route('password.request') }}"><small>Lupa Password?</small></a>
+                                <a href="{{ route('password.request') }}"><small>Forgot Password?</small></a>
                             </div>
                             <div class="input-group input-group-merge">
                                 <input type="password" id="password" name="password" class="form-control"
@@ -322,7 +322,7 @@
                     }
                 });
             }
-          
+
             // ==== LOGIN DENGAN SIDIK JARI (PASSKEY) ====
             $('#login-passkey').on('click', async function() {
                 try {

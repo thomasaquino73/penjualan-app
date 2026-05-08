@@ -94,9 +94,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('satuan-barang', SatuanBarangController::class);
     Route::resource('kategori-barang', KategoriBarangController::class);
 
-
-
-
 });
 
 require __DIR__.'/auth.php';

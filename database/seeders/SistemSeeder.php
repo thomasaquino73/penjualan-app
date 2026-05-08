@@ -23,7 +23,7 @@ class SistemSeeder extends Seeder
 
         ]);
 
-           LoginBackground::create([
+        LoginBackground::create([
             'gambar' => 'login1.jpg',
             'alias' => '69fd6d6ab719c1778216298.png',
             'status' => 1,

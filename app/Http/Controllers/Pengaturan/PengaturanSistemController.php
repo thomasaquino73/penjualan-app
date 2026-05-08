@@ -11,10 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
 use Yajra\DataTables\DataTables;
-use Intervention\Image\Facades\Image;
 
 class PengaturanSistemController extends Controller
 {
@@ -60,53 +57,50 @@ class PengaturanSistemController extends Controller
         return str_replace('\\', '/', $filePath);
     }
 
-
-
     public function store(SistemRequest $r, $id)
-{
-    DB::beginTransaction();
+    {
+        DB::beginTransaction();
 
-    try {
-        $sistem = PengaturanSistem::findOrFail($id);
+        try {
+            $sistem = PengaturanSistem::findOrFail($id);
 
-        $data = $r->except('avatar');
-        $data['nama_sistem'] = 'Laravel 12';
+            $data = $r->except('avatar');
+            $data['nama_sistem'] = 'Laravel 12';
 
-        if ($r->hasFile('avatar')) {
+            if ($r->hasFile('avatar')) {
 
-            $logoPath = $this->uploadAvatar($r->file('avatar'));
+                $logoPath = $this->uploadAvatar($r->file('avatar'));
 
+                $data['logo'] = $logoPath;
+                $data['favicon'] = $logoPath;
+            }
 
-            $data['logo'] = $logoPath;
-            $data['favicon'] = $logoPath;
+            $sistem->update($data);
+
+            DB::commit();
+
+            return response()->json([
+                'title' => 'Success',
+                'message' => 'System settings updated successfully.',
+                'redirect' => route('pengaturan.sistem'),
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $sistem->update($data);
-
-        DB::commit();
-
-        return response()->json([
-            'title' => 'Success',
-            'message' => 'System settings updated successfully.',
-            'redirect' => route('pengaturan.sistem'),
-        ]);
-
-    } catch (\Exception $e) {
-
-        DB::rollBack();
-
-        return response()->json([
-            'error' => $e->getMessage(),
-        ], 500);
     }
-}
 
     public function login_background_index(Request $r)
     {
         if ($r->ajax()) {
             $query = LoginBackground::where('status', '<>', 0);
 
-            return Datatables::of($query)
+            return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('created_at', function ($row) {
                     return $row->created_at
@@ -149,7 +143,7 @@ class PengaturanSistemController extends Controller
                       <ul class="dropdown-menu" style="">';
                     $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="far fa-edit me-1"></i>Edit</a>';
-                            $btn .= '<a class="dropdown-item detail" href="javascript:void(0)"
+                    $btn .= '<a class="dropdown-item detail" href="javascript:void(0)"
                                 data-gambar="'.asset('image/login_background/'.$row->gambar).'"
                                 data-alias="'.$row->alias.'">
                                 <i class="far fa-eye me-1"></i>Detail
@@ -165,7 +159,7 @@ class PengaturanSistemController extends Controller
                 ->make(true);
         }
 
-        $background = DB::table('login_background')->where('status',1)->get();
+        $background = DB::table('login_background')->where('status', 1)->get();
 
         $x = [
             'title' => 'Application Login Background',
@@ -186,18 +180,18 @@ class PengaturanSistemController extends Controller
 
         // Rule validasi
         $rules = [
-            'status' => 'required'
+            'status' => 'required',
         ];
 
         // Jika create → gambar wajib
-        if(empty($id)){
+        if (empty($id)) {
             $rules['gambar'] = 'required|image|mimes:jpg,jpeg,png';
-        }else{
+        } else {
             // jika update → gambar optional
             $rules['gambar'] = 'nullable|image|mimes:jpg,jpeg,png';
         }
 
-        $validator = Validator::make($request->all(), $rules,[
+        $validator = Validator::make($request->all(), $rules, [
             'gambar.required' => 'Gambar wajib diisi',
             'gambar.image' => 'File harus berupa gambar',
             'gambar.mimes' => 'Format gambar harus jpg, jpeg, png',
@@ -207,8 +201,8 @@ class PengaturanSistemController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'errors' => $validator->errors()
-            ],422);
+                'errors' => $validator->errors(),
+            ], 422);
         }
 
         try {
@@ -218,7 +212,7 @@ class PengaturanSistemController extends Controller
             ];
 
             // Upload gambar jika ada
-            if($request->hasFile('gambar')){
+            if ($request->hasFile('gambar')) {
 
                 $file = $request->file('gambar');
                 $namaFile = time().'_'.$file->getClientOriginalName();
@@ -231,38 +225,38 @@ class PengaturanSistemController extends Controller
                 $data['alias'] = $alias;
             }
 
-            if(!empty($id)){
+            if (! empty($id)) {
 
                 $data['updated_at'] = now();
                 $data['updated_by'] = Auth::id();
 
                 DB::table('login_background')
-                    ->where('id',$id)
+                    ->where('id', $id)
                     ->update($data);
 
                 return response()->json([
-                    'message'=>'Data berhasil diupdate',
-                    'title'=>'Updated'
-                ],200);
+                    'message' => 'Data berhasil diupdate',
+                    'title' => 'Updated',
+                ], 200);
 
-            }else{
+            } else {
 
                 $data['created_at'] = now();
-                $data['created_by'] =Auth::user()->id;
+                $data['created_by'] = Auth::user()->id;
 
                 DB::table('login_background')->insert($data);
 
                 return response()->json([
-                    'message'=>'Data berhasil ditambahkan',
-                    'title'=>'Created'
-                ],201);
+                    'message' => 'Data berhasil ditambahkan',
+                    'title' => 'Created',
+                ], 201);
             }
 
         } catch (\Exception $e) {
 
             return response()->json([
-                'error'=>'Terjadi kesalahan : '.$e->getMessage()
-            ],500);
+                'error' => 'Terjadi kesalahan : '.$e->getMessage(),
+            ], 500);
         }
     }
 
@@ -276,6 +270,7 @@ class PengaturanSistemController extends Controller
 
         return response()->json($data);
     }
+
     public function login_background_destroy($id)
     {
         DB::beginTransaction();
@@ -288,7 +283,7 @@ class PengaturanSistemController extends Controller
             $path = public_path('image/login_background/'.$daftar->gambar);
 
             // cek file ada atau tidak
-            if(file_exists($path)){
+            if (file_exists($path)) {
                 unlink($path);
             }
 

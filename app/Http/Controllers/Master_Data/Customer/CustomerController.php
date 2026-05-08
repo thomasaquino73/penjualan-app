@@ -3,31 +3,33 @@
 namespace App\Http\Controllers\Master_Data\Customer;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    Public function index()
+    public function index()
     {
-        $x=[
+        $x = [
             'title' => 'Customer List',
-              'breadcrumb' => [
+            'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Customer', 'url' => ''],
             ],
         ];
+
         return view('master_data.customer.customer_index', $x);
     }
+
     public function create()
     {
-        $x=[
+        $x = [
             'title' => 'Add Customer',
-              'breadcrumb' => [
+            'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Customer', 'url' => route('customer.index')],
                 ['label' => 'Add Customer', 'url' => ''],
             ],
         ];
+
         return view('master_data.customer.customer_create', $x);
     }
 }

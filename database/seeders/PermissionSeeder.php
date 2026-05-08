@@ -10,9 +10,9 @@ class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        $modules = ['role', 'user', 'permission','customer','barang','kategori_barang','satuan_barang'];
+        $modules = ['role', 'user', 'permission', 'customer', 'barang', 'kategori_barang', 'satuan_barang'];
 
-        $actions = ['browse', 'create', 'read', 'edit', 'delete','trash','restore'];
+        $actions = ['browse', 'create', 'read', 'edit', 'delete', 'trash', 'restore'];
 
         $role = Roles::firstOrCreate([
             'name' => 'Super Admin',

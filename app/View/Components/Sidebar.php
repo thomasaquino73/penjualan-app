@@ -25,7 +25,7 @@ class Sidebar extends Component
                 'label' => 'MASTER DATA',
                 'roles' => ['Super Admin'],
             ],
-              [
+            [
                 'type' => 'dropdown',
                 'name' => 'Manage Items',
                 'icon' => 'ti ti-box',
@@ -58,7 +58,7 @@ class Sidebar extends Component
 
                 ],
             ],
-              [
+            [
                 'type' => 'single',
                 'name' => 'Supplier',
                 'route' => 'customer.index',
@@ -68,7 +68,7 @@ class Sidebar extends Component
                 'roles' => ['Super Admin'],
                 'permissions' => ['customer-browse'],
             ],
-              [
+            [
                 'type' => 'single',
                 'name' => 'Customers',
                 'route' => 'customer.index',
@@ -84,7 +84,7 @@ class Sidebar extends Component
                 'label' => 'TRANSACTIONS',
                 'roles' => ['Super Admin'],
             ],
-             [
+            [
                 'type' => 'dropdown',
                 'name' => 'Manage Purchases',
                 'icon' => 'ti ti-shopping-cart',
@@ -115,7 +115,7 @@ class Sidebar extends Component
                     ],
                 ],
             ],
-              [
+            [
                 'type' => 'dropdown',
                 'name' => 'Manage Sales',
                 'icon' => 'ti ti-moneybag',
@@ -131,14 +131,14 @@ class Sidebar extends Component
                         'permissions' => ['barang-browse'],
                     ],
 
-                     [
+                    [
                         'name' => 'Proforma Invoice',
                         'route' => 'customer.index',
                         'pattern' => 'customer.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['barang-browse'],
                     ],
-                     [
+                    [
                         'name' => 'Sales Invoice',
                         'route' => 'customer.index',
                         'pattern' => 'customer.*',
@@ -162,7 +162,7 @@ class Sidebar extends Component
                         'roles' => ['Super Admin'],
                         'permissions' => ['barang-browse'],
                     ],
- [
+                    [
                         'name' => 'Warehouse',
                         'route' => 'customer.index',
                         'pattern' => 'customer.*',
@@ -176,7 +176,6 @@ class Sidebar extends Component
                         'roles' => ['Super Admin'],
                         'permissions' => ['kategori_barang-browse'],
                     ],
-               
 
                 ],
             ],
@@ -226,7 +225,7 @@ class Sidebar extends Component
                 'roles' => ['SuperAdmin'],
                 'permissions' => ['user-browse'],
             ],
-               [
+            [
                 'type' => 'single',
                 'name' => 'Application System',
                 'route' => 'pengaturan.sistem',
