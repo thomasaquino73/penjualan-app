@@ -61,12 +61,12 @@ class Sidebar extends Component
             [
                 'type' => 'single',
                 'name' => 'Supplier',
-                'route' => 'customer.index',
+                'route' => 'supplier.index',
                 'icon' => 'ti ti-users',
-                'pattern' => 'customer.*',
+                'pattern' => 'supplier.*',
                 'active' => true,
                 'roles' => ['Super Admin'],
-                'permissions' => ['customer-browse'],
+                'permissions' => ['supplier-browse'],
             ],
             [
                 'type' => 'single',

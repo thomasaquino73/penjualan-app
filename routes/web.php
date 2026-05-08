@@ -5,6 +5,7 @@ use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
 use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
 use App\Http\Controllers\Master_Data\CustomerController;
+use App\Http\Controllers\Master_Data\SupplierController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengaturan\PengaturanSistemController;
 use App\Http\Controllers\Pengaturan\PermissionsController;
@@ -109,7 +110,12 @@ Route::prefix('token')->group(function () {
     Route::get('/customer/trash', [CustomerController::class, 'trash'])->name('customer.trash');
     Route::put('/customer/restore/{id}', [CustomerController::class, 'restore'])->name('customer.restore');
     Route::resource('customer', CustomerController::class);
-    
+
+    Route::get('/supplier/generate-id', [SupplierController::class, 'generateId']);
+    Route::get('/supplier/trash', [SupplierController::class, 'trash'])->name('supplier.trash');
+    Route::put('/supplier/restore/{id}', [SupplierController::class, 'restore'])->name('supplier.restore');
+    Route::resource('supplier', SupplierController::class);
+
     Route::resource('satuan-barang', SatuanBarangController::class);
     Route::resource('kategori-barang', KategoriBarangController::class);
 
