@@ -29,14 +29,14 @@
 
         <div class="card-datatable table-responsive p-3">
             <table class="table table-bordered" id="table">
-                <thead class="border-top" style="background-color: #EA7B7B; ">
+                <thead class="border-top" style="background-color: #FFEF9F; ">
                     <tr style=";font-color:white;">
                         <th>#</th>
-                        <th>Supplier ID</th>
-                        <th>Supplier Name</th>
-                        <th>Supplier Email</th>
-                        <th>Supplier Phone</th>
-                        <th>Supplier Address</th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
                         <th>Created</th>
                         <th>Updated</th>
                         <th>Action</th>
@@ -47,104 +47,6 @@
     </div>
 @endsection
 @push('scripts')
-    <div class="modal fade" id="modals" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="mb-2" id="modal-title"></h3>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="postForm" name="postForm" method="POST" action="{{ route('supplier.store') }}">
-                        @csrf
-                        <input type="text" name="id" id="id" hidden>
-                        <div class="row">
-                            <div class="col-6 mb-3">
-                                <label for="id_supplier" class="form-label">Supplier ID<small>*</small></label>
-                                <input type="text" id="id_supplier" name="id_supplier" class="form-control"
-                                    placeholder="Enter Supplier ID">
-                                <span class="error text-danger" id="id_supplierError"></span>
-
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label for="nama" class="form-label">Supplier Name<small>*</small></label>
-                                <input type="text" id="nama" name="nama" class="form-control"
-                                    placeholder="Enter Supplier Name">
-                                <span class="error text-danger" id="namaError"></span>
-
-                            </div>
-                            <div class="col-12 mb-3">
-                                <label for="alamat" class="form-label">Address<small>*</small></label>
-                                <input type="text" id="alamat" name="alamat" class="form-control"
-                                    placeholder="Enter Supplier Address">
-                                <span class="error text-danger" id="alamatError"></span>
-                            </div>
-                            <div class="col-12 mb-3">
-                                <label for="alamat_pajak" class="form-label">Tax Address</label>
-                                <input type="text" id="alamat_pajak" name="alamat_pajak" class="form-control"
-                                    placeholder="Enter Supplier Tax Address">
-                                <span class="error text-danger" id="alamat_pajakError"></span>
-                            </div>
-
-                            <div class="col-3 mb-3">
-                                <label for="kodepos" class="form-label">Postal Code</label>
-                                <input type="text" id="kodepos" name="kodepos" class="form-control"
-                                    placeholder="Enter Postal Code">
-                                <span class="error text-danger" id="kodeposError"></span>
-                            </div>
-                            <div class="col-3 mb-3">
-                                <label for="negara" class="form-label">Country<small>*</small></label>
-                                <input type="text" id="negara" name="negara" class="form-control"
-                                    placeholder="Enter Country">
-                                <span class="error text-danger" id="negaraError"></span>
-                            </div>
-                            <div class="col-3 mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="text" id="email" name="email" class="form-control"
-                                    placeholder="Enter Email">
-                                <span class="error text-danger" id="emailError"></span>
-                            </div>
-                            <div class="col-3 mb-3">
-                                <label for="website" class="form-label">Website</label>
-                                <input type="text" id="website" name="website" class="form-control"
-                                    placeholder="Enter Website">
-                                <span class="error text-danger" id="websiteError"></span>
-                            </div>
-                            <div class="col-3 mb-3">
-                                <label for="telepon" class="form-label">Phone Number<small>*</small></label>
-                                <input type="text" id="telepon" name="telepon" class="form-control"
-                                    placeholder="Enter Phone Number">
-                                <span class="error text-danger" id="teleponError"></span>
-                            </div>
-                            <div class="col-3 mb-3">
-                                <label for="personal_kontak" class="form-label">Contact Person</label>
-                                <input type="text" id="personal_kontak" name="personal_kontak" class="form-control"
-                                    placeholder="Enter Contact Person">
-                                <span class="error text-danger" id="personal_kontakError"></span>
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Status<small>*</small></label>
-                                <select name="status" id="status" class="form-control">
-                                    <option value="">Select Status</option>
-                                    <option value="1">Active</option>
-                                    <option value="2">Not Active</option>
-                                </select>
-                                <span class="error text-danger" id="statusError"></span>
-                            </div>
-                        </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-label-secondary waves-effect" data-bs-dismiss="modal">
-                        Close
-                    </button>
-                    <button type="submit" id="savedata" name="savedata" class="btn btn-primary me-sm-3 me-1">
-                    </button>
-                </div>
-                </form>
-
-            </div>
-        </div>
-    </div>
     <script>
         $(document).ready(function() {
             var table = new DataTable('#table', {

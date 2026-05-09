@@ -8,6 +8,7 @@ use App\Models\Master_Data\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\DataTables;
 
 class SupplierController extends Controller
@@ -15,7 +16,7 @@ class SupplierController extends Controller
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = Supplier::where('status', '<>',0)->get();
+            $query = Supplier::where('status', '<>', 0)->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -79,44 +80,45 @@ class SupplierController extends Controller
         return view('master_data.supplier.supplier_index', $x);
     }
 
- private function generateSupplierId()
-{
-    $last = Supplier::whereNotNull('id_supplier')
-        ->orderBy('id', 'desc')
-        ->first();
+    private function generateSupplierId()
+    {
+        $last = Supplier::whereNotNull('id_supplier')
+            ->orderBy('id', 'desc')
+            ->first();
 
-    if (!$last) {
-        return 'SUP-001';
+        if (! $last) {
+            return 'SUP-001';
+        }
+
+        $lastId = $last->id_supplier;
+
+        // 🔥 ambil angka terakhir
+        preg_match('/(\d+)$/', $lastId, $matches);
+
+        if (! $matches) {
+            // kalau tidak ada angka → tambahin default
+            return $lastId.'01';
+        }
+
+        $number = (int) $matches[1];
+        $number++;
+
+        // 🔥 ambil prefix tanpa angka
+        $prefix = substr($lastId, 0, -strlen($matches[1]));
+
+        // 🔥 padding mengikuti panjang angka sebelumnya
+        $length = strlen($matches[1]);
+
+        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
     }
 
-    $lastId = $last->id_supplier;
-
-    // 🔥 ambil angka terakhir
-    preg_match('/(\d+)$/', $lastId, $matches);
-
-    if (!$matches) {
-        // kalau tidak ada angka → tambahin default
-        return $lastId . '01';
+    public function generateId()
+    {
+        return response()->json([
+            'id_supplier' => $this->generateSupplierId(),
+        ]);
     }
 
-    $number = (int) $matches[1];
-    $number++;
-
-    // 🔥 ambil prefix tanpa angka
-    $prefix = substr($lastId, 0, -strlen($matches[1]));
-
-    // 🔥 padding mengikuti panjang angka sebelumnya
-    $length = strlen($matches[1]);
-
-    return $prefix . str_pad($number, $length, '0', STR_PAD_LEFT);
-}
-   public function generateId()
-{
-    return response()->json([
-        'id_supplier' => $this->generateSupplierId()
-    ]);
-}
- 
     public function store(SupplierRequest $request)
     {
         try {
@@ -171,15 +173,13 @@ class SupplierController extends Controller
         }
     }
 
-    public function create()
-    {
-       
-    }
+    public function create() {}
+
     public function show(string $id)
     {
         //
     }
-    
+
     public function edit(Request $request)
     {
 
@@ -199,7 +199,7 @@ class SupplierController extends Controller
         //
     }
 
-     public function destroy(Request $request, $id)
+    public function destroy(Request $request, $id)
     {
 
         try {
@@ -207,12 +207,13 @@ class SupplierController extends Controller
             $table->status = '0';
             $table->updated_by = Auth::user()->id;
             $table->save();
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'errors' => $e->errors(),
             ], 422);
         }
     }
+
     public function trash(Request $r)
     {
         if ($r->ajax()) {
@@ -255,7 +256,6 @@ class SupplierController extends Controller
                         $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
                     }
-
 
                     return $btn;
                 })

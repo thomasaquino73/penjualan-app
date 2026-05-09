@@ -3,20 +3,19 @@
 namespace App\Http\Controllers\Master_Data;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\CustomerRequest;
-use App\Models\Master_Data\Customer;
+use App\Http\Requests\WarehouseRequest;
+use App\Models\Master_Data\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\DB;
 
-class CustomerController extends Controller
+class WarehouseController extends Controller
 {
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = Customer::where('status', '<>', 0)->get();
+            $query = Warehouse::where('status', '<>', 0)->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -51,15 +50,15 @@ class CustomerController extends Controller
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('customer-edit')) {
+                    if (auth()->user()->can('warehouse-edit')) {
                         $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
                     }
 
-                    if (auth()->user()->can('customer-delete')) {
+                    if (auth()->user()->can('warehouse-delete')) {
                         $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
-                                data-name="'.$row->nama.'"
+                                data-name="'.$row->nama_gudang.'"
                                 ><i class="ti ti-trash"></i> Delete</a>';
                     }
 
@@ -70,27 +69,27 @@ class CustomerController extends Controller
         }
 
         $x = [
-            'title' => 'Customer List',
+            'title' => 'Warehouse List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Customer', 'url' => ''],
+                ['label' => 'Warehouse', 'url' => ''],
             ],
         ];
 
-        return view('master_data.customer.customer_index', $x);
+        return view('master_data.warehouse.warehouse_index', $x);
     }
 
-    private function generateCustomerId()
+    private function generateWarehouseId()
     {
-        $last = Customer::whereNotNull('id_pelanggan')
+        $last = Warehouse::whereNotNull('id_gudang')
             ->orderBy('id', 'desc')
             ->first();
 
         if (! $last) {
-            return 'CUST-001';
+            return 'WH-001';
         }
 
-        $lastId = $last->id_pelanggan;
+        $lastId = $last->id_gudang;
 
         // 🔥 ambil angka terakhir
         preg_match('/(\d+)$/', $lastId, $matches);
@@ -115,11 +114,11 @@ class CustomerController extends Controller
     public function generateId()
     {
         return response()->json([
-            'id_pelanggan' => $this->generateCustomerId(),
+            'id_gudang' => $this->generateWarehouseId(),
         ]);
     }
 
-    public function store(CustomerRequest $request)
+    public function store(WarehouseRequest $request)
     {
         try {
             $id = $request->input('id');
@@ -130,7 +129,7 @@ class CustomerController extends Controller
                 // UPDATE
                 $data['updated_by'] = Auth::id();
 
-                Customer::where('id', $id)->update($data);
+                Warehouse::where('id', $id)->update($data);
 
                 return response()->json([
                     'action' => 'update',
@@ -143,22 +142,22 @@ class CustomerController extends Controller
                 $data['created_by'] = Auth::id();
                 $data['status'] = 1;
 
-                // 🔥 CEK ID PELANGGAN
-                if (empty($data['id_pelanggan'])) {
-                    $data['id_pelanggan'] = $this->generateCustomerId();
+                // 🔥 CEK ID GUDANG
+                if (empty($data['id_gudang'])) {
+                    $data['id_gudang'] = $this->generateWarehouseId();
                 } else {
 
                     // 🔥 VALIDASI: jangan sampai duplicate
-                    $exists = Customer::where('id_pelanggan', $data['id_pelanggan'])->exists();
+                    $exists = Warehouse::where('id_gudang', $data['id_gudang'])->exists();
 
                     if ($exists) {
                         return response()->json([
-                            'error' => 'ID Pelanggan sudah digunakan',
+                            'error' => 'Warehouse ID already in use',
                         ], 422);
                     }
                 }
 
-                Customer::create($data);
+                Warehouse::create($data);
 
                 return response()->json([
                     'action' => 'create',
@@ -186,7 +185,7 @@ class CustomerController extends Controller
         $where = [
             'id' => $request->id,
         ];
-        $data = Customer::where($where)->first();
+        $data = Warehouse::where($where)->first();
 
         return response()->json($data);
     }
@@ -203,7 +202,7 @@ class CustomerController extends Controller
     {
 
         try {
-            $table = Customer::findOrFail($id);
+            $table = Warehouse::findOrFail($id);
             $table->status = '0';
             $table->updated_by = Auth::user()->id;
             $table->save();
@@ -217,7 +216,7 @@ class CustomerController extends Controller
     public function trash(Request $r)
     {
         if ($r->ajax()) {
-            $query = Customer::where('status', 0)->get();
+            $query = Warehouse::where('status', 0)->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -252,7 +251,7 @@ class CustomerController extends Controller
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('customer-restore')) {
+                    if (auth()->user()->can('warehouse-restore')) {
                         $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
                     }
@@ -264,14 +263,14 @@ class CustomerController extends Controller
         }
 
         $x = [
-            'title' => 'Deleted Customer List',
+            'title' => 'Deleted Warehouse List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Deleted Customer', 'url' => ''],
+                ['label' => 'Deleted Warehouse', 'url' => ''],
             ],
         ];
 
-        return view('master_data.customer.customer_trash', $x);
+        return view('master_data.warehouse.warehouse_trash', $x);
     }
 
     public function restore($id)
@@ -279,7 +278,7 @@ class CustomerController extends Controller
         DB::beginTransaction();
 
         try {
-            $album = Customer::find($id);
+            $album = Warehouse::find($id);
             $album->status = 1;
             $album->updated_by = Auth::id();
             $album->save();
@@ -289,7 +288,7 @@ class CustomerController extends Controller
             return response()->json([
                 'success' => true,
                 'redirect' => true,
-                'message' => 'Customer successfully restored.',
+                'message' => 'Warehouse successfully restored.',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -297,7 +296,7 @@ class CustomerController extends Controller
             return response()->json([
                 'success' => true,
                 'redirect' => true,
-                'message' => 'Customer successfully restored.',
+                'message' => 'Warehouse successfully restored.',
             ]);
         }
     }

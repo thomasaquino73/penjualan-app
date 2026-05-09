@@ -5,7 +5,9 @@ use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
 use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
 use App\Http\Controllers\Master_Data\CustomerController;
+use App\Http\Controllers\Master_Data\SalesmanController;
 use App\Http\Controllers\Master_Data\SupplierController;
+use App\Http\Controllers\Master_Data\WarehouseController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengaturan\PengaturanSistemController;
 use App\Http\Controllers\Pengaturan\PermissionsController;
@@ -53,13 +55,12 @@ Route::get('/verify-email/{id}/{hash}', function (Request $request, $id, $hash) 
 })->middleware('signed')->name('verification.verify');
 Route::middleware('auth')->group(function () {
 
-Route::prefix('token')->group(function () {
-            Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');
-            Route::post('/expire', [IdleController::class, 'expireToken'])->name('token.expire');
-            Route::get('/check', [IdleController::class, 'checkToken'])->name('token.check');
-        }); 
+    Route::prefix('token')->group(function () {
+        Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');
+        Route::post('/expire', [IdleController::class, 'expireToken'])->name('token.expire');
+        Route::get('/check', [IdleController::class, 'checkToken'])->name('token.check');
+    });
 
-        
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
@@ -115,6 +116,16 @@ Route::prefix('token')->group(function () {
     Route::get('/supplier/trash', [SupplierController::class, 'trash'])->name('supplier.trash');
     Route::put('/supplier/restore/{id}', [SupplierController::class, 'restore'])->name('supplier.restore');
     Route::resource('supplier', SupplierController::class);
+
+    Route::get('/salesman/generate-id', [SalesmanController::class, 'generateId']);
+    Route::get('/salesman/trash', [SalesmanController::class, 'trash'])->name('salesman.trash');
+    Route::put('/salesman/restore/{id}', [SalesmanController::class, 'restore'])->name('salesman.restore');
+    Route::resource('salesman', SalesmanController::class);
+
+    Route::get('/warehouse/generate-id', [WarehouseController::class, 'generateId']);
+    Route::get('/warehouse/trash', [WarehouseController::class, 'trash'])->name('warehouse.trash');
+    Route::put('/warehouse/restore/{id}', [WarehouseController::class, 'restore'])->name('warehouse.restore');
+    Route::resource('warehouse', WarehouseController::class);
 
     Route::resource('satuan-barang', SatuanBarangController::class);
     Route::resource('kategori-barang', KategoriBarangController::class);

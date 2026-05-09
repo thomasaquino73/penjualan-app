@@ -20,13 +20,13 @@
             <h5 class="card-title mb-0">{{ $title }}</h5>
             <div class="col-12 col-lg-5 text-lg-end">
                 <div class="d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
-                    @canany(['supplier-create'])
+                    @canany(['warehouse-create'])
                         <button id="create" class="btn  btn-sm btn-primary">
                             <i class="ti ti-plus me-1"></i> Add Data
                         </button>
                     @endcanany
-                    @canany(['supplier-trash'])
-                        <a href="{{ route('supplier.trash') }}" class="btn btn-secondary">
+                    @canany(['warehouse-trash'])
+                        <a href="{{ route('warehouse.trash') }}" class="btn btn-secondary">
                             <i class="ti ti-trash me-1"></i>
                         </a>
                     @endcanany
@@ -41,9 +41,9 @@
                         <th>#</th>
                         <th>ID</th>
                         <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
                         <th>Address</th>
+                        <th>Description</th>
+                        <th>Responsible Person</th>
                         <th>Status</th>
                         <th>Created</th>
                         <th>Updated</th>
@@ -63,74 +63,44 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="postForm" name="postForm" method="POST" action="{{ route('supplier.store') }}">
+                    <form id="postForm" name="postForm" method="POST" action="{{ route('warehouse.store') }}">
                         @csrf
                         <input type="text" name="id" id="id" hidden>
                         <div class="row">
                             <div class="col-6 mb-3">
-                                <label for="id_supplier" class="form-label">Supplier ID<small>*</small></label>
-                                <input type="text" id="id_supplier" name="id_supplier" class="form-control"
-                                    placeholder="Enter Supplier ID">
-                                <span class="error text-danger" id="id_supplierError"></span>
+                                <label for="id_gudang" class="form-label">Warehouse ID<small>*</small></label>
+                                <input type="text" id="id_gudang" name="id_gudang" class="form-control"
+                                    placeholder="Enter Warehouse ID">
+                                <span class="error text-danger" id="id_gudangError"></span>
 
                             </div>
                             <div class="col-6 mb-3">
-                                <label for="nama" class="form-label">Supplier Name<small>*</small></label>
-                                <input type="text" id="nama" name="nama" class="form-control"
-                                    placeholder="Enter Supplier Name">
-                                <span class="error text-danger" id="namaError"></span>
+                                <label for="nama_gudang" class="form-label">Warehouse Name<small>*</small></label>
+                                <input type="text" id="nama_gudang" name="nama_gudang" class="form-control"
+                                    placeholder="Enter Warehouse Name">
+                                <span class="error text-danger" id="nama_gudangError"></span>
 
                             </div>
                             <div class="col-12 mb-3">
                                 <label for="alamat" class="form-label">Address<small>*</small></label>
                                 <input type="text" id="alamat" name="alamat" class="form-control"
-                                    placeholder="Enter Supplier Address">
+                                    placeholder="Enter Warehouse Address">
                                 <span class="error text-danger" id="alamatError"></span>
                             </div>
-                            <div class="col-12 mb-3">
-                                <label for="alamat_pajak" class="form-label">Tax Address</label>
-                                <input type="text" id="alamat_pajak" name="alamat_pajak" class="form-control"
-                                    placeholder="Enter Supplier Tax Address">
-                                <span class="error text-danger" id="alamat_pajakError"></span>
-                            </div>
 
-                            <div class="col-3 mb-3">
-                                <label for="kodepos" class="form-label">Postal Code</label>
-                                <input type="text" id="kodepos" name="kodepos" class="form-control"
-                                    placeholder="Enter Postal Code">
-                                <span class="error text-danger" id="kodeposError"></span>
-                            </div>
-                            <div class="col-3 mb-3">
-                                <label for="negara" class="form-label">Country<small>*</small></label>
-                                <input type="text" id="negara" name="negara" class="form-control"
-                                    placeholder="Enter Country">
-                                <span class="error text-danger" id="negaraError"></span>
-                            </div>
-                            <div class="col-3 mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="text" id="email" name="email" class="form-control"
-                                    placeholder="Enter Email">
-                                <span class="error text-danger" id="emailError"></span>
-                            </div>
-                            <div class="col-3 mb-3">
-                                <label for="website" class="form-label">Website</label>
-                                <input type="text" id="website" name="website" class="form-control"
-                                    placeholder="Enter Website">
-                                <span class="error text-danger" id="websiteError"></span>
-                            </div>
-                            <div class="col-3 mb-3">
-                                <label for="telepon" class="form-label">Phone Number<small>*</small></label>
-                                <input type="text" id="telepon" name="telepon" class="form-control"
-                                    placeholder="Enter Phone Number">
-                                <span class="error text-danger" id="teleponError"></span>
-                            </div>
-                            <div class="col-3 mb-3">
-                                <label for="personal_kontak" class="form-label">Contact Person</label>
-                                <input type="text" id="personal_kontak" name="personal_kontak" class="form-control"
-                                    placeholder="Enter Contact Person">
-                                <span class="error text-danger" id="personal_kontakError"></span>
-                            </div>
                             <div class="col-6 mb-3">
+                                <label for="keterangan" class="form-label">Description</label>
+                                <input type="text" id="keterangan" name="keterangan" class="form-control"
+                                    placeholder="Enter Description">
+                                <span class="error text-danger" id="keteranganError"></span>
+                            </div>
+                            <div class="col-3 mb-3">
+                                <label for="penanggung_jawab" class="form-label">Person responsible<small>*</small></label>
+                                <input type="text" id="penanggung_jawab" name="penanggung_jawab" class="form-control"
+                                    placeholder="Enter Responsible Person">
+                                <span class="error text-danger" id="penanggung_jawabError"></span>
+                            </div>
+                            <div class="col-3 mb-3">
                                 <label class="form-label">Status<small>*</small></label>
                                 <select name="status" id="status" class="form-control">
                                     <option value="">Select Status</option>
@@ -163,7 +133,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('supplier.index') }}',
+                ajax: '{{ route('warehouse.index') }}',
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -171,19 +141,19 @@
                         searchable: false
                     },
                     {
-                        data: 'id_supplier',
+                        data: 'id_gudang',
                     },
                     {
-                        data: 'nama',
-                    },
-                    {
-                        data: 'email',
-                    },
-                    {
-                        data: 'telepon',
+                        data: 'nama_gudang',
                     },
                     {
                         data: 'alamat',
+                    },
+                    {
+                        data: 'keterangan',
+                    },
+                    {
+                        data: 'penanggung_jawab',
                     },
 
                     {
@@ -207,7 +177,7 @@
             $('#create').click(function() {
 
                 $('#modals').modal('show');
-                $('#modal-title').html('Add Supplier');
+                $('#modal-title').html('Add Warehouse');
                 $('#savedata').html('<i class="fa fa-save me-1"></i> Save');
 
                 $('#postForm').trigger('reset');
@@ -216,9 +186,9 @@
                 resetValidation();
 
                 // 🔥 AUTO GENERATE ID LANGSUNG KE MODAL
-                $.get('/supplier/generate-id', function(res) {
+                $.get('/warehouse/generate-id', function(res) {
                     console.log(res); // 🔥 lihat di inspect
-                    $('#id_supplier').val(res.id_supplier);
+                    $('#id_gudang').val(res.id_gudang);
                 });
 
             });
@@ -307,16 +277,16 @@
 
                 $.ajax({
                     type: "GET",
-                    url: "/supplier/" + id + "/edit",
+                    url: "/warehouse/" + id + "/edit",
                     data: {
                         id: id
                     },
                     dataType: 'json',
                     success: function(data) {
                         console.log(data);
-                        $('#modal-title').html('Edit Supplier');
+                        $('#modal-title').html('Edit Warehouse');
                         $('#id').val(data.id);
-                        $('#id_supplier').val(data.id_supplier);
+                        $('#id_gudang').val(data.id_gudang);
                         $('#nama').val(data.nama);
                         $('#alamat').val(data.alamat);
                         $('#alamat_pajak').val(data.alamat_pajak);
@@ -351,7 +321,7 @@
                 }).then(function(result) {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/supplier/${id}`,
+                            url: `/warehouse/${id}`,
                             type: "DELETE",
                             cache: false,
                             data: {

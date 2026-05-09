@@ -20,7 +20,7 @@
             <h5 class="card-title mb-0">{{ $title }}</h5>
             <div class="col-12 col-lg-5 text-lg-end">
                 <div class="d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
-                    <a href="{{ route('customer.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('warehouse.index') }}" class="btn btn-secondary">
                         <i class="ti ti-chevron-left me-1"></i> Back
                     </a>
                 </div>
@@ -34,9 +34,9 @@
                         <th>#</th>
                         <th>ID</th>
                         <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
                         <th>Address</th>
+                        <th>Description</th>
+                        <th>Responsible Person</th>
                         <th>Created</th>
                         <th>Updated</th>
                         <th>Action</th>
@@ -57,7 +57,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('customer.trash') }}',
+                ajax: '{{ route('warehouse.trash') }}',
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -65,19 +65,19 @@
                         searchable: false
                     },
                     {
-                        data: 'id_pelanggan',
+                        data: 'id_gudang',
                     },
                     {
-                        data: 'nama',
-                    },
-                    {
-                        data: 'email',
-                    },
-                    {
-                        data: 'telepon',
+                        data: 'nama_gudang',
                     },
                     {
                         data: 'alamat',
+                    },
+                    {
+                        data: 'keterangan',
+                    },
+                    {
+                        data: 'penanggung_jawab',
                     },
                     {
                         data: 'created_at',
@@ -97,7 +97,7 @@
                 let id = $(this).data('id');
                 let token = $("meta[name='csrf-token']").attr("content");
                 Swal.fire({
-                    title: 'Restore this customer?',
+                    title: 'Restore this warehouse?',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, restore!',
@@ -110,7 +110,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/customer/restore/${id}`,
+                            url: `/warehouse/restore/${id}`,
                             type: 'PUT',
                             data: {
                                 _token: token
@@ -125,7 +125,7 @@
 
                             },
                             error: function(xhr) {
-                                let errMsg = 'Error restoring customer';
+                                let errMsg = 'Error restoring warehouse';
                                 if (xhr.responseJSON && xhr.responseJSON.message) {
                                     errMsg = xhr.responseJSON.message;
                                 }

@@ -6,10 +6,10 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-     public function up(): void
+    public function up(): void
     {
         Schema::table('personal_access_tokens', function (Blueprint $table) {
-               // 👇 tambahan sesuai gambar
+            // 👇 tambahan sesuai gambar
             $table->tinyInteger('expired_token')->default(0)->after('abilities'); // 0 = aktif, 1 = expired
             $table->timestamp('expired_token_at')->nullable()->after('expired_token');
         });

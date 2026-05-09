@@ -20,7 +20,7 @@
             <h5 class="card-title mb-0">{{ $title }}</h5>
             <div class="col-12 col-lg-5 text-lg-end">
                 <div class="d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
-                    <a href="{{ route('customer.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('salesman.index') }}" class="btn btn-secondary">
                         <i class="ti ti-chevron-left me-1"></i> Back
                     </a>
                 </div>
@@ -57,7 +57,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('customer.trash') }}',
+                ajax: '{{ route('salesman.trash') }}',
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -65,7 +65,7 @@
                         searchable: false
                     },
                     {
-                        data: 'id_pelanggan',
+                        data: 'id_salesman',
                     },
                     {
                         data: 'nama',
@@ -97,7 +97,7 @@
                 let id = $(this).data('id');
                 let token = $("meta[name='csrf-token']").attr("content");
                 Swal.fire({
-                    title: 'Restore this customer?',
+                    title: 'Restore this salesman?',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, restore!',
@@ -110,7 +110,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/customer/restore/${id}`,
+                            url: `/salesman/restore/${id}`,
                             type: 'PUT',
                             data: {
                                 _token: token
@@ -125,7 +125,7 @@
 
                             },
                             error: function(xhr) {
-                                let errMsg = 'Error restoring customer';
+                                let errMsg = 'Error restoring salesman';
                                 if (xhr.responseJSON && xhr.responseJSON.message) {
                                     errMsg = xhr.responseJSON.message;
                                 }

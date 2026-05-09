@@ -33,7 +33,7 @@
             </div>
             <div class="card-datatable table-responsive" style="padding: 20px">
                 <table class="table table-bordered" id="pengguna_table">
-                    <thead class="border-top" style="   background-color: #EA7B7B !important; ">
+                    <thead class="border-top" style="   background-color: #FFEF9F !important; ">
                         <tr>
                             <th>#</th>
                             <th>Avatar</th>

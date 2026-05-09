@@ -38,12 +38,12 @@
             <table class="table table-bordered" id="table">
                 <thead class="border-top" style="background-color: #AEDEFC; ">
                     <tr>
-                        <th >#</th>
-                        <th>Customer ID</th>
-                        <th>Customer Name</th>
-                        <th>Customer Email</th>
-                        <th>Customer Phone</th>
-                        <th>Customer Address</th>
+                        <th>#</th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
                         <th>Status</th>
                         <th>Created</th>
                         <th>Updated</th>
@@ -405,4 +405,3 @@
         });
     </script>
 @endpush
-

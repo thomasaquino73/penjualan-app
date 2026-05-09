@@ -3,20 +3,20 @@
 namespace App\Http\Controllers\Master_Data;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\CustomerRequest;
-use App\Models\Master_Data\Customer;
+use App\Http\Requests\SalesmanRequest;
+use App\Models\Master_Data\Salesman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\DataTables;
 
-class CustomerController extends Controller
+class SalesmanController extends Controller
 {
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = Customer::where('status', '<>', 0)->get();
+            $query = Salesman::where('status', '<>', 0)->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -51,12 +51,12 @@ class CustomerController extends Controller
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('customer-edit')) {
+                    if (auth()->user()->can('salesman-edit')) {
                         $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
                     }
 
-                    if (auth()->user()->can('customer-delete')) {
+                    if (auth()->user()->can('salesman-delete')) {
                         $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->nama.'"
@@ -70,27 +70,27 @@ class CustomerController extends Controller
         }
 
         $x = [
-            'title' => 'Customer List',
+            'title' => 'Salesman List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Customer', 'url' => ''],
+                ['label' => 'Salesman', 'url' => ''],
             ],
         ];
 
-        return view('master_data.customer.customer_index', $x);
+        return view('master_data.salesman.salesman_index', $x);
     }
 
-    private function generateCustomerId()
+    private function generateSalesmanId()
     {
-        $last = Customer::whereNotNull('id_pelanggan')
+        $last = Salesman::whereNotNull('id_salesman')
             ->orderBy('id', 'desc')
             ->first();
 
         if (! $last) {
-            return 'CUST-001';
+            return 'S-001';
         }
 
-        $lastId = $last->id_pelanggan;
+        $lastId = $last->id_salesman;
 
         // 🔥 ambil angka terakhir
         preg_match('/(\d+)$/', $lastId, $matches);
@@ -115,11 +115,19 @@ class CustomerController extends Controller
     public function generateId()
     {
         return response()->json([
-            'id_pelanggan' => $this->generateCustomerId(),
+            'id_salesman' => $this->generateSalesmanId(),
         ]);
     }
 
-    public function store(CustomerRequest $request)
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+     public function store(SalesmanRequest $request)
     {
         try {
             $id = $request->input('id');
@@ -130,7 +138,7 @@ class CustomerController extends Controller
                 // UPDATE
                 $data['updated_by'] = Auth::id();
 
-                Customer::where('id', $id)->update($data);
+                Salesman::where('id', $id)->update($data);
 
                 return response()->json([
                     'action' => 'update',
@@ -143,22 +151,22 @@ class CustomerController extends Controller
                 $data['created_by'] = Auth::id();
                 $data['status'] = 1;
 
-                // 🔥 CEK ID PELANGGAN
-                if (empty($data['id_pelanggan'])) {
-                    $data['id_pelanggan'] = $this->generateCustomerId();
+                // 🔥 CEK ID SALESMAN
+                if (empty($data['id_salesman'])) {
+                    $data['id_salesman'] = $this->generateSalesmanId();
                 } else {
 
                     // 🔥 VALIDASI: jangan sampai duplicate
-                    $exists = Customer::where('id_pelanggan', $data['id_pelanggan'])->exists();
+                    $exists = Salesman::where('id_salesman', $data['id_salesman'])->exists();
 
                     if ($exists) {
                         return response()->json([
-                            'error' => 'ID Pelanggan sudah digunakan',
+                            'error' => 'Salesman ID already in use',
                         ], 422);
                     }
                 }
 
-                Customer::create($data);
+                Salesman::create($data);
 
                 return response()->json([
                     'action' => 'create',
@@ -173,20 +181,21 @@ class CustomerController extends Controller
         }
     }
 
-    public function create() {}
-
+    /**
+     * Display the specified resource.
+     */
     public function show(string $id)
     {
         //
     }
 
-    public function edit(Request $request)
+   public function edit(Request $request)
     {
 
         $where = [
             'id' => $request->id,
         ];
-        $data = Customer::where($where)->first();
+        $data = Salesman::where($where)->first();
 
         return response()->json($data);
     }
@@ -203,7 +212,7 @@ class CustomerController extends Controller
     {
 
         try {
-            $table = Customer::findOrFail($id);
+            $table = Salesman::findOrFail($id);
             $table->status = '0';
             $table->updated_by = Auth::user()->id;
             $table->save();
@@ -217,7 +226,7 @@ class CustomerController extends Controller
     public function trash(Request $r)
     {
         if ($r->ajax()) {
-            $query = Customer::where('status', 0)->get();
+            $query = Salesman::where('status', 0)->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -252,7 +261,7 @@ class CustomerController extends Controller
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('customer-restore')) {
+                    if (auth()->user()->can('salesman-restore')) {
                         $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
                     }
@@ -264,14 +273,14 @@ class CustomerController extends Controller
         }
 
         $x = [
-            'title' => 'Deleted Customer List',
+            'title' => 'Deleted Salesman List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Deleted Customer', 'url' => ''],
+                ['label' => 'Deleted Salesman', 'url' => ''],
             ],
         ];
 
-        return view('master_data.customer.customer_trash', $x);
+        return view('master_data.salesman.salesman_trash', $x);
     }
 
     public function restore($id)
@@ -279,7 +288,7 @@ class CustomerController extends Controller
         DB::beginTransaction();
 
         try {
-            $album = Customer::find($id);
+            $album = Salesman::find($id);
             $album->status = 1;
             $album->updated_by = Auth::id();
             $album->save();
@@ -289,7 +298,7 @@ class CustomerController extends Controller
             return response()->json([
                 'success' => true,
                 'redirect' => true,
-                'message' => 'Customer successfully restored.',
+                'message' => 'Salesman successfully restored.',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -297,7 +306,7 @@ class CustomerController extends Controller
             return response()->json([
                 'success' => true,
                 'redirect' => true,
-                'message' => 'Customer successfully restored.',
+                'message' => 'Salesman successfully restored.',
             ]);
         }
     }
