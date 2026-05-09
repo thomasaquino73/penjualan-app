@@ -7,8 +7,8 @@ use App\Http\Requests\WarehouseRequest;
 use App\Models\Master_Data\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\DataTables;
 
 class WarehouseController extends Controller
 {
@@ -46,7 +46,7 @@ class WarehouseController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                        Action
+                       <i class="ti ti-menu-2 ti-xs me-1"></i> Action
                       </button>
                       <ul class="dropdown-menu" style="">';
 
@@ -247,7 +247,7 @@ class WarehouseController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                        Action
+                       <i class="ti ti-menu-2 ti-xs me-1"></i> Action
                       </button>
                       <ul class="dropdown-menu" style="">';
 

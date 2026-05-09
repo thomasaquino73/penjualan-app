@@ -25,7 +25,7 @@
                 <div class="card mb-4">
                     <h5 class="card-header">{{ $title }}</h5>
                     <div class="card-body p-10">
-                        <form action="{{ route('user.store') }}" method="POST" id="postForm">
+                        <form action="{{ route('user.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
                             @csrf
                             <div class="row">
                                 <div class="divider divider-dashed">

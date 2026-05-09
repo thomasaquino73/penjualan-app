@@ -5,6 +5,7 @@ use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
 use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
 use App\Http\Controllers\Master_Data\CustomerController;
+use App\Http\Controllers\Master_Data\DaftarKendaraanController;
 use App\Http\Controllers\Master_Data\SalesmanController;
 use App\Http\Controllers\Master_Data\SupplierController;
 use App\Http\Controllers\Master_Data\WarehouseController;
@@ -126,6 +127,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/warehouse/trash', [WarehouseController::class, 'trash'])->name('warehouse.trash');
     Route::put('/warehouse/restore/{id}', [WarehouseController::class, 'restore'])->name('warehouse.restore');
     Route::resource('warehouse', WarehouseController::class);
+    Route::prefix('daftar-kendaraan')->name('daftar-kendaraan.')->group(function () {
+        Route::get('/', [DaftarKendaraanController::class, 'index'])->name('index');
+        Route::post('/store', [DaftarKendaraanController::class, 'store'])->name('store');
+        Route::get('/data', [DaftarKendaraanController::class, 'data'])->name('data');
+        Route::get('/trash', [DaftarKendaraanController::class, 'trash'])->name('trash');
+        Route::get('/{id}/edit', [DaftarKendaraanController::class, 'edit'])->name('edit');
+        Route::delete('/{id}', [DaftarKendaraanController::class, 'destroy'])->name('destroy');
+        Route::put('/{id}/restore', [DaftarKendaraanController::class, 'restore'])->name('restore');
+        Route::get('/{id}/detail', [DaftarKendaraanController::class, 'show'])->name('show');
+    });
 
     Route::resource('satuan-barang', SatuanBarangController::class);
     Route::resource('kategori-barang', KategoriBarangController::class);

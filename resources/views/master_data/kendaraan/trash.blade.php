@@ -1,13 +1,14 @@
 @extends('layouts.app')
+@section('title', $title)
 @section('konten')
-    <h4>
-        <span class="text-muted fw-light">
+    <h4><span class="text-muted fw-light">
             @foreach ($breadcrumb as $key => $item)
                 @if (!empty($item['url']))
                     <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
                 @else
                     {{ $item['label'] }}
                 @endif
+
                 @if (!$loop->last)
                     /
                 @endif
@@ -15,42 +16,67 @@
         </span>
     </h4>
 
-    <div class="card">
-        <div class="card-header d-flex justify-content-between">
-            <div class="col-12 col-lg-6 d-flex align-items-center">
-                <i class="ti ti-trash me-2 "></i>
-                <h5 class="mb-0 ">{{ $title }}</h5>
-            </div>
-            <div class="col-12 col-lg-5 text-lg-end">
-                <div class="d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
-                    <a href="{{ route('warehouse.index') }}" class="btn btn-secondary">
-                        <i class="ti ti-chevron-left me-1"></i> Back
-                    </a>
+    <div class="row">
+        <div class="card p-10">
+            <div class="card-header  mt-2">
+                <div class="row">
+                    <div class="col-12 col-lg-6 d-flex align-items-center">
+                        <i class="ti ti-trash me-2 "></i>
+                        <h5 class="mb-0 ">{{ $title }}</h5>
+                    </div>
+                    <div class="col-12 col-lg-6 text-lg-end">
+
+                        <a href="{{ route('daftar-kendaraan.index') }}" class="btn btn-secondary">
+                            <i class="ti ti-chevron-left me-1"></i> Back
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <div class="card-datatable table-responsive p-3">
-            <table class="table table-bordered" id="table">
-                <thead class="border-top" style="background-color: #FFEF9F; ">
-                    <tr style=";font-color:white;">
-                        <th>#</th>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Address</th>
-                        <th>Description</th>
-                        <th>Responsible Person</th>
-                        <th>Created</th>
-                        <th>Updated</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-            </table>
+            <div class="card-datatable text-nowrap ">
+                <table class="table table-bordered" id="table">
+                    <thead class="border-top" style="background-color: #FFEF9F; ">
+                        <tr>
+                            <th>#</th>
+                            <th>Foto</th>
+                            <th>Merk</th>
+                            <th>Tipe</th>
+                            <th>plat_nomor</th>
+                            <th>warna</th>
+                            <th>pemilik</th>
+                            <th>Dibuat oleh</th>
+                            <th>Diubah oleh</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
     </div>
 @endsection
+@push('style')
+    <style>
+        input[name^="plat_"] {
+            text-transform: uppercase;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 2px;
+            font-size: 1.1rem;
+        }
+
+        .bg-custom-red {
+            background-color: rgba(168, 35, 35, 0.664) !important;
+        }
+    </style>
+@endpush
 @push('scripts')
     <script>
+        document.querySelectorAll('input[name^="plat_"]').forEach((input, index, arr) => {
+            input.addEventListener('input', function() {
+                if (this.value.length == this.maxLength) {
+                    if (index < arr.length - 1) arr[index + 1].focus();
+                }
+            });
+        });
         $(document).ready(function() {
             var table = new DataTable('#table', {
                 processing: true,
@@ -60,7 +86,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('warehouse.trash') }}',
+                ajax: '{{ route('daftar-kendaraan.trash') }}',
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -68,19 +94,22 @@
                         searchable: false
                     },
                     {
-                        data: 'id_gudang',
+                        data: 'foto',
                     },
                     {
-                        data: 'nama_gudang',
+                        data: 'merk',
                     },
                     {
-                        data: 'alamat',
+                        data: 'tipe',
                     },
                     {
-                        data: 'keterangan',
+                        data: 'plat_nomor',
                     },
                     {
-                        data: 'penanggung_jawab',
+                        data: 'warna',
+                    },
+                    {
+                        data: 'pemilik',
                     },
                     {
                         data: 'created_at',
@@ -96,11 +125,13 @@
                     },
                 ]
             });
+
             $('body').on('click', '.restore', function() {
                 let id = $(this).data('id');
                 let token = $("meta[name='csrf-token']").attr("content");
+                let row = $(this).closest('tr');
                 Swal.fire({
-                    title: 'Restore this warehouse?',
+                    title: 'Restore this data?',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, restore!',
@@ -113,22 +144,33 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/warehouse/restore/${id}`,
+                            url: "{{ route('daftar-kendaraan.restore', ':id') }}".replace(
+                                ':id',
+                                id),
                             type: 'PUT',
                             data: {
                                 _token: token
                             },
                             success: function(response) {
                                 table.draw();
-                                toastr.success(response.message, '', {
-                                    timeOut: 2000,
-                                    progressBar: true,
-                                    positionClass: 'toast-top-right'
-                                });
+                                if (response.redirect) {
+                                    toastr.success(response.message, '', {
+                                        timeOut: 2000,
+                                        progressBar: true,
+                                        positionClass: 'toast-top-right'
+                                    });
 
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Failed',
+                                        text: response.message ||
+                                            'Error restoring user'
+                                    });
+                                }
                             },
                             error: function(xhr) {
-                                let errMsg = 'Error restoring warehouse';
+                                let errMsg = 'Error restoring user';
                                 if (xhr.responseJSON && xhr.responseJSON.message) {
                                     errMsg = xhr.responseJSON.message;
                                 }
@@ -146,7 +188,6 @@
                     }
                 });
             });
-
         });
     </script>
 @endpush

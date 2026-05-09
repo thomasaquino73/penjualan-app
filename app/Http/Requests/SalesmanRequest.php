@@ -59,8 +59,6 @@ class SalesmanRequest extends FormRequest
                 'email',
             ],
 
-          
-
             'status' => [
                 'nullable',
                 Rule::in(['1', '2']),

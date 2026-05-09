@@ -99,6 +99,15 @@ class Sidebar extends Component
                 'permissions' => ['salesman-browse'],
             ],
             [
+                'type' => 'single',
+                'name' => 'Vehicle',
+                'route' => 'daftar-kendaraan.index',
+                'icon' => 'ti-car',
+                'pattern' => 'daftar-kendaraan.*',
+                'active' => true,
+                'roles' => ['SuperAdmin'],
+            ],
+            [
                 'type' => 'section',
                 'label' => 'TRANSACTIONS',
                 'roles' => ['Super Admin'],

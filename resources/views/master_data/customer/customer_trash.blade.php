@@ -17,7 +17,10 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between">
-            <h5 class="card-title mb-0">{{ $title }}</h5>
+            <div class="col-12 col-lg-6 d-flex align-items-center">
+                <i class="ti ti-trash me-2 "></i>
+                <h5 class="mb-0 ">{{ $title }}</h5>
+            </div>
             <div class="col-12 col-lg-5 text-lg-end">
                 <div class="d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
                     <a href="{{ route('customer.index') }}" class="btn btn-secondary">

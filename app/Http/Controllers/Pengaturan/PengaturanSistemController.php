@@ -125,9 +125,10 @@ class PengaturanSistemController extends Controller
                         ? asset('image/login_background/'.$row->gambar)
                         : asset('image/no-images.jpg');
 
-                    return '<img class="avatar avatar-md rounded-circle me-2 avatar-online"
+                    return '<img class="avatar avatar-md rounded-circle me-2 avatar-online detail"
                                 src="'.$avatarUrl.'"
-                                alt="Login_background">';
+                                alt="Login_background"  data-gambar="'.asset('image/login_background/'.$row->gambar).'"
+                                data-alias="'.$row->alias.'">';
                 })
                 ->addColumn('status', function ($row) {
                     if ($row->status == 1) {
