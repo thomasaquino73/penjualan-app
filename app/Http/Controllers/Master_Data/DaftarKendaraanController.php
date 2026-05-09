@@ -36,13 +36,13 @@ class DaftarKendaraanController extends Controller
                 ->addIndexColumn()
                 ->addColumn('created_at', function ($row) {
                     return $row->created_at
-                        ? (($row->creator->nama_lengkap ?? 'Unknown')).
+                        ? (($row->creator->fullname ?? 'Unknown')).
                         ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
                         : 'N/A';
                 })
                 ->addColumn('updated_at', function ($row) {
                     if ($row->updated_at) {
-                        $updaterName = $row->updater->nama_lengkap ?? 'Unknown';
+                        $updaterName = $row->updater->fullname ?? 'Unknown';
                         $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
 
                         return $updaterName.
@@ -225,13 +225,13 @@ class DaftarKendaraanController extends Controller
                 ->addIndexColumn()
                 ->addColumn('created_at', function ($row) {
                     return $row->created_at
-                        ? (($row->creator->nama_lengkap ?? 'Unknown')).
+                        ? (($row->creator->fullname ?? 'Unknown')).
                         ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
                         : 'N/A';
                 })
                 ->addColumn('updated_at', function ($row) {
                     if ($row->updated_at) {
-                        $updaterName = $row->updater->nama_lengkap ?? 'Unknown';
+                        $updaterName = $row->updater->fullname ?? 'Unknown';
                         $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
 
                         return $updaterName.

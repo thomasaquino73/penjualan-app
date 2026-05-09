@@ -25,7 +25,7 @@
                 </div>
                 <div class="col-12 col-lg-6 text-lg-end">
                     <button id="create" class="btn  btn-sm btn-primary">
-                        <i class="ti ti-plus me-1"></i> Tambah Data
+                        <i class="ti ti-plus me-1"></i> Add Data
                     </button>
 
                     <a href="{{ route('daftar-kendaraan.trash') }}" class="btn  btn-sm btn-secondary">
@@ -36,7 +36,7 @@
         </div>
         <div class="card-datatable table-responsive" style="padding: 20px">
             <table class="datatables-ajax table" id="table">
-                <thead>
+                <thead style="background-color: #AEDEFC; ">
                     <tr>
                         <th>#</th>
                         <th>Photo</th>
