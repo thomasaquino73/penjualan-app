@@ -114,7 +114,7 @@ class SalesmanController extends Controller
             ->first();
 
         if (! $last) {
-            return 'S-001';
+            return 'SM-001';
         }
 
         $lastId = $last->id_salesman;

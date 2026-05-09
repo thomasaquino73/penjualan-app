@@ -3,24 +3,136 @@
 namespace App\Http\Controllers\Master_Data\Barang;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master_Data\Barang;
 use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
 
 class DataBarangController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $r)
     {
-        //
+        if ($r->ajax()) {
+            $query = Barang::where('status', '<>', 0)->get();
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('created_at', function ($row) {
+                    return $row->created_at
+                        ? (($row->creator->fullname ?? 'Unknown')).
+                        ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
+                        : 'N/A';
+                })
+                ->addColumn('updated_at', function ($row) {
+                    if ($row->updated_at) {
+                        $updaterName = $row->updater->fullname ?? 'Unknown';
+                        $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
+
+                        return $updaterName.
+                            ' <br><small class="text-muted">'.$timeAgo.'</small>';
+                    }
+
+                    return 'N/A';
+                })
+                ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
+                        return '<span class="badge bg-info">Active</span>';
+                    } else {
+                        return '<span class="badge bg-danger">Not Active</span>';
+                    }
+                })
+                ->addColumn('kategori', function ($row) {
+                    return $row->kategoriID->detail;
+                })
+                ->addColumn('gudang', function ($row) {
+                    return $row->warehouseID->nama_gudang;
+                })
+                ->addColumn('tipePersediaan', function ($row) {
+                    return $row->typeID->detail;
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '<div class="btn-group">
+                      <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ti ti-menu-2 ti-xs me-1"></i>Action
+                      </button>
+                      <ul class="dropdown-menu" style="">';
+
+                    if (auth()->user()->can('customer-edit')) {
+                        $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
+                            data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
+                    }
+
+                    if (auth()->user()->can('customer-delete')) {
+                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                                data-id="'.$row->id.'"
+                                data-name="'.$row->nama.'"
+                                ><i class="ti ti-trash"></i> Delete</a>';
+                    }
+
+                    return $btn;
+                })
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status','kategori','gudang','tipePersediaan'])
+                ->make(true);
+        }
+
+        $x = [
+            'title' => 'Items List',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Items', 'url' => ''],
+            ],
+        ];
+
+        return view('master_data.barang.data_barang.data_barang_index', $x);
+    }
+    private function generateItemsId()
+    {
+        $last = Barang::whereNotNull('id_barang')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (! $last) {
+            return 'C-0001';
+        }
+
+        $lastId = $last->id_barang;
+
+        // 🔥 ambil angka terakhir
+        preg_match('/(\d+)$/', $lastId, $matches);
+
+        if (! $matches) {
+            // kalau tidak ada angka → tambahin default
+            return $lastId.'01';
+        }
+
+        $number = (int) $matches[1];
+        $number++;
+
+        // 🔥 ambil prefix tanpa angka
+        $prefix = substr($lastId, 0, -strlen($matches[1]));
+
+        // 🔥 padding mengikuti panjang angka sebelumnya
+        $length = strlen($matches[1]);
+
+        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    public function generateId()
+    {
+        return response()->json([
+            'id_pelanggan' => $this->generateItemsId(),
+        ]);
+    }
+
     public function create()
     {
-        //
+
+        return view('master_data.barang.data_barang.data_barang_create', [
+            'title' => 'Add Items',
+            'breadcrumb' => [
+                ['label' => 'Items', 'url' => route('data-barang.index')],
+                ['label' => 'Add Items', 'url' => ''],
+            ],
+        ]);
     }
 
     /**

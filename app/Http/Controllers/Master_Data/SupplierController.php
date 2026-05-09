@@ -114,7 +114,7 @@ class SupplierController extends Controller
             ->first();
 
         if (! $last) {
-            return 'SUP-001';
+            return 'SP-001';
         }
 
         $lastId = $last->id_supplier;

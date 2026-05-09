@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\GuestEmailVerificationController;
+use App\Http\Controllers\Master_Data\Barang\DataBarangController;
 use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
 use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
 use App\Http\Controllers\Master_Data\CustomerController;
@@ -139,6 +140,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/detail', [DaftarKendaraanController::class, 'show'])->name('show');
     });
 
+    Route::get('/data-barang/trash', [DataBarangController::class, 'trash'])->name('data-barang.trash');
+    Route::resource('data-barang', DataBarangController::class);
     Route::resource('satuan-barang', SatuanBarangController::class);
     Route::resource('kategori-barang', KategoriBarangController::class);
 

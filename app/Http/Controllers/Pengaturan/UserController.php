@@ -140,7 +140,7 @@ class UserController extends Controller
                 '.$icon.' Action
             </button>
             <div class="dropdown-menu">
-    ';
+     ';
 
                     // ✅ EDIT
                     if (auth()->user()->can('user-edit')) {

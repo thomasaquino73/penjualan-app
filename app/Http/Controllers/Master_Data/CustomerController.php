@@ -114,7 +114,7 @@ class CustomerController extends Controller
             ->first();
 
         if (! $last) {
-            return 'CUST-001';
+            return 'C-0001';
         }
 
         $lastId = $last->id_pelanggan;
