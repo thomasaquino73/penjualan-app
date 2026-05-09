@@ -100,6 +100,23 @@
     </div>
 
 @endsection
+@push('style')
+    <style>
+        .table-responsive {
+            max-height: 500px;
+            /* sesuaikan tinggi area scroll */
+            overflow-y: auto;
+        }
+
+        .table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #f8f9fa;
+            /* biar gak transparan */
+        }
+    </style>
+@endpush
 @push('scripts')
     <script>
         let allChecked = false;

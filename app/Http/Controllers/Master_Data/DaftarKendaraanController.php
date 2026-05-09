@@ -20,15 +20,15 @@ class DaftarKendaraanController extends Controller
             $routeName = $request->route()->getName();
 
             $permissionMap = [
-                'kendaraan.index' => 'kendaraan-browse',
-                'kendaraan.show' => 'kendaraan-read',
-                'kendaraan.create' => 'kendaraan-create',
-                'kendaraan.store' => 'kendaraan-create',
-                'kendaraan.edit' => 'kendaraan-edit',
-                'kendaraan.update' => 'kendaraan-edit',
-                'kendaraan.destroy' => 'kendaraan-delete',
-                'kendaraan.trash' => 'kendaraan-trash',
-                'kendaraan.restore' => 'kendaraan-restore',
+                'daftar-kendaraan.index' => 'kendaraan-browse',
+                'daftar-kendaraan.show' => 'kendaraan-read',
+                'daftar-kendaraan.create' => 'kendaraan-create',
+                'daftar-kendaraan.store' => 'kendaraan-create',
+                'daftar-kendaraan.edit' => 'kendaraan-edit',
+                'daftar-kendaraan.update' => 'kendaraan-edit',
+                'daftar-kendaraan.destroy' => 'kendaraan-delete',
+                'daftar-kendaraan.trash' => 'kendaraan-trash',
+                'daftar-kendaraan.restore' => 'kendaraan-restore',
             ];
 
             if (isset($permissionMap[$routeName])) {
@@ -101,17 +101,23 @@ class DaftarKendaraanController extends Controller
                         Action
                       </button>
                       <ul class="dropdown-menu" style="">';
+                      if (auth()->user()->can('kendaraan-edit')) {
                     $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
-                            data-id="'.$row->id.'"> <i class="far fa-edit me-1"></i>Ubah</a>';
+                            data-id="'.$row->id.'"> <i class="far fa-edit me-1"></i>Edit</a>';
+                      }
+                      if (auth()->user()->can('kendaraan-read')) {
                     $btn .= '<a class="dropdown-item detail" href="javascript:void(0)"
                                 data-gambar="'.asset($row->foto).'"
                                 data-alias="'.$row->plat_nomor.'">
                                 <i class="far fa-eye me-1"></i>Detail
                             </a>';
+                      }
+                      if (auth()->user()->can('kendaraan-delete')) {
                     $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->plat_nomor.'"
-                                ><i class="fa fa-trash me-1"></i> Hapus</a>';
+                                ><i class="fa fa-trash me-1"></i> Delete</a>';
+                      }
 
                     return $btn;
                 })
@@ -289,10 +295,12 @@ class DaftarKendaraanController extends Controller
                         Action
                       </button>
                       <ul class="dropdown-menu" style="">';
+                      if (auth()->user()->can('kendaraan-restore')) {
                     $btn .= ' <button class="dropdown-item restore "data-id="'.$row->id.'"
                                                 data-name="'.$row->plat_nomor.'">
                                                <i class="ti ti-trash-off me-1"></i>Restore
                                             </button>';
+                      }
 
                     return $btn;
                 })

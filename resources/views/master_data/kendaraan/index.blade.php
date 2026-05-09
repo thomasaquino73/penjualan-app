@@ -24,13 +24,16 @@
                     <h5 class="mb-0">{{ $title }}</h5>
                 </div>
                 <div class="col-12 col-lg-6 text-lg-end">
-                    <button id="create" class="btn  btn-sm btn-primary">
-                        <i class="ti ti-plus me-1"></i> Add Data
-                    </button>
-
-                    <a href="{{ route('daftar-kendaraan.trash') }}" class="btn  btn-sm btn-secondary">
-                        <i class="ti ti-trash"></i>
-                    </a>
+                    @canany(['kendaraan-create'])
+                        <button id="create" class="btn  btn-sm btn-primary">
+                            <i class="ti ti-plus me-1"></i> Add Data
+                        </button>
+                    @endcanany
+                    @canany(['kendaraan-trash'])
+                        <a href="{{ route('daftar-kendaraan.trash') }}" class="btn  btn-sm btn-secondary">
+                            <i class="ti ti-trash"></i>
+                        </a>
+                    @endcanany
                 </div>
             </div>
         </div>

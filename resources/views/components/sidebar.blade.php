@@ -86,6 +86,22 @@
                 </li>
             @endif
         @endforeach
+        <li class="menu-header small text-uppercase">
+            <span class="menu-header-text">NEED HELP?</span>
+        </li>
+        <li class="menu-item">
+            <a href="https://wa.me/081299097474" target="_blank" class="menu-link">
+                <i class="menu-icon tf-icons ti ti-brand-whatsapp"></i>
+                <div>Support</div>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="https://www.thomasaquino.my.id/" target="_blank" class="menu-link">
+                <i class="menu-icon tf-icons ti ti-news"></i>
+                <div>Documentation</div>
+            </a>
+        </li>
+        <hr class="mb-3" />
 
     </ul>
 

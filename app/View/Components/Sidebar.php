@@ -249,6 +249,7 @@ class Sidebar extends Component
                 'roles' => ['SuperAdmin'],
                 'permissions' => ['application_system-browse', 'login_background-browse', 'mata_uang-browse'],
             ],
+           
 
         ];
     }
