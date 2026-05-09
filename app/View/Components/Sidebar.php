@@ -182,21 +182,6 @@ class Sidebar extends Component
                 'roles' => ['Super Admin'],
                 'permissions' => ['role-browse', 'permission-browse'],
                 'children' => [
-
-                    [
-                        'name' => 'Vehicle',
-                        'route' => 'customer.index',
-                        'pattern' => 'customer.*',
-                        'roles' => ['Super Admin'],
-                        'permissions' => ['barang-browse'],
-                    ],
-                    [
-                        'name' => 'Warehouse',
-                        'route' => 'customer.index',
-                        'pattern' => 'customer.*',
-                        'roles' => ['Super Admin'],
-                        'permissions' => ['barang-browse'],
-                    ],
                     [
                         'name' => 'Delivery Order',
                         'route' => 'kategori-barang.index',

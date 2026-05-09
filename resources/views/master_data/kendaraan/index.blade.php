@@ -250,8 +250,8 @@
             $('#create').click(function() {
                 let kodeOtomatis = 'IUR' + Date.now();
                 $('#modals').modal('show');
-                $('#modal-title').html('Tambah Kendaraan');
-                $('#savedata').html('<i class="fa fa-save me-1"></i> Simpan');
+                $('#modal-title').html('Tambah Vehicle');
+                $('#savedata').html('<i class="fa fa-save me-1"></i> Save');
                 $('#postForm').trigger('reset');
                 $('#id').val('');
                 $('#kode').val(kodeOtomatis);
@@ -272,7 +272,7 @@
                             '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
                     },
                     complete: function(e) {
-                        $('#savedata').html(' <i class="fa fa-save me-1"></i>Simpan');
+                        $('#savedata').html(' <i class="fa fa-save me-1"></i>Save');
                     },
                     success: function(response) {
                         $('#modals').modal('hide');
@@ -318,7 +318,7 @@
             });
             $('body').on('click', '.editPost', function(a) {
                 $('#modals').modal('show');
-                $('#savedata').html('<i class="fa fa-save me-1"></i>Simpan');
+                $('#savedata').html('<i class="fa fa-save me-1"></i>Save');
                 resetValidation();
 
                 var id = $(this).data('id');
@@ -332,7 +332,7 @@
                     dataType: 'json',
                     success: function(data) {
                         console.log(data);
-                        $('#modal-title').html('Ubah Kendaraan');
+                        $('#modal-title').html('Edit Vehicle');
                         $('#id').val(data.id);
                         $('#merk').val(data.merk);
                         $('#tipe').val(data.tipe);
@@ -378,7 +378,7 @@
                             },
                             success: function(response) {
                                 table.draw();
-                                toastr.success('Data Berhasil dihapus', '', {
+                                toastr.success('Deleted Data Successfully', '', {
                                     timeOut: 1500,
                                     progressBar: true,
                                     closeButton: false,

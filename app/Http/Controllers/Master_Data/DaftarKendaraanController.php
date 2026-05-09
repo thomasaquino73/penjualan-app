@@ -298,7 +298,7 @@ class DaftarKendaraanController extends Controller
             return response()->json([
                 'success' => true,
                 'redirect' => true,
-                'message' => 'Data Kendaraan berhasil dikembalikan.',
+                'message' => 'Vehicle successfully restored.',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -306,7 +306,7 @@ class DaftarKendaraanController extends Controller
             return response()->json([
                 'success' => false,
                 'redirect' => false,
-                'message' => 'Data Kendaraan gagal dikembalikan.',
+                'message' => 'Failed to restore vehicle.',
             ]);
         }
     }
