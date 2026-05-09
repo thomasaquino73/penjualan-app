@@ -13,6 +13,33 @@ use Yajra\DataTables\DataTables;
 
 class CustomerController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $routeName = $request->route()->getName();
+
+            $permissionMap = [
+                'customer.index' => 'customer-browse',
+                'customer.show' => 'customer-read',
+                'customer.create' => 'customer-create',
+                'customer.store' => 'customer-create',
+                'customer.edit' => 'customer-edit',
+                'customer.update' => 'customer-edit',
+                'customer.destroy' => 'customer-delete',
+                'customer.trash' => 'customer-trash',
+                'customer.restore' => 'customer-restore',
+            ];
+
+            if (isset($permissionMap[$routeName])) {
+                if (! $request->user()->can($permissionMap[$routeName])) {
+                    abort(403, 'Unauthorized action');
+                }
+            }
+
+            return $next($request);
+        });
+    }
+
     public function index(Request $r)
     {
         if ($r->ajax()) {

@@ -12,6 +12,32 @@ use Yajra\DataTables\DataTables;
 
 class KategoriBarangController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $routeName = $request->route()->getName();
+
+            $permissionMap = [
+                'kategori-barang.index' => 'kategori_barang-browse',
+                'kategori-barang.show' => 'kategori_barang-read',
+                'kategori-barang.create' => 'kategori_barang-create',
+                'kategori-barang.store' => 'kategori_barang-create',
+                'kategori-barang.edit' => 'kategori_barang-edit',
+                'kategori-barang.update' => 'kategori_barang-edit',
+                'kategori-barang.destroy' => 'kategori_barang-delete',
+                'kategori-barang.trash' => 'kategori_barang-trash',
+                'kategori-barang.restore' => 'kategori_barang-restore',
+            ];
+
+            if (isset($permissionMap[$routeName])) {
+                if (! $request->user()->can($permissionMap[$routeName])) {
+                    abort(403, 'Unauthorized action');
+                }
+            }
+
+            return $next($request);
+        });
+    }
     public function index(Request $r)
     {
         $data = BasicCodeDetail::where('master_id', 2)->get();

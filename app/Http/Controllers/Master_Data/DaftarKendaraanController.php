@@ -14,6 +14,33 @@ use Yajra\DataTables\DataTables;
 
 class DaftarKendaraanController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $routeName = $request->route()->getName();
+
+            $permissionMap = [
+                'kendaraan.index' => 'kendaraan-browse',
+                'kendaraan.show' => 'kendaraan-read',
+                'kendaraan.create' => 'kendaraan-create',
+                'kendaraan.store' => 'kendaraan-create',
+                'kendaraan.edit' => 'kendaraan-edit',
+                'kendaraan.update' => 'kendaraan-edit',
+                'kendaraan.destroy' => 'kendaraan-delete',
+                'kendaraan.trash' => 'kendaraan-trash',
+                'kendaraan.restore' => 'kendaraan-restore',
+            ];
+
+            if (isset($permissionMap[$routeName])) {
+                if (! $request->user()->can($permissionMap[$routeName])) {
+                    abort(403, 'Unauthorized action');
+                }
+            }
+
+            return $next($request);
+        });
+    }
+
     public function index()
     {
         $x = [
@@ -76,7 +103,7 @@ class DaftarKendaraanController extends Controller
                       <ul class="dropdown-menu" style="">';
                     $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="far fa-edit me-1"></i>Ubah</a>';
-                     $btn .= '<a class="dropdown-item detail" href="javascript:void(0)"
+                    $btn .= '<a class="dropdown-item detail" href="javascript:void(0)"
                                 data-gambar="'.asset($row->foto).'"
                                 data-alias="'.$row->plat_nomor.'">
                                 <i class="far fa-eye me-1"></i>Detail
@@ -106,7 +133,7 @@ class DaftarKendaraanController extends Controller
     {
         try {
             $id = $request->input('id');
-           
+
             // 1️⃣ Gabungkan plat nomor terpisah menjadi satu kolom
             $plat_nomor = strtoupper(
                 trim($request->plat_depan).' '.

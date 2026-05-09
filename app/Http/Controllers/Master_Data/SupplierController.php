@@ -13,6 +13,33 @@ use Yajra\DataTables\DataTables;
 
 class SupplierController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $routeName = $request->route()->getName();
+
+            $permissionMap = [
+                'supplier.index' => 'supplier-browse',
+                'supplier.show' => 'supplier-read',
+                'supplier.create' => 'supplier-create',
+                'supplier.store' => 'supplier-create',
+                'supplier.edit' => 'supplier-edit',
+                'supplier.update' => 'supplier-edit',
+                'supplier.destroy' => 'supplier-delete',
+                'supplier.trash' => 'supplier-trash',
+                'supplier.restore' => 'supplier-restore',
+            ];
+
+            if (isset($permissionMap[$routeName])) {
+                if (! $request->user()->can($permissionMap[$routeName])) {
+                    abort(403, 'Unauthorized action');
+                }
+            }
+
+            return $next($request);
+        });
+    }
+
     public function index(Request $r)
     {
         if ($r->ajax()) {

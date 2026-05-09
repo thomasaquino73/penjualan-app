@@ -13,6 +13,33 @@ use Yajra\DataTables\DataTables;
 
 class SalesmanController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $routeName = $request->route()->getName();
+
+            $permissionMap = [
+                'salesman.index' => 'salesman-browse',
+                'salesman.show' => 'salesman-read',
+                'salesman.create' => 'salesman-create',
+                'salesman.store' => 'salesman-create',
+                'salesman.edit' => 'salesman-edit',
+                'salesman.update' => 'salesman-edit',
+                'salesman.destroy' => 'salesman-delete',
+                'salesman.trash' => 'salesman-trash',
+                'salesman.restore' => 'salesman-restore',
+            ];
+
+            if (isset($permissionMap[$routeName])) {
+                if (! $request->user()->can($permissionMap[$routeName])) {
+                    abort(403, 'Unauthorized action');
+                }
+            }
+
+            return $next($request);
+        });
+    }
+
     public function index(Request $r)
     {
         if ($r->ajax()) {

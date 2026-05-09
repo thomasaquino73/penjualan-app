@@ -12,6 +12,33 @@ use Yajra\DataTables\DataTables;
 
 class WarehouseController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $routeName = $request->route()->getName();
+
+            $permissionMap = [
+                'warehouse.index' => 'warehouse-browse',
+                'warehouse.show' => 'warehouse-read',
+                'warehouse.create' => 'warehouse-create',
+                'warehouse.store' => 'warehouse-create',
+                'warehouse.edit' => 'warehouse-edit',
+                'warehouse.update' => 'warehouse-edit',
+                'warehouse.destroy' => 'warehouse-delete',
+                'warehouse.trash' => 'warehouse-trash',
+                'warehouse.restore' => 'warehouse-restore',
+            ];
+
+            if (isset($permissionMap[$routeName])) {
+                if (! $request->user()->can($permissionMap[$routeName])) {
+                    abort(403, 'Unauthorized action');
+                }
+            }
+
+            return $next($request);
+        });
+    }
+
     public function index(Request $r)
     {
         if ($r->ajax()) {

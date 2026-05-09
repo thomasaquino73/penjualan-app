@@ -106,6 +106,7 @@ class Sidebar extends Component
                 'pattern' => 'daftar-kendaraan.*',
                 'active' => true,
                 'roles' => ['SuperAdmin'],
+                'permissions' => ['kendaraan-browse'],
             ],
             [
                 'type' => 'section',
