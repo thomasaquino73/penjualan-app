@@ -120,7 +120,7 @@ class Sidebar extends Component
                 'roles' => ['Super Admin'],
                 'permissions' => ['role-browse', 'permission-browse'],
                 'children' => [
-                        [
+                    [
                         'name' => 'Purchase Requisition',
                         'route' => 'customer.index',
                         'pattern' => 'customer.*',
@@ -243,7 +243,7 @@ class Sidebar extends Component
                 'label' => 'SETTING',
                 'roles' => ['Super Admin'],
             ],
-              [
+            [
                 'type' => 'single',
                 'name' => 'Manage Preparation',
                 'route' => 'user.index',
@@ -300,7 +300,6 @@ class Sidebar extends Component
                 'roles' => ['SuperAdmin'],
                 'permissions' => ['application_system-browse', 'login_background-browse', 'mata_uang-browse'],
             ],
-
 
         ];
     }

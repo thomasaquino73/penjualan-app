@@ -62,7 +62,7 @@ class BasicCodeDetailSeeder extends Seeder
                 'detail' => 'USD',
                 'description' => 'US Dollar',
             ],
-             [
+            [
                 'id' => $i++,
                 'master_id' => '4',
                 'detail' => 'Bahan Baku',
@@ -95,7 +95,7 @@ class BasicCodeDetailSeeder extends Seeder
 
         ]);
 
-         DB::table('warehouse')->insert([
+        DB::table('warehouse')->insert([
             [
                 'id_gudang' => 'WH-001',
                 'nama_gudang' => 'Gudang Utama',

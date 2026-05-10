@@ -72,7 +72,7 @@ class DataBarangController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status','kategori','gudang','tipePersediaan'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan'])
                 ->make(true);
         }
 
@@ -82,11 +82,12 @@ class DataBarangController extends Controller
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Product', 'url' => ''],
             ],
-          
+
         ];
 
         return view('master_data.barang.data_barang.data_barang_index', $x);
     }
+
     private function generateProductId()
     {
         $last = Barang::whereNotNull('id_barang')
@@ -135,11 +136,11 @@ class DataBarangController extends Controller
                 ['label' => 'Product', 'url' => route('data-barang.index')],
                 ['label' => 'Add Product', 'url' => ''],
             ],
-              'idNumber'=>$this->generateProductId(),
-              'categories'=>BasicCodeDetail::where('master_id', 1)->get(),
-              'unit'=>BasicCodeDetail::where('master_id', 2)->get(),
-             'warehouses'=>Warehouse::where('status',1)->get(),
-             'typePersediaan'=>BasicCodeDetail::where('master_id',4)->get(),
+            'idNumber' => $this->generateProductId(),
+            'categories' => BasicCodeDetail::where('master_id', 1)->get(),
+            'unit' => BasicCodeDetail::where('master_id', 2)->get(),
+            'warehouses' => Warehouse::where('status', 1)->get(),
+            'typePersediaan' => BasicCodeDetail::where('master_id', 4)->get(),
         ]);
     }
 

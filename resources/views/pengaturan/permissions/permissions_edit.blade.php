@@ -56,7 +56,11 @@
                             @foreach ($groupedPermissions as $groupId => $modules)
                                 @foreach ($modules as $module => $actionsData)
                                     <tr>
-                                        <td><strong>{{ ucfirst($module) }}</strong></td>
+                                        <td>
+                                            <strong>
+                                                {{ ucfirst(collect($actionsData)->first()->alias ?? $module) }}
+                                            </strong>
+                                        </td>
 
                                         @foreach ($actions as $act)
                                             <td>

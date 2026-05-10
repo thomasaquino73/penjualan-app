@@ -13,7 +13,7 @@ class BasicCodeMasterSeeder extends Seeder
     public function run(): void
     {
         DB::table('basic_code_master')->insert([
-          
+
             [
                 'id' => '1',
                 'detail' => 'Kategori',
@@ -29,7 +29,7 @@ class BasicCodeMasterSeeder extends Seeder
                 'detail' => 'Mata Uang',
                 'description' => 'Daftar mata uang',
             ],
-              [
+            [
                 'id' => '4',
                 'detail' => 'Tipe Persediaan',
                 'description' => 'Tipe persediaan untuk barang',

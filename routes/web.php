@@ -128,7 +128,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/warehouse/trash', [WarehouseController::class, 'trash'])->name('warehouse.trash');
     Route::put('/warehouse/restore/{id}', [WarehouseController::class, 'restore'])->name('warehouse.restore');
     Route::resource('warehouse', WarehouseController::class);
-    
+
     Route::prefix('daftar-kendaraan')->name('daftar-kendaraan.')->group(function () {
         Route::get('/', [DaftarKendaraanController::class, 'index'])->name('index');
         Route::post('/store', [DaftarKendaraanController::class, 'store'])->name('store');

@@ -201,7 +201,7 @@
         </div>
     </div>
 @endsection
-bpus
+
 @push('style')
     <style>
         #supplyForm {

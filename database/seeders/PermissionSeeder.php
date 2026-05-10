@@ -10,7 +10,22 @@ class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        $modules = ['role', 'user', 'permission', 'customer', 'supplier', 'salesman', 'kendaraan',  'warehouse', 'barang', 'kategori_barang', 'satuan_barang', 'application_system', 'login_background', 'mata_uang'];
+        $modules = [
+            'role' => 'role',
+            'user' => 'user',
+            'permission' => 'permission',
+            'customer' => 'customer',
+            'supplier' => 'supplier',
+            'salesman' => 'salesman',
+            'kendaraan' => 'vehicle',
+            'warehouse' => 'warehouse',
+            'barang' => 'product',
+            'kategori_barang' => 'category',
+            'satuan_barang' => 'unit',
+            'application_system' => 'application system',
+            'login_background' => 'login background',
+            'mata_uang' => 'currency',
+        ];
 
         $actions = ['browse', 'create', 'read', 'edit', 'delete', 'trash', 'restore'];
 
@@ -19,16 +34,16 @@ class PermissionSeeder extends Seeder
             'guard_name' => 'web',
         ]);
 
-        foreach ($modules as $module) {
+        foreach ($modules as $module => $alias) {
             foreach ($actions as $action) {
 
                 $permission = Permissions::firstOrCreate([
                     'name' => $module.'-'.$action,
                     'module' => $module,
+                    'alias' => $alias,
                     'guard_name' => 'web',
                 ]);
 
-                // 🔥 INI YANG PENTING
                 $role->givePermissionTo($permission);
             }
         }

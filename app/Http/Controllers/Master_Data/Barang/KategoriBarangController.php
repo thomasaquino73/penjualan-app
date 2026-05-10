@@ -38,6 +38,7 @@ class KategoriBarangController extends Controller
             return $next($request);
         });
     }
+
     public function index(Request $r)
     {
         $data = BasicCodeDetail::where('master_id', 1)->get();

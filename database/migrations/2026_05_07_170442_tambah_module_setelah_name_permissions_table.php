@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::table('permissions', function (Blueprint $table) {
             $table->string('module')->default('1')->after('name');
+            $table->string('alias')->default('1')->after('module');
         });
     }
 
@@ -17,6 +18,7 @@ return new class extends Migration
     {
         Schema::table('permissions', function (Blueprint $table) {
             $table->dropColumn('module');
+            $table->dropColumn('alias');
         });
     }
 };

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Barang extends Model
 {
-      use HasFactory;
+    use HasFactory;
 
     protected $table = 'data_barang';
 
@@ -24,14 +24,17 @@ class Barang extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
     public function kategoriID()
     {
         return $this->belongsTo(BasicCodeDetail::class, 'kategori_id');
     }
+
     public function warehouseID()
     {
         return $this->belongsTo(Warehouse::class, 'gudang_id');
     }
+
     public function typeID()
     {
         return $this->belongsTo(BasicCodeDetail::class, 'tipe_persediaan_id');
