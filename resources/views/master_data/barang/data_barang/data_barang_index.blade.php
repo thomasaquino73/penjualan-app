@@ -42,9 +42,9 @@
                         <th>ID Number</th>
                         <th>Name</th>
                         <th>Category</th>
-                        <th>Warehouse</th>
                         <th>Type</th>
-                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
                         <th>Status</th>
                         <th>Created</th>
                         <th>Updated</th>
@@ -82,9 +82,7 @@
                     {
                         data: 'kategori',
                     },
-                    {
-                        data: 'gudang',
-                    },
+
                     {
                         data: 'tipePersediaan',
                     },
@@ -94,6 +92,10 @@
                     {
                         data: 'status',
                     },
+                    {
+                        data: 'status',
+                    },
+
                     {
                         data: 'created_at',
                     },

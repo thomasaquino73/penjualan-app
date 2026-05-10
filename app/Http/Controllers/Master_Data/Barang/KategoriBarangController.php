@@ -40,7 +40,7 @@ class KategoriBarangController extends Controller
     }
     public function index(Request $r)
     {
-        $data = BasicCodeDetail::where('master_id', 2)->get();
+        $data = BasicCodeDetail::where('master_id', 1)->get();
 
         if ($r->ajax()) {
             return DataTables::of($data)
@@ -112,7 +112,7 @@ class KategoriBarangController extends Controller
         try {
             $id = $request->input('id');
             $data = $request->all();
-            $data['master_id'] = 2;
+            $data['master_id'] = 1;
 
             if (! empty($id)) {
                 $data['updated_at'] = now();

@@ -14,86 +14,87 @@ class BasicCodeDetailSeeder extends Seeder
     {
         $i = 1;
         DB::table('basic_code_detail')->insert([
-            [
-                'id' => $i++,
-                'master_id' => '1',
-                'detail' => 'Bahan Baku',
-                'description' => '',
-            ],
-            [
-                'id' => $i++,
-                'master_id' => '1',
-                'detail' => 'Bahan Baku Pembantu',
-                'description' => '',
-            ],
-            [
-                'id' => $i++,
-                'master_id' => '1',
-                'detail' => 'Barang Setengah Jadi',
-                'description' => '',
-            ],
-            [
-                'id' => $i++,
-                'master_id' => '1',
-                'detail' => 'Barang Jadi',
-                'description' => '',
-            ],
-            [
-                'id' => $i++,
-                'master_id' => '1',
-                'detail' => 'Barang Lain-lain',
-                'description' => '',
-            ],
+           
 
             [
                 'id' => $i++,
-                'master_id' => '2',
+                'master_id' => '1',
                 'detail' => 'Material Utama',
                 'description' => '',
             ],
             [
                 'id' => $i++,
-                'master_id' => '2',
+                'master_id' => '1',
                 'detail' => 'Material Pendamping',
                 'description' => '',
             ],
 
             [
                 'id' => $i++,
-                'master_id' => '3',
+                'master_id' => '2',
                 'detail' => 'PCS',
                 'description' => '',
             ],
             [
                 'id' => $i++,
-                'master_id' => '3',
+                'master_id' => '2',
                 'detail' => 'Unit',
                 'description' => '',
             ],
             [
                 'id' => $i++,
-                'master_id' => '3',
+                'master_id' => '2',
                 'detail' => 'Pack',
                 'description' => '',
             ],
 
             [
                 'id' => $i++,
-                'master_id' => '3',
+                'master_id' => '2',
                 'detail' => 'KG',
                 'description' => '',
             ],
             [
                 'id' => $i++,
-                'master_id' => '4',
+                'master_id' => '3',
                 'detail' => 'IDR',
                 'description' => 'Indonesia Rupiah',
             ],
             [
                 'id' => $i++,
-                'master_id' => '4',
+                'master_id' => '3',
                 'detail' => 'USD',
                 'description' => 'US Dollar',
+            ],
+             [
+                'id' => $i++,
+                'master_id' => '4',
+                'detail' => 'Bahan Baku',
+                'description' => '',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '4',
+                'detail' => 'Bahan Baku Pembantu',
+                'description' => '',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '4',
+                'detail' => 'Barang Setengah Jadi',
+                'description' => '',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '4',
+                'detail' => 'Barang Jadi',
+                'description' => '',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '4',
+                'detail' => 'Barang Lain-lain',
+                'description' => '',
             ],
 
         ]);

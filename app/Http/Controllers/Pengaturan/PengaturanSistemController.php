@@ -324,7 +324,7 @@ class PengaturanSistemController extends Controller
     public function mata_uang_index(Request $r)
     {
         if ($r->ajax()) {
-            $query = BasicCodeDetail::where('master_id', 4);
+            $query = BasicCodeDetail::where('master_id', 3);
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -396,7 +396,7 @@ class PengaturanSistemController extends Controller
 
         // ✅ RULE VALIDASI
         $rules = [
-            'detail' => 'required|unique:basic_code_detail,detail,'.$id.',id,master_id,4',
+            'detail' => 'required|unique:basic_code_detail,detail,'.$id.',id,master_id,3',
             'description' => 'nullable',
         ];
 
@@ -417,7 +417,7 @@ class PengaturanSistemController extends Controller
             $data = [
                 'detail' => $request->detail,
                 'description' => $request->description,
-                'master_id' => 4,
+                'master_id' => 3,
             ];
 
             if (! empty($id)) {

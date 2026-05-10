@@ -39,7 +39,7 @@ class SatuanBarangController extends Controller
 
     public function index(Request $r)
     {
-        $data = BasicCodeDetail::where('master_id', 3)->get();
+        $data = BasicCodeDetail::where('master_id', 2)->get();
 
         if ($r->ajax()) {
             return DataTables::of($data)
@@ -109,7 +109,7 @@ class SatuanBarangController extends Controller
         try {
             $id = $request->input('id');
             $data = $request->all();
-            $data['master_id'] = 3;
+            $data['master_id'] = 2;
 
             if (! empty($id)) {
                 $data['updated_at'] = now();
