@@ -2,184 +2,181 @@
 @section('title', $title)
 
 @section('konten')
-    <div class="container-xxl flex-grow-1 container-p-y">
 
-        <h4>
-            <span class="text-muted fw-light">
-                @foreach ($breadcrumb as $item)
-                    @if (!empty($item['url']))
-                        <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
-                    @else
-                        {{ $item['label'] }}
-                    @endif
+    <h4>
+        <span class="text-muted fw-light">
+            @foreach ($breadcrumb as $item)
+                @if (!empty($item['url']))
+                    <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
+                @else
+                    {{ $item['label'] }}
+                @endif
 
-                    @if (!$loop->last)
-                        /
-                    @endif
-                @endforeach
-            </span>
-        </h4>
+                @if (!$loop->last)
+                    /
+                @endif
+            @endforeach
+        </span>
+    </h4>
 
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card mb-4">
-                    <h5 class="card-header">{{ $title }}</h5>
-                    <div class="card-body p-10">
-                        <form action="{{ route('user.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
-                            @csrf
-                            <div class="row">
-                                <div class="divider divider-dashed">
-                                    <div class="divider-text">PERSONAL DATA</div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Avatar :</label>
-                                        <input type="file" class="form-control" id="avatar" name="avatar" />
-                                        <span class="error text-danger" id="avatarError"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label me-1">ID Number</label><small class="text-danger">*
-                                            required</small>
-                                        <input type="text" class="form-control" id="no_ID" name="no_ID"
-                                            placeholder="Enter ID number" />
-                                        <span class="error text-danger" id="no_IDError"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label me-1">Fullname</label><small class="text-danger">*
-                                            required</small>
-                                        <input type="text" class="form-control" id="fullname" name="fullname"
-                                            placeholder="Enter full name" />
-                                        <span class="error text-danger" id="fullnameError"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label me-1">Nickname</label><small class="text-danger">*
-                                            required</small>
-                                        <input type="text" class="form-control" id="nickname" name="nickname"
-                                            placeholder="Enter nickname" />
-                                        <span class="error text-danger" id="nicknameError"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label me-1">Gender</label><small class="text-danger">*
-                                            required</small>
-                                        <select id="gender" name="gender" style="width:100%" class="select2 form-select"
-                                            aria-label="Default select example" data-placeholder="Select Gender...">
-                                            <option value="Male">Male</option>
-                                            <option value="Female">Female</option>
-                                        </select>
-                                        <span class="error text-danger" id="genderError"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label">Email</label><small class="text-danger">*
-                                            required</small>
-                                        <input type="text" class="form-control" id="email" name="email"
-                                            placeholder="ex: 123@example.com" />
-                                        <span class="error text-danger" id="emailError"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label me-1">Phone Number</label><small class="text-danger">*
-                                            required</small>
-                                        <input type="text" class="form-control" id="phone" name="phone"
-                                            placeholder="ex: 0812***" />
-                                        <span class="error text-danger" id="phoneError"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Address</label>
-                                        <input type="text" class="form-control" id="address" name="address"
-                                            placeholder="Enter street name and house number" />
-                                        <span class="error text-danger" id="addressError"></span>
-                                    </div>
-                                </div>
-
-                            </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <h5 class="card-header">{{ $title }}</h5>
+                <div class="card-body p-10">
+                    <form action="{{ route('user.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
+                        @csrf
+                        <div class="row">
                             <div class="divider divider-dashed">
-                                <div class="divider-text">ACCOUNT DATA</div>
+                                <div class="divider-text">PERSONAL DATA</div>
                             </div>
-                            <div class="mb-3">
-                                <label for="" class="form-label">Username:</label><small class="text-danger">*
-                                    required</small>
-                                <input class="form-control" type="text" id="username" name="username"
-                                    placeholder="Enter your username..." />
-                                <span class="error text-danger" id="usernameError"></span>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Avatar :</label>
+                                    <input type="file" class="form-control" id="avatar" name="avatar" />
+                                    <span class="error text-danger" id="avatarError"></span>
+                                </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="" class="form-label">Password:</label><small
-                                            class="text-danger">*
-                                            required</small>
-                                        <input class="form-control" type="password" id="password" name="password" />
-                                        <small>*Minimal 6 character</small>
-                                        <span class="error text-danger" id="passwordError"></span>
-                                    </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label me-1">ID Number</label><small class="text-danger">*
+                                        required</small>
+                                    <input type="text" class="form-control" id="no_ID" name="no_ID"
+                                        placeholder="Enter ID number" />
+                                    <span class="error text-danger" id="no_IDError"></span>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="" class="form-label">Confirm Password:</label><small
-                                            class="text-danger">*
-                                            required</small>
-                                        <input class="form-control" type="password" id="confirm_password"
-                                            name="confirm_password" />
-                                        <small>*Minimal 6 character</small>
-                                        <span class="error text-danger" id="confirm_passwordError"></span>
-                                    </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label me-1">Fullname</label><small class="text-danger">*
+                                        required</small>
+                                    <input type="text" class="form-control" id="fullname" name="fullname"
+                                        placeholder="Enter full name" />
+                                    <span class="error text-danger" id="fullnameError"></span>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="exampleFormControlSelect1" class="form-label">Status:</label><small
-                                            class="text-danger">*
-                                            required</small>
-                                        <select name="status" id="status" class="form-select select2"
-                                            data-placeholder="Select Status">
-                                            <option value="" selected hidden>Select Status...</option>
-                                            <option value="Active">Active</option>
-                                            <option value="Not Active">Not Active</option>
-                                        </select>
-                                        <span class="error text-danger" id="statusError"></span>
-                                    </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label me-1">Nickname</label><small class="text-danger">*
+                                        required</small>
+                                    <input type="text" class="form-control" id="nickname" name="nickname"
+                                        placeholder="Enter nickname" />
+                                    <span class="error text-danger" id="nicknameError"></span>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="exampleFormControlSelect1" class="form-label ">Roles:</label><small
-                                            class="text-danger">*
-                                            required</small>
-                                        <select name="roles" id="roles" class="form-select select2">
-                                            <option value="">-- Select Role --</option>
-                                            @foreach ($roles as $role)
-                                                <option value="{{ $role->name }}">{{ $role->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <span class="error text-danger" id="rolesError"></span>
-                                    </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label me-1">Gender</label><small class="text-danger">*
+                                        required</small>
+                                    <select id="gender" name="gender" style="width:100%" class="select2 form-select"
+                                        aria-label="Default select example" data-placeholder="Select Gender...">
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                    <span class="error text-danger" id="genderError"></span>
                                 </div>
-                                <div class="card-footer">
-                                    <a href="{{ route('user.index') }}" class="btn btn-secondary"><i
-                                            class="fas fa-chevron-left me-1"></i>
-                                        <b>{{ __('Back') }}</b></a>
-                                    <button type="submit" id="savedata" name="savedata" class="btn btn-primary">
-                                        <i class="fa fa-save me-1"></i>{{ __('Save') }}
-                                    </button>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label><small class="text-danger">*
+                                        required</small>
+                                    <input type="text" class="form-control" id="email" name="email"
+                                        placeholder="ex: 123@example.com" />
+                                    <span class="error text-danger" id="emailError"></span>
                                 </div>
-                        </form>
-                    </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label me-1">Phone Number</label><small class="text-danger">*
+                                        required</small>
+                                    <input type="text" class="form-control" id="phone" name="phone"
+                                        placeholder="ex: 0812***" />
+                                    <span class="error text-danger" id="phoneError"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Address</label>
+                                    <input type="text" class="form-control" id="address" name="address"
+                                        placeholder="Enter street name and house number" />
+                                    <span class="error text-danger" id="addressError"></span>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="divider divider-dashed">
+                            <div class="divider-text">ACCOUNT DATA</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label">Username:</label><small class="text-danger">*
+                                required</small>
+                            <input class="form-control" type="text" id="username" name="username"
+                                placeholder="Enter your username..." />
+                            <span class="error text-danger" id="usernameError"></span>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="" class="form-label">Password:</label><small
+                                        class="text-danger">*
+                                        required</small>
+                                    <input class="form-control" type="password" id="password" name="password" />
+                                    <small>*Minimal 6 character</small>
+                                    <span class="error text-danger" id="passwordError"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="" class="form-label">Confirm Password:</label><small
+                                        class="text-danger">*
+                                        required</small>
+                                    <input class="form-control" type="password" id="confirm_password"
+                                        name="confirm_password" />
+                                    <small>*Minimal 6 character</small>
+                                    <span class="error text-danger" id="confirm_passwordError"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="exampleFormControlSelect1" class="form-label">Status:</label><small
+                                        class="text-danger">*
+                                        required</small>
+                                    <select name="status" id="status" class="form-select select2"
+                                        data-placeholder="Select Status">
+                                        <option value="" selected hidden>Select Status...</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Not Active">Not Active</option>
+                                    </select>
+                                    <span class="error text-danger" id="statusError"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="exampleFormControlSelect1" class="form-label ">Roles:</label><small
+                                        class="text-danger">*
+                                        required</small>
+                                    <select name="roles" id="roles" class="form-select select2">
+                                        <option value="">-- Select Role --</option>
+                                        @foreach ($roles as $role)
+                                            <option value="{{ $role->name }}">{{ $role->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <span class="error text-danger" id="rolesError"></span>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <a href="{{ route('user.index') }}" class="btn btn-secondary"><i
+                                        class="fas fa-chevron-left me-1"></i>
+                                    <b>{{ __('Back') }}</b></a>
+                                <button type="submit" id="savedata" name="savedata" class="btn btn-primary">
+                                    <i class="fa fa-save me-1"></i>{{ __('Save') }}
+                                </button>
+                            </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-
 @endsection
 @push('scripts')
     <script>

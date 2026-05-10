@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Master_Data\Barang;
 
 use App\Http\Controllers\Controller;
+use App\Models\BasicCodeDetail;
 use App\Models\Master_Data\Barang;
+use App\Models\Master_Data\Warehouse;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 
@@ -80,6 +82,7 @@ class DataBarangController extends Controller
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Items', 'url' => ''],
             ],
+          
         ];
 
         return view('master_data.barang.data_barang.data_barang_index', $x);
@@ -132,6 +135,11 @@ class DataBarangController extends Controller
                 ['label' => 'Items', 'url' => route('data-barang.index')],
                 ['label' => 'Add Items', 'url' => ''],
             ],
+              'idNumber'=>$this->generateItemsId(),
+              'categories'=>BasicCodeDetail::where('master_id', 1)->get(),
+              'unit'=>BasicCodeDetail::where('master_id', 2)->get(),
+             'warehouses'=>Warehouse::where('status',1)->get(),
+             'typePersediaan'=>BasicCodeDetail::where('master_id',4)->get(),
         ]);
     }
 

@@ -109,7 +109,7 @@
 
     function resetIdleTime() {
         idleTime = 0;
-        console.log("IdleTime:", idleTime);
+        // console.log("IdleTime:", idleTime);
         if (idleInterval) {
             clearInterval(idleInterval);
         }
@@ -122,7 +122,7 @@
         idleInterval = setInterval(() => {
             idleTime++;
             // console.log untuk debug
-            console.log("Idle:", idleTime);
+            // console.log("Idle:", idleTime);
 
             if (idleTime >= idleLimit) {
                 clearInterval(idleInterval);

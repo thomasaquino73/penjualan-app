@@ -14,8 +14,6 @@ class BasicCodeDetailSeeder extends Seeder
     {
         $i = 1;
         DB::table('basic_code_detail')->insert([
-           
-
             [
                 'id' => $i++,
                 'master_id' => '1',
@@ -28,7 +26,6 @@ class BasicCodeDetailSeeder extends Seeder
                 'detail' => 'Material Pendamping',
                 'description' => '',
             ],
-
             [
                 'id' => $i++,
                 'master_id' => '2',
@@ -47,7 +44,6 @@ class BasicCodeDetailSeeder extends Seeder
                 'detail' => 'Pack',
                 'description' => '',
             ],
-
             [
                 'id' => $i++,
                 'master_id' => '2',
@@ -97,6 +93,19 @@ class BasicCodeDetailSeeder extends Seeder
                 'description' => '',
             ],
 
+        ]);
+
+         DB::table('warehouse')->insert([
+            [
+                'id_gudang' => 'WH-001',
+                'nama_gudang' => 'Gudang Utama',
+                'alamat' => 'Jl. Merdeka No. 1',
+            ],
+            [
+                'id_gudang' => 'WH-002',
+                'nama_gudang' => 'Gudang Cadangan',
+                'alamat' => 'Jl. Kemerdekaan No. 2',
+            ],
         ]);
     }
 }

@@ -112,7 +112,7 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <button id="savedata" type="submit" class="btn btn-primary w-100">Masuk</button>
+                            <button id="savedata" type="submit" class="btn btn-primary w-100">Sign In</button>
                         </div>
                     </form>
 
