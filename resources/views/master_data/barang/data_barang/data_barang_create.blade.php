@@ -71,13 +71,18 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Unit</label>
-                                <select name="unit_id" id="unit_id" class="form-select select2"
-                                    data-placeholder="Select unit">
-                                    <option></option>
-                                    @foreach ($unit as $units)
-                                        <option value="{{ $units->id }}">{{ $units->detail }}</option>
-                                    @endforeach
-                                </select>
+                                <div class="input-group">
+                                    <select name="unit_id" id="unit_id" class="form-select "
+                                        data-placeholder="Select unit">
+                                        <option></option>
+                                        @foreach ($unit as $units)
+                                            <option value="{{ $units->id }}">{{ $units->detail }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button class="btn btn-outline-primary waves-effect" type="button"
+                                        id="button-addon2">...</button>
+                                </div>
+
                                 <span class="error text-danger" id="unit_idError"></span>
                             </div>
                             <div class="col-md-3  ">
@@ -143,7 +148,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-6" id="subUnitSection" style="display: none;">
                         <h6><strong>Sub Unit</strong></h6>
                         <div class="mb-3 row">
                             <label for="html5-text-input" class="col-md-2 col-form-label">Unit 1</label>
@@ -159,7 +164,7 @@
                                 =
                                 <input class="form-control" type="text" placeholder="Enter quantity" id="quantity1">
                                 x
-                                <input class="form-control" type="text" placeholder="Unit" id="unit1" readonly>
+                                <input class="form-control" type="text" placeholder="" id="unit1" readonly>
                             </div>
                         </div>
                         <div class="mb-3 row">
@@ -176,7 +181,7 @@
                                 =
                                 <input class="form-control" type="text" placeholder="Enter quantity" id="quantity2">
                                 x
-                                <input class="form-control" type="text" placeholder="Unit" id="unit2" readonly>
+                                <input class="form-control" type="text" placeholder="" id="unit2" readonly>
                             </div>
                         </div>
                     </div>
@@ -195,10 +200,49 @@
         </div>
     </div>
 @endsection
+bpus
 @push('style')
     <style>
         #supplyForm {
             transition: all 0.3s ease;
+        }
+
+        #unit1 {
+            border: none;
+            box-shadow: none;
+            /* hilangkan shadow bootstrap */
+        }
+
+        #unit2 {
+            border: none;
+            box-shadow: none;
+            /* hilangkan shadow bootstrap */
+        }
+
+        /* Container select2 hanya untuk #unit_id */
+        #unit_id+.select2-container {
+            flex: 1 1 auto;
+            width: 1% !important;
+        }
+
+        /* Tinggi select2 */
+        #unit_id+.select2-container .select2-selection--single {
+            height: 38px !important;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            border-right: 0;
+            /* biar nyatu sama button */
+        }
+
+        /* Text di tengah */
+        #unit_id+.select2-container .select2-selection__rendered {
+            line-height: 36px;
+            padding-left: 12px;
+        }
+
+        /* Arrow sejajar */
+        #unit_id+.select2-container .select2-selection__arrow {
+            height: 36px;
         }
     </style>
 @endpush
@@ -206,9 +250,12 @@
     <script>
         $('.select2').select2({
             allowClear: true,
-            width: '100%'
+            width: '100%',
         });
-
+        $('#unit_id').select2({
+            width: '100%',
+            dropdownAutoWidth: true
+        });
         document.addEventListener("DOMContentLoaded", function() {
             const supplyRadio = document.getElementById("radioSupply");
             const nonSupplyRadio = document.getElementById("radioNonSupply");
@@ -335,5 +382,10 @@
 
         qty.addEventListener('input', hitungTotal);
         price.addEventListener('input', hitungTotal);
+    </script>
+    <script>
+        $('#button-addon2').on('click', function() {
+            $('#subUnitSection').slideToggle(); // klik → muncul, klik lagi → hilang
+        });
     </script>
 @endpush
