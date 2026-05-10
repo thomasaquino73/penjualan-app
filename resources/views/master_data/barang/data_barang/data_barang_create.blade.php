@@ -79,8 +79,9 @@
                                             <option value="{{ $units->id }}">{{ $units->detail }}</option>
                                         @endforeach
                                     </select>
-                                    <button class="btn btn-outline-primary waves-effect" type="button"
-                                        id="button-addon2">...</button>
+                                    <button class="btn btn-primary waves-effect" type="button" id="button-addon2" disabled>
+                                        ...
+                                    </button>
                                 </div>
 
                                 <span class="error text-danger" id="unit_idError"></span>
@@ -364,6 +365,11 @@ bpus
     <script>
         $('#unit_id').on('change', function() {
             let data = $(this).select2('data');
+            if ($(this).val()) {
+                $('#button-addon2').prop('disabled', false);
+            } else {
+                $('#button-addon2').prop('disabled', true);
+            }
             $('#unit1').val(data[0].text);
             $('#unit2').val(data[0].text);
         });
@@ -388,4 +394,5 @@ bpus
             $('#subUnitSection').slideToggle(); // klik → muncul, klik lagi → hilang
         });
     </script>
+    <script></script>
 @endpush
