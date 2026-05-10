@@ -203,4 +203,84 @@
             nonSupplyRadio.addEventListener("change", toggleForm);
         });
     </script>
+    <script>
+        let saveAndNew = false;
+
+        $('#savedata').click(function(e) {
+            saveAndNew = false;
+        });
+
+        $('#savedatamore').click(function(e) {
+            saveAndNew = true;
+        });
+
+        $('#postForm').on('submit', function(e) {
+            e.preventDefault();
+            let form = this;
+            let btn = saveAndNew ? $('#savedatamore') : $('#savedata');
+            let formData = new FormData(form);
+            formData.append('save_and_new', saveAndNew ? 1 : 0);
+
+            $.ajax({
+                url: $(form).attr('action'),
+                method: $(form).attr('method'),
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                beforeSend: function() {
+                    btn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
+                    btn.prop('disabled', true);
+                },
+                complete: function() {
+                    if (saveAndNew) {
+                        btn.html('<i class="fa fa-plus-circle me-1"></i> Save and Create New');
+                    } else {
+                        btn.html('<i class="fa fa-upload me-1"></i> Save and Close');
+                    }
+                    btn.prop('disabled', false);
+                },
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Created Successfully',
+                        text: response.message,
+                        showClass: {
+                            popup: 'animate__animated animate__bounceIn'
+                        },
+                        customClass: {
+                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    }).then(() => {
+                        window.location.href = response.redirect;
+                    });
+                },
+                error: function(xhr) {
+                    // reset validation messages (buat kamu implement sendiri)
+                    resetValidation();
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed to Create Data',
+                        text: 'Please check your data again.',
+                        showClass: {
+                            popup: 'animate__animated animate__bounceIn'
+                        },
+                        customClass: {
+                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
+
+                    let errors = xhr.responseJSON.errors || {};
+
+                    $.each(errors, function(key, value) {
+                        displayFieldError(key, value[
+                            0]); // fungsi buat nampilin error per field
+                    });
+                }
+            });
+        });
+    </script>
 @endpush
