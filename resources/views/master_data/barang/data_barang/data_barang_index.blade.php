@@ -39,13 +39,11 @@
                 <thead class="border-top" style="background-color: #AEDEFC; ">
                     <tr>
                         <th>#</th>
+                        <th>Picture</th>
                         <th>Product ID</th>
-                        <th>Name</th>
-                        <th>Category</th>
-                        <th>Type</th>
-                        <th>Quantity</th>
+                        <th>Product Name</th>
                         <th>Price</th>
-                        <th>Status</th>
+                        <th>Product Type</th>
                         <th>Created</th>
                         <th>Updated</th>
                         <th>Action</th>
@@ -74,26 +72,20 @@
                         searchable: false
                     },
                     {
-                        data: 'id_barang',
+                        data: 'fotoProduk',
                     },
                     {
                         data: 'id_barang',
                     },
                     {
-                        data: 'kategori',
+                        data: 'nama_barang',
+                    },
+                    {
+                        data: 'price',
                     },
 
                     {
-                        data: 'tipePersediaan',
-                    },
-                    {
-                        data: 'keterangan',
-                    },
-                    {
-                        data: 'status',
-                    },
-                    {
-                        data: 'status',
+                        data: 'productType',
                     },
 
                     {

@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Master_Data\Barang;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProductRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Master_Data\Barang;
 use App\Models\Master_Data\Warehouse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 class DataBarangController extends Controller
@@ -35,11 +38,28 @@ class DataBarangController extends Controller
 
                     return 'N/A';
                 })
+                ->addColumn('fotoProduk', function ($row) {
+                    $avatarUrl = $row->photo_filename
+                         ? asset($row->photo_filename)
+                         : asset('image/no-images.jpg');
+
+                    return '<img class="avatar avatar-md rounded-circle me-2 avatar-online detail"
+                                src="'.$avatarUrl.'"
+                                alt="Foto Produk"  data-gambar="'.asset($row->photo_filename).'"
+                                data-alias="'.$row->nama_barang.'">';
+                })
                 ->addColumn('status', function ($row) {
                     if ($row->status == 1) {
                         return '<span class="badge bg-info">Active</span>';
                     } else {
                         return '<span class="badge bg-danger">Not Active</span>';
+                    }
+                })
+                ->addColumn('productType', function ($row) {
+                    if ($row->product_type == 'supply') {
+                        return '<span class="badge bg-success">Supply</span>';
+                    } else {
+                        return '<span class="badge bg-secondary">Non Supply</span>';
                     }
                 })
                 ->addColumn('kategori', function ($row) {
@@ -48,9 +68,9 @@ class DataBarangController extends Controller
                 ->addColumn('gudang', function ($row) {
                     return $row->warehouseID->nama_gudang;
                 })
-                ->addColumn('tipePersediaan', function ($row) {
-                    return $row->typeID->detail;
-                })
+                // ->addColumn('tipePersediaan', function ($row) {
+                //     return $row->typeID->detail;
+                // })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -58,12 +78,12 @@ class DataBarangController extends Controller
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('customer-edit')) {
-                        $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
+                    if (auth()->user()->can('barang-edit')) {
+                        $btn .= '<a class="dropdown-item editPost" href="'.route('data-barang.edit', $row->id).'"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
                     }
 
-                    if (auth()->user()->can('customer-delete')) {
+                    if (auth()->user()->can('barang-delete')) {
                         $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->nama.'"
@@ -72,7 +92,7 @@ class DataBarangController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk','productType'])
                 ->make(true);
         }
 
@@ -144,12 +164,50 @@ class DataBarangController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    private function uploadAvatar($avatar)
     {
-        //
+        $name = uniqid().time();
+        $destination = 'image/foto_produk';
+        $filePath = $avatar->move($destination, $name.'.'.$avatar->getClientOriginalExtension());
+
+        return str_replace('\\', '/', $filePath);
+    }
+
+    public function store(ProductRequest $request)
+    {
+        DB::beginTransaction();
+        try {
+            $isSaveAndNew = $request->input('save_and_new') == '1';
+            $data = $request->except(['_token', 'save_and_new', 'unit1', 'unit2']);
+            $data['created_by'] = Auth::id();
+            if ($request->hasFile('photo_filename')) {
+                $data['photo_filename'] = $this->uploadAvatar($request->file('photo_filename'));
+            }
+            Barang::create($data);
+
+            DB::commit();
+
+            if ($isSaveAndNew) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product has been saved. You can now upload a new product.',
+                    'redirect' => route('data-barang.create'),
+                ]);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product has been successfully added.',
+                    'redirect' => route('data-barang.index'),
+                ]);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create product: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -165,13 +223,25 @@ class DataBarangController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $id=Barang::findorfail($id);
+        return view('master_data.barang.data_barang.data_barang_edit', [
+            'title' => 'Edit Product',
+            'breadcrumb' => [
+                ['label' => 'Product', 'url' => route('data-barang.index')],
+                ['label' => 'Edit Product', 'url' => ''],
+            ],
+            'idNumber' => $this->generateProductId(),
+            'categories' => BasicCodeDetail::where('master_id', 1)->get(),
+            'unit' => BasicCodeDetail::where('master_id', 2)->get(),
+            'warehouses' => Warehouse::where('status', 1)->get(),
+            'typePersediaan' => BasicCodeDetail::where('master_id', 4)->get(),
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(ProductRequest $request, string $id)
     {
         //
     }
