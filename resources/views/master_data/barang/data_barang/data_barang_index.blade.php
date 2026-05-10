@@ -39,7 +39,7 @@
                 <thead class="border-top" style="background-color: #AEDEFC; ">
                     <tr>
                         <th>#</th>
-                        <th>ID Number</th>
+                        <th>Product ID</th>
                         <th>Name</th>
                         <th>Category</th>
                         <th>Type</th>

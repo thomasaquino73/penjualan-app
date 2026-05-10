@@ -42,7 +42,7 @@
                                         class="footer-link text-primary fw-medium">Thomas Aquino</a>
                                 </div>
                                 <div class="d-none d-lg-inline-block">
-                                    Version 1.2.0
+                                    Version 1.0.0
                                 </div>
                             </div>
                         </div>

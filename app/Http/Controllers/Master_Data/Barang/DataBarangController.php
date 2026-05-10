@@ -77,17 +77,17 @@ class DataBarangController extends Controller
         }
 
         $x = [
-            'title' => 'Items List',
+            'title' => 'Product List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Items', 'url' => ''],
+                ['label' => 'Product', 'url' => ''],
             ],
           
         ];
 
         return view('master_data.barang.data_barang.data_barang_index', $x);
     }
-    private function generateItemsId()
+    private function generateProductId()
     {
         $last = Barang::whereNotNull('id_barang')
             ->orderBy('id', 'desc')
@@ -122,7 +122,7 @@ class DataBarangController extends Controller
     public function generateId()
     {
         return response()->json([
-            'id_pelanggan' => $this->generateItemsId(),
+            'id_pelanggan' => $this->generateProductId(),
         ]);
     }
 
@@ -130,12 +130,12 @@ class DataBarangController extends Controller
     {
 
         return view('master_data.barang.data_barang.data_barang_create', [
-            'title' => 'Add Items',
+            'title' => 'Add Product',
             'breadcrumb' => [
-                ['label' => 'Items', 'url' => route('data-barang.index')],
-                ['label' => 'Add Items', 'url' => ''],
+                ['label' => 'Product', 'url' => route('data-barang.index')],
+                ['label' => 'Add Product', 'url' => ''],
             ],
-              'idNumber'=>$this->generateItemsId(),
+              'idNumber'=>$this->generateProductId(),
               'categories'=>BasicCodeDetail::where('master_id', 1)->get(),
               'unit'=>BasicCodeDetail::where('master_id', 2)->get(),
              'warehouses'=>Warehouse::where('status',1)->get(),

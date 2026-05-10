@@ -27,14 +27,14 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'Manage Items',
+                'name' => 'Manage Product',
                 'icon' => 'ti ti-box',
                 'roles' => ['Super Admin'],
                 'permissions' => ['role-browse', 'permission-browse'],
                 'children' => [
 
                     [
-                        'name' => 'Items',
+                        'name' => 'Product',
                         'route' => 'data-barang.index',
                         'pattern' => 'data-barang.*',
                         'roles' => ['Super Admin'],
@@ -253,7 +253,7 @@ class Sidebar extends Component
                 'roles' => ['SuperAdmin'],
                 'permissions' => ['mata_uang-browse'],
             ],
-            
+
             [
                 'type' => 'dropdown',
                 'name' => 'Manage Access',
@@ -300,7 +300,7 @@ class Sidebar extends Component
                 'roles' => ['SuperAdmin'],
                 'permissions' => ['application_system-browse', 'login_background-browse', 'mata_uang-browse'],
             ],
-           
+
 
         ];
     }

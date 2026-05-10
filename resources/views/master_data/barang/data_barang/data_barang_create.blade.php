@@ -35,7 +35,7 @@
                                 <span class="error text-danger" id="photo_filenameError"></span>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Items ID</label>
+                                <label class="form-label">Product ID</label>
                                 <input type="text" name="id_barang" id="id_barang" class="form-control"
                                     value="{{ $idNumber }}" readonly>
                                 <span class="error text-danger" id="id_barangError"></span>
@@ -48,7 +48,8 @@
 
                             <div class="col-md-3">
                                 <label class="form-label">Category</label>
-                                <select name="kategori_id" id="kategori_id" class="form-select">
+                                <select name="kategori_id" id="kategori_id" class="form-select select2"
+                                    data-placeholder="Select category">
                                     <option></option>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}">{{ $category->detail }}</option>
@@ -58,19 +59,20 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Warehouse</label>
-                                <select name="gudang_id" id="gudang_id" class="form-select">
+                                <select name="gudang_id" id="gudang_id" class="form-select select2"
+                                    data-placeholder="Select warehouse">
                                     <option></option>
                                     @foreach ($warehouses as $warehouse)
                                         <option value="{{ $warehouse->id }}">
-                                            {{ $warehouse->nama_gudang }}
-                                            )</option>
+                                            {{ $warehouse->nama_gudang }}</option>
                                     @endforeach
                                 </select>
                                 <span class="error text-danger" id="gudang_idError"></span>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Unit</label>
-                                <select name="unit_id" id="unit_id" class="form-select">
+                                <select name="unit_id" id="unit_id" class="form-select select2"
+                                    data-placeholder="Select unit">
                                     <option></option>
                                     @foreach ($unit as $units)
                                         <option value="{{ $units->id }}">{{ $units->detail }}</option>
@@ -78,17 +80,20 @@
                                 </select>
                                 <span class="error text-danger" id="unit_idError"></span>
                             </div>
-                            <div class="col-md-3 d-flex gap-2 ">
-                                <div class="form-check form-check-success me-4">
-                                    <input name="type" class="form-check-input" type="radio" value="supply"
-                                        id="radioSupply" checked>
-                                    <label class="form-check-label" for="radioSupply"> Supply </label>
-                                </div>
+                            <div class="col-md-3  ">
+                                <label class="form-label">Product Type</label>
+                                <div class="d-flex gap-2">
+                                    <div class="form-check form-check-success me-4">
+                                        <input name="type" class="form-check-input" type="radio" value="supply"
+                                            id="radioSupply" checked>
+                                        <label class="form-check-label" for="radioSupply"> Supply </label>
+                                    </div>
 
-                                <div class="form-check form-check-success">
-                                    <input name="type" class="form-check-input" type="radio" value="non_supply"
-                                        id="radioNonSupply">
-                                    <label class="form-check-label" for="radioNonSupply"> Non Supply </label>
+                                    <div class="form-check form-check-success">
+                                        <input name="type" class="form-check-input" type="radio" value="non_supply"
+                                            id="radioNonSupply">
+                                        <label class="form-check-label" for="radioNonSupply"> Non Supply </label>
+                                    </div>
                                 </div>
                             </div>
 
@@ -102,42 +107,76 @@
 
                     </div>
                 </div>
-                <div id="supplyForm">
-                    <div class="divider my-7 ">
-                        <div class="divider-text">Additional Information</div>
+                <div class="divider my-7 ">
+                    <div class="divider-text">Additional Information</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6" id="supplyForm">
+                        <h6><strong>Beginning Balance</strong></h6>
+                        <div class="mb-3 row">
+                            <label class="col-md-4 col-form-label">Quantity</label>
+                            <div class="col-md-8">
+                                <input class="form-control" type="number" id="quantity" placeholder="Enter quantity">
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label class="col-md-4 col-form-label">Price/Unit</label>
+                            <div class="col-md-8">
+                                <input class="form-control" type="number" id="price"
+                                    placeholder="Enter price per unit">
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label class="col-md-4 col-form-label">Cost of Goods</label>
+                            <div class="col-md-8">
+                                <input class="form-control" type="text" id="hasil_akhir" readonly>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label for="html5-text-input" class="col-md-4 col-form-label">
+                                date</label>
+                            <div class="col-md-8">
+                                <input type="date" name="date" id="date" class="form-control">
+                            </div>
+                        </div>
                     </div>
-                    <h6>
-                        <strong>Beginning Balance</strong>
-                    </h6>
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="mb-3 row">
-                                <label for="html5-text-input" class="col-md-4 col-form-label">Quantity</label>
-                                <div class="col-md-8">
-                                    <input class="form-control" type="text" placeholder="Enter quantity"
-                                        id="html5-text-input">
-                                </div>
+                    <div class="col-lg-6">
+                        <h6><strong>Sub Unit</strong></h6>
+                        <div class="mb-3 row">
+                            <label for="html5-text-input" class="col-md-2 col-form-label">Unit 1</label>
+                            <div class="col-md-10 d-flex gap-4">
+                                <select name="unit_1" id="unit_1" class="form-select select2"
+                                    data-placeholder="Select unit">
+                                    <option></option>
+                                    @foreach ($unit as $un)
+                                        <option value="{{ $un->id }}">{{ $un->detail }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                =
+                                <input class="form-control" type="text" placeholder="Enter quantity" id="quantity1">
+                                x
+                                <input class="form-control" type="text" placeholder="Unit" id="unit1" readonly>
                             </div>
-                            <div class="mb-3 row">
-                                <label for="html5-text-input" class="col-md-4 col-form-label">Price/Unit</label>
-                                <div class="col-md-8">
-                                    <input class="form-control" type="text" placeholder="Enter price per unit"
-                                        id="html5-text-input">
-                                </div>
-                            </div>
-                            <div class="mb-3 row">
-                                <label for="html5-text-input" class="col-md-4 col-form-label">
-                                    Cost of Goods</label>
-                                <div class="col-md-8">
-                                    <input class="form-control" type="text" id="html5-text-input">
-                                </div>
-                            </div>
-                            <div class="mb-3 row">
-                                <label for="html5-text-input" class="col-md-4 col-form-label">
-                                    date</label>
-                                <div class="col-md-8">
-                                    <input type="date" name="date" id="date" class="form-control">
-                                </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label for="html5-text-input" class="col-md-2 col-form-label">Unit 2</label>
+                            <div class="col-md-10 d-flex gap-4">
+                                <select name="unit_2" id="unit_2" class="form-select select2"
+                                    data-placeholder="Select unit">
+                                    <option></option>
+                                    @foreach ($unit as $un)
+                                        <option value="{{ $un->id }}">{{ $un->detail }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                =
+                                <input class="form-control" type="text" placeholder="Enter quantity" id="quantity2">
+                                x
+                                <input class="form-control" type="text" placeholder="Unit" id="unit2" readonly>
                             </div>
                         </div>
                     </div>
@@ -165,23 +204,11 @@
 @endpush
 @push('scripts')
     <script>
-        $('#kategori_id').select2({
-            placeholder: "select category",
+        $('.select2').select2({
             allowClear: true,
             width: '100%'
         });
-        $('#gudang_id').select2({
-            placeholder: "select warehouse",
-            allowClear: true,
-            width: '100%'
-        });
-        $('#unit_id').select2({
-            placeholder: "select unit",
-            allowClear: true,
-            width: '100%'
-        });
-    </script>
-    <script>
+
         document.addEventListener("DOMContentLoaded", function() {
             const supplyRadio = document.getElementById("radioSupply");
             const nonSupplyRadio = document.getElementById("radioNonSupply");
@@ -192,6 +219,10 @@
                     form.style.display = "block";
                 } else {
                     form.style.display = "none";
+                    $('#quantity').val('');
+                    $('#price').val('');
+                    $('#hasil_akhir').val('');
+                    $('#date').val('');
                 }
             }
 
@@ -282,5 +313,27 @@
                 }
             });
         });
+    </script>
+    <script>
+        $('#unit_id').on('change', function() {
+            let data = $(this).select2('data');
+            $('#unit1').val(data[0].text);
+            $('#unit2').val(data[0].text);
+        });
+    </script>
+    <script>
+        const qty = document.getElementById('quantity');
+        const price = document.getElementById('price');
+        const total = document.getElementById('hasil_akhir');
+
+        function hitungTotal() {
+            let q = parseFloat(qty.value) || 0;
+            let p = parseFloat(price.value) || 0;
+
+            total.value = q * p;
+        }
+
+        qty.addEventListener('input', hitungTotal);
+        price.addEventListener('input', hitungTotal);
     </script>
 @endpush
