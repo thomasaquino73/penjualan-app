@@ -23,10 +23,9 @@
         </div>
         <div class="card-datatable table-responsive" style="padding: 20px">
 
-            <form method="POST" action="{{ route('data-barang.update', $detail->id) }}" class="py-2" id="postForm"
+            <form method="POST" action="{{ route('data-barang.store') }}" class="py-2" id="postForm"
                 enctype="multipart/form-data">
                 @csrf
-                @method('PUT')
                 {{-- modals --}}
                 <div class="modal fade" id="modals" tabindex="-1">
                     <div class="modal-dialog modal-md">
@@ -42,8 +41,8 @@
                                     <div class="conversion-item border p-3 mb-2 rounded">
                                         <div class="d-flex justify-content-between mb-2">
                                             <strong>Unit Conversion</strong>
-                                            {{-- <button type="button"
-                                                class="btn btn-danger btn-sm remove-conversion">X</button> --}}
+                                            <button type="button"
+                                                class="btn btn-danger btn-sm remove-conversion">X</button>
                                         </div>
                                         <div class="row g-2">
                                             <div class="col-md-4">
@@ -79,9 +78,9 @@
 
                                 </div>
 
-                                {{-- <button type="button" class="btn btn-primary mt-2" id="addConversion">
+                                <button type="button" class="btn btn-primary mt-2" id="addConversion">
                                     + Add Conversion
-                                </button> --}}
+                                </button>
 
                             </div>
 
@@ -104,13 +103,12 @@
                             <div class="col-md-6">
                                 <label class="form-label">Product ID <small class="text-danger">*</small> </label>
                                 <input type="text" name="id_barang" id="id_barang" class="form-control"
-                                    value="{{ $detail->id_barang }}">
+                                    value="{{ $idNumber }}">
                                 <span class="error text-danger" id="id_barangError"></span>
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label">Name <small class="text-danger">*</small> </label>
-                                <input type="text" name="nama_barang" id="nama_barang" class="form-control"
-                                    value="{{ $detail->nama_barang }}">
+                                <input type="text" name="nama_barang" id="nama_barang" class="form-control">
                                 <span class="error text-danger" id="nama_barangError"></span>
                             </div>
 
@@ -120,10 +118,7 @@
                                     data-placeholder="Select category">
                                     <option></option>
                                     @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}"
-                                            {{ $detail->kategori_id == $category->id ? 'selected' : '' }}>
-                                            {{ $category->detail }}
-                                        </option>
+                                        <option value="{{ $category->id }}">{{ $category->detail }}</option>
                                     @endforeach
                                 </select>
                                 <span class="error text-danger" id="kategori_idError"></span>
@@ -134,8 +129,7 @@
                                     data-placeholder="Select warehouse">
                                     <option></option>
                                     @foreach ($warehouses as $warehouse)
-                                        <option value="{{ $warehouse->id }}"
-                                            {{ $detail->gudang_id == $warehouse->id ? 'selected' : '' }}>
+                                        <option value="{{ $warehouse->id }}">
                                             {{ $warehouse->nama_gudang }}</option>
                                     @endforeach
                                 </select>
@@ -148,14 +142,11 @@
                                         data-placeholder="Select unit">
                                         <option></option>
                                         @foreach ($unit as $units)
-                                            <option value="{{ $units->id }}"
-                                                {{ $detail->unit_id == $units->id ? 'selected' : '' }}>
-                                                {{ $units->detail }}
-                                            </option>
+                                            <option value="{{ $units->id }}">{{ $units->detail }}</option>
                                         @endforeach
                                     </select>
                                     <button type="button" id="showSubUnit"
-                                        class="btn btn-sm btn-primary waves-effect waves-light">...</button>
+                                        class="btn btn-md btn-primary waves-effect waves-light">...</button>
                                 </div>
                                 <span class="error text-danger" id="unit_idError"></span>
                             </div>
@@ -164,15 +155,13 @@
                                 <div class="d-flex gap-2">
                                     <div class="form-check form-check-success me-4">
                                         <input name="product_type" class="form-check-input" type="radio"
-                                            value="supply" id="radioSupply"
-                                            {{ $detail->product_type == 'supply' ? 'checked' : '' }} readonly>
+                                            value="supply" id="radioSupply" checked>
                                         <label class="form-check-label" for="radioSupply"> Supply </label>
                                     </div>
 
                                     <div class="form-check form-check-success">
                                         <input name="product_type" class="form-check-input" type="radio"
-                                            value="non_supply" id="radioNonSupply"
-                                            {{ $detail->product_type == 'non_supply' ? 'checked' : '' }} readonly>
+                                            value="non_supply" id="radioNonSupply">
                                         <label class="form-check-label" for="radioNonSupply"> Non Supply </label>
                                     </div>
                                 </div>
@@ -200,7 +189,7 @@
                             <label class="col-md-4 col-form-label">Quantity</label>
                             <div class="col-md-8">
                                 <input class="form-control" type="number" id="quantity" name="quantity"
-                                    placeholder="Enter quantity" value="{{ $detail->quantity }}">
+                                    placeholder="Enter quantity">
                                 <span class="error text-danger" id="quantityError"></span>
                             </div>
                         </div>
@@ -209,7 +198,7 @@
                             <label class="col-md-4 col-form-label">Price/Unit</label>
                             <div class="col-md-8">
                                 <input class="form-control" type="number" id="price" name="price"
-                                    placeholder="Enter price per unit" value="{{ $detail->price }}">
+                                    placeholder="Enter price per unit">
                                 <span class="error text-danger" id="priceError"></span>
                             </div>
                         </div>
@@ -217,16 +206,14 @@
                         <div class="mb-3 row">
                             <label class="col-md-4 col-form-label">Cost of Goods</label>
                             <div class="col-md-8">
-                                <input class="form-control" type="text" id="hasil_akhir" name="hasil_akhir" readonly
-                                    value="{{ $detail->quantity * $detail->price }}">
+                                <input class="form-control" type="text" id="hasil_akhir" name="hasil_akhir" readonly>
                             </div>
                         </div>
                         <div class="mb-3 row">
                             <label for="html5-text-input" class="col-md-4 col-form-label">
-                                Date</label>
+                                date</label>
                             <div class="col-md-8">
-                                <input type="date" name="date" id="date" class="form-control"
-                                    value="{{ $detail->date ? date('Y-m-d', strtotime($detail->date)) : '' }}">
+                                <input type="date" name="date" id="date" class="form-control">
                                 <span class="error text-danger" id="dateError"></span>
                             </div>
                         </div>
@@ -436,10 +423,61 @@
         qty.addEventListener('input', hitungTotal);
         price.addEventListener('input', hitungTotal);
     </script>
-
-    <script></script>
     <script>
-        let existing = @json($detail->conversions ?? []);
+        $('#button-addon2').on('click', function() {
+            $('#subUnitSection').slideToggle(); // klik → muncul, klik lagi → hilang
+        });
+    </script>
+    <script>
+        let index = 1;
+        $('#addConversion').on('click', function() {
+
+            let unitId = $('#unit_id').val();
+            let unitText = $('#unit_id option:selected').text();
+
+            let html = `
+            <div class="conversion-item border p-3 mb-2 rounded">
+                <input type="hidden" name="conversion[${index}][from_unit]" value="${unitId}">
+                <div class="d-flex justify-content-between mb-2">
+                    <strong>Unit Conversion</strong>
+                    <button type="button" class="btn btn-danger btn-sm remove-conversion">X</button>
+                </div>
+
+                <div class="row g-2">
+
+                    <div class="col-md-4">
+                        <label>From Unit</label>
+                                <input type="text" class="form-control" value="${unitText}" readonly>
+                    </div>
+
+                    <div class="col-md-2 text-center">
+                        <label>&nbsp;</label>
+                        <div class="fw-bold">=</div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Quantity</label>
+                        <input type="number" name="conversion[${index}][qty]" class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>To Unit</label>
+                        <select name="conversion[${index}][to_unit]" class="form-select">
+                            <option value="">Select</option>
+                            @foreach ($unit as $u)
+                                <option value="{{ $u->id }}">{{ $u->detail }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                </div>
+            </div>`;
+
+            $('#conversion-wrapper').append(html);
+            index++;
+        });
+    </script>
+    <script>
         $(document).on('click', '#showSubUnit', function() {
 
             let unitId = $('#unit_id').val();
@@ -461,33 +499,35 @@
                 return;
             }
 
-            let row1 = existing[0] ?? null;
-            let row2 = existing[1] ?? null;
+            $('#conversion-wrapper').html('');
 
             let html = `
-
-                <!-- ROW 1 -->
                 <div class="conversion-item border p-3 mb-2 rounded">
 
-                    <input type="hidden" name="conversion[0][from_unit]" value="${unitId}">
+                    <div class="d-flex justify-content-between mb-2">
+                        <strong>Unit Conversion</strong>
+                        <button type="button" class="btn btn-danger btn-sm remove-conversion">X</button>
+                    </div>
 
-                    <div class="row g-2 mt-1">
+                    <div class="row g-2">
+                        <input type="hidden" name="conversion[${index}][from_unit]" value="${unitId}">
 
                         <div class="col-md-4">
+                            <label>From Unit</label>
                             <input type="text" class="form-control" value="${unitText}" readonly>
                         </div>
-
-                        <div class="col-md-2 text-center">=</div>
-
+                         <div class="col-md-2 text-center">
+                        <label>&nbsp;</label>
+                        <div class="fw-bold">=</div>
+                    </div>
                         <div class="col-md-3">
-                            <input type="number" 
-                                name="conversion[0][qty]" 
-                                value="${row1 ? row1.qty : ''}" 
-                                class="form-control">
+                            <label>Quantity</label>
+                            <input type="number" name="conversion[${index}][qty]" class="form-control">
                         </div>
 
                         <div class="col-md-3">
-                            <select name="conversion[0][to_unit]" class="form-select">
+                            <label>To Unit</label>
+                            <select name="conversion[${index}][to_unit]" class="form-select">
                                 <option value="">Select</option>
                                 @foreach ($unit as $u)
                                     <option value="{{ $u->id }}">{{ $u->detail }}</option>
@@ -497,51 +537,15 @@
 
                     </div>
                 </div>
-
-                <!-- ROW 2 -->
-                <div class="conversion-item border p-3 mb-2 rounded">
-                    <input type="hidden" name="conversion[1][from_unit]" value="${unitId}">
-
-                    <div class="row g-2 mt-1">
-
-                        <div class="col-md-4">
-                            <input type="text" class="form-control" value="${unitText}" readonly>
-                        </div>
-
-                        <div class="col-md-2 text-center">=</div>
-
-                        <div class="col-md-3">
-                            <input type="number" 
-                                name="conversion[1][qty]" 
-                                value="${row2 ? row2.qty : ''}" 
-                                class="form-control">
-                        </div>
-
-                        <div class="col-md-3">
-                            <select name="conversion[1][to_unit]" class="form-select">
-                                <option value="">Select</option>
-                                @foreach ($unit as $u)
-                                    <option value="{{ $u->id }}">{{ $u->detail }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                    </div>
-                </div>
-                `;
+            `;
 
             $('#conversion-wrapper').html(html);
-
-            // ✅ SET SELECTED (PENTING)
-            if (row1) {
-                $('select[name="conversion[0][to_unit]"]').val(row1.to_unit_id);
-            }
-
-            if (row2) {
-                $('select[name="conversion[1][to_unit]"]').val(row2.to_unit_id);
-            }
-
             $('#modals').modal('show');
+
+            index++;
+        });
+        $(document).on('click', '.remove-conversion', function() {
+            $(this).closest('.conversion-item').remove();
         });
     </script>
 @endpush

@@ -19,7 +19,7 @@ class DataBarangController extends Controller
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = Barang::where('status', '<>', 0)->get();
+            $query = Barang::where('status', '<>', 0)->orderBy('id_barang', 'desc')->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()

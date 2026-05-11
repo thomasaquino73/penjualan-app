@@ -41,8 +41,8 @@
                                     <div class="conversion-item border p-3 mb-2 rounded">
                                         <div class="d-flex justify-content-between mb-2">
                                             <strong>Unit Conversion</strong>
-                                            <button type="button"
-                                                class="btn btn-danger btn-sm remove-conversion">X</button>
+                                            {{-- <button type="button"
+                                                class="btn btn-danger btn-sm remove-conversion">X</button> --}}
                                         </div>
                                         <div class="row g-2">
                                             <div class="col-md-4">
@@ -78,9 +78,9 @@
 
                                 </div>
 
-                                <button type="button" class="btn btn-primary mt-2" id="addConversion">
+                                {{-- <button type="button" class="btn btn-primary mt-2" id="addConversion">
                                     + Add Conversion
-                                </button>
+                                </button> --}}
 
                             </div>
 
@@ -146,7 +146,7 @@
                                         @endforeach
                                     </select>
                                     <button type="button" id="showSubUnit"
-                                        class="btn btn-md btn-primary waves-effect waves-light">...</button>
+                                        class="btn btn-sm btn-primary waves-effect waves-light">...</button>
                                 </div>
                                 <span class="error text-danger" id="unit_idError"></span>
                             </div>
@@ -407,17 +407,7 @@
             });
         });
     </script>
-    <script>
-        $('#unit_id').on('change', function() {
-            let data = $(this).select2('data');
-            if ($(this).val()) {
-                $('#button-addon2').prop('disabled', false);
-            } else {
-                $('#button-addon2').prop('disabled', true);
-            }
 
-        });
-    </script>
     <script>
         const qty = document.getElementById('quantity');
         const price = document.getElementById('price');
@@ -433,62 +423,57 @@
         qty.addEventListener('input', hitungTotal);
         price.addEventListener('input', hitungTotal);
     </script>
+
     <script>
-        $('#button-addon2').on('click', function() {
-            $('#subUnitSection').slideToggle(); // klik → muncul, klik lagi → hilang
-        });
+        // $('#addConversion').on('click', function() {
+
+        //     let unitId = $('#unit_id').val();
+        //     let unitText = $('#unit_id option:selected').text();
+
+        //     let html = `
+    //     <div class="conversion-item border p-3 mb-2 rounded">
+    //         <input type="hidden" name="conversion[${index}][from_unit]" value="${unitId}">
+    //         <div class="d-flex justify-content-between mb-2">
+    //             <strong>Unit Conversion</strong>
+    //             <button type="button" class="btn btn-danger btn-sm remove-conversion">X</button>
+    //         </div>
+
+    //         <div class="row g-2">
+
+    //             <div class="col-md-4">
+    //                 <label>From Unit</label>
+    //                         <input type="text" class="form-control" value="${unitText}" readonly>
+    //             </div>
+
+    //             <div class="col-md-2 text-center">
+    //                 <label>&nbsp;</label>
+    //                 <div class="fw-bold">=</div>
+    //             </div>
+
+    //             <div class="col-md-3">
+    //                 <label>Quantity</label>
+    //                 <input type="number" name="conversion[${index}][qty]" class="form-control">
+    //             </div>
+
+    //             <div class="col-md-3">
+    //                 <label>To Unit</label>
+    //                 <select name="conversion[${index}][to_unit]" class="form-select">
+    //                     <option value="">Select</option>
+    //                     @foreach ($unit as $u)
+    //                         <option value="{{ $u->id }}">{{ $u->detail }}</option>
+    //                     @endforeach
+    //                 </select>
+    //             </div>
+
+    //         </div>
+    //     </div>`;
+
+        //     $('#conversion-wrapper').append(html);
+        //     index++;
+        // });
     </script>
     <script>
-        let index = 1;
-
-        $('#addConversion').on('click', function() {
-
-            let unitId = $('#unit_id').val();
-            let unitText = $('#unit_id option:selected').text();
-
-            let html = `
-            <div class="conversion-item border p-3 mb-2 rounded">
-<input type="hidden" name="conversion[${index}][from_unit]" value="${unitId}">
-                <div class="d-flex justify-content-between mb-2">
-                    <strong>Unit Conversion</strong>
-                    <button type="button" class="btn btn-danger btn-sm remove-conversion">X</button>
-                </div>
-
-                <div class="row g-2">
-
-                    <div class="col-md-4">
-                        <label>From Unit</label>
-                                <input type="text" class="form-control" value="${unitText}" readonly>
-                    </div>
-
-                    <div class="col-md-2 text-center">
-                        <label>&nbsp;</label>
-                        <div class="fw-bold">=</div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label>Quantity</label>
-                        <input type="number" name="conversion[${index}][qty]" class="form-control">
-                    </div>
-
-                    <div class="col-md-3">
-                        <label>To Unit</label>
-                        <select name="conversion[${index}][to_unit]" class="form-select">
-                            <option value="">Select</option>
-                            @foreach ($unit as $u)
-                                <option value="{{ $u->id }}">{{ $u->detail }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                </div>
-            </div>`;
-
-            $('#conversion-wrapper').append(html);
-            index++;
-        });
-    </script>
-    <script>
+        // let index = 1;
         $(document).on('click', '#showSubUnit', function() {
 
             let unitId = $('#unit_id').val();
@@ -498,58 +483,79 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Oops...',
-                    text: 'Please select a unit first.'
+                    text: 'Please select a unit first.',
+                    showClass: {
+                        popup: 'animate__animated animate__bounceIn'
+                    },
+                    customClass: {
+                        confirmButton: 'btn btn-primary waves-effect waves-light'
+                    },
+                    buttonsStyling: false,
                 });
                 return;
             }
 
-            $('#conversion-wrapper').html('');
-
             let html = `
-                <div class="conversion-item border p-3 mb-2 rounded">
 
-                    <div class="d-flex justify-content-between mb-2">
-                        <strong>Unit Conversion</strong>
-                        <button type="button" class="btn btn-danger btn-sm remove-conversion">X</button>
-                    </div>
+    <!-- ROW 1 -->
+    <div class="conversion-item border p-3 mb-2 rounded">
+        <div class="row g-2">
 
-                    <div class="row g-2">
-                        <input type="hidden" name="conversion[${index}][from_unit]" value="${unitId}">
+            <input type="hidden" name="conversion[1][from_unit]" value="${unitId}">
 
-                        <div class="col-md-4">
-                            <label>From Unit</label>
-                            <input type="text" class="form-control" value="${unitText}" readonly>
-                        </div>
-                         <div class="col-md-2 text-center">
-                        <label>&nbsp;</label>
-                        <div class="fw-bold">=</div>
-                    </div>
-                        <div class="col-md-3">
-                            <label>Quantity</label>
-                            <input type="number" name="conversion[${index}][qty]" class="form-control">
-                        </div>
+            <div class="col-md-4">
+                <input type="text" class="form-control" value="${unitText}" readonly>
+            </div>
 
-                        <div class="col-md-3">
-                            <label>To Unit</label>
-                            <select name="conversion[${index}][to_unit]" class="form-select">
-                                <option value="">Select</option>
-                                @foreach ($unit as $u)
-                                    <option value="{{ $u->id }}">{{ $u->detail }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+            <div class="col-md-2 text-center">=</div>
 
-                    </div>
-                </div>
-            `;
+            <div class="col-md-3">
+                <input type="number" name="conversion[1][qty]" class="form-control">
+            </div>
+
+            <div class="col-md-3">
+                <select name="conversion[1][to_unit]" class="form-select">
+                    <option value="">Select</option>
+                    @foreach ($unit as $u)
+                        <option value="{{ $u->id }}">{{ $u->detail }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ROW 2 -->
+    <div class="conversion-item border p-3 mb-2 rounded">
+        <div class="row g-2">
+
+            <input type="hidden" name="conversion[2][from_unit]" value="${unitId}">
+
+            <div class="col-md-4">
+                <input type="text" class="form-control" value="${unitText}" readonly>
+            </div>
+
+            <div class="col-md-2 text-center">=</div>
+
+            <div class="col-md-3">
+                <input type="number" name="conversion[2][qty]" class="form-control">
+            </div>
+
+            <div class="col-md-3">
+                <select name="conversion[2][to_unit]" class="form-select">
+                    <option value="">Select</option>
+                    @foreach ($unit as $u)
+                        <option value="{{ $u->id }}">{{ $u->detail }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+        </div>
+    </div>
+    `;
 
             $('#conversion-wrapper').html(html);
             $('#modals').modal('show');
-
-            index++;
-        });
-        $(document).on('click', '.remove-conversion', function() {
-            $(this).closest('.conversion-item').remove();
         });
     </script>
 @endpush
