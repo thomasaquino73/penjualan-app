@@ -109,7 +109,7 @@ class DaftarKendaraanController extends Controller
                         $btn .= '<a class="dropdown-item detail" href="javascript:void(0)"
                                 data-gambar="'.asset($row->foto).'"
                                 data-alias="'.$row->plat_nomor.'">
-                                <i class="far fa-eye me-1"></i>Detail
+                                <i class="ti ti-list-details me-1"></i>Detail
                             </a>';
                     }
                     if (auth()->user()->can('kendaraan-delete')) {

@@ -235,11 +235,7 @@
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">
                     <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
-                        <i class="fa fa-upload me-1"></i> Save and Close
-                    </button>
-
-                    <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
-                        <i class="fa fa-plus-circle me-1"></i> Save and Create New
+                        <i class="fa fa-upload me-1"></i> Update
                     </button>
                     <a href="{{ route('data-barang.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
@@ -373,14 +369,14 @@
                     if (saveAndNew) {
                         btn.html('<i class="fa fa-plus-circle me-1"></i> Save and Create New');
                     } else {
-                        btn.html('<i class="fa fa-upload me-1"></i> Save and Close');
+                        btn.html('<i class="fa fa-upload me-1"></i> Update');
                     }
                     btn.prop('disabled', false);
                 },
                 success: function(response) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Data Created Successfully',
+                        title: 'Data Updated Successfully',
                         text: response.message,
                         showClass: {
                             popup: 'animate__animated animate__bounceIn'

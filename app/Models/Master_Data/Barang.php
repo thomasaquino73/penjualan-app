@@ -39,6 +39,10 @@ class Barang extends Model
     {
         return $this->belongsTo(BasicCodeDetail::class, 'tipe_persediaan_id');
     }
+    public function unitID()
+    {
+        return $this->belongsTo(BasicCodeDetail::class, 'unit_id');
+    }
 
     public function conversions()
     {

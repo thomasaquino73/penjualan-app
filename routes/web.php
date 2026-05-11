@@ -141,6 +141,7 @@ Route::middleware('auth')->group(function () {
     });
     Route::get('/sub-unit/{id}', [DataBarangController::class, 'getSubUnit']);
     Route::get('/data-barang/trash', [DataBarangController::class, 'trash'])->name('data-barang.trash');
+    Route::put('/data-barang/restore/{id}', [DataBarangController::class, 'restore'])->name('data-barang.restore');
     Route::resource('data-barang', DataBarangController::class);
     Route::resource('satuan-barang', SatuanBarangController::class);
     Route::resource('kategori-barang', KategoriBarangController::class);
