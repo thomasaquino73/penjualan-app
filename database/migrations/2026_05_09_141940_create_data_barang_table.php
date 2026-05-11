@@ -20,22 +20,33 @@ return new class extends Migration
             $table->unsignedBigInteger('gudang_id');
             $table->unsignedBigInteger('tipe_persediaan_id')->nullable();
             $table->unsignedBigInteger('unit_id');
-            $table->string('unit1');
-            $table->string('unit2');
             $table->enum('product_type', ['supply', 'non_supply'])->default('supply');
             $table->string('keterangan')->nullable();
             $table->bigInteger('quantity')->nullable();
             $table->bigInteger('price')->nullable();
             $table->bigInteger('hasil_akhir')->nullable();
             $table->date('date')->nullable();
-            $table->integer('unit_1')->nullable();
-            $table->integer('unit_2')->nullable();
-            $table->integer('quantity1')->nullable();
-            $table->integer('quantity2')->nullable();
             $table->tinyInteger('status')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
+        });
+        Schema::create('data_barang_conversions', function (Blueprint $table) {
+            $table->id();
+            // relasi ke barang utama
+            $table->unsignedBigInteger('data_barang_id');
+            // unit asal (dari unit utama)
+            $table->unsignedBigInteger('from_unit_id');
+            // unit tujuan
+            $table->unsignedBigInteger('to_unit_id');
+            // jumlah konversi
+            $table->decimal('qty', 18, 4);
+            $table->timestamps();
+            // index biar cepat
+            $table->index('data_barang_id');
+            $table->index('from_unit_id');
+            $table->index('to_unit_id');
+
         });
     }
 
@@ -44,6 +55,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('data_barang_conversions');
         Schema::dropIfExists('data_barang');
     }
 };

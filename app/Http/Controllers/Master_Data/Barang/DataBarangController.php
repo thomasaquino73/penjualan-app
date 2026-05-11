@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Master_Data\Barang;
+use App\Models\Master_Data\DataBarangConversion;
 use App\Models\Master_Data\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -174,39 +175,105 @@ class DataBarangController extends Controller
         return str_replace('\\', '/', $filePath);
     }
 
+    // public function store(ProductRequest $request)
+    // {
+    //     DB::beginTransaction();
+    //     try {
+    //         $isSaveAndNew = $request->input('save_and_new') == '1';
+    //         $data = $request->except(['_token', 'save_and_new']);
+    //         $data['created_by'] = Auth::id();
+
+    //         if ($request->hasFile('photo_filename')) {
+    //             $data['photo_filename'] = $this->uploadAvatar($request->file('photo_filename'));
+    //         }
+    //         Barang::create($data);
+
+    //         DB::commit();
+
+    //         if ($isSaveAndNew) {
+    //             return response()->json([
+    //                 'success' => true,
+    //                 'message' => 'Product has been saved. You can now upload a new product.',
+    //                 'redirect' => route('data-barang.create'),
+    //             ]);
+    //         } else {
+    //             return response()->json([
+    //                 'success' => true,
+    //                 'message' => 'Product has been successfully added.',
+    //                 'redirect' => route('data-barang.index'),
+    //             ]);
+    //         }
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to create product: '.$e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
     public function store(ProductRequest $request)
     {
         DB::beginTransaction();
+
         try {
-                  $isSaveAndNew = $request->input('save_and_new') == '1';
-            $data = $request->except(['_token', 'save_and_new']);
-            $unit = BasicCodeDetail::find($request->unit_id);
+            $isSaveAndNew = $request->input('save_and_new') == '1';
+
+            $data = $request->except(['_token', 'save_and_new', 'conversion']);
+
+            // $unit = BasicCodeDetail::find($request->unit_id);
+
             $data['created_by'] = Auth::id();
-            $data['unit1'] = $unit->detail;
-            $data['unit2'] = $unit->detail;
-    
-        
+            // $data['unit1'] = $unit->detail;
+            // $data['unit2'] = $unit->detail;
+
             if ($request->hasFile('photo_filename')) {
                 $data['photo_filename'] = $this->uploadAvatar($request->file('photo_filename'));
             }
-            Barang::create($data);
+
+            // =========================
+            // 1. SAVE MAIN PRODUCT
+            // =========================
+            $barang = Barang::create($data);
+
+            // =========================
+            // 2. SAVE CONVERSION DATA
+            // =========================
+            if ($request->has('conversion')) {
+
+                foreach ($request->conversion as $conv) {
+// dd($request->conversion);
+                    // skip kalau kosong
+                    if (
+                        empty($conv['from_unit']) ||
+                        empty($conv['to_unit']) ||
+                        empty($conv['qty'])
+                    ) {
+                        continue;
+                    }
+
+                    DataBarangConversion::create([
+                        'data_barang_id' => $barang->id,
+                        'from_unit_id' => $conv['from_unit'],
+                        'to_unit_id' => $conv['to_unit'],
+                        'qty' => $conv['qty'],
+                    ]);
+                }
+            }
 
             DB::commit();
 
-            if ($isSaveAndNew) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Product has been saved. You can now upload a new product.',
-                    'redirect' => route('data-barang.create'),
-                ]);
-            } else {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Product has been successfully added.',
-                    'redirect' => route('data-barang.index'),
-                ]);
-            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Product has been successfully saved.',
+                'redirect' => $isSaveAndNew
+                    ? route('data-barang.create')
+                    : route('data-barang.index'),
+            ]);
+
         } catch (\Exception $e) {
+
             DB::rollBack();
 
             return response()->json([
@@ -251,16 +318,11 @@ class DataBarangController extends Controller
         DB::beginTransaction();
 
         try {
-            $unit = BasicCodeDetail::find($request->unit_id);
             $isSaveAndNew = $request->input('save_and_new') == '1';
-
             $barang = Barang::findOrFail($id);
-
             $data = $request->except(['_token', '_method', 'save_and_new', 'unit1', 'unit2']);
-
             $data['updated_by'] = Auth::id();
-            $data['unit1'] = $unit->detail;
-            $data['unit2'] = $unit->detail;
+
             // jika upload foto baru
             if ($request->hasFile('photo_filename')) {
                 // optional: hapus file lama kalau perlu
@@ -316,12 +378,12 @@ class DataBarangController extends Controller
 
     public function getSubUnit($id)
     {
-        $data = Barang::where('id',$id)->first();
+        $data = Barang::where('id', $id)->first();
 
-        if (!$data) {
+        if (! $data) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data not found'
+                'message' => 'Data not found',
             ], 404);
         }
 
@@ -330,11 +392,9 @@ class DataBarangController extends Controller
             'data' => [
                 'unit_1' => $data->unit_1,
                 'unit_2' => $data->unit_2,
-                'unit1' => $data->unit1,
-                'unit2' => $data->unit2,
                 'quantity1' => $data->quantity1,
                 'quantity2' => $data->quantity2,
-            ]
+            ],
         ]);
     }
 }
