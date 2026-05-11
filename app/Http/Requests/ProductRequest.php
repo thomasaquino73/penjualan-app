@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Master_Data\Barang;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -14,31 +15,24 @@ class ProductRequest extends FormRequest
 
     public function rules(): array
     {
-        $id = $this->input('id');
+        $id = $this->route('data_barang');
+        // atau sesuaikan dengan nama route model binding kamu
+
+        if ($id instanceof Barang) {
+            $id = $id->id;
+        }
 
         return [
-
             'id_barang' => [
-                'required', // 🔥 boleh kosong (auto generate di controller)
+                'required',
                 'string',
                 Rule::unique('data_barang', 'id_barang')->ignore($id),
             ],
-            'nama_barang' => [
-                'required', // 🔥 boleh kosong (auto generate di controller)
-            ],
-            'kategori_id' => [
-                'required', // 🔥 boleh kosong (auto generate di controller)
-            ],
-            'gudang_id' => [
-                'required', // 🔥 boleh kosong (auto generate di controller)
-            ],
-            'unit_id' => [
-                'required', // 🔥 boleh kosong (auto generate di controller)
-            ],
-            'product_type' => [
-                'required', // 🔥 boleh kosong (auto generate di controller)
-            ],
-
+            'nama_barang' => ['required'],
+            'kategori_id' => ['required'],
+            'gudang_id' => ['required'],
+            'unit_id' => ['required'],
+            'product_type' => ['required'],
         ];
     }
 

@@ -22,10 +22,10 @@
             </div>
         </div>
         <div class="card-datatable table-responsive" style="padding: 20px">
-
-            <form method="POST" action="{{ route('data-barang.store') }}" class="py-2" id="postForm"
+            <form method="POST" action="{{ route('data-barang.update', $detail->id) }}" class="py-2" id="postForm"
                 enctype="multipart/form-data">
                 @csrf
+                @method('PUT')
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="row g-3">
@@ -37,12 +37,13 @@
                             <div class="col-md-6">
                                 <label class="form-label">Product ID <small class="text-danger">*</small> </label>
                                 <input type="text" name="id_barang" id="id_barang" class="form-control"
-                                    value="{{ $idNumber }}">
+                                    value="{{ $detail->id_barang }}">
                                 <span class="error text-danger" id="id_barangError"></span>
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label">Name <small class="text-danger">*</small> </label>
-                                <input type="text" name="nama_barang" id="nama_barang" class="form-control">
+                                <input type="text" name="nama_barang" id="nama_barang" class="form-control"
+                                    value="{{ $detail->nama_barang }}">
                                 <span class="error text-danger" id="nama_barangError"></span>
                             </div>
 
@@ -52,7 +53,10 @@
                                     data-placeholder="Select category">
                                     <option></option>
                                     @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->detail }}</option>
+                                        <option value="{{ $category->id }}"
+                                            {{ $category->id == $detail->kategori_id ? 'selected' : '' }}>
+                                            {{ $category->detail }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <span class="error text-danger" id="kategori_idError"></span>
@@ -63,8 +67,10 @@
                                     data-placeholder="Select warehouse">
                                     <option></option>
                                     @foreach ($warehouses as $warehouse)
-                                        <option value="{{ $warehouse->id }}">
-                                            {{ $warehouse->nama_gudang }}</option>
+                                        <option value="{{ $warehouse->id }}"
+                                            {{ $warehouse->id == $detail->gudang_id ? 'selected' : '' }}>
+                                            {{ $warehouse->nama_gudang }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <span class="error text-danger" id="gudang_idError"></span>
@@ -76,14 +82,15 @@
                                         data-placeholder="Select unit">
                                         <option></option>
                                         @foreach ($unit as $units)
-                                            <option value="{{ $units->id }}">{{ $units->detail }}</option>
+                                            <option value="{{ $units->id }}"
+                                                {{ $units->id == $detail->unit_id ? 'selected' : '' }}>
+                                                {{ $units->detail }}
+                                            </option>
                                         @endforeach
                                     </select>
-                                    <button class="btn btn-primary waves-effect" type="button" id="button-addon2" disabled>
-                                        ...
-                                    </button>
+                                    <button type="button" id="showSubUnit" data-id="{{ $detail->id }}"
+                                        class="btn btn-md btn-primary waves-effect waves-light">...</button>
                                 </div>
-
                                 <span class="error text-danger" id="unit_idError"></span>
                             </div>
                             <div class="col-md-3  ">
@@ -91,13 +98,14 @@
                                 <div class="d-flex gap-2">
                                     <div class="form-check form-check-success me-4">
                                         <input name="product_type" class="form-check-input" type="radio" value="supply"
-                                            id="radioSupply" checked>
+                                            id="radioSupply" {{ $detail->product_type == 'supply' ? 'checked' : '' }}>
                                         <label class="form-check-label" for="radioSupply"> Supply </label>
                                     </div>
 
                                     <div class="form-check form-check-success">
                                         <input name="product_type" class="form-check-input" type="radio"
-                                            value="non_supply" id="radioNonSupply">
+                                            value="non_supply" id="radioNonSupply"
+                                            {{ $detail->product_type == 'non_supply' ? 'checked' : '' }}>
                                         <label class="form-check-label" for="radioNonSupply"> Non Supply </label>
                                     </div>
                                 </div>
@@ -106,7 +114,7 @@
 
                             <div class="col-md-12 mb-5">
                                 <label class="form-label">Description</label>
-                                <textarea name="keterangan" id="keterangan" cols="30" rows="3" class="form-control"></textarea>
+                                <textarea name="keterangan" id="keterangan" cols="30" rows="3" class="form-control">{{ $detail->keterangan }}</textarea>
                                 <span class="error text-danger" id="keteranganError"></span>
                             </div>
 
@@ -125,7 +133,7 @@
                             <label class="col-md-4 col-form-label">Quantity</label>
                             <div class="col-md-8">
                                 <input class="form-control" type="number" id="quantity" name="quantity"
-                                    placeholder="Enter quantity">
+                                    placeholder="Enter quantity" value="{{ $detail->quantity }}">
                                 <span class="error text-danger" id="quantityError"></span>
                             </div>
                         </div>
@@ -134,7 +142,7 @@
                             <label class="col-md-4 col-form-label">Price/Unit</label>
                             <div class="col-md-8">
                                 <input class="form-control" type="number" id="price" name="price"
-                                    placeholder="Enter price per unit">
+                                    placeholder="Enter price per unit" value="{{ $detail->price }}">
                                 <span class="error text-danger" id="priceError"></span>
                             </div>
                         </div>
@@ -142,73 +150,93 @@
                         <div class="mb-3 row">
                             <label class="col-md-4 col-form-label">Cost of Goods</label>
                             <div class="col-md-8">
-                                <input class="form-control" type="text" id="hasil_akhir" name="hasil_akhir" readonly>
+                                <input class="form-control" type="text" id="hasil_akhir" name="hasil_akhir" readonly
+                                    value="{{ $detail->hasil_akhir }}">
                             </div>
                         </div>
                         <div class="mb-3 row">
                             <label for="html5-text-input" class="col-md-4 col-form-label">
                                 date</label>
                             <div class="col-md-8">
-                                <input type="date" name="date" id="date" class="form-control">
+                                <input type="date" name="date" id="date" class="form-control"
+                                    value="{{ $detail->date }}">
                                 <span class="error text-danger" id="dateError"></span>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-6" id="subUnitSection" style="display: none;">
-                        <h6><strong>Sub Unit</strong></h6>
-                        <div class="mb-3 row">
-                            <label for="html5-text-input" class="col-md-2 col-form-label">Unit 1</label>
-                            <div class="col-md-10 d-flex gap-4">
-                                <select name="unit_1" id="unit_1" class="form-select select2"
-                                    data-placeholder="Select unit">
-                                    <option></option>
-                                    @foreach ($unit as $un)
-                                        <option value="{{ $un->id }}">{{ $un->detail }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                =
-                                <input class="form-control" type="text" placeholder="Enter quantity" id="quantity1"
-                                    name="quantity1">
-                                x
-                                <input class="form-control" type="text" placeholder="" id="unit1" name="unit1"
-                                    readonly>
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="html5-text-input" class="col-md-2 col-form-label">Unit 2</label>
-                            <div class="col-md-10 d-flex gap-4">
-                                <select name="unit_2" id="unit_2" class="form-select select2"
-                                    data-placeholder="Select unit">
-                                    <option></option>
-                                    @foreach ($unit as $un)
-                                        <option value="{{ $un->id }}">{{ $un->detail }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                =
-                                <input class="form-control" type="text" placeholder="Enter quantity" id="quantity2"
-                                    name="quantity2">
-                                x
-                                <input class="form-control" type="text" placeholder="" id="unit2" name="unit2"
-                                    readonly>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">
                     <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
-                        <i class="fa fa-upload me-1"></i> Save and Close
-                    </button>
-
-                    <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
-                        <i class="fa fa-plus-circle me-1"></i> Save and Create New
+                        <i class="fa fa-upload me-1"></i> Update
                     </button>
                     <a href="{{ route('data-barang.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
-            </form>
         </div>
     </div>
+
+    <div class="modal fade" id="modals" tabindex="-1">
+        <div class="modal-dialog  modal-md">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <div class="text-center ">
+                        <h3 class="mb-2" id="modal-title"></h3>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center">
+                    <label class="col-md-2 col-form-label">Unit 1</label>
+
+                    <div class="col-md-10">
+                        <div class="d-flex align-items-center gap-2">
+
+                            <select name="unit_1" id="unit_1" class="form-select select2" style="width: 200px;">
+                                <option></option>
+                                @foreach ($unit as $un)
+                                    <option value="{{ $un->id }}">{{ $un->detail }}</option>
+                                @endforeach
+                            </select>
+
+                            <span>=</span>
+
+                            <input class="form-control" type="text" placeholder="Qty" id="quantity1"
+                                name="quantity1" style="width: 120px;">
+
+                            <span>x</span>
+
+                            <input class="form-control" type="text" id="unit1" name="unit1" readonly
+                                style="width: 120px;">
+                        </div>
+                    </div>
+                    <label class="col-md-2 mt-2 col-form-label">Unit 2</label>
+                    <div class="col-md-10">
+                        <div class="d-flex align-items-center gap-2">
+                            <select name="unit_2" id="unit_2" class="form-select select2" style="width: 200px;">
+                                <option></option>
+                                @foreach ($unit as $un)
+                                    <option value="{{ $un->id }}">{{ $un->detail }}</option>
+                                @endforeach
+                            </select>
+
+                            <span>=</span>
+
+                            <input class="form-control" type="text" placeholder="Qty" id="quantity2"
+                                name="quantity2" style="width: 120px;">
+
+                            <span>x</span>
+
+                            <input class="form-control" type="text" id="unit2" name="unit2" readonly
+                                style="width: 120px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer"></div>
+            </div>
+        </div>
+    </div>
+    </form>
 @endsection
 
 @push('style')
@@ -258,6 +286,118 @@
 @endpush
 @push('scripts')
     <script>
+        let isModalOpen = false;
+        let dbUnit1 = '';
+        let dbUnit2 = '';
+        let currentData = null;
+
+        $(document).ready(function() {
+
+            // =========================
+            // OPEN MODAL + FETCH DATA
+            // =========================
+            $('#showSubUnit').on('click', function() {
+
+                let dataBarangId = $(this).data('id');
+
+                isModalOpen = true;
+
+                $('#modals').modal('show');
+                $('#modal-title').html('Edit Sub Unit');
+
+                $.ajax({
+                    url: '/sub-unit/' + dataBarangId,
+                    type: 'GET',
+                    dataType: 'json',
+
+                    success: function(res) {
+
+                        if (!res.success) return;
+
+                        let d = res.data;
+
+                        currentData = d;
+
+                        // input biasa
+                        $('#quantity1').val(d.quantity1);
+                        $('#quantity2').val(d.quantity2);
+
+                        // simpan DB fallback
+                        dbUnit1 = d.unit1;
+                        dbUnit2 = d.unit2;
+
+                        $('#unit1').val(dbUnit1);
+                        $('#unit2').val(dbUnit2);
+                    },
+
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to fetch data'
+                        });
+                    }
+                });
+            });
+
+
+            // =========================
+            // PASTIKAN MODAL SUDAH SIAP
+            // =========================
+            $('#modals').on('shown.bs.modal', function() {
+
+                if (!currentData) return;
+
+                setTimeout(function() {
+
+                    $('#unit_1')
+                        .val(String(currentData.unit_1))
+                        .trigger('change');
+
+                    $('#unit_2')
+                        .val(String(currentData.unit_2))
+                        .trigger('change');
+
+                }, 100);
+            });
+
+
+            // =========================
+            // UNIT SELECT CHANGE
+            // =========================
+            $('#unit_id').on('change', function() {
+
+                if (!isModalOpen) return;
+
+                let selected = $(this).select2('data');
+
+                if (selected.length > 0) {
+
+                    let text = selected[0].text;
+
+                    $('#unit1').val(text);
+                    $('#unit2').val(text);
+
+                } else {
+
+                    $('#unit1').val(dbUnit1);
+                    $('#unit2').val(dbUnit2);
+                }
+            });
+
+
+            // =========================
+            // MODAL CLOSE RESET STATE
+            // =========================
+            $('#modals').on('hidden.bs.modal', function() {
+
+                isModalOpen = false;
+                currentData = null;
+            });
+
+        });
+    </script>
+    <script>
         $('.select2').select2({
             allowClear: true,
             width: '100%',
@@ -265,6 +405,16 @@
         $('#unit_id').select2({
             width: '100%',
             dropdownAutoWidth: true
+        });
+        $('#unit_1').select2({
+            dropdownParent: $('#modals'),
+            placeholder: "Select unit",
+            allowClear: true
+        });
+        $('#unit_2').select2({
+            dropdownParent: $('#modals'),
+            placeholder: "Select unit",
+            allowClear: true
         });
         document.addEventListener("DOMContentLoaded", function() {
             const supplyRadio = document.getElementById("radioSupply");

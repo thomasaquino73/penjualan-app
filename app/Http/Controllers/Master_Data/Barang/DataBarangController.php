@@ -10,6 +10,7 @@ use App\Models\Master_Data\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\DataTables;
 
 class DataBarangController extends Controller
@@ -86,13 +87,13 @@ class DataBarangController extends Controller
                     if (auth()->user()->can('barang-delete')) {
                         $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
-                                data-name="'.$row->nama.'"
+                                data-name="'.$row->nama_barang.'"
                                 ><i class="ti ti-trash"></i> Delete</a>';
                     }
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk','productType'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType'])
                 ->make(true);
         }
 
@@ -177,9 +178,14 @@ class DataBarangController extends Controller
     {
         DB::beginTransaction();
         try {
-            $isSaveAndNew = $request->input('save_and_new') == '1';
-            $data = $request->except(['_token', 'save_and_new', 'unit1', 'unit2']);
+                  $isSaveAndNew = $request->input('save_and_new') == '1';
+            $data = $request->except(['_token', 'save_and_new']);
+            $unit = BasicCodeDetail::find($request->unit_id);
             $data['created_by'] = Auth::id();
+            $data['unit1'] = $unit->detail;
+            $data['unit2'] = $unit->detail;
+    
+        
             if ($request->hasFile('photo_filename')) {
                 $data['photo_filename'] = $this->uploadAvatar($request->file('photo_filename'));
             }
@@ -223,7 +229,8 @@ class DataBarangController extends Controller
      */
     public function edit(string $id)
     {
-        $id=Barang::findorfail($id);
+        $idDetail = Barang::findorfail($id);
+
         return view('master_data.barang.data_barang.data_barang_edit', [
             'title' => 'Edit Product',
             'breadcrumb' => [
@@ -235,22 +242,99 @@ class DataBarangController extends Controller
             'unit' => BasicCodeDetail::where('master_id', 2)->get(),
             'warehouses' => Warehouse::where('status', 1)->get(),
             'typePersediaan' => BasicCodeDetail::where('master_id', 4)->get(),
+            'detail' => $idDetail,
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(ProductRequest $request, string $id)
+    public function update(ProductRequest $request, $id)
     {
-        //
+        DB::beginTransaction();
+
+        try {
+            $unit = BasicCodeDetail::find($request->unit_id);
+            $isSaveAndNew = $request->input('save_and_new') == '1';
+
+            $barang = Barang::findOrFail($id);
+
+            $data = $request->except(['_token', '_method', 'save_and_new', 'unit1', 'unit2']);
+
+            $data['updated_by'] = Auth::id();
+            $data['unit1'] = $unit->detail;
+            $data['unit2'] = $unit->detail;
+            // jika upload foto baru
+            if ($request->hasFile('photo_filename')) {
+                // optional: hapus file lama kalau perlu
+                // if ($barang->photo_filename) {
+                //     Storage::delete($barang->photo_filename);
+                // }
+
+                $data['photo_filename'] = $this->uploadAvatar($request->file('photo_filename'));
+            }
+
+            $barang->update($data);
+
+            DB::commit();
+
+            if ($isSaveAndNew) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product has been updated. You can now add a new product.',
+                    'redirect' => route('data-barang.create'),
+                ]);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product has been successfully updated.',
+                    'redirect' => route('data-barang.index'),
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update product: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Request $request, $id)
     {
-        //
+
+        try {
+            $table = Barang::findOrFail($id);
+            $table->status = '0';
+            $table->updated_by = Auth::user()->id;
+            $table->save();
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => $e->errors(),
+            ], 422);
+        }
+    }
+
+    public function getSubUnit($id)
+    {
+        $data = Barang::where('id',$id)->first();
+
+        if (!$data) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'unit_1' => $data->unit_1,
+                'unit_2' => $data->unit_2,
+                'unit1' => $data->unit1,
+                'unit2' => $data->unit2,
+                'quantity1' => $data->quantity1,
+                'quantity2' => $data->quantity2,
+            ]
+        ]);
     }
 }
