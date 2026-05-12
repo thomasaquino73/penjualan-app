@@ -30,13 +30,13 @@
                         class="d-flex flex-column flex-md-row gap-2 
                         justify-content-start justify-content-lg-end">
 
-                        <a href="{{ route('data-barang.index') }}" class="btn btn-secondary btn-sm ">
+                        <a href="{{ route('supplier.index') }}" class="btn btn-secondary btn-sm ">
                             <i class="ti ti-chevron-left me-1"></i> Back
                         </a>
 
                         @canany(['supplier-restore'])
                             <button id="restoreSelected" class="btn btn-success btn-sm ">
-                                <i class="ti ti-refresh"></i> Restore Selected
+                                <i class="ti ti-refresh me-1"></i> Restore Selected
                             </button>
                         @endcanany
 

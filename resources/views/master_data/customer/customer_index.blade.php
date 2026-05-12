@@ -16,28 +16,46 @@
     </h4>
 
     <div class="card">
-        <div class="card-header d-flex justify-content-between">
-            <h5 class="card-title mb-0">{{ $title }}</h5>
-            <div class="col-12 col-lg-5 text-lg-end">
-                <div class="d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
+        <div
+            class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
+
+            <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
+
+            <div class="col-12 col-lg-5">
+                <div
+                    class="d-flex flex-column flex-md-row gap-2 
+                    justify-content-start justify-content-lg-end">
+
                     @canany(['customer-create'])
                         <button id="create" class="btn  btn-sm btn-primary">
                             <i class="ti ti-plus me-1"></i> Add Data
                         </button>
                     @endcanany
                     @canany(['customer-trash'])
-                        <a href="{{ route('customer.trash') }}" class="btn btn-secondary">
-                            <i class="ti ti-trash me-1"></i>
+                        <a href="{{ route('customer.trash') }}" class="btn btn-sm btn-secondary">
+                            <i class="ti ti-trash me-1"></i>Trash Bin
                         </a>
                     @endcanany
+
+                    @canany(['barang-delete'])
+                        <button id="deleteSelected" class="btn btn-danger btn-sm">
+                            <i class="ti ti-trash me-1"></i> Delete Selected
+                        </button>
+                    @endcanany
+
                 </div>
             </div>
-        </div>
 
+        </div>
         <div class="card-datatable table-responsive p-3">
             <table class="table table-bordered" id="table">
                 <thead class="border-top" style="background-color: #AEDEFC; ">
                     <tr>
+                        <th>
+                            <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input" type="checkbox" value="" id="checkAll">
+                            </div>
+                        </th>
                         <th>#</th>
                         <th>ID</th>
                         <th>Name</th>
@@ -155,6 +173,17 @@
     </div>
     <script>
         $(document).ready(function() {
+            $('#checkAll').on('click', function() {
+                $('.checkItem').prop('checked', this.checked);
+            });
+
+            // kalau salah satu di uncheck → header ikut off
+            $(document).on('click', '.checkItem', function() {
+                $('#checkAll').prop(
+                    'checked',
+                    $('.checkItem:checked').length === $('.checkItem').length
+                );
+            });
             var table = new DataTable('#table', {
                 processing: true,
                 serverSide: true,
@@ -165,6 +194,11 @@
                 ],
                 ajax: '{{ route('customer.index') }}',
                 columns: [{
+                        data: 'cekbok',
+                        name: 'cekbok',
+                        orderable: false,
+                        searchable: false
+                    }, {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
                         orderable: false,
@@ -400,6 +434,68 @@
                 $('#detail_alias').text(alias);
 
                 $('#modalDetail').modal('show');
+
+            });
+            $('#deleteSelected').on('click', function() {
+
+                let ids = [];
+
+                $('.checkItem:checked').each(function() {
+                    ids.push($(this).val());
+                });
+
+                if (ids.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'An error occurred. Please try again later.',
+                        text: 'Please select data first!',
+                        timer: 5000,
+                        customClass: {
+                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Data will be deleted!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/customer/delete-multiple',
+                            type: 'POST',
+                            data: {
+                                ids: ids,
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(res) {
+                                toastr.success('Deleted Data Successfully', '', {
+                                    timeOut: 1500,
+                                    progressBar: true,
+                                    closeButton: false,
+                                    positionClass: 'toast-top-right',
+                                });
+                                $('#table').DataTable().ajax.reload();
+                            },
+                            error: function() {
+                                Swal.fire('Error!', 'Failed to delete data.', 'error');
+                            }
+                        });
+                    }
+
+                });
 
             });
         });

@@ -32,14 +32,14 @@
                         </button>
                     @endcanany
                     @canany(['supplier-trash'])
-                        <a href="{{ route('supplier.trash') }}" class="btn btn-secondary">
+                        <a href="{{ route('supplier.trash') }}" class="btn btn-sm btn-secondary">
                             <i class="ti ti-trash me-1"></i>Trash Bin
                         </a>
                     @endcanany
 
                     @canany(['barang-delete'])
                         <button id="deleteSelected" class="btn btn-danger btn-sm">
-                            <i class="ti ti-trash"></i> Delete Selected
+                            <i class="ti ti-trash me-1"></i> Delete Selected
                         </button>
                     @endcanany
 

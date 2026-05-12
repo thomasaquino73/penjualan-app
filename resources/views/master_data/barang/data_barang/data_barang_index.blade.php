@@ -27,22 +27,25 @@
                     justify-content-start justify-content-lg-end">
 
                     @canany(['barang-create'])
-                        <a href="{{ route('data-barang.create') }}" class="btn btn-primary ">
+                        <a href="{{ route('data-barang.create') }}" class="btn btn-sm btn-primary ">
                             <i class="ti ti-plus me-1"></i> Add Data
                         </a>
                     @endcanany
 
                     @canany(['barang-trash'])
-                        <a href="{{ route('data-barang.trash') }}" class="btn btn-secondary ">
+                        <a href="{{ route('data-barang.trash') }}" class="btn btn-sm btn-secondary ">
                             <i class="ti ti-trash me-1"></i>Trash Bin
                         </a>
                     @endcanany
 
                     @canany(['barang-delete'])
-                        <button id="deleteSelected" class="btn btn-danger ">
-                            <i class="ti ti-trash"></i> Delete Selected
+                        <button id="deleteSelected" class="btn btn-sm btn-danger ">
+                            <i class="ti ti-trash me-1"></i> Delete Selected
                         </button>
                     @endcanany
+                    <button class="btn btn-sm btn-info ">
+                        <i class="ti ti-printer me-1"></i> Print All
+                    </button>
 
                 </div>
             </div>

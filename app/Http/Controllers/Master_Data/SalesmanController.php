@@ -71,6 +71,12 @@ class SalesmanController extends Controller
                         return '<span class="badge bg-danger">Not Active</span>';
                     }
                 })
+                    ->addColumn('cekbok', function ($row) {
+                    return '   <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
+                                    >
+                            </div>';
+                })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -92,7 +98,7 @@ class SalesmanController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status','cekbok'])
                 ->make(true);
         }
 
@@ -281,6 +287,12 @@ class SalesmanController extends Controller
                         return '<span class="badge bg-danger">Not Active</span>';
                     }
                 })
+                    ->addColumn('cekbok', function ($row) {
+                    return '   <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
+                                    >
+                            </div>';
+                })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -295,7 +307,7 @@ class SalesmanController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status','cekbok'])
                 ->make(true);
         }
 

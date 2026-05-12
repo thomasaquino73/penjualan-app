@@ -36,7 +36,7 @@
 
                         @canany(['barang-restore'])
                             <button id="restoreSelected" class="btn btn-success btn-sm ">
-                                <i class="ti ti-refresh"></i> Restore Selected
+                                <i class="ti ti-refresh me-1"></i> Restore Selected
                             </button>
                         @endcanany
 

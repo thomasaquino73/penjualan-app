@@ -70,6 +70,12 @@ class WarehouseController extends Controller
                         return '<span class="badge bg-danger">Not Active</span>';
                     }
                 })
+                      ->addColumn('cekbok', function ($row) {
+                    return '   <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
+                                    >
+                            </div>';
+                })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -91,7 +97,7 @@ class WarehouseController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status','cekbok'])
                 ->make(true);
         }
 
@@ -239,6 +245,21 @@ class WarehouseController extends Controller
             ], 422);
         }
     }
+    public function deleteMultiple(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (! $ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
+        }
+
+        Warehouse::whereIn('id', $ids)->update([
+            'status' => '0',
+            'updated_by' => Auth::id(),
+        ]);
+
+        return response()->json(['success' => true]);
+    }
 
     public function trash(Request $r)
     {
@@ -271,6 +292,12 @@ class WarehouseController extends Controller
                         return '<span class="badge bg-danger">Not Active</span>';
                     }
                 })
+                      ->addColumn('cekbok', function ($row) {
+                    return '   <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
+                                    >
+                            </div>';
+                })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -285,7 +312,7 @@ class WarehouseController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status','cekbok'])
                 ->make(true);
         }
 
@@ -326,5 +353,20 @@ class WarehouseController extends Controller
                 'message' => 'Warehouse successfully restored.',
             ]);
         }
+    }
+     public function restoreMultiple(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (! $ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
+        }
+
+        Warehouse::whereIn('id', $ids)->update([
+            'status' => '1',
+            'updated_by' => Auth::id(),
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

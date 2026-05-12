@@ -109,6 +109,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/mata-uang/{id}', [PengaturanSistemController::class, 'mata_uang_destroy'])->name('pengaturan.mata_uang.delete');
 
     // Master Data
+        Route::post('/customer/delete-multiple', [CustomerController::class, 'deleteMultiple']);
+    Route::post('/customer/restore-multiple', [CustomerController::class, 'restoreMultiple']);
     Route::get('/customer/generate-id', [CustomerController::class, 'generateId']);
     Route::get('/customer/trash', [CustomerController::class, 'trash'])->name('customer.trash');
     Route::put('/customer/restore/{id}', [CustomerController::class, 'restore'])->name('customer.restore');
@@ -121,11 +123,15 @@ Route::middleware('auth')->group(function () {
     Route::put('/supplier/restore/{id}', [SupplierController::class, 'restore'])->name('supplier.restore');
     Route::resource('supplier', SupplierController::class);
 
+    Route::post('/salesman/delete-multiple', [SalesmanController::class, 'deleteMultiple']);
+    Route::post('/salesman/restore-multiple', [SalesmanController::class, 'restoreMultiple']);
     Route::get('/salesman/generate-id', [SalesmanController::class, 'generateId']);
     Route::get('/salesman/trash', [SalesmanController::class, 'trash'])->name('salesman.trash');
     Route::put('/salesman/restore/{id}', [SalesmanController::class, 'restore'])->name('salesman.restore');
     Route::resource('salesman', SalesmanController::class);
 
+    Route::post('/warehouse/delete-multiple', [WarehouseController::class, 'deleteMultiple']);
+    Route::post('/warehouse/restore-multiple', [WarehouseController::class, 'restoreMultiple']);
     Route::get('/warehouse/generate-id', [WarehouseController::class, 'generateId']);
     Route::get('/warehouse/trash', [WarehouseController::class, 'trash'])->name('warehouse.trash');
     Route::put('/warehouse/restore/{id}', [WarehouseController::class, 'restore'])->name('warehouse.restore');
@@ -140,6 +146,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [DaftarKendaraanController::class, 'destroy'])->name('destroy');
         Route::put('/{id}/restore', [DaftarKendaraanController::class, 'restore'])->name('restore');
         Route::get('/{id}/detail', [DaftarKendaraanController::class, 'show'])->name('show');
+        Route::post('/delete-multiple', [DaftarKendaraanController::class, 'deleteMultiple']);
+        Route::post('/restore-multiple', [DaftarKendaraanController::class, 'restoreMultiple']);
     });
     Route::get('/data-barang/print/{id}', [DataBarangController::class, 'print'])->name('data-barang.print');
     Route::post('/data-barang/delete-multiple', [DataBarangController::class, 'deleteMultiple']);
