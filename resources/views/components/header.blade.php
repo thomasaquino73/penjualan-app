@@ -51,19 +51,21 @@
 
     {{-- <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/apex-charts/apex-charts.css" /> --}}
     {{-- <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/swiper/swiper.css" /> --}}
-    {{-- <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" /> --}}
-    {{-- <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" /> --}}
-    {{-- <link rel="stylesheet"
-  href="{{ asset('') }}assets/vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css" /> --}}
+    
     <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/tagify/tagify.css" />
     <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/toastr/toastr.css" />
     <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/sweetalert2/sweetalert2.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="//cdn.datatables.net/2.3.7/css/dataTables.dataTables.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
         rel="stylesheet" />
-    <link rel="stylesheet" href="//cdn.datatables.net/2.3.7/css/dataTables.dataTables.min.css" />
+
+
+
+<link rel="stylesheet" href="https://cdn.datatables.net/2.3.8/css/dataTables.bootstrap5.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.8/css/responsive.bootstrap5.css" />
+
+
+    <link rel="stylesheet" href="//cdn.datatables.net/2.3.8/css/dataTables.dataTables.min.css" />
     <link rel="stylesheet" href="{{ asset('assets/css/preloader.css') }}">
     <div id="preloader">
     <div class="preloader-content">

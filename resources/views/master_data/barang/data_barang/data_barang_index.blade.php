@@ -53,7 +53,7 @@
         </div>
 
         <div class="card-datatable table-responsive p-3">
-            <table class="table table-bordered" id="table">
+            <table class="display responsive nowrap" id="table">
                 <thead class="border-top" style="background-color: #AEDEFC; ">
                     <tr>
                         <th>
