@@ -71,7 +71,7 @@ class SatuanBarangController extends Controller
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="ti ti-menu-2 ti-xs me-1"></i>
-                      Action
+                      
                       </button>
                       <ul class="dropdown-menu" style="">';
                     if (auth()->user()->can('satuan_barang-edit')) {

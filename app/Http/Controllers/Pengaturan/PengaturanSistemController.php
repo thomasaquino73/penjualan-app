@@ -140,7 +140,7 @@ class PengaturanSistemController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="ti ti-menu-2 ti-xs me-1"></i> Action
+                        <i class="ti ti-menu-2 ti-xs me-1"></i> 
                       </button>
                       <ul class="dropdown-menu" style="">';
                     if (auth()->user()->can('login_background-edit')) {
@@ -348,7 +348,7 @@ class PengaturanSistemController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="ti ti-menu-2 ti-xs me-1"></i> Action
+                        <i class="ti ti-menu-2 ti-xs me-1"></i> 
                       </button>
                       <ul class="dropdown-menu" style="">';
                     if (auth()->user()->can('mata_uang-edit')) {

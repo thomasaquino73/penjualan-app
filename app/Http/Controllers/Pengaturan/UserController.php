@@ -137,7 +137,7 @@ class UserController extends Controller
             <button type="button"
                 class="btn btn-'.$color.' dropdown-toggle waves-effect waves-light"
                 data-bs-toggle="dropdown" aria-expanded="false">
-                '.$icon.' Action
+                '.$icon.' 
             </button>
             <div class="dropdown-menu">
      ';

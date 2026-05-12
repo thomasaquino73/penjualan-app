@@ -79,12 +79,12 @@ class RolesController extends Controller
                     }
 
                     $btn = '<div class="btn-group">';
-                    $btn .= '<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"><i class="ti ti-menu-2 ti-xs me-1"></i> Choose Options</button>';
+                    $btn .= '<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"><i class="ti ti-menu-2 ti-xs me-1"></i> </button>';
                     $btn .= '<div class="dropdown-menu">';
 
                     if (auth()->user()->can('role-edit')) {
                         $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)" data-id="'.$row['id'].'">
-                                    <i class="far fa-edit me-1"></i> Edit</a>';
+                                    <i class="ti ti-edit me-1"></i> Edit</a>';
                     }
                     if (auth()->user()->can('permission-edit')) {
                         $btn .= '<a class="dropdown-item "  href="'.route('permissions.edit', $row['id']).'" data-id="'.$row['id'].'">
@@ -93,7 +93,7 @@ class RolesController extends Controller
 
                     if (auth()->user()->can('role-delete')) {
                         $btn .= '<a class="dropdown-item" id="delete" href="javascript:void(0)" data-id="'.$row['id'].'" data-name="'.$row['name'].'">
-                                    <i class="fa fa-trash me-1"></i> Delete</a>';
+                                    <i class="ti ti-trash me-1"></i> Delete</a>';
                     }
 
                     $btn .= '</div></div>';

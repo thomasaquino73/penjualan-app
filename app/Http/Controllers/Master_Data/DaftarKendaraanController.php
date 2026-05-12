@@ -104,7 +104,7 @@ class DaftarKendaraanController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                        Action
+                        
                       </button>
                       <ul class="dropdown-menu" style="">';
                     if (auth()->user()->can('kendaraan-edit')) {
@@ -320,7 +320,7 @@ class DaftarKendaraanController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                        Action
+                        
                       </button>
                       <ul class="dropdown-menu" style="">';
                     if (auth()->user()->can('kendaraan-restore')) {

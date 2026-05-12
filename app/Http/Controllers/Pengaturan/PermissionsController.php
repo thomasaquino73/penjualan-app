@@ -58,7 +58,7 @@ class PermissionsController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">';
-                    $btn .= '<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-menu-2 ti-xs me-1"></i> Choose Options</button>';
+                    $btn .= '<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-menu-2 ti-xs me-1"></i> </button>';
                     $btn .= '<div class="dropdown-menu">';
                     if (auth()->user()->can('permission-edit')) {
 
