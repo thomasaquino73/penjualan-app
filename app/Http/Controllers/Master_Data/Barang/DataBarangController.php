@@ -368,7 +368,7 @@ class DataBarangController extends Controller
             $barang = Barang::findOrFail($id);
             $data = $request->except(['_token', '_method', 'save_and_new', 'conversion']);
             $data['updated_by'] = Auth::id();
-
+            $data['status'] = $request->has('status') ? 2 : 1;
             // jika upload foto baru
             if ($request->hasFile('photo_filename')) {
                 // optional: hapus file lama kalau perlu
