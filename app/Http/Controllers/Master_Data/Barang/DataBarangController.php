@@ -8,6 +8,7 @@ use App\Models\BasicCodeDetail;
 use App\Models\Master_Data\Barang;
 use App\Models\Master_Data\DataBarangConversion;
 use App\Models\Master_Data\Warehouse;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,8 @@ use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\DataTables;
 
 class DataBarangController extends Controller
-{public function __construct()
+{
+    public function __construct()
     {
         $this->middleware(function ($request, $next) {
             $routeName = $request->route()->getName();
@@ -41,6 +43,7 @@ class DataBarangController extends Controller
             return $next($request);
         });
     }
+
     public function index(Request $r)
     {
         if ($r->ajax()) {
@@ -90,8 +93,8 @@ class DataBarangController extends Controller
                     }
                 })
                 ->addColumn('cekbok', function ($row) {
-                   return '   <div class="form-check form-check-primary mt-3">
-                                <input class="form-check-input checkItem" type="checkbox" value="'. $row->id.'"
+                    return '   <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
                                     >
                             </div>';
                 })
@@ -126,6 +129,9 @@ class DataBarangController extends Controller
                                 data-name="'.$row->nama_barang.'"
                                 ><i class="ti ti-trash"></i> Delete</a>';
                     }
+                    $btn .= '<a class="dropdown-item" href="'.route('data-barang.print', $row->id).'" target="_blank">
+                                    <i class="ti ti-printer"></i> Print
+                                </a>';
 
                     return $btn;
                 })
@@ -324,6 +330,7 @@ class DataBarangController extends Controller
     public function show(string $id)
     {
         $idDetail = Barang::findorfail($id);
+
         return view('master_data.barang.data_barang.data_barang_detail', [
             'title' => 'Detail Product',
             'breadcrumb' => [
@@ -442,42 +449,21 @@ class DataBarangController extends Controller
             ], 422);
         }
     }
-   public function deleteMultiple(Request $request)
+
+    public function deleteMultiple(Request $request)
     {
         $ids = $request->ids;
 
-        if (!$ids || count($ids) == 0) {
+        if (! $ids || count($ids) == 0) {
             return response()->json(['success' => false]);
         }
 
         Barang::whereIn('id', $ids)->update([
             'status' => '0',
-            'updated_by' => Auth::id()
+            'updated_by' => Auth::id(),
         ]);
 
         return response()->json(['success' => true]);
-    }
-
-    public function getSubUnit($id)
-    {
-        $data = Barang::where('id', $id)->first();
-
-        if (! $data) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Data not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'unit_1' => $data->unit_1,
-                'unit_2' => $data->unit_2,
-                'quantity1' => $data->quantity1,
-                'quantity2' => $data->quantity2,
-            ],
-        ]);
     }
 
     public function trash(Request $r)
@@ -514,9 +500,9 @@ class DataBarangController extends Controller
                                 alt="Foto Produk"  data-gambar="'.asset($row->photo_filename).'"
                                 data-alias="'.$row->nama_barang.'">';
                 })
-                   ->addColumn('cekbok', function ($row) {
-                   return '   <div class="form-check form-check-primary mt-3">
-                                <input class="form-check-input checkItem" type="checkbox" value="'. $row->id.'"
+                ->addColumn('cekbok', function ($row) {
+                    return '   <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
                                     >
                             </div>';
                 })
@@ -543,7 +529,7 @@ class DataBarangController extends Controller
                 // ->addColumn('tipePersediaan', function ($row) {
                 //     return $row->typeID->detail;
                 // })
-                  ->addColumn('action', function ($row) {
+                ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="ti ti-menu-2 ti-xs me-1"></i>Action
@@ -557,7 +543,7 @@ class DataBarangController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType','cekbok'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok'])
                 ->make(true);
         }
 
@@ -600,19 +586,30 @@ class DataBarangController extends Controller
             ]);
         }
     }
-     public function restoreMultiple(Request $request)
+
+    public function restoreMultiple(Request $request)
     {
         $ids = $request->ids;
 
-        if (!$ids || count($ids) == 0) {
+        if (! $ids || count($ids) == 0) {
             return response()->json(['success' => false]);
         }
 
         Barang::whereIn('id', $ids)->update([
             'status' => '1',
-            'updated_by' => Auth::id()
+            'updated_by' => Auth::id(),
         ]);
 
         return response()->json(['success' => true]);
+    }
+
+    public function print($id)
+    {
+        $barang = Barang::findOrFail($id);
+
+        $pdf = Pdf::loadView('pdf.barang_pdf', compact('barang'));
+
+        return $pdf->stream('barang.pdf');
+        // kalau mau download → ->download('barang.pdf');
     }
 }
