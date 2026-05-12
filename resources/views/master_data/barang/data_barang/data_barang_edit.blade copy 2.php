@@ -22,10 +22,10 @@
             </div>
         </div>
         <div class="card-datatable table-responsive" style="padding: 20px">
-
-            <form method="POST" action="{{ route('data-barang.store') }}" class="py-2" id="postForm"
+            <form method="POST" action="{{ route('data-barang.update', $detail->id) }}" class="py-2" id="postForm"
                 enctype="multipart/form-data">
                 @csrf
+                @method('PUT')
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="row g-3">
@@ -37,12 +37,13 @@
                             <div class="col-md-6">
                                 <label class="form-label">Product ID <small class="text-danger">*</small> </label>
                                 <input type="text" name="id_barang" id="id_barang" class="form-control"
-                                    value="{{ $idNumber }}">
+                                    value="{{ $detail->id_barang }}">
                                 <span class="error text-danger" id="id_barangError"></span>
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label">Name <small class="text-danger">*</small> </label>
-                                <input type="text" name="nama_barang" id="nama_barang" class="form-control">
+                                <input type="text" name="nama_barang" id="nama_barang" class="form-control"
+                                    value="{{ $detail->nama_barang }}">
                                 <span class="error text-danger" id="nama_barangError"></span>
                             </div>
 
@@ -52,7 +53,10 @@
                                     data-placeholder="Select category">
                                     <option></option>
                                     @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->detail }}</option>
+                                        <option value="{{ $category->id }}"
+                                            {{ $detail->kategori_id == $category->id ? 'selected' : '' }}>
+                                            {{ $category->detail }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <span class="error text-danger" id="kategori_idError"></span>
@@ -63,7 +67,8 @@
                                     data-placeholder="Select warehouse">
                                     <option></option>
                                     @foreach ($warehouses as $warehouse)
-                                        <option value="{{ $warehouse->id }}">
+                                        <option value="{{ $warehouse->id }}"
+                                            {{ $detail->gudang_id == $warehouse->id ? 'selected' : '' }}>
                                             {{ $warehouse->nama_gudang }}</option>
                                     @endforeach
                                 </select>
@@ -76,7 +81,9 @@
                                         data-placeholder="Select unit">
                                         <option></option>
                                         @foreach ($unit as $units)
-                                            <option value="{{ $units->id }}">{{ $units->detail }}</option>
+                                            <option value="{{ $units->id }}"
+                                                {{ $detail->unit_id == $units->id ? 'selected' : '' }}>
+                                                {{ $units->detail }}</option>
                                         @endforeach
                                     </select>
                                     {{-- <button type="button" id="showSubUnit"
@@ -89,13 +96,15 @@
                                 <div class="d-flex gap-2">
                                     <div class="form-check form-check-success me-4">
                                         <input name="product_type" class="form-check-input" type="radio" value="supply"
-                                            id="radioSupply" checked>
+                                            id="radioSupply" {{ $detail->product_type == 'supply' ? 'checked' : '' }}
+                                            readonly>
                                         <label class="form-check-label" for="radioSupply"> Supply </label>
                                     </div>
 
                                     <div class="form-check form-check-success">
                                         <input name="product_type" class="form-check-input" type="radio"
-                                            value="non_supply" id="radioNonSupply">
+                                            value="non_supply" id="radioNonSupply"
+                                            {{ $detail->product_type == 'non_supply' ? 'checked' : '' }} readonly>
                                         <label class="form-check-label" for="radioNonSupply"> Non Supply </label>
                                     </div>
                                 </div>
@@ -107,9 +116,7 @@
                                 <textarea name="keterangan" id="keterangan" cols="30" rows="3" class="form-control"></textarea>
                                 <span class="error text-danger" id="keteranganError"></span>
                             </div>
-
                         </div>
-
                     </div>
                 </div>
                 <div class="divider my-7 ">
@@ -123,7 +130,7 @@
                             <label class="col-md-4 col-form-label">Quantity</label>
                             <div class="col-md-8">
                                 <input class="form-control" type="number" id="quantity" name="quantity"
-                                    placeholder="Enter quantity">
+                                    placeholder="Enter quantity" value="{{ $detail->quantity }}">
                                 <span class="error text-danger" id="quantityError"></span>
                             </div>
                         </div>
@@ -132,7 +139,7 @@
                             <label class="col-md-4 col-form-label">Price/Unit</label>
                             <div class="col-md-8">
                                 <input class="form-control" type="number" id="price" name="price"
-                                    placeholder="Enter price per unit">
+                                    placeholder="Enter price per unit" value="{{ $detail->price }}">
                                 <span class="error text-danger" id="priceError"></span>
                             </div>
                         </div>
@@ -140,14 +147,16 @@
                         <div class="mb-3 row">
                             <label class="col-md-4 col-form-label">Cost of Goods</label>
                             <div class="col-md-8">
-                                <input class="form-control" type="text" id="hasil_akhir" name="hasil_akhir" readonly>
+                                <input class="form-control" type="text" id="hasil_akhir" name="hasil_akhir" readonly
+                                    value="{{ $detail->quantity * $detail->price }}">
                             </div>
                         </div>
                         <div class="mb-3 row">
                             <label for="html5-text-input" class="col-md-4 col-form-label">
-                                date</label>
+                                Date</label>
                             <div class="col-md-8">
-                                <input type="date" name="date" id="date" class="form-control">
+                                <input type="date" name="date" id="date" class="form-control"
+                                    value="{{ $detail->date ? date('Y-m-d', strtotime($detail->date)) : '' }}">
                                 <span class="error text-danger" id="dateError"></span>
                             </div>
                         </div>
@@ -160,7 +169,8 @@
                             </div>
                             <div class="row g-2">
                                 <div class="col-md-4">
-                                    <input type="text" class="form-control from_unit_text" disabled>
+                                    <input type="text" class="form-control from_unit_text" disabled
+                                        value="{{ $detail->unit_id ? $detail->unitID->detail : '' }}">
                                     <input type="hidden" name="conversion[0][from_unit]" class="from_unit_id">
                                 </div>
                                 <div class="col-md-2 text-center">
@@ -169,7 +179,8 @@
 
                                 <div class="col-md-3">
                                     <input type="number" name="conversion[0][qty]" class="form-control qty"
-                                        placeholder="Qty" disabled>
+                                        value="{{ $detail->unit_id ? $detail->unitID->detail : '' }}" placeholder="Qty"
+                                        disabled>
                                 </div>
 
                                 <div class="col-md-3">
@@ -221,11 +232,7 @@
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">
                     <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
-                        <i class="fa fa-upload me-1"></i> Save and Close
-                    </button>
-
-                    <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
-                        <i class="fa fa-plus-circle me-1"></i> Save and Create New
+                        <i class="fa fa-upload me-1"></i> Update
                     </button>
                     <a href="{{ route('data-barang.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
@@ -333,52 +340,7 @@
             let btn = saveAndNew ? $('#savedatamore') : $('#savedata');
             let formData = new FormData(form);
             formData.append('save_and_new', saveAndNew ? 1 : 0);
-            let isValid = true;
-            let errorMessage = '';
 
-            $('.conversion-item').each(function() {
-                let qty = $(this).find('.qty').val();
-                let toUnit = $(this).find('.to_unit').val();
-                let fromUnit = $(this).find('.from_unit_id').val();
-
-                // 1. qty ada tapi to_unit kosong
-                if (qty && !toUnit) {
-                    isValid = false;
-                    errorMessage = 'Please select a destination unit for the entered quantity.';
-                    return false;
-                }
-
-                // 2. to_unit ada tapi qty kosong
-                if (!qty && toUnit) {
-                    isValid = false;
-                    errorMessage = 'Please enter a quantity for the selected unit.';
-                    return false;
-                }
-
-                // 3. to_unit tidak boleh sama dengan from_unit
-                if (toUnit && fromUnit && toUnit == fromUnit) {
-                    isValid = false;
-                    errorMessage = 'The destination unit must be different from the source unit.';
-                    return false;
-                }
-            });
-
-            if (!isValid) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Invalid Input',
-                    text: errorMessage,
-                    confirmButtonText: 'OK',
-                    showClass: {
-                        popup: 'animate__animated animate__bounceIn'
-                    },
-                    customClass: {
-                        confirmButton: 'btn btn-primary waves-effect waves-light'
-                    },
-                    buttonsStyling: false
-                });
-                return; // ❌ STOP submit
-            }
             $.ajax({
                 url: $(form).attr('action'),
                 method: $(form).attr('method'),
@@ -394,14 +356,14 @@
                     if (saveAndNew) {
                         btn.html('<i class="fa fa-plus-circle me-1"></i> Save and Create New');
                     } else {
-                        btn.html('<i class="fa fa-upload me-1"></i> Save and Close');
+                        btn.html('<i class="fa fa-upload me-1"></i> Update');
                     }
                     btn.prop('disabled', false);
                 },
                 success: function(response) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Data Created Successfully',
+                        title: 'Data Updated Successfully',
                         text: response.message,
                         showClass: {
                             popup: 'animate__animated animate__bounceIn'
@@ -457,7 +419,6 @@
         qty.addEventListener('input', hitungTotal);
         price.addEventListener('input', hitungTotal);
     </script>
-
 
     <script>
         // $(document).on('click', '#showSubUnit', function() {
