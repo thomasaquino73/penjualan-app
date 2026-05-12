@@ -425,17 +425,6 @@
                     }
                 });
             });
-            $('body').on('click', '.detail', function() {
-
-                let gambar = $(this).data('gambar');
-                let alias = $(this).data('alias');
-
-                $('#detail_gambar').attr('src', gambar);
-                $('#detail_alias').text(alias);
-
-                $('#modalDetail').modal('show');
-
-            });
             $('#deleteSelected').on('click', function() {
 
                 let ids = [];

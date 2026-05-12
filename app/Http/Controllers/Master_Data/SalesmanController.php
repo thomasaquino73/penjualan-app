@@ -255,7 +255,21 @@ class SalesmanController extends Controller
             ], 422);
         }
     }
+ public function deleteMultiple(Request $request)
+    {
+        $ids = $request->ids;
 
+        if (! $ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
+        }
+
+        Salesman::whereIn('id', $ids)->update([
+            'status' => '0',
+            'updated_by' => Auth::id(),
+        ]);
+
+        return response()->json(['success' => true]);
+    }
     public function trash(Request $r)
     {
         if ($r->ajax()) {
@@ -348,5 +362,20 @@ class SalesmanController extends Controller
                 'message' => 'Salesman successfully restored.',
             ]);
         }
+    }
+    public function restoreMultiple(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (! $ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
+        }
+
+        Salesman::whereIn('id', $ids)->update([
+            'status' => '1',
+            'updated_by' => Auth::id(),
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

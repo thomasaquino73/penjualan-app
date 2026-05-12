@@ -32,7 +32,7 @@
                     @endcanany
                     @canany(['salesman-trash'])
                         <a href="{{ route('salesman.trash') }}" class="btn btn-sm btn-secondary">
-                            <i class="ti ti-trash me-1"></i>
+                            <i class="ti ti-trash me-1"></i> Trash Bin
                         </a>
                     @endcanany
                     @canany(['salesman-delete'])
@@ -159,6 +159,17 @@
     </div>
     <script>
         $(document).ready(function() {
+            $('#checkAll').on('click', function() {
+                $('.checkItem').prop('checked', this.checked);
+            });
+
+            // kalau salah satu di uncheck → header ikut off
+            $(document).on('click', '.checkItem', function() {
+                $('#checkAll').prop(
+                    'checked',
+                    $('.checkItem:checked').length === $('.checkItem').length
+                );
+            });
             var table = new DataTable('#table', {
                 processing: true,
                 serverSide: true,
