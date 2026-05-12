@@ -114,6 +114,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/customer/restore/{id}', [CustomerController::class, 'restore'])->name('customer.restore');
     Route::resource('customer', CustomerController::class);
 
+    Route::post('/supplier/delete-multiple', [SupplierController::class, 'deleteMultiple']);
+    Route::post('/supplier/restore-multiple', [SupplierController::class, 'restoreMultiple']);
     Route::get('/supplier/generate-id', [SupplierController::class, 'generateId']);
     Route::get('/supplier/trash', [SupplierController::class, 'trash'])->name('supplier.trash');
     Route::put('/supplier/restore/{id}', [SupplierController::class, 'restore'])->name('supplier.restore');

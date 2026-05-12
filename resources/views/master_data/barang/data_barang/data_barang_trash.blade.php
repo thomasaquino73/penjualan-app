@@ -30,12 +30,12 @@
                         class="d-flex flex-column flex-md-row gap-2 
                         justify-content-start justify-content-lg-end">
 
-                        <a href="{{ route('data-barang.index') }}" class="btn btn-secondary btn-sm w-100 w-md-auto">
+                        <a href="{{ route('data-barang.index') }}" class="btn btn-secondary btn-sm ">
                             <i class="ti ti-chevron-left me-1"></i> Back
                         </a>
 
                         @canany(['barang-restore'])
-                            <button id="restoreSelected" class="btn btn-success btn-sm w-100 w-md-auto">
+                            <button id="restoreSelected" class="btn btn-success btn-sm ">
                                 <i class="ti ti-refresh"></i> Restore Selected
                             </button>
                         @endcanany
@@ -193,7 +193,16 @@
                 });
 
                 if (ids.length === 0) {
-                    Swal.fire('Warning', 'Please select data first!', 'warning');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'An error occurred. Please try again later.',
+                        text: 'Please select data first!',
+                        timer: 5000,
+                        customClass: {
+                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
                     return;
                 }
 

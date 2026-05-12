@@ -27,19 +27,19 @@
                     justify-content-start justify-content-lg-end">
 
                     @canany(['barang-create'])
-                        <a href="{{ route('data-barang.create') }}" class="btn btn-primary btn-sm w-100 w-md-auto">
+                        <a href="{{ route('data-barang.create') }}" class="btn btn-primary ">
                             <i class="ti ti-plus me-1"></i> Add Data
                         </a>
                     @endcanany
 
                     @canany(['barang-trash'])
-                        <a href="{{ route('data-barang.trash') }}" class="btn btn-secondary btn-sm w-100 w-md-auto">
+                        <a href="{{ route('data-barang.trash') }}" class="btn btn-secondary ">
                             <i class="ti ti-trash me-1"></i>Trash Bin
                         </a>
                     @endcanany
 
                     @canany(['barang-delete'])
-                        <button id="deleteSelected" class="btn btn-danger btn-sm w-100 w-md-auto">
+                        <button id="deleteSelected" class="btn btn-danger ">
                             <i class="ti ti-trash"></i> Delete Selected
                         </button>
                     @endcanany
@@ -207,7 +207,16 @@
                 });
 
                 if (ids.length === 0) {
-                    Swal.fire('Warning', 'Please select data first!', 'warning');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'An error occurred. Please try again later.',
+                        text: 'Please select data first!',
+                        timer: 5000,
+                        customClass: {
+                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
                     return;
                 }
 
