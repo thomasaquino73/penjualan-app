@@ -18,12 +18,16 @@
 
     {{-- <div class="row"> --}}
     <div class="card ">
-        <div class="card-header bg-white">
-            <div class="row">
-                <div class="col-12 col-lg-6">
-                    <h5 class="mb-0">{{ $title }}</h5>
-                </div>
-                <div class="col-12 col-lg-6 text-lg-end">
+        <div
+            class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
+
+            <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
+
+            <div class="col-12 col-lg-5">
+                <div
+                    class="d-flex flex-column flex-md-row gap-2 
+                    justify-content-start justify-content-lg-end">
+
                     @canany(['kendaraan-create'])
                         <button id="create" class="btn  btn-sm btn-primary">
                             <i class="ti ti-plus me-1"></i> Add Data
@@ -31,16 +35,30 @@
                     @endcanany
                     @canany(['kendaraan-trash'])
                         <a href="{{ route('daftar-kendaraan.trash') }}" class="btn  btn-sm btn-secondary">
-                            <i class="ti ti-trash"></i>
+                            <i class="ti ti-trash"></i> Trash Bin
                         </a>
                     @endcanany
+                    @canany(['kendaraan-delete'])
+                        <button id="deleteSelected" class="btn btn-sm btn-danger ">
+                            <i class="ti ti-trash me-1"></i> Delete Selected
+                        </button>
+                    @endcanany
+
+
                 </div>
             </div>
+
         </div>
+
         <div class="card-datatable table-responsive" style="padding: 20px">
             <table class="datatables-ajax table" id="table">
                 <thead style="background-color: #AEDEFC; ">
                     <tr>
+                        <th>
+                            <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input" type="checkbox" value="" id="checkAll">
+                            </div>
+                        </th>
                         <th>#</th>
                         <th>Photo</th>
                         <th>Brand</th>
@@ -121,8 +139,8 @@
                                     </div>
 
                                     <div class="col-md-2">
-                                        <input type="text" name="plat_belakang" id="plat_belakang" class="form-control"
-                                            maxlength="3" placeholder="XYZ">
+                                        <input type="text" name="plat_belakang" id="plat_belakang"
+                                            class="form-control" maxlength="3" placeholder="XYZ">
                                         <span class="error text-danger" id="plat_belakangError"></span>
                                     </div>
                                 </div>
@@ -198,6 +216,17 @@
             });
         });
         $(document).ready(function() {
+            $('#checkAll').on('click', function() {
+                $('.checkItem').prop('checked', this.checked);
+            });
+
+            // kalau salah satu di uncheck → header ikut off
+            $(document).on('click', '.checkItem', function() {
+                $('#checkAll').prop(
+                    'checked',
+                    $('.checkItem:checked').length === $('.checkItem').length
+                );
+            });
             var table = new DataTable('#table', {
                 processing: true,
                 serverSide: true,
@@ -208,6 +237,11 @@
                 ],
                 ajax: '{{ route('daftar-kendaraan.data') }}',
                 columns: [{
+                        data: 'cekbok',
+                        name: 'cekbok',
+                        orderable: false,
+                        searchable: false
+                    }, {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
                         orderable: false,
@@ -424,6 +458,78 @@
             $('#detail_alias').text(alias);
 
             $('#modalDetail').modal('show');
+
+        });
+        $('#deleteSelected').on('click', function() {
+
+            let ids = [];
+
+            $('.checkItem:checked').each(function() {
+                ids.push($(this).val());
+            });
+
+            if (ids.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'An error occurred. Please try again later.',
+                    text: 'Please select data first!',
+                    timer: 5000,
+                    customClass: {
+                        confirmButton: 'btn btn-primary waves-effect waves-light'
+                    },
+                    buttonsStyling: false
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Data will be deleted!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+                    cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/daftar-kendaraan/delete-multiple',
+                        type: 'POST',
+                        data: {
+                            ids: ids,
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(res) {
+                            toastr.success('Deleted Data Successfully', '', {
+                                timeOut: 1500,
+                                progressBar: true,
+                                closeButton: false,
+                                positionClass: 'toast-top-right',
+                            });
+                            $('#table').DataTable().ajax.reload();
+                        },
+
+                        error: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Failed to delete data.',
+                                timer: 5000,
+                                customClass: {
+                                    confirmButton: 'btn btn-primary waves-effect waves-light'
+                                },
+                                buttonsStyling: false
+                            });
+                        }
+                    });
+                }
+
+            });
 
         });
     </script>

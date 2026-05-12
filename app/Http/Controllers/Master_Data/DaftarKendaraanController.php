@@ -95,6 +95,12 @@ class DaftarKendaraanController extends Controller
                         return '<span class="badge bg-warning">Not Active</span>';
                     }
                 })
+                           ->addColumn('cekbok', function ($row) {
+                    return '   <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
+                                    >
+                            </div>';
+                })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -121,7 +127,7 @@ class DaftarKendaraanController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'foto'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'foto','cekbok'])
                 ->make(true);
         }
     }
@@ -248,6 +254,21 @@ class DaftarKendaraanController extends Controller
             ], 422);
         }
     }
+     public function deleteMultiple(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (! $ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
+        }
+
+        Kendaraan::whereIn('id', $ids)->update([
+            'status' => '0',
+            'updated_by' => Auth::id(),
+        ]);
+
+        return response()->json(['success' => true]);
+    }
 
     public function trash(Request $r)
     {
@@ -289,6 +310,12 @@ class DaftarKendaraanController extends Controller
                         return '<span class="badge bg-warning">Not Active</span>';
                     }
                 })
+                           ->addColumn('cekbok', function ($row) {
+                    return '   <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
+                                    >
+                            </div>';
+                })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -304,7 +331,7 @@ class DaftarKendaraanController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'foto'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'foto','cekbok'])
                 ->make(true);
         }
 
@@ -344,5 +371,21 @@ class DaftarKendaraanController extends Controller
                 'message' => 'Failed to restore vehicle.',
             ]);
         }
+    }
+
+    public function restoreMultiple(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (! $ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
+        }
+
+        Kendaraan::whereIn('id', $ids)->update([
+            'status' => '1',
+            'updated_by' => Auth::id(),
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

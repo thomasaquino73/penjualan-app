@@ -254,8 +254,18 @@
                                 });
                                 $('#table').DataTable().ajax.reload();
                             },
+
                             error: function() {
-                                Swal.fire('Error!', 'Failed to delete data.', 'error');
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: 'Failed to delete data.',
+                                    timer: 5000,
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary waves-effect waves-light'
+                                    },
+                                    buttonsStyling: false
+                                });
                             }
                         });
                     }

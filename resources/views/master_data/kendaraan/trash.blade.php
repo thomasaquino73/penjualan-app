@@ -18,24 +18,45 @@
 
     <div class="row">
         <div class="card p-10">
-            <div class="card-header  mt-2">
-                <div class="row">
-                    <div class="col-12 col-lg-6 d-flex align-items-center">
-                        <i class="ti ti-trash me-2 "></i>
-                        <h5 class="mb-0 ">{{ $title }}</h5>
-                    </div>
-                    <div class="col-12 col-lg-6 text-lg-end">
+            <div class="card-header">
+                <div class="row w-100">
 
-                        <a href="{{ route('daftar-kendaraan.index') }}" class="btn btn-secondary">
-                            <i class="ti ti-chevron-left me-1"></i> Back
-                        </a>
+                    <!-- Title -->
+                    <div class="col-12 col-lg-7">
+                        <h5 class="card-title mb-3 mb-lg-0"> <i class="ti ti-trash me-2 "></i>{{ $title }}</h5>
                     </div>
+
+                    <!-- Buttons -->
+                    <div class="col-12 col-lg-5">
+                        <div
+                            class="d-flex flex-column flex-md-row gap-2 
+                        justify-content-start justify-content-lg-end">
+
+                            <a href="{{ route('daftar-kendaraan.index') }}" class="btn btn-secondary btn-sm ">
+                                <i class="ti ti-chevron-left me-1"></i> Back
+                            </a>
+
+                            @canany(['kendaraan-restore'])
+                                <button id="restoreSelected" class="btn btn-success btn-sm ">
+                                    <i class="ti ti-refresh me-1"></i> Restore Selected
+                                </button>
+                            @endcanany
+
+                        </div>
+                    </div>
+
                 </div>
             </div>
+
             <div class="card-datatable text-nowrap ">
                 <table class="table table-bordered" id="table">
                     <thead class="border-top" style="background-color: #FFEF9F; ">
                         <tr>
+                            <th>
+                                <div class="form-check form-check-primary mt-3">
+                                    <input class="form-check-input" type="checkbox" value="" id="checkAll">
+                                </div>
+                            </th>
                             <th>#</th>
                             <th>Foto</th>
                             <th>Merk</th>
@@ -78,6 +99,17 @@
             });
         });
         $(document).ready(function() {
+            $('#checkAll').on('click', function() {
+                $('.checkItem').prop('checked', this.checked);
+            });
+
+            // kalau salah satu di uncheck → header ikut off
+            $(document).on('click', '.checkItem', function() {
+                $('#checkAll').prop(
+                    'checked',
+                    $('.checkItem:checked').length === $('.checkItem').length
+                );
+            });
             var table = new DataTable('#table', {
                 processing: true,
                 serverSide: true,
@@ -88,6 +120,11 @@
                 ],
                 ajax: '{{ route('daftar-kendaraan.trash') }}',
                 columns: [{
+                        data: 'cekbok',
+                        name: 'cekbok',
+                        orderable: false,
+                        searchable: false
+                    }, {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
                         orderable: false,
@@ -187,6 +224,69 @@
                         });
                     }
                 });
+            });
+
+            $('#restoreSelected').on('click', function() {
+
+                let ids = [];
+
+                $('.checkItem:checked').each(function() {
+                    ids.push($(this).val());
+                });
+
+                if (ids.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'An error occurred. Please try again later.',
+                        text: 'Please select data first!',
+                        timer: 5000,
+                        customClass: {
+                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Data will be restored!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, restore it!',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/daftar-kendaraan/restore-multiple',
+                            type: 'POST',
+                            data: {
+                                ids: ids,
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(res) {
+                                toastr.success('Restored Data Successfully', '', {
+                                    timeOut: 1500,
+                                    progressBar: true,
+                                    closeButton: false,
+                                    positionClass: 'toast-top-right',
+                                });
+                                $('#table').DataTable().ajax.reload();
+                            },
+                            error: function() {
+                                Swal.fire('Error!', 'Failed to restore data.', 'error');
+                            }
+                        });
+                    }
+
+                });
+
             });
         });
     </script>

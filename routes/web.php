@@ -155,13 +155,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/data-barang/trash', [DataBarangController::class, 'trash'])->name('data-barang.trash');
     Route::put('/data-barang/restore/{id}', [DataBarangController::class, 'restore'])->name('data-barang.restore');
     Route::resource('data-barang', DataBarangController::class);
+
+    Route::post('/satuan-barang/delete-multiple', [SatuanBarangController::class, 'deleteMultiple']);
     Route::resource('satuan-barang', SatuanBarangController::class);
+
+    Route::post('/kategori-barang/delete-multiple', [KategoriBarangController::class, 'deleteMultiple']);
     Route::resource('kategori-barang', KategoriBarangController::class);
 
 });
 
 /*
-|--------------------------------------------------------------------------
 | Fallback (jika route tidak ditemukan)
 |--------------------------------------------------------------------------
 */

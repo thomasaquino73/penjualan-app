@@ -63,6 +63,12 @@ class KategoriBarangController extends Controller
 
                     return 'N/A';
                 })
+                 ->addColumn('cekbok', function ($row) {
+                    return '   <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
+                                    >
+                            </div>';
+                })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -86,7 +92,7 @@ class KategoriBarangController extends Controller
                     return $btn;
                 })
 
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status','cekbok'])
                 ->make(true);
         }
         $x = [
@@ -198,5 +204,18 @@ class KategoriBarangController extends Controller
                 'error' => 'Terjadi kesalahan: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+     public function deleteMultiple(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (! $ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
+        }
+
+        BasicCodeDetail::whereIn('id', $ids)->delete();
+
+        return response()->json(['success' => true]);
     }
 }
