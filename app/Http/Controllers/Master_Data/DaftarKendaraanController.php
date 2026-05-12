@@ -95,7 +95,7 @@ class DaftarKendaraanController extends Controller
                         return '<span class="badge bg-warning">Not Active</span>';
                     }
                 })
-                           ->addColumn('cekbok', function ($row) {
+                ->addColumn('cekbok', function ($row) {
                     return '   <div class="form-check form-check-primary mt-3">
                                 <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
                                     >
@@ -127,7 +127,7 @@ class DaftarKendaraanController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'foto','cekbok'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'foto', 'cekbok'])
                 ->make(true);
         }
     }
@@ -254,7 +254,8 @@ class DaftarKendaraanController extends Controller
             ], 422);
         }
     }
-     public function deleteMultiple(Request $request)
+
+    public function deleteMultiple(Request $request)
     {
         $ids = $request->ids;
 
@@ -310,7 +311,7 @@ class DaftarKendaraanController extends Controller
                         return '<span class="badge bg-warning">Not Active</span>';
                     }
                 })
-                           ->addColumn('cekbok', function ($row) {
+                ->addColumn('cekbok', function ($row) {
                     return '   <div class="form-check form-check-primary mt-3">
                                 <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
                                     >
@@ -331,7 +332,7 @@ class DaftarKendaraanController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'foto','cekbok'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'foto', 'cekbok'])
                 ->make(true);
         }
 

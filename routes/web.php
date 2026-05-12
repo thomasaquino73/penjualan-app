@@ -109,7 +109,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/mata-uang/{id}', [PengaturanSistemController::class, 'mata_uang_destroy'])->name('pengaturan.mata_uang.delete');
 
     // Master Data
-        Route::post('/customer/delete-multiple', [CustomerController::class, 'deleteMultiple']);
+    Route::post('/customer/delete-multiple', [CustomerController::class, 'deleteMultiple']);
     Route::post('/customer/restore-multiple', [CustomerController::class, 'restoreMultiple']);
     Route::get('/customer/generate-id', [CustomerController::class, 'generateId']);
     Route::get('/customer/trash', [CustomerController::class, 'trash'])->name('customer.trash');
