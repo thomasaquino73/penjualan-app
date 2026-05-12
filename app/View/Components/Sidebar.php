@@ -34,7 +34,7 @@ class Sidebar extends Component
                 'children' => [
 
                     [
-                        'name' => 'Product',
+                        'name' => 'Products',
                         'route' => 'data-barang.index',
                         'pattern' => 'data-barang.*',
                         'roles' => ['Super Admin'],

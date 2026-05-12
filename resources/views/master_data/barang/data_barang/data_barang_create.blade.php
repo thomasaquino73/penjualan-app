@@ -26,72 +26,6 @@
             <form method="POST" action="{{ route('data-barang.store') }}" class="py-2" id="postForm"
                 enctype="multipart/form-data">
                 @csrf
-                {{-- modals --}}
-                <div class="modal fade" id="modals" tabindex="-1">
-                    <div class="modal-dialog modal-md">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <div class="text-center">
-                                    <h3 class="mb-2" id="modal-title">Unit Conversion</h3>
-                                </div>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body text-center">
-                                <div id="conversion-wrapper">
-                                    <div class="conversion-item border p-3 mb-2 rounded">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <strong>Unit Conversion</strong>
-                                            {{-- <button type="button"
-                                                class="btn btn-danger btn-sm remove-conversion">X</button> --}}
-                                        </div>
-                                        <div class="row g-2">
-                                            <div class="col-md-4">
-                                                <label>From Unit</label>
-                                                <select name="conversion[0][from_unit]" id="from_unit_0" class="form-select"
-                                                    readonly>
-                                                    <option value="">Select</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-2 text-center">
-                                                <label>&nbsp;</label>
-                                                <div class="fw-bold">=</div>
-                                            </div>
-
-                                            <div class="col-md-3">
-                                                <label>Quantity</label>
-                                                <input type="number" name="conversion[0][qty]" class="form-control"
-                                                    placeholder="Qty">
-                                            </div>
-
-                                            <div class="col-md-3">
-                                                <label>To Unit</label>
-                                                <select name="conversion[0][to_unit]" class="form-select">
-                                                    <option value="">Select</option>
-                                                    @foreach ($unit as $u)
-                                                        <option value="{{ $u->id }}">{{ $u->detail }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                                {{-- <button type="button" class="btn btn-primary mt-2" id="addConversion">
-                                    + Add Conversion
-                                </button> --}}
-
-                            </div>
-
-                            <div class="card-footer"></div>
-
-                        </div>
-                    </div>
-                </div>
-
-
-                {{-- endmodals --}}
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="row g-3">
@@ -145,8 +79,8 @@
                                             <option value="{{ $units->id }}">{{ $units->detail }}</option>
                                         @endforeach
                                     </select>
-                                    <button type="button" id="showSubUnit"
-                                        class="btn btn-sm btn-primary waves-effect waves-light">...</button>
+                                    {{-- <button type="button" id="showSubUnit"
+                                        class="btn btn-sm btn-primary waves-effect waves-light">...</button> --}}
                                 </div>
                                 <span class="error text-danger" id="unit_idError"></span>
                             </div>
@@ -154,8 +88,8 @@
                                 <label class="form-label">Product Type<small class="text-danger">*</small></label>
                                 <div class="d-flex gap-2">
                                     <div class="form-check form-check-success me-4">
-                                        <input name="product_type" class="form-check-input" type="radio"
-                                            value="supply" id="radioSupply" checked>
+                                        <input name="product_type" class="form-check-input" type="radio" value="supply"
+                                            id="radioSupply" checked>
                                         <label class="form-check-label" for="radioSupply"> Supply </label>
                                     </div>
 
@@ -218,7 +152,72 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-lg-6">
+                        <h6><strong>Unit Conversion</strong></h6>
+                        <div class="conversion-item border p-3 mb-2 rounded ">
+                            <div class="d-flex justify-content-between mb-2">
 
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control from_unit_text" disabled>
+                                    <input type="hidden" name="conversion[0][from_unit]" class="from_unit_id">
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="fw-bold">=</div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <input type="number" name="conversion[0][qty]" class="form-control qty"
+                                        placeholder="Qty" disabled>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <select name="conversion[0][to_unit]" class="form-select to_unit" disabled>
+                                        <option value="">Select</option>
+                                        @foreach ($unit as $u)
+                                            <option value="{{ $u->id }}">{{ $u->detail }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="conversion-item border p-3 mb-2 rounded">
+                            <div class="d-flex justify-content-between mb-2">
+
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label>From Unit</label>
+                                    <input type="text" class="form-control from_unit_text" disabled>
+                                    <input type="hidden" name="conversion[1][from_unit]" class="from_unit_id">
+
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <label>&nbsp;</label>
+                                    <div class="fw-bold">=</div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label>Quantity</label>
+                                    <input type="number" name="conversion[1][qty]" class="form-control qty"
+                                        placeholder="Qty" disabled>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label>To Unit</label>
+                                    <select name="conversion[1][to_unit]" class="form-select to_unit" disabled>
+                                        <option value="">Select</option>
+                                        @foreach ($unit as $u)
+                                            <option value="{{ $u->id }}">{{ $u->detail }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">
                     <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
@@ -237,7 +236,7 @@
     </form>
 @endsection
 
-@push('style')
+{{-- @push('style')
     <style>
         #supplyForm {
             transition: all 0.3s ease;
@@ -281,7 +280,7 @@
             height: 36px;
         }
     </style>
-@endpush
+@endpush --}}
 @push('scripts')
     <script>
         $('.select2').select2({
@@ -344,7 +343,52 @@
             let btn = saveAndNew ? $('#savedatamore') : $('#savedata');
             let formData = new FormData(form);
             formData.append('save_and_new', saveAndNew ? 1 : 0);
+            let isValid = true;
+            let errorMessage = '';
 
+            $('.conversion-item').each(function() {
+                let qty = $(this).find('.qty').val();
+                let toUnit = $(this).find('.to_unit').val();
+                let fromUnit = $(this).find('.from_unit_id').val();
+
+                // 1. qty ada tapi to_unit kosong
+                if (qty && !toUnit) {
+                    isValid = false;
+                    errorMessage = 'Please select a destination unit for the entered quantity.';
+                    return false;
+                }
+
+                // 2. to_unit ada tapi qty kosong
+                if (!qty && toUnit) {
+                    isValid = false;
+                    errorMessage = 'Please enter a quantity for the selected unit.';
+                    return false;
+                }
+
+                // 3. to_unit tidak boleh sama dengan from_unit
+                if (toUnit && fromUnit && toUnit == fromUnit) {
+                    isValid = false;
+                    errorMessage = 'The destination unit must be different from the source unit.';
+                    return false;
+                }
+            });
+
+            if (!isValid) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Input',
+                    text: errorMessage,
+                    confirmButtonText: 'OK',
+                    showClass: {
+                        popup: 'animate__animated animate__bounceIn'
+                    },
+                    customClass: {
+                        confirmButton: 'btn btn-primary waves-effect waves-light'
+                    },
+                    buttonsStyling: false
+                });
+                return; // ❌ STOP submit
+            }
             $.ajax({
                 url: $(form).attr('action'),
                 method: $(form).attr('method'),
@@ -424,138 +468,43 @@
         price.addEventListener('input', hitungTotal);
     </script>
 
+
     <script>
-        // $('#addConversion').on('click', function() {
+        // $(document).on('click', '#showSubUnit', function() {
 
         //     let unitId = $('#unit_id').val();
         //     let unitText = $('#unit_id option:selected').text();
 
-        //     let html = `
-    //     <div class="conversion-item border p-3 mb-2 rounded">
-    //         <input type="hidden" name="conversion[${index}][from_unit]" value="${unitId}">
-    //         <div class="d-flex justify-content-between mb-2">
-    //             <strong>Unit Conversion</strong>
-    //             <button type="button" class="btn btn-danger btn-sm remove-conversion">X</button>
-    //         </div>
+        //     if (!unitId) {
+        //         Swal.fire({
+        //             icon: 'error',
+        //             title: 'Oops...',
+        //             text: 'Please select a unit first.',
+        //         });
+        //         return;
+        //     }
 
-    //         <div class="row g-2">
+        //     // isi ke input TEXT
+        //     $('.from_unit_text').val(unitText);
 
-    //             <div class="col-md-4">
-    //                 <label>From Unit</label>
-    //                         <input type="text" class="form-control" value="${unitText}" readonly>
-    //             </div>
-
-    //             <div class="col-md-2 text-center">
-    //                 <label>&nbsp;</label>
-    //                 <div class="fw-bold">=</div>
-    //             </div>
-
-    //             <div class="col-md-3">
-    //                 <label>Quantity</label>
-    //                 <input type="number" name="conversion[${index}][qty]" class="form-control">
-    //             </div>
-
-    //             <div class="col-md-3">
-    //                 <label>To Unit</label>
-    //                 <select name="conversion[${index}][to_unit]" class="form-select">
-    //                     <option value="">Select</option>
-    //                     @foreach ($unit as $u)
-    //                         <option value="{{ $u->id }}">{{ $u->detail }}</option>
-    //                     @endforeach
-    //                 </select>
-    //             </div>
-
-    //         </div>
-    //     </div>`;
-
-        //     $('#conversion-wrapper').append(html);
-        //     index++;
+        //     // isi ke hidden input (buat backend)
+        //     $('.from_unit_id').val(unitId);
+        //     // 🔥 AKTIFKAN INPUT
+        //     $('.qty').prop('disabled', false);
+        //     $('.to_unit').prop('disabled', false);
         // });
-    </script>
-    <script>
-        // let index = 1;
-        $(document).on('click', '#showSubUnit', function() {
 
-            let unitId = $('#unit_id').val();
+        $('#unit_id').on('change', function() {
+            let unitId = $(this).val();
             let unitText = $('#unit_id option:selected').text();
 
-            if (!unitId) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'Please select a unit first.',
-                    showClass: {
-                        popup: 'animate__animated animate__bounceIn'
-                    },
-                    customClass: {
-                        confirmButton: 'btn btn-primary waves-effect waves-light'
-                    },
-                    buttonsStyling: false,
-                });
-                return;
-            }
+            $('.from_unit_text').val(unitText);
 
-            let html = `
-
-    <!-- ROW 1 -->
-    <div class="conversion-item border p-3 mb-2 rounded">
-        <div class="row g-2">
-
-            <input type="hidden" name="conversion[1][from_unit]" value="${unitId}">
-
-            <div class="col-md-4">
-                <input type="text" class="form-control" value="${unitText}" readonly>
-            </div>
-
-            <div class="col-md-2 text-center">=</div>
-
-            <div class="col-md-3">
-                <input type="number" name="conversion[1][qty]" class="form-control">
-            </div>
-
-            <div class="col-md-3">
-                <select name="conversion[1][to_unit]" class="form-select">
-                    <option value="">Select</option>
-                    @foreach ($unit as $u)
-                        <option value="{{ $u->id }}">{{ $u->detail }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ROW 2 -->
-    <div class="conversion-item border p-3 mb-2 rounded">
-        <div class="row g-2">
-
-            <input type="hidden" name="conversion[2][from_unit]" value="${unitId}">
-
-            <div class="col-md-4">
-                <input type="text" class="form-control" value="${unitText}" readonly>
-            </div>
-
-            <div class="col-md-2 text-center">=</div>
-
-            <div class="col-md-3">
-                <input type="number" name="conversion[2][qty]" class="form-control">
-            </div>
-
-            <div class="col-md-3">
-                <select name="conversion[2][to_unit]" class="form-select">
-                    <option value="">Select</option>
-                    @foreach ($unit as $u)
-                        <option value="{{ $u->id }}">{{ $u->detail }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-        </div>
-    </div>
-    `;
-
-            $('#conversion-wrapper').html(html);
-            $('#modals').modal('show');
+            // isi ke hidden input (buat backend)
+            $('.from_unit_id').val(unitId);
+            // 🔥 AKTIFKAN INPUT
+            $('.qty').prop('disabled', false);
+            $('.to_unit').prop('disabled', false);
         });
     </script>
 @endpush

@@ -40,7 +40,7 @@
                     <tr>
                         <th>#</th>
                         <th>Picture</th>
-                        <th>Product ID</th>
+                        <th>Product Code</th>
                         <th>Product Name</th>
                         <th>Price</th>
                         <th>Product Type</th>

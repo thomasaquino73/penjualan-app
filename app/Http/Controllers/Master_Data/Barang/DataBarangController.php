@@ -284,7 +284,7 @@ class DataBarangController extends Controller
 
                     DataBarangConversion::create([
                         'data_barang_id' => $barang->id,
-                        'from_unit_id' => $conv['from_unit'],
+                        'from_unit_id' => $request->unit_id,
                         'to_unit_id' => $conv['to_unit'],
                         'qty' => $conv['qty'],
                     ]);

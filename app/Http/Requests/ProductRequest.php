@@ -28,7 +28,11 @@ class ProductRequest extends FormRequest
                 'string',
                 Rule::unique('data_barang', 'id_barang')->ignore($id),
             ],
-            'nama_barang' => ['required'],
+            'nama_barang' => [
+                'required',
+                'string',
+                Rule::unique('data_barang', 'nama_barang')->ignore($id),
+            ],
             'kategori_id' => ['required'],
             'gudang_id' => ['required'],
             'unit_id' => ['required'],
@@ -42,6 +46,8 @@ class ProductRequest extends FormRequest
 
             'id_barang.unique' => 'Product ID has already been taken',
             'id_barang.required' => 'Product ID is required',
+            'nama_barang.unique' => 'Product name has already been taken',
+            'nama_barang.required' => 'Product name is required',
             'kategori_id.required' => 'Product category is required',
             'gudang_id.required' => 'Warehouse is required',
             'unit_id.required' => 'Unit is required',
