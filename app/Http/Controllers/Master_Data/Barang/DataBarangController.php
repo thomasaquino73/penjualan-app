@@ -89,6 +89,12 @@ class DataBarangController extends Controller
                         return '<span class="badge bg-secondary">Non Supply</span>';
                     }
                 })
+                ->addColumn('cekbok', function ($row) {
+                   return '   <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input checkItem" type="checkbox" value="'. $row->id.'"
+                                    >
+                            </div>';
+                })
                 ->addColumn('kategori', function ($row) {
                     return $row->kategoriID->detail;
                 })
@@ -123,7 +129,7 @@ class DataBarangController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok'])
                 ->make(true);
         }
 
@@ -436,6 +442,21 @@ class DataBarangController extends Controller
             ], 422);
         }
     }
+   public function deleteMultiple(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (!$ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
+        }
+
+        Barang::whereIn('id', $ids)->update([
+            'status' => '0',
+            'updated_by' => Auth::id()
+        ]);
+
+        return response()->json(['success' => true]);
+    }
 
     public function getSubUnit($id)
     {
@@ -493,6 +514,12 @@ class DataBarangController extends Controller
                                 alt="Foto Produk"  data-gambar="'.asset($row->photo_filename).'"
                                 data-alias="'.$row->nama_barang.'">';
                 })
+                   ->addColumn('cekbok', function ($row) {
+                   return '   <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input checkItem" type="checkbox" value="'. $row->id.'"
+                                    >
+                            </div>';
+                })
                 ->addColumn('status', function ($row) {
                     if ($row->status == 1) {
                         return '<span class="badge bg-info">Active</span>';
@@ -530,7 +557,7 @@ class DataBarangController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType','cekbok'])
                 ->make(true);
         }
 
@@ -572,5 +599,20 @@ class DataBarangController extends Controller
                 'message' => 'Product successfully restored.',
             ]);
         }
+    }
+     public function restoreMultiple(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (!$ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
+        }
+
+        Barang::whereIn('id', $ids)->update([
+            'status' => '1',
+            'updated_by' => Auth::id()
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

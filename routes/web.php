@@ -139,6 +139,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/{id}/restore', [DaftarKendaraanController::class, 'restore'])->name('restore');
         Route::get('/{id}/detail', [DaftarKendaraanController::class, 'show'])->name('show');
     });
+    Route::post('/data-barang/delete-multiple', [DataBarangController::class, 'deleteMultiple']);
+    Route::post('/data-barang/restore-multiple', [DataBarangController::class, 'restoreMultiple']);
     Route::get('/sub-unit/{id}', [DataBarangController::class, 'getSubUnit']);
     Route::get('/data-barang/trash', [DataBarangController::class, 'trash'])->name('data-barang.trash');
     Route::put('/data-barang/restore/{id}', [DataBarangController::class, 'restore'])->name('data-barang.restore');
