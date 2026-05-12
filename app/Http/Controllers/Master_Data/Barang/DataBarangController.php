@@ -203,7 +203,7 @@ class DataBarangController extends Controller
             'categories' => BasicCodeDetail::where('master_id', 1)->get(),
             'unit' => BasicCodeDetail::where('master_id', 2)->get(),
             'warehouses' => Warehouse::where('status', 1)->get(),
-            'typePersediaan' => BasicCodeDetail::where('master_id', 4)->get(),
+            'inventoryTypes' => BasicCodeDetail::where('master_id', 4)->get(),
         ]);
     }
 
@@ -262,12 +262,8 @@ class DataBarangController extends Controller
             $isSaveAndNew = $request->input('save_and_new') == '1';
 
             $data = $request->except(['_token', 'save_and_new', 'conversion']);
-
-            // $unit = BasicCodeDetail::find($request->unit_id);
-
             $data['created_by'] = Auth::id();
-            // $data['unit1'] = $unit->detail;
-            // $data['unit2'] = $unit->detail;
+            $data['status'] = $request->has('status') ? 2 : 1;
 
             if ($request->hasFile('photo_filename')) {
                 $data['photo_filename'] = $this->uploadAvatar($request->file('photo_filename'));
@@ -358,7 +354,7 @@ class DataBarangController extends Controller
             'categories' => BasicCodeDetail::where('master_id', 1)->get(),
             'unit' => BasicCodeDetail::where('master_id', 2)->get(),
             'warehouses' => Warehouse::where('status', 1)->get(),
-            'typePersediaan' => BasicCodeDetail::where('master_id', 4)->get(),
+            'inventoryTypes' => BasicCodeDetail::where('master_id', 4)->get(),
             'detail' => $idDetail,
         ]);
     }

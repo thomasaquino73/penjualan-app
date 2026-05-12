@@ -29,12 +29,40 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-3  ">
+                                <label class="form-label">Product Type<small class="text-danger">*</small></label>
+                                <div class="d-flex gap-2">
+                                    <div class="form-check form-check-success me-4">
+                                        <input name="product_type" class="form-check-input" type="radio" value="supply"
+                                            id="radioSupply" checked>
+                                        <label class="form-check-label" for="radioSupply"> Supply </label>
+                                    </div>
+
+                                    <div class="form-check form-check-success">
+                                        <input name="product_type" class="form-check-input" type="radio"
+                                            value="non_supply" id="radioNonSupply">
+                                        <label class="form-check-label" for="radioNonSupply"> Non Supply </label>
+                                    </div>
+                                </div>
+                                <span class="error text-danger" id="product_typeError"></span>
+                            </div>
+                            <div class="col-md-3  ">
+                                <label class="form-label">Status</label>
+                                <div class="form-check form-check-primary">
+                                    <input class="form-check-input" type="checkbox" value="1" id="status"
+                                        name="status">
+                                    <label class="form-check-label" for="status">
+                                        Set as Not Active
+                                    </label>
+                                </div>
+                                <span class="error text-danger" id="statusError"></span>
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label">Picture</label>
                                 <input type="file" name="photo_filename" id="photo_filename" class="form-control">
                                 <span class="error text-danger" id="photo_filenameError"></span>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <label class="form-label">Product ID <small class="text-danger">*</small> </label>
                                 <input type="text" name="id_barang" id="id_barang" class="form-control"
                                     value="{{ $idNumber }}">
@@ -84,23 +112,22 @@
                                 </div>
                                 <span class="error text-danger" id="unit_idError"></span>
                             </div>
-                            <div class="col-md-3  ">
-                                <label class="form-label">Product Type<small class="text-danger">*</small></label>
-                                <div class="d-flex gap-2">
-                                    <div class="form-check form-check-success me-4">
-                                        <input name="product_type" class="form-check-input" type="radio" value="supply"
-                                            id="radioSupply" checked>
-                                        <label class="form-check-label" for="radioSupply"> Supply </label>
-                                    </div>
-
-                                    <div class="form-check form-check-success">
-                                        <input name="product_type" class="form-check-input" type="radio"
-                                            value="non_supply" id="radioNonSupply">
-                                        <label class="form-check-label" for="radioNonSupply"> Non Supply </label>
-                                    </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Inventory Type<small class="text-danger">*</small></label>
+                                <div class="input-group">
+                                    <select name="tipe_persediaan_id" id="tipe_persediaan_id"
+                                        class="form-select select2 " data-placeholder="Select inventory type">
+                                        <option></option>
+                                        @foreach ($inventoryTypes as $type)
+                                            <option value="{{ $type->id }}">{{ $type->detail }}</option>
+                                        @endforeach
+                                    </select>
+                                    {{-- <button type="button" id="showSubUnit"
+                                        class="btn btn-sm btn-primary waves-effect waves-light">...</button> --}}
                                 </div>
-                                <span class="error text-danger" id="product_typeError"></span>
+                                <span class="error text-danger" id="tipe_persediaan_idError"></span>
                             </div>
+
 
                             <div class="col-md-12 mb-5">
                                 <label class="form-label">Description</label>

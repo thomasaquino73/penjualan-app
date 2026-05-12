@@ -67,6 +67,7 @@
                         <th>Product Name</th>
                         <th>Price</th>
                         <th>Product Type</th>
+                        <th>Status</th>
                         <th>Created</th>
                         <th>Updated</th>
                         <th>Action</th>
@@ -126,6 +127,9 @@
 
                     {
                         data: 'productType',
+                    },
+                    {
+                        data: 'status',
                     },
 
                     {
