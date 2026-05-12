@@ -58,14 +58,10 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
         rel="stylesheet" />
-
-
-
-<link rel="stylesheet" href="https://cdn.datatables.net/2.3.8/css/dataTables.bootstrap5.css" />
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.8/css/responsive.bootstrap5.css" />
-
-
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.8/css/dataTables.bootstrap5.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.8/css/responsive.bootstrap5.css" />
     <link rel="stylesheet" href="//cdn.datatables.net/2.3.8/css/dataTables.dataTables.min.css" />
+
     <link rel="stylesheet" href="{{ asset('assets/css/preloader.css') }}">
     <div id="preloader">
     <div class="preloader-content">
@@ -88,25 +84,6 @@
     </div>
     </div>
     </div>
-    {{-- <div id="preloader">
-        <div class="preloader-content">
 
-            <!-- SVG Medical -->
-            <svg class="medical-loader" viewBox="0 0 100 100" width="90" height="90">
-
-                <!-- Lingkaran animasi -->
-                <circle class="circle-bg" cx="50" cy="50" r="40"></circle>
-                <circle class="circle-loader" cx="50" cy="50" r="40"></circle>
-
-                <!-- Heartbeat -->
-                <polyline class="heartbeat" points="20,55 35,55 42,40 50,70 60,45 70,55 80,55">
-                </polyline>
-
-            </svg>
-
-            <p class="loading-text">Memuat Sistem {{ $aplikasi }}...</p>
-
-        </div>
-    </div> --}}
 
     @stack('style')

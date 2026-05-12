@@ -55,6 +55,9 @@
               </li> --}}
               <!--/ Language -->
 
+              <a class="nav-link" href="javascript:void(0);" id="wifiIcon">
+                  <i class="ti ti-wifi"></i>
+              </a>
               <!-- Style Switcher -->
               <li class="nav-item dropdown-style-switcher dropdown me-2 me-xl-0">
                   <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
@@ -293,5 +296,23 @@
                   }
               });
           });
+      </script>
+      <script>
+          function updateConnectionStatus() {
+              const icon = document.getElementById('wifiIcon');
+
+              if (navigator.onLine) {
+                  icon.style.color = 'green'; // online
+              } else {
+                  icon.style.color = 'black'; // offline
+              }
+          }
+
+          // cek saat pertama load
+          updateConnectionStatus();
+
+          // event ketika berubah
+          window.addEventListener('online', updateConnectionStatus);
+          window.addEventListener('offline', updateConnectionStatus);
       </script>
   @endpush
