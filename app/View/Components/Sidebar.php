@@ -245,7 +245,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'single',
-                'name' => 'Manage Preparation',
+                'name' => 'General Setting',
                 'route' => 'user.index',
                 'icon' => 'ti ti-adjustments-horizontal',
                 'pattern' => 'user.*',

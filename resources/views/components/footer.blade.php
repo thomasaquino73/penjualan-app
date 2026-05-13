@@ -14,7 +14,8 @@
 {{-- <script src="{{ asset('') }}assets/vendor/libs/@form-validation/popular.js"></script>
 <script src="{{ asset('') }}assets/vendor/libs/@form-validation/bootstrap5.js"></script>
 <script src="{{ asset('') }}assets/vendor/libs/@form-validation/auto-focus.js"></script> --}}
-
+<script src="{{ asset('') }}assets/js/app-ecommerce-dashboard.js"></script>
+<script src="{{ asset('') }}assets/vendor/libs/apex-charts/apexcharts.js"></script>
 <!-- Main JS -->
 <script src="{{ asset('') }}assets/js/main.js"></script>
 <script src="{{ asset('assets/vendor/libs/tagify/tagify.js') }}"></script>
@@ -29,6 +30,7 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/3.0.8/js/dataTables.responsive.js"></script>
 <script src="https://cdn.datatables.net/responsive/3.0.8/js/responsive.dataTables.js"></script>
+
 
 
 <script>

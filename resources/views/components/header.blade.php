@@ -18,7 +18,7 @@
     <!-- Icons -->
     <link rel="stylesheet" href="{{ asset('') }}assets/vendor/fonts/fontawesome.css" />
     <link rel="stylesheet" href="{{ asset('') }}assets/vendor/fonts/tabler-icons.css" />
-    {{-- <link rel="stylesheet" href="{{ asset('') }}assets/vendor/fonts/flag-icons.css" /> --}}
+    <link rel="stylesheet" href="{{ asset('') }}assets/vendor/fonts/flag-icons.css" />
 
     <!-- Core CSS -->
     <link rel="stylesheet" href="{{ asset('') }}assets/vendor/css/rtl/core.css"
@@ -30,7 +30,7 @@
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/node-waves/node-waves.css" />
     <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
-    {{-- <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/typeahead-js/typeahead.css" /> --}}
+    <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/typeahead-js/typeahead.css" />
     <!-- Vendor -->
     <link rel="stylesheet"
         href="{{ asset('') }}assets/vendor/libs/@form-validation/form-validation.css" />
@@ -49,7 +49,7 @@
 
     <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/flatpickr/flatpickr.css" />
 
-    {{-- <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/apex-charts/apex-charts.css" /> --}}
+    <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/apex-charts/apex-charts.css" />
     {{-- <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/swiper/swiper.css" /> --}}
     
     <link rel="stylesheet" href="{{ asset('') }}assets/vendor/libs/tagify/tagify.css" />

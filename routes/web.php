@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\IdleController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Master_Data\Barang\DataBarangController;
 use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
@@ -28,10 +29,6 @@ Route::get('/', function () {
         : redirect()->route('login');
 })->name('halaman.utama');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
 Route::get('/guest/verification', [GuestEmailVerificationController::class, 'index'])
     ->name('guest.verification');
 Route::post('/guest/send-verification', [GuestEmailVerificationController::class, 'resend'])
@@ -56,6 +53,7 @@ Route::get('/verify-email/{id}/{hash}', function (Request $request, $id, $hash) 
     return redirect()->route('login')->with('status', 'Email Anda berhasil diverifikasi.');
 })->middleware('signed')->name('verification.verify');
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::prefix('token')->group(function () {
         Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');
