@@ -9,19 +9,14 @@ class DashboardController extends Controller
 {
     public function index()
     {
-         $data = User::query();
+        $data = User::query();
         $stats = $this->getUserStatistics($data);
 
         $x = [
-            'title' => 'Customer List',
-            'breadcrumb' => [
-                ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => '', 'url' => ''],
-            ],
             'totalUsers' => $stats['totalUsers'],
-                'totalActive' => $stats['totalActive'],
-                'totalVerified' => $stats['totalVerified'],
-                'totalLogin' => $stats['totalLogin'],
+            'totalActive' => $stats['totalActive'],
+            'totalVerified' => $stats['totalVerified'],
+            'totalLogin' => $stats['totalLogin'],
         ];
 
         return view('dashboard', $x);

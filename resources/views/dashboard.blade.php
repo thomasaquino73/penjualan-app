@@ -1,19 +1,5 @@
 @extends('layouts.app')
 @section('konten')
-    <h4><span class="text-muted fw-light">
-            @foreach ($breadcrumb as $key => $item)
-                @if (!empty($item['url']))
-                    <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
-                @else
-                    {{ $item['label'] }}
-                @endif
-
-                @if (!$loop->last)
-                    /
-                @endif
-            @endforeach
-        </span>
-    </h4>
     <div class="row">
         <div class="col-sm-6 col-lg-3 mb-4">
             <div class="card card-border-shadow-info">
@@ -708,7 +694,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-xl-4 mb-4">
+                <div class="col-md-6 col-xl-6 mb-4">
                     <div class="card h-100">
                         <div class="card-header d-flex justify-content-between">
                             <div class="card-title m-0 me-2">
