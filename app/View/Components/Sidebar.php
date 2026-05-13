@@ -309,7 +309,7 @@ class Sidebar extends Component
                 'icon' => 'ti-user-cog',
                 'pattern' => 'user.*',
                 'active' => true,
-                'roles' => ['SuperAdmin'],
+                'roles' => ['Super Admin'],
                 'permissions' => ['user-browse'],
             ],
             [
@@ -319,8 +319,8 @@ class Sidebar extends Component
                 'icon' => 'ti-database',
                 'pattern' => 'pengaturan.*',
                 'active' => true,
-                'roles' => ['SuperAdmin'],
-                'permissions' => ['application_system-browse', 'login_background-browse', 'mata_uang-browse'],
+                'roles' => ['Super Admin'],
+                'permissions' => [''],
             ],
 
         ];

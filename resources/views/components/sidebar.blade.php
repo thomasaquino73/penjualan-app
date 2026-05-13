@@ -86,6 +86,14 @@
                 </li>
             @endif
         @endforeach
+        @role('Super Admin')
+            <li class="menu-item">
+                <a href="{{ route('pengaturan.sistem') }}" class="menu-link">
+                    <i class="menu-icon tf-icons ti ti-database"></i>
+                    <div>Application System</div>
+                </a>
+            </li>
+        @endrole
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">NEED HELP?</span>
         </li>
