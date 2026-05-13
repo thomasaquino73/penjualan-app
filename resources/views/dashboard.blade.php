@@ -175,183 +175,12 @@
                             <h5 class="card-title mb-0">Profit</h5>
                             <small class="text-muted">Last Month</small>
                         </div>
-                        <div class="card-body" style="position: relative;">
-                            <div id="profitLastMonth" style="min-height: 93px;">
-                                <div id="apexchartskuy5wmj8g"
-                                    class="apexcharts-canvas apexchartskuy5wmj8g apexcharts-theme-light"
-                                    style="width: 197px; height: 93px;"><svg id="SvgjsSvg4399" width="197"
-                                        height="93" xmlns="http://www.w3.org/2000/svg" version="1.1"
-                                        xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev"
-                                        class="apexcharts-svg apexcharts-zoomable" xmlns:data="ApexChartsNS"
-                                        transform="translate(0, 0)" style="background: transparent;">
-                                        <g id="SvgjsG4401" class="apexcharts-inner apexcharts-graphical"
-                                            transform="translate(6, 12)">
-                                            <defs id="SvgjsDefs4400">
-                                                <clipPath id="gridRectMaskkuy5wmj8g">
-                                                    <rect id="SvgjsRect4406" width="190" height="78" x="-3" y="-1"
-                                                        rx="0" ry="0" opacity="1" stroke-width="0"
-                                                        stroke="none" stroke-dasharray="0" fill="#fff"></rect>
-                                                </clipPath>
-                                                <clipPath id="forecastMaskkuy5wmj8g"></clipPath>
-                                                <clipPath id="nonForecastMaskkuy5wmj8g"></clipPath>
-                                                <clipPath id="gridRectMarkerMaskkuy5wmj8g">
-                                                    <rect id="SvgjsRect4407" width="202" height="94" x="-9" y="-9"
-                                                        rx="0" ry="0" opacity="1" stroke-width="0"
-                                                        stroke="none" stroke-dasharray="0" fill="#fff"></rect>
-                                                </clipPath>
-                                            </defs>
-                                            <line id="SvgjsLine4405" x1="0" y1="0" x2="0"
-                                                y2="76" stroke="#b6b6b6" stroke-dasharray="3"
-                                                stroke-linecap="butt" class="apexcharts-xcrosshairs" x="0" y="0"
-                                                width="1" height="76" fill="#b1b9c4" filter="none"
-                                                fill-opacity="0.9" stroke-width="1"></line>
-                                            <g id="SvgjsG4424" class="apexcharts-xaxis" transform="translate(0, 0)">
-                                                <g id="SvgjsG4425" class="apexcharts-xaxis-texts-g"
-                                                    transform="translate(0, -4)"></g>
-                                            </g>
-                                            <g id="SvgjsG4434" class="apexcharts-grid">
-                                                <g id="SvgjsG4435" class="apexcharts-gridlines-horizontal"></g>
-                                                <g id="SvgjsG4436" class="apexcharts-gridlines-vertical">
-                                                    <line id="SvgjsLine4437" x1="0" y1="0"
-                                                        x2="0" y2="76" stroke="#dbdade"
-                                                        stroke-dasharray="6" stroke-linecap="butt"
-                                                        class="apexcharts-gridline"></line>
-                                                    <line id="SvgjsLine4438" x1="36.8" y1="0"
-                                                        x2="36.8" y2="76" stroke="#dbdade"
-                                                        stroke-dasharray="6" stroke-linecap="butt"
-                                                        class="apexcharts-gridline"></line>
-                                                    <line id="SvgjsLine4439" x1="73.6" y1="0"
-                                                        x2="73.6" y2="76" stroke="#dbdade"
-                                                        stroke-dasharray="6" stroke-linecap="butt"
-                                                        class="apexcharts-gridline"></line>
-                                                    <line id="SvgjsLine4440" x1="110.39999999999999" y1="0"
-                                                        x2="110.39999999999999" y2="76" stroke="#dbdade"
-                                                        stroke-dasharray="6" stroke-linecap="butt"
-                                                        class="apexcharts-gridline"></line>
-                                                    <line id="SvgjsLine4441" x1="147.2" y1="0"
-                                                        x2="147.2" y2="76" stroke="#dbdade"
-                                                        stroke-dasharray="6" stroke-linecap="butt"
-                                                        class="apexcharts-gridline"></line>
-                                                    <line id="SvgjsLine4442" x1="184" y1="0"
-                                                        x2="184" y2="76" stroke="#dbdade"
-                                                        stroke-dasharray="6" stroke-linecap="butt"
-                                                        class="apexcharts-gridline"></line>
-                                                </g>
-                                                <line id="SvgjsLine4444" x1="0" y1="76" x2="184"
-                                                    y2="76" stroke="transparent" stroke-dasharray="0"
-                                                    stroke-linecap="butt"></line>
-                                                <line id="SvgjsLine4443" x1="0" y1="1" x2="0"
-                                                    y2="76" stroke="transparent" stroke-dasharray="0"
-                                                    stroke-linecap="butt"></line>
-                                            </g>
-                                            <g id="SvgjsG4408" class="apexcharts-line-series apexcharts-plot-series">
-                                                <g id="SvgjsG4409" class="apexcharts-series" seriesName="seriesx1"
-                                                    data:longestSeries="true" rel="1" data:realIndex="0">
-                                                    <path id="SvgjsPath4423"
-                                                        d="M 0 76L 36.800000000000004 44.33333333333333L 73.60000000000001 63.333333333333336L 110.4 25.333333333333336L 147.20000000000002 44.33333333333333L 184 6.333333333333329"
-                                                        fill="none" fill-opacity="1" stroke="rgba(0,207,232,0.85)"
-                                                        stroke-opacity="1" stroke-linecap="butt" stroke-width="2"
-                                                        stroke-dasharray="0" class="apexcharts-line" index="0"
-                                                        clip-path="url(#gridRectMaskkuy5wmj8g)"
-                                                        pathTo="M 0 76L 36.800000000000004 44.33333333333333L 73.60000000000001 63.333333333333336L 110.4 25.333333333333336L 147.20000000000002 44.33333333333333L 184 6.333333333333329"
-                                                        pathFrom="M -1 76L -1 76L 36.800000000000004 76L 73.60000000000001 76L 110.4 76L 147.20000000000002 76L 184 76">
-                                                    </path>
-                                                    <g id="SvgjsG4410" class="apexcharts-series-markers-wrap"
-                                                        data:realIndex="0">
-                                                        <g id="SvgjsG4412" class="apexcharts-series-markers"
-                                                            clip-path="url(#gridRectMarkerMaskkuy5wmj8g)">
-                                                            <circle id="SvgjsCircle4413" r="3.5" cx="0"
-                                                                cy="76"
-                                                                class="apexcharts-marker no-pointer-events wofv1ikw6g"
-                                                                stroke="transparent" fill="#00cfe8" fill-opacity="1"
-                                                                stroke-width="3.2" stroke-opacity="0.9" rel="0"
-                                                                j="0" index="0" default-marker-size="3.5"></circle>
-                                                            <circle id="SvgjsCircle4414" r="3.5" cx="36.800000000000004"
-                                                                cy="44.33333333333333"
-                                                                class="apexcharts-marker no-pointer-events wvz8lxed"
-                                                                stroke="transparent" fill="#00cfe8" fill-opacity="1"
-                                                                stroke-width="3.2" stroke-opacity="0.9" rel="1"
-                                                                j="1" index="0" default-marker-size="3.5"></circle>
-                                                        </g>
-                                                        <g id="SvgjsG4415" class="apexcharts-series-markers"
-                                                            clip-path="url(#gridRectMarkerMaskkuy5wmj8g)">
-                                                            <circle id="SvgjsCircle4416" r="3.5" cx="73.60000000000001"
-                                                                cy="63.333333333333336"
-                                                                class="apexcharts-marker no-pointer-events wde91mxdo"
-                                                                stroke="transparent" fill="#00cfe8" fill-opacity="1"
-                                                                stroke-width="3.2" stroke-opacity="0.9" rel="2"
-                                                                j="2" index="0" default-marker-size="3.5"></circle>
-                                                        </g>
-                                                        <g id="SvgjsG4417" class="apexcharts-series-markers"
-                                                            clip-path="url(#gridRectMarkerMaskkuy5wmj8g)">
-                                                            <circle id="SvgjsCircle4418" r="3.5" cx="110.4"
-                                                                cy="25.333333333333336"
-                                                                class="apexcharts-marker no-pointer-events w6ctynweu"
-                                                                stroke="transparent" fill="#00cfe8" fill-opacity="1"
-                                                                stroke-width="3.2" stroke-opacity="0.9" rel="3"
-                                                                j="3" index="0" default-marker-size="3.5"></circle>
-                                                        </g>
-                                                        <g id="SvgjsG4419" class="apexcharts-series-markers"
-                                                            clip-path="url(#gridRectMarkerMaskkuy5wmj8g)">
-                                                            <circle id="SvgjsCircle4420" r="3.5" cx="147.20000000000002"
-                                                                cy="44.33333333333333"
-                                                                class="apexcharts-marker no-pointer-events wq9fs0e6"
-                                                                stroke="transparent" fill="#00cfe8" fill-opacity="1"
-                                                                stroke-width="3.2" stroke-opacity="0.9" rel="4"
-                                                                j="4" index="0" default-marker-size="3.5"></circle>
-                                                        </g>
-                                                        <g id="SvgjsG4421" class="apexcharts-series-markers"
-                                                            clip-path="url(#gridRectMarkerMaskkuy5wmj8g)">
-                                                            <circle id="SvgjsCircle4422" r="5" cx="184"
-                                                                cy="6.333333333333329"
-                                                                class="apexcharts-marker no-pointer-events ws9mk3lqm"
-                                                                stroke="#00cfe8" fill="#ffffff" fill-opacity="1"
-                                                                stroke-width="3.2" stroke-opacity="0.9" rel="5"
-                                                                j="5" index="0" default-marker-size="5"></circle>
-                                                        </g>
-                                                    </g>
-                                                </g>
-                                                <g id="SvgjsG4411" class="apexcharts-datalabels" data:realIndex="0"></g>
-                                            </g>
-                                            <line id="SvgjsLine4445" x1="0" y1="0" x2="184"
-                                                y2="0" stroke="#b6b6b6" stroke-dasharray="0" stroke-width="1"
-                                                stroke-linecap="butt" class="apexcharts-ycrosshairs"></line>
-                                            <line id="SvgjsLine4446" x1="0" y1="0" x2="184"
-                                                y2="0" stroke-dasharray="0" stroke-width="0"
-                                                stroke-linecap="butt" class="apexcharts-ycrosshairs-hidden"></line>
-                                            <g id="SvgjsG4447" class="apexcharts-yaxis-annotations"></g>
-                                            <g id="SvgjsG4448" class="apexcharts-xaxis-annotations"></g>
-                                            <g id="SvgjsG4449" class="apexcharts-point-annotations"></g>
-                                            <rect id="SvgjsRect4450" width="0" height="0" x="0" y="0"
-                                                rx="0" ry="0" opacity="1" stroke-width="0"
-                                                stroke="none" stroke-dasharray="0" fill="#fefefe"
-                                                class="apexcharts-zoom-rect"></rect>
-                                            <rect id="SvgjsRect4451" width="0" height="0" x="0" y="0"
-                                                rx="0" ry="0" opacity="1" stroke-width="0"
-                                                stroke="none" stroke-dasharray="0" fill="#fefefe"
-                                                class="apexcharts-selection-rect"></rect>
-                                        </g>
-                                        <rect id="SvgjsRect4404" width="0" height="0" x="0" y="0"
-                                            rx="0" ry="0" opacity="1" stroke-width="0"
-                                            stroke="none" stroke-dasharray="0" fill="#fefefe"></rect>
-                                        <g id="SvgjsG4432" class="apexcharts-yaxis" rel="0"
-                                            transform="translate(-8, 0)">
-                                            <g id="SvgjsG4433" class="apexcharts-yaxis-texts-g"></g>
-                                        </g>
-                                        <g id="SvgjsG4402" class="apexcharts-annotations"></g>
-                                    </svg>
-                                    <div class="apexcharts-legend" style="max-height: 46.5px;"></div>
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mt-3 gap-3">
+                        <div class="card-body">
+                            <div id="profitChart"></div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3">
                                 <h4 class="mb-0">624k</h4>
                                 <small class="text-success">+8.24%</small>
-                            </div>
-                            <div class="resize-triggers">
-                                <div class="expand-trigger">
-                                    <div style="width: 246px; height: 163px;"></div>
-                                </div>
-                                <div class="contract-trigger"></div>
                             </div>
                         </div>
                     </div>
@@ -973,3 +802,43 @@
         </div>
     </div>
 @endsection
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+            var options = {
+                chart: {
+                    type: 'line',
+                    height: 100,
+                    sparkline: {
+                        enabled: true // 🔥 ini bikin mini chart seperti di gambar kamu
+                    }
+                },
+                series: [{
+                    name: 'Profit',
+                    data: [10, 40, 20, 60, 40, 80]
+                }],
+                stroke: {
+                    width: 2,
+                    curve: 'smooth'
+                },
+                colors: ['#00cfe8'],
+                tooltip: {
+                    enabled: true
+                }
+            };
+
+        var chart = new ApexCharts(document.querySelector("#profitChart"), options);
+        chart.render();
+    </script>
+@endpush
+@push('style')
+    <style>
+        #profitChart {
+            width: 100%;
+        }
+
+        .card-body {
+            overflow: hidden;
+        }
+    </style>
+@endpush
