@@ -93,13 +93,8 @@
                                         <td class="fw-medium text-dark ps-2">{{ $detail->unitID->detail ?? '-' }}</td>
                                     </tr>
                                     <tr class="align-middle">
-                                        <th class="ps-4 py-3 text-muted fw-normal">Sub-Units</th>
-                                        <td class="fw-medium text-dark ps-2">
-                                            {{ $detail->unit1 ?? '-' }}
-                                            @if ($detail->unit2)
-                                                <span class="text-muted mx-1">/</span> {{ $detail->unit2 }}
-                                            @endif
-                                        </td>
+                                        <th class="ps-4 py-3 text-muted fw-normal">Inventory Type</th>
+                                        <td class="fw-medium text-dark ps-2">{{ $detail->typeID->detail ?? '-' }}</td>
                                     </tr>
                                     <tr class="align-middle">
                                         <th class="ps-4 py-3 text-muted fw-normal">Stock Availability</th>

@@ -66,7 +66,7 @@
                         <th>Product Code</th>
                         <th>Product Name</th>
                         <th>Price</th>
-                        <th>Product Type</th>
+                        <th>Stock</th>
                         <th>Status</th>
                         <th>Created</th>
                         <th>Updated</th>
@@ -126,7 +126,7 @@
                     },
 
                     {
-                        data: 'productType',
+                        data: 'price',
                     },
                     {
                         data: 'status',
