@@ -183,7 +183,7 @@ class SatuanBarangController extends Controller
     {
         try {
             $detail = BasicCodeDetail::findOrFail($id);
-            if ($detail->barang_unit()->exists()) {
+            if ($detail->barang_unit()->exists()|| $detail->from_unit()->exists()|| $detail->to_unit()->exists()) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Cannot delete this data because it is currently assigned to products.'

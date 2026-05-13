@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Master_Data\Barang;
+use App\Models\Master_Data\DataBarangConversion;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -49,5 +50,13 @@ class BasicCodeDetail extends Model
      public function barang_unit()
     {
         return $this->hasMany(Barang::class, 'unit_id', 'id');
+    }
+     public function from_unit()
+    {
+        return $this->hasMany(DataBarangConversion::class, 'from_unit_id', 'id');
+    }
+     public function to_unit()
+    {
+        return $this->hasMany(DataBarangConversion::class, 'to_unit_id', 'id');
     }
 }
