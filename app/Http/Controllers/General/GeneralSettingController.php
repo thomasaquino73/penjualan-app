@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\General;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class GeneralSettingController extends Controller
 {
@@ -33,8 +32,10 @@ class GeneralSettingController extends Controller
             return $next($request);
         });
     }
-       public function index(){
-        
+
+    public function index()
+    {
+
         $x = [
             'title' => 'General Setting',
             'breadcrumb' => [

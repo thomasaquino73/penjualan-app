@@ -25,6 +25,5 @@ class CompanyInfoSeeder extends Seeder
             'favicon' => 'image/logo/69fd6d6ab719c1778216298.png',
         ]);
 
-        
     }
 }

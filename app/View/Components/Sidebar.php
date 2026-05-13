@@ -243,12 +243,12 @@ class Sidebar extends Component
                 'label' => 'SETTING',
                 'roles' => ['Super Admin'],
             ],
-             [
+            [
                 'type' => 'dropdown',
                 'name' => 'General Setting',
                 'icon' => 'ti ti-adjustments-horizontal',
                 'roles' => ['Super Admin'],
-                'permissions' => ['mata_uang-browse','company-browse','general-browse'],
+                'permissions' => ['mata_uang-browse', 'company-browse', 'general-browse'],
                 'children' => [
 
                     [

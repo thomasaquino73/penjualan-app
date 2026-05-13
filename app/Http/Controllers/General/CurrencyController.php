@@ -38,6 +38,7 @@ class CurrencyController extends Controller
             return $next($request);
         });
     }
+
     /**
      * Display a listing of the resource.
      */
@@ -111,7 +112,7 @@ class CurrencyController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-     {
+    {
         $id = $request->input('id');
 
         // ✅ RULE VALIDASI
@@ -185,10 +186,9 @@ class CurrencyController extends Controller
         //
     }
 
-    
-     public function edit(Request $request)
+    public function edit(Request $request)
     {
-        
+
         $where = [
             'id' => $request->id,
         ];

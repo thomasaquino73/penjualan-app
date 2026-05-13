@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CompanyInfoRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\General\Company;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CompanyInfoController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         $sistemID = 1;
         $sistem = Company::findOrFail($sistemID);
         $x = [
@@ -20,11 +20,12 @@ class CompanyInfoController extends Controller
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Company Information', 'url' => ''],
             ],
-                'dataSistem' => $sistem,
+            'dataSistem' => $sistem,
         ];
 
         return view('general.company-info.company_info_index', $x);
     }
+
     public function edit($id)
     {
         $sistem = Company::findOrFail($id);
@@ -42,7 +43,8 @@ class CompanyInfoController extends Controller
 
         return view('general.company-info.company_info_edit', $x);
     }
-      private function uploadAvatar($avatar)
+
+    private function uploadAvatar($avatar)
     {
         $name = uniqid().time();
         $destination = 'image/logo';

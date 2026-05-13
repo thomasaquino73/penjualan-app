@@ -16,7 +16,7 @@ class Company extends Model
 
     protected $guarded = [];
 
-     public function currency()
+    public function currency()
     {
         return $this->belongsTo(BasicCodeDetail::class, 'mata_uang_id');
     }

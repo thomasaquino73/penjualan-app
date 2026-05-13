@@ -36,11 +36,11 @@ return new class extends Migration
             // relasi ke barang utama
             $table->unsignedBigInteger('data_barang_id');
             // unit asal (dari unit utama)
-            $table->unsignedBigInteger('from_unit_id');
+            $table->unsignedBigInteger('from_unit_id')->nullable();
             // unit tujuan
-            $table->unsignedBigInteger('to_unit_id');
+            $table->unsignedBigInteger('to_unit_id')->nullable();
             // jumlah konversi
-            $table->decimal('qty', 18, 4);
+            $table->integer('qty')->nullable();
             $table->timestamps();
             // index biar cepat
             $table->index('data_barang_id');

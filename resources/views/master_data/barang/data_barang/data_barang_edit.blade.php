@@ -135,8 +135,6 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    {{-- <button type="button" id="showSubUnit"
-                                        class="btn btn-sm btn-primary waves-effect waves-light">...</button> --}}
                                 </div>
                                 <span class="error text-danger" id="tipe_persediaan_idError"></span>
                             </div>
@@ -193,7 +191,7 @@
                     </div>
                     <div class="col-lg-6">
                         <h6><strong>Unit Conversion</strong></h6>
-                        <div class="conversion-item border p-3 mb-2 rounded ">
+                        {{-- <div class="conversion-item border p-3 mb-2 rounded ">
                             <div class="d-flex justify-content-between mb-2">
 
                             </div>
@@ -221,42 +219,58 @@
                                 </div>
 
                             </div>
-                        </div>
+                        </div> --}}
 
                         <div class="conversion-item border p-3 mb-2 rounded">
                             <div class="d-flex justify-content-between mb-2">
 
                             </div>
                             <div class="row g-2">
-                                <div class="col-md-4">
-                                    <label>From Unit</label>
-                                    <input type="text" class="form-control from_unit_text" disabled>
-                                    <input type="hidden" name="conversion[1][from_unit]" class="from_unit_id">
+                                @foreach ($subUnit as $index => $item)
+                                    <div class="conversion-item row mb-2">
 
-                                </div>
-                                <div class="col-md-2 text-center">
-                                    <label>&nbsp;</label>
-                                    <div class="fw-bold">=</div>
-                                </div>
+                                        <div class="col-md-4">
+                                            <label>From Unit</label>
 
-                                <div class="col-md-3">
-                                    <label>Quantity</label>
-                                    <input type="number" name="conversion[1][qty]" class="form-control qty"
-                                        placeholder="Qty" disabled>
-                                </div>
+                                            <input type="text" class="form-control from_unit_text"
+                                                value="{{ $detail->unitID->detail ?? '' }}" readonly>
 
-                                <div class="col-md-3">
-                                    <label>To Unit</label>
-                                    <select name="conversion[1][to_unit]" class="form-select to_unit" disabled>
-                                        <option value="">Select</option>
-                                        @foreach ($unit as $u)
-                                            <option value="{{ $u->id }}"
-                                                {{ isset($detail->conversions[0]) && $detail->conversions[0]->to_unit == $u->id ? 'selected' : '' }}>
-                                                {{ $u->detail }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                            <input type="hidden" class="from_unit_id"
+                                                name="conversion[{{ $index }}][from_unit]"
+                                                value="{{ $detail->unit_id }}">
+                                        </div>
+
+                                        <div class="col-md-2 text-center">
+                                            <label>&nbsp;</label>
+                                            <div class="fw-bold">=</div>
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <label>Quantity</label>
+                                            <input type="number" name="conversion[{{ $index }}][qty]"
+                                                class="form-control qty" value="{{ $item->qty }}" placeholder="Qty">
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <label>To Unit</label>
+                                            <select name="conversion[{{ $index }}][to_unit]"
+                                                class="form-select to_unit">
+
+                                                <option value="">Select</option>
+
+                                                @foreach ($unit as $u)
+                                                    <option value="{{ $u->id }}"
+                                                        {{ $item->to_unit_id == $u->id ? 'selected' : '' }}>
+                                                        {{ $u->detail }}
+                                                    </option>
+                                                @endforeach
+
+                                            </select>
+                                        </div>
+
+                                    </div>
+                                @endforeach
+
                             </div>
                         </div>
                     </div>
@@ -365,58 +379,78 @@
             saveAndNew = true;
         });
 
-        $('#postForm').on('submit', function(e) {
-            e.preventDefault();
-            let form = this;
-            let btn = saveAndNew ? $('#savedatamore') : $('#savedata');
-            let formData = new FormData(form);
-            formData.append('save_and_new', saveAndNew ? 1 : 0);
-            let isValid = true;
-            let errorMessage = '';
+        function validateConversion() {
+            let result = {
+                isValid: true,
+                errorMessage: ''
+            };
 
             $('.conversion-item').each(function() {
                 let qty = $(this).find('.qty').val();
                 let toUnit = $(this).find('.to_unit').val();
                 let fromUnit = $(this).find('.from_unit_id').val();
 
-                // 1. qty ada tapi to_unit kosong
-                if (qty && !toUnit) {
-                    isValid = false;
-                    errorMessage = 'Please select a destination unit for the entered quantity.';
-                    return false;
-                }
+                // Perbaikan: Angka 0 atau string kosong dianggap "tidak diisi"
+                let isQtyFilled = (qty !== "" && qty !== "0" && qty !== 0);
+                let isToUnitFilled = (toUnit !== "" && toUnit !== null);
 
-                // 2. to_unit ada tapi qty kosong
-                if (!qty && toUnit) {
-                    isValid = false;
-                    errorMessage = 'Please enter a quantity for the selected unit.';
-                    return false;
-                }
+                // Validasi hanya berjalan jika baris ini benar-benar niat diisi (bukan cuma angka 0)
+                if (isQtyFilled || isToUnitFilled) {
 
-                // 3. to_unit tidak boleh sama dengan from_unit
-                if (toUnit && fromUnit && toUnit == fromUnit) {
-                    isValid = false;
-                    errorMessage = 'The destination unit must be different from the source unit.';
-                    return false;
+                    // 1. Qty ada isinya (bukan 0) tapi unit tujuan belum dipilih
+                    if (isQtyFilled && !isToUnitFilled) {
+                        result.isValid = false;
+                        result.errorMessage = 'Please select a destination unit for the entered quantity.';
+                        return false;
+                    }
+
+                    // 2. Unit tujuan dipilih tapi Qty kosong atau nol
+                    if (!isQtyFilled && isToUnitFilled) {
+                        result.isValid = false;
+                        result.errorMessage = 'Please enter a valid quantity (more than 0) for the selected unit.';
+                        return false;
+                    }
+
+                    // 3. Unit Tujuan tidak boleh sama dengan Unit Asal
+                    if (isToUnitFilled && fromUnit && toUnit == fromUnit) {
+                        result.isValid = false;
+                        result.errorMessage = 'The destination unit must be different from the source unit.';
+                        return false;
+                    }
                 }
             });
 
-            if (!isValid) {
+            return result;
+        }
+        $('#postForm').on('submit', function(e) {
+            e.preventDefault();
+
+            // --- 1. Jalankan Validasi Terpisah ---
+            let validation = validateConversion();
+
+            if (!validation.isValid) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Invalid Input',
-                    text: errorMessage,
+                    text: validation.errorMessage,
                     confirmButtonText: 'OK',
-                    showClass: {
-                        popup: 'animate__animated animate__bounceIn'
-                    },
                     customClass: {
                         confirmButton: 'btn btn-primary waves-effect waves-light'
                     },
                     buttonsStyling: false
                 });
-                return; // ❌ STOP submit
+                return; // ❌ STOP: Jangan lanjut ke AJAX
             }
+
+            // --- 2. Persiapan Data ---
+            let form = this;
+            let isNew = (typeof saveAndNew !== 'undefined' && saveAndNew);
+            let btn = isNew ? $('#savedatamore') : $('#savedata');
+
+            let formData = new FormData(form);
+            formData.append('save_and_new', isNew ? 1 : 0);
+
+            // --- 3. Kirim Data via AJAX ---
             $.ajax({
                 url: $(form).attr('action'),
                 method: $(form).attr('method'),
@@ -429,23 +463,20 @@
                     btn.prop('disabled', true);
                 },
                 complete: function() {
-                    if (saveAndNew) {
-                        btn.html('<i class="fa fa-plus-circle me-1"></i> Save and Create New');
-                    } else {
-                        btn.html('<i class="fa fa-upload me-1"></i> Save and Close');
-                    }
+                    // Mengembalikan teks tombol
+                    btn.html(isNew ?
+                        '<i class="fa fa-plus-circle me-1"></i> Save and Create New' :
+                        '<i class="fa fa-upload me-1"></i> Save and Close'
+                    );
                     btn.prop('disabled', false);
                 },
                 success: function(response) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Data Created Successfully',
+                        title: 'Success!',
                         text: response.message,
-                        showClass: {
-                            popup: 'animate__animated animate__bounceIn'
-                        },
                         customClass: {
-                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                            confirmButton: 'btn btn-primary'
                         },
                         buttonsStyling: false
                     }).then(() => {
@@ -453,27 +484,23 @@
                     });
                 },
                 error: function(xhr) {
-                    // reset validation messages (buat kamu implement sendiri)
-                    resetValidation();
+                    if (typeof resetValidation === "function") resetValidation();
 
                     Swal.fire({
                         icon: 'error',
-                        title: 'Failed to Create Data',
+                        title: 'Failed to Save Data',
                         text: 'Please check your data again.',
-                        showClass: {
-                            popup: 'animate__animated animate__bounceIn'
-                        },
                         customClass: {
-                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                            confirmButton: 'btn btn-primary'
                         },
                         buttonsStyling: false
                     });
 
-                    let errors = xhr.responseJSON.errors || {};
-
+                    let errors = xhr.responseJSON ? xhr.responseJSON.errors : {};
                     $.each(errors, function(key, value) {
-                        displayFieldError(key, value[
-                            0]); // fungsi buat nampilin error per field
+                        if (typeof displayFieldError === "function") {
+                            displayFieldError(key, value[0]);
+                        }
                     });
                 }
             });
@@ -522,17 +549,30 @@
         //     $('.to_unit').prop('disabled', false);
         // });
 
+
         $('#unit_id').on('change', function() {
+            // Ambil ID yang dipilih
             let unitId = $(this).val();
-            let unitText = $('#unit_id option:selected').text();
 
-            $('.from_unit_text').val(unitText);
+            // Ambil Teks yang dipilih
+            // Jika menggunakan Select2, kita ambil text dari option yang terpilih secara eksplisit
+            let unitText = $(this).find('option:selected').text().trim();
 
-            // isi ke hidden input (buat backend)
-            $('.from_unit_id').val(unitId);
-            // 🔥 AKTIFKAN INPUT
-            $('.qty').prop('disabled', false);
-            $('.to_unit').prop('disabled', false);
+            if (!unitId) {
+                // Opsional: Kosongkan jika unit utama tidak dipilih
+                $('.from_unit_text').val('');
+                $('.from_unit_id').val('');
+                return;
+            }
+
+            // Update semua input di dalam loop conversion-item
+            $('.conversion-item').each(function() {
+                // Update input text (untuk tampilan user)
+                $(this).find('.from_unit_text').val(unitText);
+
+                // Update input hidden/id (untuk pengiriman data ke server)
+                $(this).find('.from_unit_id').val(unitId);
+            });
         });
     </script>
 @endpush

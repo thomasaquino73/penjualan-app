@@ -277,26 +277,19 @@ class DataBarangController extends Controller
             // =========================
             // 2. SAVE CONVERSION DATA
             // =========================
-            if ($request->has('conversion')) {
+            $conversions = $request->conversion ?? [];
 
-                foreach ($request->conversion as $conv) {
-                    // dd($request->conversion);
-                    // skip kalau kosong
-                    if (
-                        empty($conv['from_unit']) ||
-                        empty($conv['to_unit']) ||
-                        empty($conv['qty'])
-                    ) {
-                        continue;
-                    }
+            // pastikan selalu ada 2 index
+            for ($i = 0; $i < 2; $i++) {
 
-                    DataBarangConversion::create([
-                        'data_barang_id' => $barang->id,
-                        'from_unit_id' => $request->unit_id,
-                        'to_unit_id' => $conv['to_unit'],
-                        'qty' => $conv['qty'],
-                    ]);
-                }
+                $conv = $conversions[$i] ?? [];
+
+                DataBarangConversion::create([
+                    'data_barang_id' => $barang->id,
+                    'from_unit_id' => $request->unit_id, // selalu dari unit utama
+                    'to_unit_id' => $conv['to_unit'] ?? null,
+                    'qty' => $conv['qty'] ?? 0,
+                ]);
             }
 
             DB::commit();
@@ -343,6 +336,7 @@ class DataBarangController extends Controller
     public function edit(string $id)
     {
         $idDetail = Barang::findorfail($id);
+        $subUnit = DataBarangConversion::where('data_barang_id', $idDetail->id)->get();
 
         return view('master_data.barang.data_barang.data_barang_edit', [
             'title' => 'Edit Product',
@@ -356,6 +350,7 @@ class DataBarangController extends Controller
             'warehouses' => Warehouse::where('status', 1)->get(),
             'inventoryTypes' => BasicCodeDetail::where('master_id', 4)->get(),
             'detail' => $idDetail,
+            'subUnit' => $subUnit,
         ]);
     }
 
@@ -365,51 +360,54 @@ class DataBarangController extends Controller
 
         try {
             $isSaveAndNew = $request->input('save_and_new') == '1';
+
+            // 1. Ambil data barang utama
             $barang = Barang::findOrFail($id);
+
+            // 2. Siapkan data update (kecuali field khusus)
             $data = $request->except(['_token', '_method', 'save_and_new', 'conversion']);
             $data['updated_by'] = Auth::id();
             $data['status'] = $request->has('status') ? 2 : 1;
-            // jika upload foto baru
-            if ($request->hasFile('photo_filename')) {
-                // optional: hapus file lama kalau perlu
-                // if ($barang->photo_filename) {
-                //     Storage::delete($barang->photo_filename);
-                // }
 
+            // 3. Handle Upload Foto
+            if ($request->hasFile('photo_filename')) {
+                // Jika ingin menghapus file lama agar storage tidak penuh
+                if ($barang->photo_filename && file_exists(public_path('uploads/products/'.$barang->photo_filename))) {
+                    unlink(public_path('uploads/products/'.$barang->photo_filename));
+                }
                 $data['photo_filename'] = $this->uploadAvatar($request->file('photo_filename'));
             }
 
+            // 4. Eksekusi Update Barang Utama
             $barang->update($data);
 
             // =========================
             // UPDATE CONVERSION
             // =========================
 
-            // 1. HAPUS DATA LAMA
-            DataBarangConversion::where('data_barang_id', $barang->id)->delete();
+            if ($request->has('conversion') && is_array($request->conversion)) {
+                foreach ($request->conversion as $index => $conv) {
 
-            // 2. INSERT ULANG
-            if ($request->has('conversion')) {
+                    // Ambil data dari input konversi
+                    $qty = $conv['qty'] ?? 0;
+                    $toUnit = $conv['to_unit'] ?? null;
 
-                foreach ($request->conversion as $conv) {
+                    // Kita ambil data konversi berdasarkan urutan (index) atau ID jika ada
+                    // agar tetap bisa update meskipun to_unit_id di database masih NULL
+                    $existingConversion = DataBarangConversion::where('data_barang_id', $barang->id)
+                        ->skip($index) // Mengambil baris ke-N sesuai urutan di form
+                        ->first();
 
-                    if (
-                        empty($conv['from_unit']) ||
-                        empty($conv['to_unit']) ||
-                        empty($conv['qty'])
-                    ) {
-                        continue;
+                    if ($existingConversion) {
+                        // Update data: from_unit_id dipaksa ikut unit_id utama dari request
+                        $existingConversion->update([
+                            'from_unit_id' => $request->unit_id,
+                            'to_unit_id' => $toUnit,
+                            'qty' => $qty,
+                        ]);
                     }
-
-                    DataBarangConversion::create([
-                        'data_barang_id' => $barang->id,
-                        'from_unit_id' => $conv['from_unit'],
-                        'to_unit_id' => $conv['to_unit'],
-                        'qty' => $conv['qty'],
-                    ]);
                 }
             }
-
             DB::commit();
 
             return response()->json([
@@ -421,7 +419,6 @@ class DataBarangController extends Controller
             ]);
 
         } catch (\Exception $e) {
-
             DB::rollBack();
 
             return response()->json([

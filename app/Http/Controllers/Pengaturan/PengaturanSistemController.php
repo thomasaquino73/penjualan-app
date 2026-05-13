@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Pengaturan;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SistemRequest;
-use App\Models\BasicCodeDetail;
 use App\Models\LoginBackground;
 use App\Models\PengaturanSistem;
 use Illuminate\Http\Request;
@@ -126,16 +125,16 @@ class PengaturanSistemController extends Controller
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                        $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
+                    $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="far fa-edit me-1"></i>Edit</a>';
 
-                        $btn .= '<a class="dropdown-item detail" href="javascript:void(0)"
+                    $btn .= '<a class="dropdown-item detail" href="javascript:void(0)"
                                 data-gambar="'.asset('image/login_background/'.$row->gambar).'"
                                 data-alias="'.$row->alias.'">
                                 <i class="far fa-eye me-1"></i>Detail
                             </a>';
 
-                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                    $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->alias.'"
                                 ><i class="fa fa-trash me-1"></i> Delete</a>';
@@ -296,6 +295,4 @@ class PengaturanSistemController extends Controller
             ], 500);
         }
     }
-    
-    
 }

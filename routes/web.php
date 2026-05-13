@@ -3,7 +3,6 @@
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\General\CompanyInfoController;
-use App\Http\Controllers\General\Currency;
 use App\Http\Controllers\General\CurrencyController;
 use App\Http\Controllers\General\GeneralSettingController;
 use App\Http\Controllers\GuestEmailVerificationController;
@@ -58,17 +57,15 @@ Route::get('/verify-email/{id}/{hash}', function (Request $request, $id, $hash) 
 })->middleware('signed')->name('verification.verify');
 Route::middleware('auth')->group(function () {
     Route::group(['middleware' => ['role:Super Admin']], function () {
-        
-    Route::get('/pengaturan-sistem', [PengaturanSistemController::class, 'index'])->name('pengaturan.sistem');
-    Route::get('/pengaturan-sistem/{id}/edit', [PengaturanSistemController::class, 'edit'])->name('pengaturan.edit');
-    Route::put('/pengaturan-sistem/{id}/update', [PengaturanSistemController::class, 'store'])->name('pengaturan.update');
-    Route::get('/pengaturan-background', [PengaturanSistemController::class, 'login_background_index'])->name('pengaturan.background.index');
-    Route::post('/pengaturan-background/store', [PengaturanSistemController::class, 'login_background_store'])->name('pengaturan.background.store');
-    Route::get('/pengaturan-background/{id}/edit', [PengaturanSistemController::class, 'login_background_edit'])->name('pengaturan.background.edit');
-    Route::delete('/pengaturan-background/{id}', [PengaturanSistemController::class, 'login_background_destroy'])->name('pengaturan.background.delete');
+
+        Route::get('/pengaturan-sistem', [PengaturanSistemController::class, 'index'])->name('pengaturan.sistem');
+        Route::get('/pengaturan-sistem/{id}/edit', [PengaturanSistemController::class, 'edit'])->name('pengaturan.edit');
+        Route::put('/pengaturan-sistem/{id}/update', [PengaturanSistemController::class, 'store'])->name('pengaturan.update');
+        Route::get('/pengaturan-background', [PengaturanSistemController::class, 'login_background_index'])->name('pengaturan.background.index');
+        Route::post('/pengaturan-background/store', [PengaturanSistemController::class, 'login_background_store'])->name('pengaturan.background.store');
+        Route::get('/pengaturan-background/{id}/edit', [PengaturanSistemController::class, 'login_background_edit'])->name('pengaturan.background.edit');
+        Route::delete('/pengaturan-background/{id}', [PengaturanSistemController::class, 'login_background_destroy'])->name('pengaturan.background.delete');
     });
-
-
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/company-info', [CompanyInfoController::class, 'index'])->name('company.info');
@@ -115,9 +112,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}', [UserController::class, 'show'])->name('show');
         Route::put('/verify-user/{id}', [UserController::class, 'verify_user'])->name('verify');
     });
-
-
- 
 
     // Master Data
     Route::post('/customer/delete-multiple', [CustomerController::class, 'deleteMultiple']);

@@ -15,7 +15,7 @@ class SistemRequest extends FormRequest
     {
         return [
             'nama_aplikasi' => 'required|string|max:100',
-            
+
         ];
     }
 
@@ -25,7 +25,6 @@ class SistemRequest extends FormRequest
             'nama_aplikasi.required' => 'Nama aplikasi wajib diisi.',
             'nama_aplikasi.max' => 'Nama aplikasi maksimal 100 karakter.',
 
-           
         ];
     }
 }
