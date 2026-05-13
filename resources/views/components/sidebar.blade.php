@@ -109,7 +109,7 @@
                 <div>Documentation</div>
             </a>
         </li>
-        <hr class="mb-3" />
+        <hr class="mb-5" />
 
     </ul>
 

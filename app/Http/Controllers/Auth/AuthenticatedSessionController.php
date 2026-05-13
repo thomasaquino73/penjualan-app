@@ -53,8 +53,8 @@ class AuthenticatedSessionController extends Controller
             // Jika user tidak ditemukan atau password salah
             if (! $user || ! Hash::check($password, $user->password)) {
                 return $r->wantsJson()
-                    ? response()->json(['message' => 'Login gagal, periksa kembali kredensial Anda.'], 422)
-                    : back()->withErrors(['username' => 'Login gagal, periksa kembali kredensial Anda.']);
+                    ? response()->json(['message' => 'Login failed, please double check your credentials.'], 422)
+                    : back()->withErrors(['username' => 'Login failed, please double check your credentials']);
             }
 
             // 🔒 Cek status aktif akun
@@ -63,11 +63,11 @@ class AuthenticatedSessionController extends Controller
 
                 return $r->wantsJson()
                     ? response()->json([
-                        'message' => 'Akun Anda tidak aktif. Silakan hubungi administrator.',
+                        'message' => 'Your account is inactive. Please contact the administrator.',
                         'status_code' => 'inactive_account',
                     ], 403)
                     : redirect()->route('login')->withErrors([
-                        'username' => 'Akun Anda tidak aktif. Silakan hubungi administrator.',
+                        'username' => 'Your account is inactive. Please contact the administrator..',
                     ]);
             }
 
@@ -77,7 +77,7 @@ class AuthenticatedSessionController extends Controller
 
                 return response()->json([
                     'status_code' => 'unverified_email',
-                    'message' => 'Email Anda belum diverifikasi. Klik OK untuk mengirim ulang link verifikasi.',
+                    'message' => 'Your email has not been verified. Click OK to resend the verification link.',
                 ], 403);
             }
 
@@ -87,11 +87,11 @@ class AuthenticatedSessionController extends Controller
 
                 return $r->wantsJson()
                     ? response()->json([
-                        'message' => 'Akun Anda belum aktif hingga tanggal '.$user->email_verified_at->format('d M Y H:i').'.',
+                        'message' => 'Your account is not active as of date '.$user->email_verified_at->format('d M Y H:i').'.',
                         'status_code' => 'email_not_active_yet',
                     ], 403)
                     : redirect()->route('login')->withErrors([
-                        'email' => 'Akun Anda belum aktif. Silakan login kembali pada tanggal '.
+                        'email' => 'Your account is not yet active. Please log in again on '.
                             $user->email_verified_at->format('d M Y H:i').'.',
                     ]);
             }
@@ -166,6 +166,6 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        return redirect('/login')->with('logout_message', 'Anda telah berhasil Logout.');
+        return redirect('/login')->with('logout_message', 'You have successfully logged out.');
     }
 }

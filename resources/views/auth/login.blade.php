@@ -204,7 +204,7 @@
                     },
                     success: function(response) {
                         if (response.redirect) {
-                            toastr.success('Login berhasil! Mengarahkan ke dashboard...', '', {
+                            toastr.success('Login successful! Redirecting to dashboard...', '', {
                                 timeOut: 1500,
                                 progressBar: true,
                                 positionClass: 'toast-top-right',
