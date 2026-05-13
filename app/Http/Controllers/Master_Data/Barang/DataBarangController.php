@@ -316,9 +316,14 @@ class DataBarangController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+        public function show(string $id)
     {
-        $idDetail = Barang::findorfail($id);
+        $idDetail = Barang::findOrFail($id);
+        
+        // Menambahkan filter where qty > 0
+        $unitConversion = DataBarangConversion::where('data_barang_id', $idDetail->id)
+            ->where('qty', '>', 0) // Hanya ambil yang qty-nya lebih dari 0
+            ->get();
 
         return view('master_data.barang.data_barang.data_barang_detail', [
             'title' => 'Detail Product',
@@ -327,6 +332,7 @@ class DataBarangController extends Controller
                 ['label' => 'Detail Product', 'url' => ''],
             ],
             'detail' => $idDetail,
+            'unitConversion' => $unitConversion,
         ]);
     }
 

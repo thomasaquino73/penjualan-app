@@ -67,9 +67,9 @@
                 </div>
             </div>
 
-            {{-- Product Details Section --}}
+            {{-- unit Details Section --}}
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm h-100">
+                <div class="card border-0 shadow-sm mb-3">
                     <div class="card-header bg-white py-3 border-bottom border-light">
                         <h5 class="card-title mb-0 fw-bold">
                             <i class="ti ti-info-circle me-2 text-primary"></i>Product Specifications
@@ -118,6 +118,51 @@
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm ">
+                    <div class="card border-0 shadow-sm ">
+                        <div class="card-header bg-white py-3 border-bottom border-light">
+                            <h5 class="card-title mb-0 fw-bold">
+                                <i class="ti ti-arrows-exchange me-2 text-primary"></i>Unit Conversion
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr class="bg-light">
+                                            <th class="ps-4 py-3 text-muted fw-bold" width="10%">No</th>
+                                            <th class="py-3 text-muted fw-bold">From Unit</th>
+                                            <th class="py-3 text-muted fw-bold text-center" width="10%">=</th>
+                                            <th class="py-3 text-muted fw-bold">Conversion Result</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($unitConversion as $index => $conv)
+                                            <tr class="align-middle">
+                                                <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
+                                                <td class="py-3 text-dark">
+                                                    1 {{ $conv->fromUnitID->detail ?? 'N/A' }}
+                                                </td>
+                                                <td class="py-3 text-center fw-bold text-primary">=</td>
+                                                <td class="py-3 text-dark fw-bold">
+                                                    {{ number_format($conv->qty, 0) }}
+                                                    {{ $conv->toUnitID->detail ?? 'Sub-unit' }}
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center py-4 text-muted italic">
+                                                    <i class="ti ti-alert-circle d-block mb-2 fs-3"></i>
+                                                    No conversion data available for this product.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
