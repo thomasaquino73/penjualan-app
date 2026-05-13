@@ -246,6 +246,41 @@ class CustomerController extends Controller
             ], 422);
         }
     }
+   
+
+    // public function destroy(Request $request, $id)
+    // {
+    //     try {
+    //         $customer = Customer::findOrFail($id);
+
+    //         // 1. Check Relations: Is this Customer ID used in other tables?
+    //         // Note: Ensure 'items' and 'purchases' are defined as relationships in the Customer Model
+    //         $hasRelation = $customer->items()->exists() || $customer->purchases()->exists();
+
+    //         if ($hasRelation) {
+    //             return response()->json([
+    //                 'status' => 'error',
+    //                 'message' => 'Customer cannot be deleted or deactivated because it is linked to existing transaction records.'
+    //             ], 422);
+    //         }
+
+    //         // 2. If no relations exist, proceed with deactivation
+    //         $customer->status = '0';
+    //         $customer->updated_by = Auth::user()->id;
+    //         $customer->save();
+
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Customer has been successfully deactivated.'
+    //         ]);
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'An error occurred: ' . $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
 
     public function deleteMultiple(Request $request)
     {

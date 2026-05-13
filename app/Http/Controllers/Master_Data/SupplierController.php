@@ -232,9 +232,8 @@ class SupplierController extends Controller
         //
     }
 
-    public function destroy(Request $request, $id)
+     public function destroy(Request $request, $id)
     {
-
         try {
             $table = Supplier::findOrFail($id);
             $table->status = '0';
@@ -246,6 +245,40 @@ class SupplierController extends Controller
             ], 422);
         }
     }
+
+    // public function destroy(Request $request, $id)
+    // {
+    //     try {
+    //         $supplier = Supplier::findOrFail($id);
+
+    //         // 1. Check Relations: Is this Supplier ID used in other tables?
+    //         // Note: Ensure 'items' and 'purchases' are defined as relationships in the Supplier Model
+    //         $hasRelation = $supplier->items()->exists() || $supplier->purchases()->exists();
+
+    //         if ($hasRelation) {
+    //             return response()->json([
+    //                 'status' => 'error',
+    //                 'message' => 'Supplier cannot be deleted or deactivated because it is linked to existing transaction records.'
+    //             ], 422);
+    //         }
+
+    //         // 2. If no relations exist, proceed with deactivation
+    //         $supplier->status = '0';
+    //         $supplier->updated_by = Auth::user()->id;
+    //         $supplier->save();
+
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Supplier has been successfully deactivated.'
+    //         ]);
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'An error occurred: ' . $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
 
     public function deleteMultiple(Request $request)
     {
