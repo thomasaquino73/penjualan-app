@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Master_Data\Barang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,5 +39,15 @@ class BasicCodeDetail extends Model
     public function master()
     {
         return $this->belongsTo(BasicCodeMaster::class, 'master_id', 'id');
+    }
+
+    public function barang_category()
+    {
+        return $this->hasMany(Barang::class, 'kategori_id', 'id');
+    }
+
+     public function barang_unit()
+    {
+        return $this->hasMany(Barang::class, 'unit_id', 'id');
     }
 }

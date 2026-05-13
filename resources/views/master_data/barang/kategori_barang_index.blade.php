@@ -289,11 +289,19 @@
                                     positionClass: 'toast-top-right',
                                 });
                             },
-                            error: function(jqXHR, textStatus, errorThrown) {
+                            error: function(jqXHR) {
+                                let message =
+                                    "Something went wrong"; // Fallback jika respon kosong
+
+                                if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                                    // Mengambil pesan spesifik dari Controller Anda
+                                    message = jqXHR.responseJSON.message;
+                                }
+
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Failed to delete',
-                                    text: 'An error occurred. Please try again later.',
+                                    text: message, // Pesan otomatis berubah sesuai kondisi di Controller
                                     timer: 5000,
                                     customClass: {
                                         confirmButton: 'btn btn-info waves-effect waves-light'

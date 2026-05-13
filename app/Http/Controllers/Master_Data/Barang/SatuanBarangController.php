@@ -182,22 +182,26 @@ class SatuanBarangController extends Controller
     public function destroy(Request $request, $id)
     {
         try {
-            $table = BasicCodeDetail::findOrFail($id);
-            $table->delete();
+            $detail = BasicCodeDetail::findOrFail($id);
+            if ($detail->barang_unit()->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Cannot delete this data because it is currently assigned to products.'
+                ], 422);
+            }
+
+            $detail->delete();
 
             return response()->json([
                 'action' => 'delete',
+                'status' => 'success',
                 'message' => 'Data deleted successfully',
             ], 200);
 
-        } catch (ValidationException $e) {
-            return response()->json([
-                'errors' => $e->errors(),
-            ], 422);
-
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Terjadi kesalahan: '.$e->getMessage(),
+                'status' => 'error',
+                'message' => 'An error occurred: ' . $e->getMessage(),
             ], 500);
         }
     }
