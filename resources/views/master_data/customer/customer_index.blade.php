@@ -85,70 +85,70 @@
                         @csrf
                         <input type="text" name="id" id="id" hidden>
                         <div class="row">
-                            <div class="col-6 mb-3">
+                            <div class="col-md-6 col-sm-12 mb-3">
                                 <label for="id_pelanggan" class="form-label">Customer ID<small>*</small></label>
                                 <input type="text" id="id_pelanggan" name="id_pelanggan" class="form-control"
                                     placeholder="Enter Customer ID">
                                 <span class="error text-danger" id="id_pelangganError"></span>
 
                             </div>
-                            <div class="col-6 mb-3">
+                            <div class="col-md-6 col-sm-12 mb-3">
                                 <label for="nama" class="form-label">Customer Name<small>*</small></label>
                                 <input type="text" id="nama" name="nama" class="form-control"
                                     placeholder="Enter Customer Name">
                                 <span class="error text-danger" id="namaError"></span>
 
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="col-md-12 col-sm-12 mb-3">
                                 <label for="alamat" class="form-label">Address<small>*</small></label>
                                 <input type="text" id="alamat" name="alamat" class="form-control"
                                     placeholder="Enter Customer Address">
                                 <span class="error text-danger" id="alamatError"></span>
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="col-md-12 col-sm-12 mb-3">
                                 <label for="alamat_pajak" class="form-label">Tax Address</label>
                                 <input type="text" id="alamat_pajak" name="alamat_pajak" class="form-control"
                                     placeholder="Enter Customer Tax Address">
                                 <span class="error text-danger" id="alamat_pajakError"></span>
                             </div>
 
-                            <div class="col-3 mb-3">
+                            <div class="col-md-3 col-sm-12 mb-3">
                                 <label for="kodepos" class="form-label">Postal Code</label>
                                 <input type="text" id="kodepos" name="kodepos" class="form-control"
                                     placeholder="Enter Postal Code">
                                 <span class="error text-danger" id="kodeposError"></span>
                             </div>
-                            <div class="col-3 mb-3">
+                            <div class="col-md-3 col-sm-12 mb-3">
                                 <label for="negara" class="form-label">Country<small>*</small></label>
                                 <input type="text" id="negara" name="negara" class="form-control"
                                     placeholder="Enter Country">
                                 <span class="error text-danger" id="negaraError"></span>
                             </div>
-                            <div class="col-3 mb-3">
+                            <div class="col-md-3 col-sm-12 mb-3">
                                 <label for="email" class="form-label">Email</label>
                                 <input type="text" id="email" name="email" class="form-control"
                                     placeholder="Enter Email">
                                 <span class="error text-danger" id="emailError"></span>
                             </div>
-                            <div class="col-3 mb-3">
+                            <div class="col-md-3 col-sm-12 mb-3">
                                 <label for="website" class="form-label">Website</label>
                                 <input type="text" id="website" name="website" class="form-control"
                                     placeholder="Enter Website">
                                 <span class="error text-danger" id="websiteError"></span>
                             </div>
-                            <div class="col-3 mb-3">
+                            <div class="col-md-3 col-sm-12 mb-3">
                                 <label for="telepon" class="form-label">Phone Number<small>*</small></label>
                                 <input type="text" id="telepon" name="telepon" class="form-control"
                                     placeholder="Enter Phone Number">
                                 <span class="error text-danger" id="teleponError"></span>
                             </div>
-                            <div class="col-3 mb-3">
+                            <div class="col-md-3 col-sm-12 mb-3">
                                 <label for="personal_kontak" class="form-label">Contact Person</label>
                                 <input type="text" id="personal_kontak" name="personal_kontak" class="form-control"
                                     placeholder="Enter Contact Person">
                                 <span class="error text-danger" id="personal_kontakError"></span>
                             </div>
-                            <div class="col-6 mb-3">
+                            <div class="col-md-6 col-sm-12 mb-3">
                                 <label class="form-label">Status<small>*</small></label>
                                 <select name="status" id="status" class="form-control">
                                     <option value="">Select Status</option>

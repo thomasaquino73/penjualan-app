@@ -25,7 +25,7 @@
 
             <div class="col-12 col-lg-5">
                 <div
-                    class="d-flex flex-column flex-md-row gap-2 
+                    class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
 
                     @canany(['kendaraan-create'])
@@ -102,28 +102,28 @@
                         @csrf
                         <input type="text" name="id" id="id" hidden>
                         <div class="row">
-                            <div class="col-6 mb-3">
+                            <div class="col-md-6 col-sm-12 mb-3">
                                 <label for="foto" class="form-label">Photo<small>*</small></label>
                                 <input type="file" id="foto" name="foto" class="form-control"
                                     placeholder="Upload Photo">
                                 <span class="error text-danger" id="fotoError"></span>
                             </div>
 
-                            <div class="col-6 mb-3">
+                            <div class="col-md-6 col-sm-12 mb-3">
                                 <label for="merk" class="form-label">Brand<small>*</small></label>
                                 <input type="text" id="merk" name="merk" class="form-control"
                                     placeholder="Enter Brand">
                                 <span class="error text-danger" id="merkError"></span>
                             </div>
 
-                            <div class="col-6 mb-3">
+                            <div class="col-md-6 col-sm-12 mb-3">
                                 <label for="tipe" class="form-label">Type<small>*</small></label>
                                 <input type="text" id="tipe" name="tipe" class="form-control"
                                     placeholder="Enter Type">
                                 <span class="error text-danger" id="tipeError"></span>
                             </div>
 
-                            <div class="col-6 mb-3">
+                            <div class="col-md-6 col-sm-12 mb-3">
                                 <label class="form-label">License Plate<small>*</small></label>
                                 <div class="row g-2">
                                     <div class="col-md-2">
@@ -146,21 +146,21 @@
                                 </div>
                             </div>
 
-                            <div class="col-3 mb-3">
+                            <div class="col-md-3 col-sm-12 mb-3">
                                 <label for="warna" class="form-label">Color<small>*</small></label>
                                 <input type="text" id="warna" name="warna" class="form-control"
                                     placeholder="Enter Color">
                                 <span class="error text-danger" id="warnaError"></span>
                             </div>
 
-                            <div class="col-3 mb-3">
+                            <div class="col-md-3 col-sm-12 mb-3">
                                 <label for="pemilik" class="form-label">Owner<small>*</small></label>
                                 <input type="text" id="pemilik" name="pemilik" class="form-control"
                                     placeholder="Enter Owner Name">
                                 <span class="error text-danger" id="pemilikError"></span>
                             </div>
 
-                            <div class="col-6 mb-3">
+                            <div class="col-md-6 col-sm-12 mb-3">
                                 <label class="form-label">Status</label>
                                 <select name="status" id="status" class="form-control">
                                     <option value="">Select Status</option>

@@ -43,9 +43,9 @@
                             <i class="ti ti-trash me-1"></i> Delete Selected
                         </button>
                     @endcanany
-                    <button class="btn btn-sm btn-info ">
+                    <a href="{{ route('data-barang.print_all') }}" class="btn btn-sm btn-info ">
                         <i class="ti ti-printer me-1"></i> Print All
-                    </button>
+                    </a>
 
                 </div>
             </div>

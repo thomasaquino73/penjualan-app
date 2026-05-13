@@ -608,4 +608,13 @@ class DataBarangController extends Controller
         return $pdf->stream('barang.pdf');
         // kalau mau download → ->download('barang.pdf');
     }
+    public function print_all()
+    {
+        $barangs = Barang::all();
+
+        $pdf = Pdf::loadView('pdf.barang_all_pdf', compact('barangs'));
+
+        return $pdf->stream('barang_all.pdf');
+        // kalau mau download → ->download('barang.pdf');
+    }
 }

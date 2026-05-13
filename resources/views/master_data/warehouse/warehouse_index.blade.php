@@ -85,40 +85,40 @@
                         @csrf
                         <input type="text" name="id" id="id" hidden>
                         <div class="row">
-                            <div class="col-6 mb-3">
+                            <div class="col-md-6 col-sm-12 mb-3">
                                 <label for="id_gudang" class="form-label">Warehouse ID<small>*</small></label>
                                 <input type="text" id="id_gudang" name="id_gudang" class="form-control"
                                     placeholder="Enter Warehouse ID">
                                 <span class="error text-danger" id="id_gudangError"></span>
 
                             </div>
-                            <div class="col-6 mb-3">
+                            <div class="col-md-6 col-sm-12 mb-3">
                                 <label for="nama_gudang" class="form-label">Warehouse Name<small>*</small></label>
                                 <input type="text" id="nama_gudang" name="nama_gudang" class="form-control"
                                     placeholder="Enter Warehouse Name">
                                 <span class="error text-danger" id="nama_gudangError"></span>
 
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="col-md-12 col-sm-12 mb-3">
                                 <label for="alamat" class="form-label">Address<small>*</small></label>
                                 <input type="text" id="alamat" name="alamat" class="form-control"
                                     placeholder="Enter Warehouse Address">
                                 <span class="error text-danger" id="alamatError"></span>
                             </div>
 
-                            <div class="col-6 mb-3">
+                            <div class="col-md-6 col-sm-12 mb-3">
                                 <label for="keterangan" class="form-label">Description</label>
                                 <input type="text" id="keterangan" name="keterangan" class="form-control"
                                     placeholder="Enter Description">
                                 <span class="error text-danger" id="keteranganError"></span>
                             </div>
-                            <div class="col-3 mb-3">
+                            <div class="col-md-3 col-sm-12 mb-3">
                                 <label for="penanggung_jawab" class="form-label">Person responsible<small>*</small></label>
                                 <input type="text" id="penanggung_jawab" name="penanggung_jawab" class="form-control"
                                     placeholder="Enter Responsible Person">
                                 <span class="error text-danger" id="penanggung_jawabError"></span>
                             </div>
-                            <div class="col-3 mb-3">
+                            <div class="col-md-3 col-sm-12 mb-3">
                                 <label class="form-label">Status<small>*</small></label>
                                 <select name="status" id="status" class="form-control">
                                     <option value="">Select Status</option>

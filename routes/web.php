@@ -149,6 +149,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/delete-multiple', [DaftarKendaraanController::class, 'deleteMultiple']);
         Route::post('/restore-multiple', [DaftarKendaraanController::class, 'restoreMultiple']);
     });
+    Route::get('/data-barang/print-all', [DataBarangController::class, 'print_all'])->name('data-barang.print_all');
     Route::get('/data-barang/print/{id}', [DataBarangController::class, 'print'])->name('data-barang.print');
     Route::post('/data-barang/delete-multiple', [DataBarangController::class, 'deleteMultiple']);
     Route::post('/data-barang/restore-multiple', [DataBarangController::class, 'restoreMultiple']);
