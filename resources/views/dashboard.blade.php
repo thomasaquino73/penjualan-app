@@ -24,7 +24,7 @@
                                 <i class="ti ti-users ti-md"></i>
                             </span>
                         </div>
-                        <h4 class="ms-1 mb-0"></h4>
+                        <h4 class="ms-1 mb-0">{{ $totalUsers }}</h4>
                     </div>
                     <p class="mb-1">Total Users</p>
                 </div>
@@ -40,7 +40,7 @@
                                 <i class="ti ti-user-star ti-md"></i>
                             </span>
                         </div>
-                        <h4 class="ms-1 mb-0"></h4>
+                        <h4 class="ms-1 mb-0">{{ $totalActive }}</h4>
                     </div>
                     <p class="mb-1">Total Active Users</p>
                 </div>
@@ -56,7 +56,7 @@
                                 <i class="ti ti-user-up ti-md"></i>
                             </span>
                         </div>
-                        <h4 class="ms-1 mb-0"></h4>
+                        <h4 class="ms-1 mb-0">{{ $totalLogin }}</h4>
                     </div>
                     <p class="mb-1">Total Logged-in Users</p>
                 </div>
@@ -72,7 +72,7 @@
                                 <i class="ti ti-user-check ti-md"></i>
                             </span>
                         </div>
-                        <h4 class="ms-1 mb-0"></h4>
+                        <h4 class="ms-1 mb-0">{{ $totalVerified }}</h4>
                     </div>
                     <p class="mb-1">Total Verified Users</p>
                 </div>

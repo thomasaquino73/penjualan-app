@@ -608,6 +608,7 @@ class DataBarangController extends Controller
         return $pdf->stream('barang.pdf');
         // kalau mau download → ->download('barang.pdf');
     }
+
     public function print_all()
     {
         $barangs = Barang::all();

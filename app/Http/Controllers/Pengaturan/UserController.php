@@ -190,26 +190,42 @@ class UserController extends Controller
                 ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'roles', 'last_seen', 'avatar'])
                 ->make(true);
         }
-        $allUsers = $data->get();
-        $totalUsers = User::where('active', 1)->count();
-        $totalActive = User::where('status', 'Active')->where('active', 1)->count();
-        $totalVerified = User::whereNotNull('email_verified_at')->where('active', 1)->count();
-        $totalLogin = $allUsers->filter(function ($user) {
-            return Cache::has('user-is-online-'.$user->id);
-        })->count();
+        $stats = $this->getUserStatistics($data);
         $x = [
             'title' => 'User List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Users', 'url' => ''],
             ],
-            'totalUsers' => $totalUsers,
-            'totalActive' => $totalActive,
-            'totalVerified' => $totalVerified,
-            'totalLogin' => $totalLogin,
+            'totalUsers' => $stats['totalUsers'],
+            'totalActive' => $stats['totalActive'],
+            'totalVerified' => $stats['totalVerified'],
+            'totalLogin' => $stats['totalLogin'],
+
         ];
 
         return view('pengaturan.user.user_index', $x);
+    }
+
+    private function getUserStatistics($data)
+    {
+        $allUsers = $data->get();
+
+        return [
+            'totalUsers' => User::where('active', 1)->count(),
+
+            'totalActive' => User::where('status', 'Active')
+                ->where('active', 1)
+                ->count(),
+
+            'totalVerified' => User::whereNotNull('email_verified_at')
+                ->where('active', 1)
+                ->count(),
+
+            'totalLogin' => $allUsers->filter(function ($user) {
+                return Cache::has('user-is-online-'.$user->id);
+            })->count(),
+        ];
     }
 
     public function create()
