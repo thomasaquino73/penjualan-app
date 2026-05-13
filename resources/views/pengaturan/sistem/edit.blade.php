@@ -36,60 +36,12 @@
                                 <div class="divider-text">Fill in the data completely and correctly</div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label>Logo</label>
-                                    <input type="file" name="avatar" id="avatar" class="form-control">
-                                    <span class="text-danger error" id="avatarError"></span>
-                                </div>
                                 <div class="col-md-6 mb-3 ">
                                     <label>Application Name<small>*</small></label>
-                                    <input type="text" name="nama_aplikasi" id="nama_aplikasi" class="form-control"
-                                        value="{{ $dataSistem->nama_aplikasi }}">
+                                    <input type="text" name="nama_aplikasi" id="nama_aplikasi"
+                                        class="form-control text-uppercase" value="{{ $dataSistem->nama_aplikasi }}">
                                     <span class="text-danger error" id="nama_aplikasiError"></span>
                                 </div>
-                                <div class="col-md-6 mb-3 ">
-                                    <label>Institution Name<small>*</small></label>
-                                    <input type="text" name="nama_instansi" id="nama_instansi" class="form-control"
-                                        value="{{ $dataSistem->nama_instansi }}">
-                                    <span class="text-danger error" id="nama_instansiError"></span>
-                                </div>
-                                <div class="col-md-3 mb-3 ">
-                                    <label>Phone Number<small>*</small></label>
-                                    <input type="text" name="telepon" id="telepon" class="form-control"
-                                        value="{{ $dataSistem->telepon }}">
-                                    <span class="text-danger error" id="teleponError"></span>
-                                </div>
-                                <div class="col-md-3 mb-3 ">
-                                    <label>Email<small>*</small></label>
-                                    <input type="text" name="email" id="email" class="form-control"
-                                        value="{{ $dataSistem->email }}">
-                                    <span class="text-danger error" id="emailError"></span>
-                                </div>
-                                <div class="col-md-6 mb-3 ">
-                                    <label>Website<small>*</small></label>
-                                    <input type="text" name="website" id="website" class="form-control"
-                                        value="{{ $dataSistem->website }}">
-                                    <span class="text-danger error" id="websiteError"></span>
-                                </div>
-                                <div class="col-md-6 mb-3 ">
-                                    <label>Address<small>*</small></label>
-                                    <input type="text" name="alamat" id="alamat" class="form-control"
-                                        value="{{ $dataSistem->alamat }}">
-                                    <span class="text-danger error" id="alamatError"></span>
-                                </div>
-                                <div class="col-md-6 mb-3 ">
-                                    <label>Postal Code<small>*</small></label>
-                                    <input type="text" name="kodepos" id="kodepos" class="form-control"
-                                        value="{{ $dataSistem->kodepos }}">
-                                    <span class="text-danger error" id="kodeposError"></span>
-                                </div>
-                                <div class="col-md-6 mb-3 ">
-                                    <label>Country<small>*</small></label>
-                                    <input type="text" name="negara" id="negara" class="form-control"
-                                        value="{{ $dataSistem->negara }}">
-                                    <span class="text-danger error" id="negaraError"></span>
-                                </div>
-
                             </div>
 
                             <div class="mt-3">

@@ -12,15 +12,6 @@ return new class extends Migration
             $table->id();
             $table->string('nama_aplikasi');
             $table->string('nama_sistem');
-            $table->string('nama_instansi'); // misalnya nama gereja / organisasi
-            $table->string('alamat')->nullable();
-            $table->string('telepon')->nullable();
-            $table->string('email')->nullable();
-            $table->string('website')->nullable();
-            $table->string('logo')->nullable();
-            $table->string('favicon')->nullable();
-            $table->text('kodepos')->nullable();
-            $table->string('negara')->nullable();
             $table->timestamps();
         });
     }

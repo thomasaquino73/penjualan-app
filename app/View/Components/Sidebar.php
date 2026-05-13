@@ -243,17 +243,39 @@ class Sidebar extends Component
                 'label' => 'SETTING',
                 'roles' => ['Super Admin'],
             ],
-            [
-                'type' => 'single',
+             [
+                'type' => 'dropdown',
                 'name' => 'General Setting',
-                'route' => 'user.index',
                 'icon' => 'ti ti-adjustments-horizontal',
-                'pattern' => 'user.*',
-                'active' => true,
-                'roles' => ['SuperAdmin'],
-                'permissions' => ['mata_uang-browse'],
-            ],
+                'roles' => ['Super Admin'],
+                'permissions' => ['mata_uang-browse','company-browse','general-browse'],
+                'children' => [
 
+                    [
+                        'name' => 'General Setting',
+                        'route' => 'general-setting.index',
+                        'pattern' => 'general-setting.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['general-browse'],
+                    ],
+                    [
+                        'name' => 'Company Information',
+                        'route' => 'company.info',
+                        'pattern' => 'company.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['company-browse'],
+                    ],
+
+                    [
+                        'name' => 'Currency',
+                        'route' => 'mata-uang.index',
+                        'pattern' => 'mata-uang.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['mata_uang-browse'],
+                    ],
+
+                ],
+            ],
             [
                 'type' => 'dropdown',
                 'name' => 'Manage Access',

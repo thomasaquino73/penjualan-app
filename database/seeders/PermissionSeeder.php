@@ -25,6 +25,8 @@ class PermissionSeeder extends Seeder
             'application_system' => 'application system',
             'login_background' => 'login background',
             'mata_uang' => 'currency',
+            'company' => 'company',
+            'general' => 'general',
         ];
 
         $actions = ['browse', 'create', 'read', 'edit', 'delete', 'trash', 'restore'];

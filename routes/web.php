@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\General\CompanyInfoController;
+use App\Http\Controllers\General\Currency;
+use App\Http\Controllers\General\CurrencyController;
+use App\Http\Controllers\General\GeneralSettingController;
 use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Master_Data\Barang\DataBarangController;
 use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
@@ -54,6 +58,12 @@ Route::get('/verify-email/{id}/{hash}', function (Request $request, $id, $hash) 
 })->middleware('signed')->name('verification.verify');
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/company-info', [CompanyInfoController::class, 'index'])->name('company.info');
+    Route::get('/company-info/{id}/edit', [CompanyInfoController::class, 'edit'])->name('company.edit');
+    Route::put('/company-info/{id}/update', [CompanyInfoController::class, 'update'])->name('company.update');
+    Route::get('/general-setting', [GeneralSettingController::class, 'index'])->name('general-setting.index');
+
+    Route::resource('/mata-uang', CurrencyController::class);
 
     Route::prefix('token')->group(function () {
         Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');
@@ -101,10 +111,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/pengaturan-background/{id}/edit', [PengaturanSistemController::class, 'login_background_edit'])->name('pengaturan.background.edit');
     Route::delete('/pengaturan-background/{id}', [PengaturanSistemController::class, 'login_background_destroy'])->name('pengaturan.background.delete');
 
-    Route::get('/mata-uang', [PengaturanSistemController::class, 'mata_uang_index'])->name('pengaturan.mata_uang.index');
-    Route::post('/mata-uang/store', [PengaturanSistemController::class, 'mata_uang_store'])->name('pengaturan.mata_uang.store');
-    Route::get('/mata-uang/{id}/edit', [PengaturanSistemController::class, 'mata_uang_edit'])->name('pengaturan.mata_uang.edit');
-    Route::delete('/mata-uang/{id}', [PengaturanSistemController::class, 'mata_uang_destroy'])->name('pengaturan.mata_uang.delete');
+ 
 
     // Master Data
     Route::post('/customer/delete-multiple', [CustomerController::class, 'deleteMultiple']);

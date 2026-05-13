@@ -18,7 +18,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            @include('partials.pengaturan.navbar_pengaturan')
+            @include('partials.pengaturan.navbar_general')
 
             <div class="card mb-4">
 
@@ -70,7 +70,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="postForm" name="postForm" method="POST" action="{{ route('pengaturan.mata_uang.store') }}">
+                    <form id="postForm" name="postForm" method="POST" action="{{ route('mata-uang.store') }}">
                         @csrf
                         <input type="text" name="id" id="id" hidden>
                         <div class="row">
@@ -113,7 +113,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('pengaturan.mata_uang.index') }}',
+                ajax: '{{ route('mata-uang.index') }}',
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',

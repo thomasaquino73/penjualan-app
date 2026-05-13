@@ -17,10 +17,6 @@ class SistemSeeder extends Seeder
         PengaturanSistem::create([
             'nama_aplikasi' => 'ALMEX APP',
             'nama_sistem' => 'Laravel 12',
-            'nama_instansi' => 'PT. Almex Bintang Timur',
-            'favicon' => 'image/favicon/favicon.png',
-            'logo' => 'image/logo/69fd6d6ab719c1778216298.png',
-
         ]);
 
         LoginBackground::create([
