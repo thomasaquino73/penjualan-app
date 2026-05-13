@@ -584,6 +584,246 @@
             </div>
         </div>
         <div class="col-xl-8 col-sm-12">
+            <div class="row">
+                <div class="col-md-6 col-xl-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between">
+                            <div class="card-title m-0 me-2">
+                                <h5 class="m-0 me-2">Transactions</h5>
+                                <small class="text-muted">Total 58 Transactions done in this Month</small>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn p-0" type="button" id="transactionID" data-bs-toggle="dropdown"
+                                    aria-haspopup="true" aria-expanded="false">
+                                    <i class="ti ti-dots-vertical ti-sm text-muted"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="transactionID">
+                                    <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <ul class="p-0 m-0">
+                                <li class="d-flex mb-3 pb-1 align-items-center">
+                                    <div class="badge bg-label-primary me-3 rounded p-2">
+                                        <i class="ti ti-wallet ti-sm"></i>
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Wallet</h6>
+                                            <small class="text-muted d-block">Starbucks</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <h6 class="mb-0 text-danger">-$75</h6>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="d-flex mb-3 pb-1 align-items-center">
+                                    <div class="badge bg-label-success rounded me-3 p-2">
+                                        <i class="ti ti-browser-check ti-sm"></i>
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Bank Transfer</h6>
+                                            <small class="text-muted d-block">Add Money</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <h6 class="mb-0 text-success">+$480</h6>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="d-flex mb-3 pb-1 align-items-center">
+                                    <div class="badge bg-label-danger rounded me-3 p-2">
+                                        <i class="ti ti-brand-paypal ti-sm"></i>
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Paypal</h6>
+                                            <small class="text-muted d-block mb-1">Client Payment</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <h6 class="mb-0 text-success">+$268</h6>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="d-flex mb-3 pb-1 align-items-center">
+                                    <div class="badge bg-label-secondary me-3 rounded p-2">
+                                        <i class="ti ti-credit-card ti-sm"></i>
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Master Card</h6>
+                                            <small class="text-muted d-block mb-1">Ordered iPhone 13</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <h6 class="mb-0 text-danger">-$699</h6>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="d-flex mb-3 pb-1 align-items-center">
+                                    <div class="badge bg-label-info me-3 rounded p-2">
+                                        <i class="ti ti-currency-dollar ti-sm"></i>
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Bank Transactions</h6>
+                                            <small class="text-muted d-block mb-1">Refund</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <h6 class="mb-0 text-success">+$98</h6>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="d-flex mb-3 pb-1 align-items-center">
+                                    <div class="badge bg-label-danger me-3 rounded p-2">
+                                        <i class="ti ti-brand-paypal ti-sm"></i>
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Paypal</h6>
+                                            <small class="text-muted d-block mb-1">Client Payment</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <h6 class="mb-0 text-success">+$126</h6>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <div class="badge bg-label-success me-3 rounded p-2">
+                                        <i class="ti ti-browser-check ti-sm"></i>
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Bank Transfer</h6>
+                                            <small class="text-muted d-block mb-1">Pay Office Rent</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <h6 class="mb-0 text-danger">-$1290</h6>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between">
+                            <div class="card-title m-0 me-2">
+                                <h5 class="m-0 me-2">Popular Products</h5>
+                                <small class="text-muted">Total 10.4k Visitors</small>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn p-0" type="button" id="popularProduct" data-bs-toggle="dropdown"
+                                    aria-haspopup="true" aria-expanded="false">
+                                    <i class="ti ti-dots-vertical ti-sm text-muted"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="popularProduct">
+                                    <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <ul class="p-0 m-0">
+                                <li class="d-flex mb-4 pb-1">
+                                    <div class="me-3">
+                                        <img src="../../assets/img/products/iphone.png" alt="User" class="rounded"
+                                            width="46">
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Apple iPhone 13</h6>
+                                            <small class="text-muted d-block">Item: #FXZ-4567</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <p class="mb-0 fw-medium">$999.29</p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="d-flex mb-4 pb-1">
+                                    <div class="me-3">
+                                        <img src="../../assets/img/products/nike-air-jordan.png" alt="User"
+                                            class="rounded" width="46">
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Nike Air Jordan</h6>
+                                            <small class="text-muted d-block">Item: #FXZ-3456</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <p class="mb-0 fw-medium">$72.40</p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="d-flex mb-4 pb-1">
+                                    <div class="me-3">
+                                        <img src="../../assets/img/products/headphones.png" alt="User"
+                                            class="rounded" width="46">
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Beats Studio 2</h6>
+                                            <small class="text-muted d-block">Item: #FXZ-9485</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <p class="mb-0 fw-medium">$99</p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="d-flex mb-4 pb-1">
+                                    <div class="me-3">
+                                        <img src="../../assets/img/products/apple-watch.png" alt="User"
+                                            class="rounded" width="46">
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Apple Watch Series 7</h6>
+                                            <small class="text-muted d-block">Item: #FXZ-2345</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <p class="mb-0 fw-medium">$249.99</p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="d-flex mb-4 pb-1">
+                                    <div class="me-3">
+                                        <img src="../../assets/img/products/amazon-echo.png" alt="User"
+                                            class="rounded" width="46">
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Amazon Echo Dot</h6>
+                                            <small class="text-muted d-block">Item: #FXZ-8959</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <p class="mb-0 fw-medium">$79.40</p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="d-flex">
+                                    <div class="me-3">
+                                        <img src="../../assets/img/products/play-station.png" alt="User"
+                                            class="rounded" width="46">
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Play Station Console</h6>
+                                            <small class="text-muted d-block">Item: #FXZ-7892</small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <p class="mb-0 fw-medium">$129.48</p>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div class="row">
