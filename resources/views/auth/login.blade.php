@@ -204,14 +204,15 @@
                     },
                     success: function(response) {
                         if (response.redirect) {
-                            toastr.success('Login successful! Redirecting to dashboard...', '', {
-                                timeOut: 1500,
-                                progressBar: true,
-                                positionClass: 'toast-top-right',
-                                onHidden: function() {
-                                    window.location.href = response.redirect;
-                                }
-                            });
+                            toastr.success('Login successful! Redirecting to dashboard...',
+                                '', {
+                                    timeOut: 1500,
+                                    progressBar: true,
+                                    positionClass: 'toast-top-right',
+                                    onHidden: function() {
+                                        window.location.href = response.redirect;
+                                    }
+                                });
                             return;
                         }
 
@@ -232,7 +233,7 @@
 
                         Swal.fire({
                             icon: 'error',
-                            title: 'Login Gagal',
+                            title: 'Login Fail',
                             text: xhr.responseJSON?.message ?? 'Terjadi kesalahan.',
                             customClass: {
                                 confirmButton: 'btn btn-primary'
@@ -252,14 +253,14 @@
             function showUnverifiedAlert(message, email) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Email Belum Diverifikasi',
+                    title: 'Email Not Verified',
                     text: message,
 
-                    showConfirmButton: true, // ✅ pastikan ini jelas
-                    confirmButtonText: 'Kirim Ulang Link Verifikasi',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Resend Verification Link',
 
                     showCancelButton: true,
-                    cancelButtonText: 'Batal',
+                    cancelButtonText: 'Cancel',
 
                     reverseButtons: true,
                     allowOutsideClick: false,
@@ -286,8 +287,8 @@
                     },
                     beforeSend: function() {
                         Swal.fire({
-                            title: 'Mengirim...',
-                            text: 'Mohon tunggu sebentar.',
+                            title: 'Sending...',
+                            text: 'Please wait a moment.',
                             showConfirmButton: false,
                             allowOutsideClick: false,
                             customClass: {
@@ -300,9 +301,10 @@
                     success: function(response) {
                         Swal.fire({
                             icon: 'success',
-                            title: 'Berhasil!',
+                            title: 'Success!',
                             text: response.message,
-                            showConfirmButton: false,
+                            showConfirmButton: true,
+                            confirmButtonText: 'OK',
                             customClass: {
                                 confirmButton: 'btn btn-primary'
                             },
@@ -312,8 +314,11 @@
                     error: function(xhr) {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Gagal!',
-                            text: xhr.responseJSON?.message ?? 'Gagal mengirim verifikasi.',
+                            title: 'Failed!',
+                            text: xhr.responseJSON?.message ??
+                                'Failed to send verification email.',
+                            showConfirmButton: true,
+                            confirmButtonText: 'Try Again',
                             customClass: {
                                 confirmButton: 'btn btn-primary'
                             },
@@ -322,63 +327,6 @@
                     }
                 });
             }
-
-            // ==== LOGIN DENGAN SIDIK JARI (PASSKEY) ====
-            $('#login-passkey').on('click', async function() {
-                try {
-                    // 1. Ambil challenge dari server
-                    const options = await fetch('/webauthn/login', {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    }).then(r => r.json());
-
-                    // Convert base64 → array buffer
-                    options.publicKey.challenge = Uint8Array.from(atob(options.publicKey.challenge),
-                        c => c.charCodeAt(0));
-
-                    if (options.publicKey.allowCredentials) {
-                        options.publicKey.allowCredentials = options.publicKey.allowCredentials.map(c =>
-                            ({
-                                ...c,
-                                id: Uint8Array.from(atob(c.id), x => x.charCodeAt(0))
-                            }));
-                    }
-
-                    // 2. Jalankan fingerprint / passkey
-                    const assertion = await navigator.credentials.get(options);
-
-                    // 3. Kirim ke server
-                    const verify = await fetch('/webauthn/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(assertion)
-                    }).then(r => r.json());
-
-                    if (verify.authenticated) {
-                        toastr.success('Login dengan sidik jari berhasil!');
-
-                        setTimeout(() => {
-                            window.location.href = verify.redirect ?? '/dashboard';
-                        }, 800);
-                    }
-
-                } catch (err) {
-                    console.error(err);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Login Gagal',
-                        text: 'Tidak dapat menggunakan sidik jari pada perangkat ini.',
-                        customClass: {
-                            confirmButton: 'btn btn-primary'
-                        },
-                        buttonsStyling: false
-                    });
-                }
-            });
 
 
         });
