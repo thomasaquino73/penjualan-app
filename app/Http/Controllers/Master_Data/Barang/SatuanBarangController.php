@@ -183,10 +183,10 @@ class SatuanBarangController extends Controller
     {
         try {
             $detail = BasicCodeDetail::findOrFail($id);
-            if ($detail->barang_unit()->exists()|| $detail->from_unit()->exists()|| $detail->to_unit()->exists()) {
+            if ($detail->barang_unit()->exists() || $detail->from_unit()->exists() || $detail->to_unit()->exists()) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Cannot delete this data because it is currently assigned to products.'
+                    'message' => 'Cannot delete this data because it is currently assigned to products.',
                 ], 422);
             }
 
@@ -201,7 +201,7 @@ class SatuanBarangController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred: ' . $e->getMessage(),
+                'message' => 'An error occurred: '.$e->getMessage(),
             ], 500);
         }
     }

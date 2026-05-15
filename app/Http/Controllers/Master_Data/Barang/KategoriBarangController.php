@@ -184,33 +184,33 @@ class KategoriBarangController extends Controller
     }
 
     public function destroy(Request $request, $id)
-{
-    try {
-        $detail = BasicCodeDetail::findOrFail($id);
+    {
+        try {
+            $detail = BasicCodeDetail::findOrFail($id);
 
-        // Check if this code detail is being used in the 'barang' table
-        if ($detail->barang_category()->exists()) {
+            // Check if this code detail is being used in the 'barang' table
+            if ($detail->barang_category()->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Cannot delete this data because it is currently assigned to products.',
+                ], 422);
+            }
+
+            $detail->delete();
+
+            return response()->json([
+                'action' => 'delete',
+                'status' => 'success',
+                'message' => 'Data deleted successfully',
+            ], 200);
+
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Cannot delete this data because it is currently assigned to products.'
-            ], 422);
+                'message' => 'An error occurred: '.$e->getMessage(),
+            ], 500);
         }
-
-        $detail->delete();
-
-        return response()->json([
-            'action' => 'delete',
-            'status' => 'success',
-            'message' => 'Data deleted successfully',
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'An error occurred: ' . $e->getMessage(),
-        ], 500);
     }
-}
 
     public function deleteMultiple(Request $request)
     {

@@ -47,15 +47,17 @@ class BasicCodeDetail extends Model
         return $this->hasMany(Barang::class, 'kategori_id', 'id');
     }
 
-     public function barang_unit()
+    public function barang_unit()
     {
         return $this->hasMany(Barang::class, 'unit_id', 'id');
     }
-     public function from_unit()
+
+    public function from_unit()
     {
         return $this->hasMany(DataBarangConversion::class, 'from_unit_id', 'id');
     }
-     public function to_unit()
+
+    public function to_unit()
     {
         return $this->hasMany(DataBarangConversion::class, 'to_unit_id', 'id');
     }

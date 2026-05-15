@@ -44,6 +44,7 @@ class Barang extends Model
     {
         return $this->belongsTo(BasicCodeDetail::class, 'unit_id');
     }
+
     public function conversions()
     {
         return $this->hasMany(DataBarangConversion::class, 'data_barang_id');

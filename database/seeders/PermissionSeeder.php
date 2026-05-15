@@ -45,7 +45,7 @@ class PermissionSeeder extends Seeder
             foreach ($actions as $action) {
 
                 $permission = Permissions::firstOrCreate([
-                    'name' => $module . '-' . $action,
+                    'name' => $module.'-'.$action,
                     'module' => $module,
                     'alias' => $config['alias'],
                     'group_name' => $config['group'], // 🔥 ini penting

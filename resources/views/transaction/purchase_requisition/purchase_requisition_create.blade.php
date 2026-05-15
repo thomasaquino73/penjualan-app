@@ -111,7 +111,7 @@
             </form>
         </div>
     </div>
-    <div class="modal fade" id="modalPrDetail" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modalPrDetail">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -122,16 +122,34 @@
                     @csrf
                     <input type="hidden" name="id" id="detail_id">
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label" for="product_id">Product / Item</label>
-                            <select name="product_id" id="product_id" class="form-select select2-modal">
-                                <option value="">Select Product</option>
-                            </select>
-                        </div>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label" for="product_id">Product / Item</label>
+                                <select name="product_id" id="product_id" class="form-select select2-modal"
+                                    data-placeholder="Select Product">
+                                    <option></option>
+                                    @foreach ($product as $product)
+                                        <option value="{{ $product->id }}">{{ $product->nama_barang }}</option>
+                                    @endforeach
+                                </select>
+                                <span class="error text-danger" id="product_idError"></span>
+                            </div>
 
-                        <div class="mb-3">
-                            <label class="form-label" for="qty">Quantity</label>
-                            <input type="number" id="qty" name="qty" class="form-control" placeholder="0">
+
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="quantity">Quantity</label>
+                                <input type="number" id="quantity" name="quantity" class="form-control"
+                                    placeholder="0">
+                                <span class="error text-danger" id="quantityError"></span>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="unit_id">Unit</label>
+                                <select name="unit_id" id="unit_id" class="form-select select2-modal"
+                                    data-placeholder="Select Unit">
+                                    <option></option>
+                                </select>
+                                <span class="error text-danger" id="unit_idError"></span>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -151,10 +169,49 @@
     <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
     <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
 
-    <script src="https://cdn.datatables.net/select/2.0.3/js/dataTables.select.js"></script>
+    <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
         $(document).ready(function() {
+            $('.select2-modal').each(function() {
+                var $this = $(this);
+                $this.wrap('<div class="position-relative"></div>').select2({
+                    placeholder: $this.attr('data-placeholder'),
+                    width: '100%',
+                    dropdownParent: $(
+                        '#modalPrDetail'
+                    ) // <--- WAJIB: Sesuaikan dengan ID Modal Bootstrap kamu
+                });
+            });
+
+            $('#product_id').on('change', function() {
+                let productId = $(this).val();
+                let unitDropdown = $('#unit_id');
+
+                // Kosongkan dropdown unit terlebih dahulu dan set ke keadaan loading
+                unitDropdown.empty().append('<option></option>').trigger('change');
+
+                if (productId) {
+                    $.ajax({
+                        url: `/get-units-by-product/${productId}`,
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(data) {
+                            // Isi kembali dropdown unit dengan data baru dari server
+                            $.each(data, function(key, value) {
+                                unitDropdown.append(new Option(value.name, value.id,
+                                    false, false));
+                            });
+
+                            // Refresh tampilan select2 agar memperbarui opsinya
+                            unitDropdown.trigger('change');
+                        },
+                        error: function() {
+                            toastr.error('Failed to fetch units data.');
+                        }
+                    });
+                }
+            });
 
             let table = new DataTable('#table', {
                 processing: true,

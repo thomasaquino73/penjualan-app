@@ -174,12 +174,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/penawaran-pembelian/trash', [PurchaseRequisitionController::class, 'trash'])->name('penawaran-pembelian.trash');
     Route::get('/penawaran-pembelian/table-pr', [PurchaseRequisitionController::class, 'table_pr'])->name('penawaran-pembelian.table_pr');
     Route::delete('/penawaran-pembelian/detail/delete/{id}', [PurchaseRequisitionController::class, 'destroy_detail']);
+    Route::get('/get-units-by-product/{id}', [PurchaseRequisitionController::class, 'getUnitsByProduct'])
+        ->name('penawaran-pembelian.get_units');
     Route::resource('penawaran-pembelian', PurchaseRequisitionController::class);
 
     Route::get('/purchase-order/trash', [PurchaseOrderController::class, 'trash'])->name('purchase-order.trash');
     Route::resource('purchase-order', PurchaseOrderController::class);
 
-     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
+    Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
     Route::resource('sales-order', SalesOrderController::class);
 
 });

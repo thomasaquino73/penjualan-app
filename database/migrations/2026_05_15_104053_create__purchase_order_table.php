@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('purchase_order', function (Blueprint $table) {
+        Schema::create('purchase_order', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('customer_id');
             $table->bigInteger('code');
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->bigInteger('sales_id')->nullable();
             $table->bigInteger('term_id')->nullable();
             $table->bigInteger('vehicle_id')->nullable();
-            $table->enum('status',['processing','deliver'])->default('processing')->comment('status penawaran');
+            $table->enum('status', ['processing', 'deliver'])->default('processing')->comment('status penawaran');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

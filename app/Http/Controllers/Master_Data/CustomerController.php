@@ -246,7 +246,6 @@ class CustomerController extends Controller
             ], 422);
         }
     }
-   
 
     // public function destroy(Request $request, $id)
     // {

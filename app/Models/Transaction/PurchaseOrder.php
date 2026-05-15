@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PurchaseOrder extends Model
 {
-         use HasFactory;
+    use HasFactory;
 
     protected $table = 'purchase_order';
 
@@ -24,6 +24,7 @@ class PurchaseOrder extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class, 'customer_id');

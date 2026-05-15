@@ -17,7 +17,7 @@ return new class extends Migration
             $table->bigInteger('code');
             $table->date('date');
             $table->bigInteger('sales_id')->nullable();
-            $table->enum('status',['processing','deliver'])->default('processing')->comment('status penawaran');
+            $table->enum('status', ['processing', 'deliver'])->default('processing')->comment('status penawaran');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

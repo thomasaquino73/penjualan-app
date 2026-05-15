@@ -18,10 +18,12 @@ class DataBarangConversion extends Model
     {
         return $this->belongsTo(Barang::class, 'data_barang_id');
     }
-     public function fromUnitID()
+
+    public function fromUnitID()
     {
         return $this->belongsTo(BasicCodeDetail::class, 'from_unit_id');
     }
+
     public function toUnitID()
     {
         return $this->belongsTo(BasicCodeDetail::class, 'to_unit_id');

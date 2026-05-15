@@ -232,7 +232,7 @@ class SupplierController extends Controller
         //
     }
 
-     public function destroy(Request $request, $id)
+    public function destroy(Request $request, $id)
     {
         try {
             $table = Supplier::findOrFail($id);

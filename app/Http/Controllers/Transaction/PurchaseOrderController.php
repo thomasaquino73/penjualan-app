@@ -37,10 +37,10 @@ class PurchaseOrderController extends Controller
                     return 'N/A';
                 })
                 ->addColumn('status', function ($row) {
-                        return '<span class="badge bg-info">Processing Queue</span>';
+                    return '<span class="badge bg-info">Processing Queue</span>';
                 })
                 ->addColumn('customer', function ($row) {
-                        return $row->customer->nama;
+                    return $row->customer->nama;
                 })
                 ->addColumn('cekbok', function ($row) {
                     return '   <div class="form-check form-check-primary mt-3">
@@ -69,7 +69,7 @@ class PurchaseOrderController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok','customer'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'customer'])
                 ->make(true);
         }
 
@@ -115,18 +115,19 @@ class PurchaseOrderController extends Controller
 
         return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
     }
+
     public function create()
     {
-         $x = [
+        $x = [
             'title' => 'Purchase Order New',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Purchase Order', 'url' => ''],
             ],
-            'customer'=>Customer::where('status','<>',0)->get(),
+            'customer' => Customer::where('status', '<>', 0)->get(),
             'idNumber' => $this->generateNumberId(),
-            'kendaraan'=>Kendaraan::where('status','<>',0)->get(),
-            'term'=>BasicCodeDetail::where('master_id',5)->get(),
+            'kendaraan' => Kendaraan::where('status', '<>', 0)->get(),
+            'term' => BasicCodeDetail::where('master_id', 5)->get(),
 
         ];
 

@@ -3,17 +3,18 @@
 namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\BasicCodeDetail;
+use App\Models\Master_Data\Barang;
 use App\Models\Master_Data\Customer;
-use App\Models\Master_Data\Salesman;
+use App\Models\Master_Data\DataBarangConversion;
 use App\Models\Transaction\PurchaseRequisition;
 use App\Models\Transaction\PurchaseRequisitionDetail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 class PurchaseRequisitionController extends Controller
 {
-     public function index(Request $r)
+    public function index(Request $r)
     {
         if ($r->ajax()) {
             $query = PurchaseRequisition::where('active', '<>', 0)->get();
@@ -38,10 +39,10 @@ class PurchaseRequisitionController extends Controller
                     return 'N/A';
                 })
                 ->addColumn('status', function ($row) {
-                        return '<span class="badge bg-info">Processing Queue</span>';
+                    return '<span class="badge bg-info">Processing Queue</span>';
                 })
                 ->addColumn('customer', function ($row) {
-                        return $row->customer->nama;
+                    return $row->customer->nama;
                 })
                 ->addColumn('cekbok', function ($row) {
                     return '   <div class="form-check form-check-primary mt-3">
@@ -70,7 +71,7 @@ class PurchaseRequisitionController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok','customer'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'customer'])
                 ->make(true);
         }
 
@@ -85,22 +86,23 @@ class PurchaseRequisitionController extends Controller
         return view('transaction.purchase_requisition.purchase_requisition_index', $x);
     }
 
-     public function table_pr(Request $r)
+    public function table_pr(Request $r)
     {
         if ($r->ajax()) {
             $query = PurchaseRequisitionDetail::with('produkID')
-            ->where('active', '<>', 0)
-            ->get();
+                ->where('active', '<>', 0)
+                ->get();
+
             return DataTables::of($query)
                 ->addIndexColumn()
-                 ->addColumn('data_produk', function ($row) {
-                  return $row->produkID->nama_barang;
+                ->addColumn('data_produk', function ($row) {
+                    return $row->produkID->nama_barang;
                 })
-                
+
                 ->rawColumns(['data_produk'])
                 ->make(true);
         }
-     
+
     }
 
     private function generateNumberId()
@@ -134,16 +136,18 @@ class PurchaseRequisitionController extends Controller
 
         return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
     }
+
     public function create()
     {
-         $x = [
+        $x = [
             'title' => 'Purchase Requisition New',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Purchase Requisition', 'url' => ''],
             ],
-            'customer'=>Customer::where('status','<>',0)->get(),
+            'customer' => Customer::where('status', '<>', 0)->get(),
             'idNumber' => $this->generateNumberId(),
+            'product' => Barang::where('status', '<>', 0)->get(),
 
         ];
 
@@ -190,10 +194,10 @@ class PurchaseRequisitionController extends Controller
         //
     }
 
-     public function trash(Request $r)
+    public function trash(Request $r)
     {
         if ($r->ajax()) {
-            $query = PurchaseRequisition::where('active',  0)->get();
+            $query = PurchaseRequisition::where('active', 0)->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -215,10 +219,10 @@ class PurchaseRequisitionController extends Controller
                     return 'N/A';
                 })
                 ->addColumn('status', function ($row) {
-                        return '<span class="badge bg-info">Processing Queue</span>';
+                    return '<span class="badge bg-info">Processing Queue</span>';
                 })
                 ->addColumn('customer', function ($row) {
-                        return $row->customer->nama;
+                    return $row->customer->nama;
                 })
                 ->addColumn('cekbok', function ($row) {
                     return '   <div class="form-check form-check-primary mt-3">
@@ -247,7 +251,7 @@ class PurchaseRequisitionController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok','customer'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'customer'])
                 ->make(true);
         }
 
@@ -262,11 +266,81 @@ class PurchaseRequisitionController extends Controller
         return view('transaction.purchase_requisition.purchase_requisition_trash', $x);
     }
 
-   public function destroy_detail($id)
-{
-    $detail = PurchaseRequisitionDetail::findOrFail($id);
-    $detail->delete(); // atau ubah active = 0 jika menggunakan soft delete manual
+    public function destroy_detail($id)
+    {
+        $detail = PurchaseRequisitionDetail::findOrFail($id);
+        $detail->delete(); // atau ubah active = 0 jika menggunakan soft delete manual
 
-    return response()->json(['success' => true]);
-}
+        return response()->json(['success' => true]);
+    }
+
+    public function getUnitsByProduct($id)
+    {
+        // 1. Ambil semua baris data konversi berdasarkan data_barang_id
+        $conversions = \App\Models\Master_Data\DataBarangConversion::with(['toUnitID', 'fromUnitID']) 
+            ->where('data_barang_id', $id)
+            ->get();
+
+        if ($conversions->isEmpty()) {
+            return response()->json([]);
+        }
+
+        $result = [];
+        $addedIds = []; // Array penampung untuk menghindari ID kembar di dropdown
+
+        // 2. Cek apakah ada SALAH SATU atau SEMUA baris yang to_unit_id-nya terisi (TIDAK NULL)
+        $hasToUnit = $conversions->contains(function ($item) {
+            return !is_null($item->getRawOriginal('to_unit_id')) && $item->getRawOriginal('to_unit_id') !== '';
+        });
+
+        if ($hasToUnit) {
+            // --- KONDISI A: to_unit_id ada yang terisi -> Tampilkan dari to_unit_id DAN from_unit_id ---
+            
+            // Ambil SEMUA data to_unit_id yang valid (tidak null)
+            foreach ($conversions as $item) {
+                $toId = $item->getRawOriginal('to_unit_id');
+                
+                if (!is_null($toId) && !in_array($toId, $addedIds)) {
+                    $result[] = [
+                        'id'   => $toId,
+                        'name' => $item->toUnitID ? $item->toUnitID->detail : 'Unit ' . $toId
+                    ];
+                    $addedIds[] = $toId;
+                }
+            }
+
+            // Tambahkan JUGAdari darifrom_unit_id (ambil 1 data saja)
+            $firstFromUnit = $conversions->first(function ($item) {
+                return !is_null($item->getRawOriginal('from_unit_id'));
+            });
+
+            if ($firstFromUnit) {
+                $fromId = $firstFromUnit->getRawOriginal('from_unit_id');
+                if (!in_array($fromId, $addedIds)) {
+                    $result[] = [
+                        'id'   => $fromId,
+                        'name' => $firstFromUnit->fromUnitID ? $firstFromUnit->fromUnitID->detail : 'Unit ' . $fromId
+                    ];
+                }
+            }
+
+        } else {
+            // --- KONDISI B: to_unit_id KOSONG SEMUA -> Hanya tampilkan 1 data dari from_unit_id ---
+            
+            $firstFromUnit = $conversions->first(function ($item) {
+                return !is_null($item->getRawOriginal('from_unit_id'));
+            });
+
+            if ($firstFromUnit) {
+                $fromId = $firstFromUnit->getRawOriginal('from_unit_id');
+                $result[] = [
+                    'id'   => $fromId,
+                    'name' => $firstFromUnit->fromUnitID ? $firstFromUnit->fromUnitID->detail : 'Unit ' . $fromId
+                ];
+            }
+        }
+
+        // Kembalikan data array JSON ter-filter ke JavaScript
+        return response()->json($result);
+    }
 }

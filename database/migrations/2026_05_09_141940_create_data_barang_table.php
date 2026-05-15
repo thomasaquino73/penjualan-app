@@ -33,20 +33,14 @@ return new class extends Migration
         });
         Schema::create('data_barang_conversions', function (Blueprint $table) {
             $table->id();
-            // relasi ke barang utama
             $table->unsignedBigInteger('data_barang_id');
-            // unit asal (dari unit utama)
             $table->unsignedBigInteger('from_unit_id')->nullable();
-            // unit tujuan
             $table->unsignedBigInteger('to_unit_id')->nullable();
-            // jumlah konversi
             $table->integer('qty')->nullable();
             $table->timestamps();
-            // index biar cepat
             $table->index('data_barang_id');
             $table->index('from_unit_id');
             $table->index('to_unit_id');
-
         });
     }
 
