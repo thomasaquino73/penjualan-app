@@ -163,7 +163,7 @@
                         cancelButton: 'btn btn-label-secondary waves-effect waves-light'
                     },
                     buttonsStyling: false
-                }).then(function(result) {
+                    }).then(function(result) {
                     if (result.isConfirmed) {
                         $.ajax({
                             url: `/data-barang/${id}`,

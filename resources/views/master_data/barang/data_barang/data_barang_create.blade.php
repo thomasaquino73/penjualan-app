@@ -100,7 +100,7 @@
                             <div class="col-md-3">
                                 <label class="form-label">Unit<small class="text-danger">*</small></label>
                                 <div class="input-group">
-                                    <select name="unit_id" id="unit_id" class="form-select "
+                                    <select name="unit_id" id="unit_id" class="form-select select2 "
                                         data-placeholder="Select unit">
                                         <option></option>
                                         @foreach ($unit as $units)
@@ -310,10 +310,6 @@
 @endpush --}}
 @push('scripts')
     <script>
-        $('#unit_id').select2({
-            width: '100%',
-            dropdownAutoWidth: true
-        });
         document.addEventListener("DOMContentLoaded", function() {
             const supplyRadio = document.getElementById("radioSupply");
             const nonSupplyRadio = document.getElementById("radioNonSupply");

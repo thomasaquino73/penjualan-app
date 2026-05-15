@@ -78,35 +78,24 @@
                 <div class="divider divider-dashed">
                     <div class="divider-text">Purchase Requisition Detail</div>
                 </div>
-                <button class="btn btn-sm btn-primary"><i class="ti ti-plus me-1"></i>Add</button>
+                {{-- <button class="btn btn-sm btn-primary"><i class="ti ti-plus me-1"></i>Add</button>
                 <button class="btn btn-sm btn-primary"><i class="ti ti-edit me-1"></i>Edit</button>
-                <button class="btn btn-sm btn-primary"><i class="ti ti-refresh me-1"></i>Refresh</button>
+                <button class="btn btn-sm btn-primary"><i class="ti ti-refresh me-1"></i>Refresh</button> --}}
                 <div class="row mt-3">
                     <table class="table display responsive nowrap" id="table">
                         <thead class="border-top" style="background-color: #AEDEFC; ">
                             <tr>
                                 <th>#</th>
                                 <th>Item</th>
-                                <th>Qty</th>
+                                {{-- <th>Qty</th>
                                 <th>Unit</th>
                                 <th>Unit Price</th>
                                 <th>Disc %</th>
                                 <th>Tax</th>
-                                <th>Amount</th>
+                                <th>Amount</th> --}}
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                        </tbody>
+
                     </table>
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">
@@ -122,11 +111,191 @@
             </form>
         </div>
     </div>
+    <div class="modal fade" id="modalPrDetail" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Create new entry</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formPrDetail">
+                    @csrf
+                    <input type="hidden" name="id" id="detail_id">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label" for="product_id">Product / Item</label>
+                            <select name="product_id" id="product_id" class="form-select select2-modal">
+                                <option value="">Select Product</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="qty">Quantity</label>
+                            <input type="number" id="qty" name="qty" class="form-control" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="btnSubmitModal">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
+@push('style')
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
+@endpush
 @push('scripts')
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
+
+    <script src="https://cdn.datatables.net/select/2.0.3/js/dataTables.select.js"></script>
+    <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
         $(document).ready(function() {
-            let table = new DataTable('#table');
+
+            let table = new DataTable('#table', {
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                select: true, // WAJIB TRUE agar fitur Edit/Delete berfungsi
+                lengthMenu: [
+                    [10, 25, 50, -1],
+                    [10, 25, 50, 'All']
+                ],
+                ajax: '{{ route('penawaran-pembelian.table_pr') }}',
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'data_produk',
+                        name: 'data_produk'
+                    }
+                ],
+                layout: {
+                    topStart: {
+                        buttons: [{
+                                text: '<i class="ti ti-plus me-1"></i> New',
+                                className: 'btn btn-primary btn-sm',
+                                action: function(e, dt, node, config) {
+                                    $('#formPrDetail')[0].reset();
+                                    $('#detail_id').val('');
+                                    $('#modalTitle').text('Create new entry');
+                                    $('#btnSubmitModal').text('Create');
+                                    $('#modalPrDetail').modal('show');
+                                }
+                            },
+                            {
+                                text: '<i class="ti ti-edit me-1"></i> Edit',
+                                className: 'btn btn-warning btn-sm',
+                                extend: 'selectedSingle', // Aktif hanya jika 1 baris dipilih
+                                action: function(e, dt, node, config) {
+                                    let data = dt.row({
+                                        selected: true
+                                    }).data();
+                                    $('#detail_id').val(data.id);
+                                    $('#product_id').val(data.product_id).trigger('change');
+                                    $('#qty').val(data.qty);
+
+                                    $('#modalTitle').text('Edit entry');
+                                    $('#btnSubmitModal').text('Update');
+                                    $('#modalPrDetail').modal('show');
+                                }
+                            },
+                            // --- TAMBAHKAN TOMBOL DELETE DI SINI ---
+                            {
+                                text: '<i class="ti ti-trash me-1"></i> Delete',
+                                className: 'btn btn-danger btn-sm',
+                                extend: 'selected', // Aktif jika ada 1 atau lebih baris yang dipilih
+                                action: function(e, dt, node, config) {
+                                    // 1. Ambil data dari baris yang dipilih
+                                    let rows = dt.rows({
+                                        selected: true
+                                    }).data().toArray();
+
+                                    // Ambil ID dan Nama Produk dari baris pertama yang di-select
+                                    let id = rows[0].id;
+                                    let name = rows[0].data_produk ? rows[0].data_produk :
+                                        ''; // Mengambil nama produk agar tidak eror
+
+                                    Swal.fire({
+                                        title: 'Are you sure?',
+                                        text: "Want to delete data: " + name,
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Yes, delete it!',
+                                        cancelButtonText: 'Cancel',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+                                            cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                                        },
+                                        buttonsStyling: false
+                                    }).then(function(result) {
+                                        if (result.isConfirmed) {
+                                            $.ajax({
+                                                url: `/penawaran-pembelian/detail/delete/${id}`,
+                                                type: "DELETE",
+                                                cache: false,
+                                                data: {
+                                                    _token: '{{ csrf_token() }}' // Menggunakan token csrf Laravel langsung
+                                                },
+                                                success: function(response) {
+                                                    // Memuat ulang data tabel via AJAX tanpa reload halaman penuh
+                                                    dt.ajax.reload(null, false);
+
+                                                    toastr.success(
+                                                        'Deleted Data Successfully',
+                                                        '', {
+                                                            timeOut: 1500,
+                                                            progressBar: true,
+                                                            closeButton: false,
+                                                            positionClass: 'toast-top-right',
+                                                        }
+                                                    );
+                                                },
+                                                error: function(jqXHR, textStatus,
+                                                    errorThrown) {
+                                                    Swal.fire({
+                                                        icon: 'error',
+                                                        title: 'Failed to delete',
+                                                        text: 'An error occurred. Please try again later.',
+                                                        timer: 5000,
+                                                        customClass: {
+                                                            confirmButton: 'btn btn-info waves-effect waves-light'
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        } else if (result.dismiss === Swal.DismissReason
+                                            .cancel) {
+                                            Swal.fire({
+                                                icon: 'info',
+                                                title: 'Cancelled',
+                                                text: 'Your data is safe.',
+                                                customClass: {
+                                                    confirmButton: 'btn btn-info waves-effect waves-light'
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                            },
+                            {
+                                text: '<i class="ti ti-refresh me-1"></i> Refresh',
+                                className: 'btn btn-secondary btn-sm',
+                                action: function(e, dt, node, config) {
+                                    dt.ajax.reload(null, false);
+                                }
+                            }
+                        ]
+                    }
+                }
+            });
         });
     </script>
 @endpush

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Master_Data\Customer;
 use App\Models\Master_Data\Salesman;
 use App\Models\Transaction\PurchaseRequisition;
+use App\Models\Transaction\PurchaseRequisitionDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 class PurchaseRequisitionController extends Controller
@@ -81,6 +83,24 @@ class PurchaseRequisitionController extends Controller
         ];
 
         return view('transaction.purchase_requisition.purchase_requisition_index', $x);
+    }
+
+     public function table_pr(Request $r)
+    {
+        if ($r->ajax()) {
+            $query = PurchaseRequisitionDetail::with('produkID')
+            ->where('active', '<>', 0)
+            ->get();
+            return DataTables::of($query)
+                ->addIndexColumn()
+                 ->addColumn('data_produk', function ($row) {
+                  return $row->produkID->nama_barang;
+                })
+                
+                ->rawColumns(['data_produk'])
+                ->make(true);
+        }
+     
     }
 
     private function generateNumberId()
@@ -241,4 +261,12 @@ class PurchaseRequisitionController extends Controller
 
         return view('transaction.purchase_requisition.purchase_requisition_trash', $x);
     }
+
+   public function destroy_detail($id)
+{
+    $detail = PurchaseRequisitionDetail::findOrFail($id);
+    $detail->delete(); // atau ubah active = 0 jika menggunakan soft delete manual
+
+    return response()->json(['success' => true]);
+}
 }
