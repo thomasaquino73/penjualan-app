@@ -310,10 +310,6 @@
 @endpush --}}
 @push('scripts')
     <script>
-        $('.select2').select2({
-            allowClear: true,
-            width: '100%',
-        });
         $('#unit_id').select2({
             width: '100%',
             dropdownAutoWidth: true

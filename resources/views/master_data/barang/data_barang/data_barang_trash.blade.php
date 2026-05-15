@@ -21,7 +21,7 @@
 
                 <!-- Title -->
                 <div class="col-12 col-lg-7">
-                    <h5 class="card-title mb-3 mb-lg-0">{{ $title }}</h5>
+                    <h5 class="card-title mb-3 mb-lg-0"><i class="ti ti-trash me-1"></i>{{ $title }}</h5>
                 </div>
 
                 <!-- Buttons -->

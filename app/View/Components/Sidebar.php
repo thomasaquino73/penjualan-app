@@ -122,15 +122,15 @@ class Sidebar extends Component
                 'children' => [
                     [
                         'name' => 'Purchase Requisition',
-                        'route' => 'customer.index',
-                        'pattern' => 'customer.*',
+                        'route' => 'penawaran-pembelian.index',
+                        'pattern' => 'penawaran-pembelian.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['barang-browse'],
                     ],
                     [
                         'name' => 'Purchase Order',
-                        'route' => 'customer.index',
-                        'pattern' => 'customer.*',
+                        'route' => 'purchase-order.index',
+                        'pattern' => 'purchase-order.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['barang-browse'],
                     ],
@@ -180,8 +180,8 @@ class Sidebar extends Component
                     ],
                     [
                         'name' => 'Sales Order',
-                        'route' => 'customer.index',
-                        'pattern' => 'customer.*',
+                        'route' => 'sales-order.index',
+                        'pattern' => 'sales-order.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['barang-browse'],
                     ],

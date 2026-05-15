@@ -34,6 +34,11 @@ class BasicCodeMasterSeeder extends Seeder
                 'detail' => 'Tipe Persediaan',
                 'description' => 'Tipe persediaan untuk barang',
             ],
+            [
+                'id' => '5',
+                'detail' => 'Term',
+                'description' => 'Jenis Pembayaran',
+            ],
 
         ]);
 

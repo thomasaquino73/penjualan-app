@@ -92,6 +92,12 @@ class BasicCodeDetailSeeder extends Seeder
                 'detail' => 'Barang Lain-lain',
                 'description' => '',
             ],
+            [
+                'id' => $i++,
+                'master_id' => '5',
+                'detail' => 'COD',
+                'description' => '',
+            ],
 
         ]);
 

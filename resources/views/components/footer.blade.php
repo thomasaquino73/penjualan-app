@@ -80,6 +80,10 @@
     </div>
 </div>
 <script>
+    $('.select2').select2({
+        allowClear: true,
+        width: '100%',
+    });
     document.addEventListener("DOMContentLoaded", function() {
         const offlineModal = new bootstrap.Modal(document.getElementById('offlineModal'));
         const onlineModal = new bootstrap.Modal(document.getElementById('onlineModal'));

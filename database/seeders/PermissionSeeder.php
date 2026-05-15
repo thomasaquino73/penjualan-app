@@ -11,22 +11,27 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $modules = [
-            'role' => 'role',
-            'user' => 'user',
-            'permission' => 'permission',
-            'customer' => 'customer',
-            'supplier' => 'supplier',
-            'salesman' => 'salesman',
-            'kendaraan' => 'vehicle',
-            'warehouse' => 'warehouse',
-            'barang' => 'product',
-            'kategori_barang' => 'category',
-            'satuan_barang' => 'unit',
-            // 'application_system' => 'application system',
-            // 'login_background' => 'login background',
-            'mata_uang' => 'currency',
-            'company' => 'company',
-            'general' => 'general',
+            'role' => ['alias' => 'Role', 'group' => 'Access Management'],
+            'user' => ['alias' => 'User', 'group' => 'Access Management'],
+            'permission' => ['alias' => 'Permission', 'group' => 'Access Management'],
+
+            'customer' => ['alias' => 'Customer', 'group' => 'Master Data'],
+            'supplier' => ['alias' => 'Supplier', 'group' => 'Master Data'],
+            'salesman' => ['alias' => 'Salesman', 'group' => 'Master Data'],
+
+            'kendaraan' => ['alias' => 'Vehicle', 'group' => 'Master Data'],
+            'warehouse' => ['alias' => 'Warehouse', 'group' => 'Master Data'],
+
+            'barang' => ['alias' => 'Product', 'group' => 'Master Data'],
+            'kategori_barang' => ['alias' => 'Category', 'group' => 'Master Data'],
+            'satuan_barang' => ['alias' => 'Unit', 'group' => 'Master Data'],
+
+            'mata_uang' => ['alias' => 'Currency', 'group' => 'General'],
+            'company' => ['alias' => 'Company', 'group' => 'General'],
+            'general' => ['alias' => 'General', 'group' => 'General'],
+
+            'penawaran_pembelian' => ['alias' => 'Purchase Requisition', 'group' => 'Transaction'],
+            'purchase_order' => ['alias' => 'Purchase Order', 'group' => 'Transaction'],
         ];
 
         $actions = ['browse', 'create', 'read', 'edit', 'delete', 'trash', 'restore'];
@@ -36,13 +41,14 @@ class PermissionSeeder extends Seeder
             'guard_name' => 'web',
         ]);
 
-        foreach ($modules as $module => $alias) {
+        foreach ($modules as $module => $config) {
             foreach ($actions as $action) {
 
                 $permission = Permissions::firstOrCreate([
-                    'name' => $module.'-'.$action,
+                    'name' => $module . '-' . $action,
                     'module' => $module,
-                    'alias' => $alias,
+                    'alias' => $config['alias'],
+                    'group_name' => $config['group'], // 🔥 ini penting
                     'guard_name' => 'web',
                 ]);
 

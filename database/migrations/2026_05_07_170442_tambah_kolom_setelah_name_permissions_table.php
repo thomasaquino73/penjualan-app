@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::table('permissions', function (Blueprint $table) {
             $table->string('module')->default('1')->after('name');
             $table->string('alias')->default('1')->after('module');
+            $table->string('group_name')->default('1')->after('alias');
         });
     }
 
@@ -19,6 +20,7 @@ return new class extends Migration
         Schema::table('permissions', function (Blueprint $table) {
             $table->dropColumn('module');
             $table->dropColumn('alias');
+            $table->dropColumn('group_name');
         });
     }
 };

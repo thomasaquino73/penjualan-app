@@ -20,6 +20,9 @@ use App\Http\Controllers\Pengaturan\PermissionsController;
 use App\Http\Controllers\Pengaturan\RolesController;
 use App\Http\Controllers\Pengaturan\UserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Transaction\PurchaseOrderController;
+use App\Http\Controllers\Transaction\PurchaseRequisitionController;
+use App\Http\Controllers\Transaction\SalesOrderController;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
@@ -167,6 +170,15 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/kategori-barang/delete-multiple', [KategoriBarangController::class, 'deleteMultiple']);
     Route::resource('kategori-barang', KategoriBarangController::class);
+
+    Route::get('/penawaran-pembelian/trash', [PurchaseRequisitionController::class, 'trash'])->name('penawaran-pembelian.trash');
+    Route::resource('penawaran-pembelian', PurchaseRequisitionController::class);
+
+       Route::get('/purchase-order/trash', [PurchaseOrderController::class, 'trash'])->name('purchase-order.trash');
+    Route::resource('purchase-order', PurchaseOrderController::class);
+
+     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
+    Route::resource('sales-order', SalesOrderController::class);
 
 });
 
