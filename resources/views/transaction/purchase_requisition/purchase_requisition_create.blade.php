@@ -62,26 +62,15 @@
                     </div>
                     <div class="col-md-3">
                         <div class="col-12 mb-3">
-                            <label class="form-label">Product ID <small class="text-danger">*</small> </label>
+                            <label class="form-label">Request Number<small class="text-danger">*</small> </label>
                             <input type="text" name="code" id="code" class="form-control"
                                 value="{{ $idNumber }}">
                             <span class="error text-danger" id="codeError"></span>
                         </div>
                         <div class="col-12 mb-3">
-                            <label class="form-label">Date<small class="text-danger">*</small> </label>
+                            <label class="form-label">Request Date<small class="text-danger">*</small> </label>
                             <input type="date" name="date" id="date" class="form-control" value="">
                             <span class="error text-danger" id="dateError"></span>
-                        </div>
-                        <div class="col-12 mb-3">
-                            <label class="form-label">Salesman<small class="text-danger">*</small> </label>
-                            <select name="sales_id" id="sales_id" class="form-select select2"
-                                data-placeholder="Select Salesman">
-                                <option></option>
-                                @foreach ($salesman as $sm)
-                                    <option value="{{ $sm->id }}">{{ $sm->nama }}</option>
-                                @endforeach
-                            </select>
-                            <span class="error text-danger" id="sales_idError"></span>
                         </div>
                     </div>
 

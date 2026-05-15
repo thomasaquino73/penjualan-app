@@ -64,13 +64,13 @@
                     <div class="col-md-6">
                         <div class="row">
                             <div class="col-6 mb-3">
-                                <label class="form-label">Product ID <small class="text-danger">*</small> </label>
+                                <label class="form-label">PO Number <small class="text-danger">*</small> </label>
                                 <input type="text" name="code" id="code" class="form-control"
                                     value="{{ $idNumber }}">
                                 <span class="error text-danger" id="codeError"></span>
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label">Date<small class="text-danger">*</small> </label>
+                                <label class="form-label">PO Date<small class="text-danger">*</small> </label>
                                 <input type="date" name="date" id="date" class="form-control" value="">
                                 <span class="error text-danger" id="dateError"></span>
                             </div>

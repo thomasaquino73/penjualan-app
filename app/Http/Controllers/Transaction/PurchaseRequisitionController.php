@@ -124,7 +124,6 @@ class PurchaseRequisitionController extends Controller
             ],
             'customer'=>Customer::where('status','<>',0)->get(),
             'idNumber' => $this->generateNumberId(),
-            'salesman'=>Salesman::where('status','<>',0)->get(),
 
         ];
 
