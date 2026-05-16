@@ -30,11 +30,11 @@
                         class="d-flex flex-column flex-md-row gap-2 
                         justify-content-start justify-content-lg-end">
 
-                        <a href="{{ route('penawaran-pembelian.index') }}" class="btn btn-secondary btn-sm ">
+                        <a href="{{ route('permintaan-pembelian.index') }}" class="btn btn-secondary btn-sm ">
                             <i class="ti ti-chevron-left me-1"></i> Back
                         </a>
 
-                        @canany(['penawaran_pembelian-restore'])
+                        @canany(['permintaan_pembelian-restore'])
                             <button id="restoreSelected" class="btn btn-success btn-sm ">
                                 <i class="ti ti-refresh me-1"></i> Restore Selected
                             </button>
@@ -90,7 +90,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('penawaran-pembelian.trash') }}',
+                ajax: '{{ route('permintaan-pembelian.trash') }}',
                 columns: [{
                         data: 'cekbok',
                         name: 'cekbok',
@@ -147,7 +147,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/penawaran-pembelian/restore/${id}`,
+                            url: `/permintaan-pembelian/restore/${id}`,
                             type: 'PUT',
                             data: {
                                 _token: token
@@ -218,7 +218,7 @@
 
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: '/penawaran-pembelian/restore-multiple',
+                            url: '/permintaan-pembelian/restore-multiple',
                             type: 'POST',
                             data: {
                                 ids: ids,

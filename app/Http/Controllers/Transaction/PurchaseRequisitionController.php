@@ -105,12 +105,12 @@ class PurchaseRequisitionController extends Controller
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('penawaran_pembelian-edit')) {
-                        $btn .= '<a class="dropdown-item " href="'.route("penawaran-pembelian.edit", $row->id).'"
+                    if (auth()->user()->can('permintaan_pembelian-edit')) {
+                        $btn .= '<a class="dropdown-item " href="'.route("permintaan-pembelian.edit", $row->id).'"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
                     }
 
-                    if (auth()->user()->can('penawaran_pembelian-delete')) {
+                    if (auth()->user()->can('permintaan_pembelian-delete')) {
                         $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->code.'"
@@ -259,8 +259,8 @@ class PurchaseRequisitionController extends Controller
 
             // 4. Atur arah redirect URL berdasarkan tombol footer yang diklik user
             $redirectUrl = $request->save_and_new == 1
-                ? route('penawaran-pembelian.create') // Kembali kosongkan form untuk input data PR baru lagi
-                : route('penawaran-pembelian.index');  // Selesai dan kembali ke tabel index utama
+                ? route('permintaan-pembelian.create') // Kembali kosongkan form untuk input data PR baru lagi
+                : route('permintaan-pembelian.index');  // Selesai dan kembali ke tabel index utama
 
             return response()->json([
                 'success'  => true,
@@ -296,7 +296,7 @@ class PurchaseRequisitionController extends Controller
         'title'      => 'Purchase Requisition Edit',
         'breadcrumb' => [
             ['label' => 'Dashboard', 'url' => route('dashboard')],
-            ['label' => 'Purchase Requisition', 'url' => route('penawaran-pembelian.index')],
+            ['label' => 'Purchase Requisition', 'url' => route('permintaan-pembelian.index')],
             ['label' => 'Edit', 'url' => ''],
         ],
         'customer'   => Customer::where('status', '<>', 0)->get(),
@@ -371,7 +371,7 @@ class PurchaseRequisitionController extends Controller
         DB::commit();
 
         // 4. Atur arah redirect URL (Aksi update biasanya langsung kembali ke halaman index utama)
-        $redirectUrl = route('penawaran-pembelian.index');
+        $redirectUrl = route('permintaan-pembelian.index');
 
         return response()->json([
             'success'  => true,
@@ -493,7 +493,7 @@ class PurchaseRequisitionController extends Controller
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('penawaran_pembelian-restore')) {
+                    if (auth()->user()->can('permintaan_pembelian-restore')) {
                         $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
                     }
@@ -507,7 +507,7 @@ class PurchaseRequisitionController extends Controller
         $x = [
             'title' => 'Deleted Purchase Requisition List',
             'breadcrumb' => [
-                ['label' => 'Purchase Requisition', 'url' => route('penawaran-pembelian.index')],
+                ['label' => 'Purchase Requisition', 'url' => route('permintaan-pembelian.index')],
                 ['label' => 'Deleted Purchase Requisition', 'url' => ''],
             ],
 
@@ -606,10 +606,10 @@ class PurchaseRequisitionController extends Controller
         DB::beginTransaction();
 
         try {
-            $penawaranpembelian = PurchaseRequisition::find($id);
-            $penawaranpembelian->active = 1;
-            $penawaranpembelian->updated_by = Auth::id();
-            $penawaranpembelian->save();
+            $permintaanpembelian = PurchaseRequisition::find($id);
+            $permintaanpembelian->active = 1;
+            $permintaanpembelian->updated_by = Auth::id();
+            $permintaanpembelian->save();
 
             DB::commit();
 
