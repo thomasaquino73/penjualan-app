@@ -20,7 +20,7 @@ class PurchaseRequisitionController extends Controller
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = PurchaseRequisition::where('active', '<>', 0)->get();
+            $query = PurchaseRequisition::where('active', '<>', 0)->orderby('code','desc')->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -408,7 +408,7 @@ class PurchaseRequisitionController extends Controller
     public function trash(Request $r)
     {
         if ($r->ajax()) {
-            $query = PurchaseRequisition::where('active',  0)->get();
+            $query = PurchaseRequisition::where('active',  0)->orderby('code','desc')->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
