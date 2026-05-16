@@ -47,7 +47,7 @@
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="form-label">Request Date<small class="text-danger">*</small> </label>
-                                <input type="date" name="date" id="date" class="form-control" value="">
+                                <input type="text" name="date" id="date" class="form-control" value="">
                                 <span class="error text-danger" id="dateError"></span>
                             </div>
                         </div>
@@ -65,9 +65,7 @@
                 <div class="divider divider-dashed">
                     <div class="divider-text">Purchase Requisition Detail</div>
                 </div>
-                {{-- <button class="btn btn-sm btn-primary"><i class="ti ti-plus me-1"></i>Add</button>
-                <button class="btn btn-sm btn-primary"><i class="ti ti-edit me-1"></i>Edit</button>
-                <button class="btn btn-sm btn-primary"><i class="ti ti-refresh me-1"></i>Refresh</button> --}}
+
                 <div class="row mt-3">
                     <table class="table display responsive nowrap" id="table">
                         <thead class="border-top" style="background-color: #AEDEFC; ">
@@ -154,6 +152,16 @@
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
+        $(function() {
+            flatpickr("#date", {
+                enableTime: false,
+                time_24hr: true,
+                enableSeconds: false,
+                dateFormat: "d-m-Y",
+                minDate: "today",
+                defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}"
+            });
+        });
         $(document).ready(function() {
             $('.select2-modal').each(function() {
                 var $this = $(this);

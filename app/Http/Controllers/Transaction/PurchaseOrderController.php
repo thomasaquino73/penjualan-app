@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Models\BasicCodeDetail;
+use App\Models\Master_Data\Barang;
 use App\Models\Master_Data\Customer;
 use App\Models\Master_Data\Kendaraan;
 use App\Models\Transaction\PurchaseOrder;
+use App\Models\Transaction\PurchaseOrderDetail;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 
@@ -116,6 +118,24 @@ class PurchaseOrderController extends Controller
         return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
     }
 
+    public function table_pr(Request $r)
+    {
+        if ($r->ajax()) {
+            $query = PurchaseOrderDetail::with('produkID')
+                ->where('active', '<>', 0)
+                ->get();
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('data_produk', function ($row) {
+                    return $row->produkID->nama_barang;
+                })
+
+                ->rawColumns(['data_produk'])
+                ->make(true);
+        }
+    }
+
     public function create()
     {
         $x = [
@@ -124,10 +144,11 @@ class PurchaseOrderController extends Controller
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Purchase Order', 'url' => ''],
             ],
-            'customer' => Customer::where('status', '<>', 0)->get(),
+            'customer' => Customer::where('status', 1)->get(),
             'idNumber' => $this->generateNumberId(),
-            'kendaraan' => Kendaraan::where('status', '<>', 0)->get(),
+            'kendaraan' => Kendaraan::where('status', 1)->get(),
             'term' => BasicCodeDetail::where('master_id', 5)->get(),
+            'product' => Barang::where('status', '<>', 0)->get(),
 
         ];
 

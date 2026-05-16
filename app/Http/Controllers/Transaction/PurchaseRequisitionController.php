@@ -35,6 +35,9 @@ class PurchaseRequisitionController extends Controller
                         });
                 })
                 ->orderby('code', 'desc');
+            if ($r->status) {
+                $query->where('status', $r->status);
+            }
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -194,7 +197,6 @@ class PurchaseRequisitionController extends Controller
                 ->rawColumns(['data_produk'])
                 ->make(true);
         }
-
     }
 
     private function generateNumberId()
@@ -739,51 +741,52 @@ class PurchaseRequisitionController extends Controller
         return response()->json(['message' => 'Purchase Requisition status successfully updated!']);
     }
 
-   public function print($id)
-{
-    // Menggunakan relasi 'creator' sesuai dengan yang ada di model Anda
-    $detail = PurchaseRequisition::with(['details.produkID', 'details.unitID', 'creator'])->findOrFail($id);
-    $company = Company::first(); 
+    public function print($id)
+    {
+        // Menggunakan relasi 'creator' sesuai dengan yang ada di model Anda
+        $detail = PurchaseRequisition::with(['details.produkID', 'details.unitID', 'creator'])->findOrFail($id);
+        $company = Company::first();
 
-    // 1. LOGIKA LOGO PERUSAHAAN (Base64)
-    $logoBase64 = null;
-    if ($company && $company->logo) {
-        $path = public_path($company->logo); 
-        if (file_exists($path)) {
-            $type = pathinfo($path, PATHINFO_EXTENSION);
-            $data = file_get_contents($path);
-            $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+        $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+            }
         }
+
+        // 2. LOGIKA QR CODE TANDA TANGAN DIGITAL
+        // DISESUAIKAN: Menggunakan $detail->creator->name
+        $approverName = $detail->creator->fullname ?? 'Staff Purchasing';
+
+        $qrText = "DOCUMENT VALIDATION\n"
+                ."Status: DIGITALLY SIGNED & APPROVED\n"
+                .'Doc Number: '.$detail->code."\n"
+                .'Signed By: '.$approverName."\n"
+                .'Date: '.($detail->date ?? date('Y-m-d'));
+
+        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='.urlencode($qrText);
+        $qrContext = stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+
+        try {
+            $qrData = file_get_contents($qrUrl, false, $qrContext);
+            $qrCodeBase64 = 'data:image/png;base64,'.base64_encode($qrData);
+        } catch (\Exception $e) {
+            $qrCodeBase64 = null;
+        }
+
+        $pdf = Pdf::loadView('pdf.purchase_requisition_pdf', compact('detail', 'company', 'logoBase64', 'qrCodeBase64'))
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'chroot' => [public_path()],
+            ]);
+
+        $fileName = str_replace('/', '-', $detail->code).'.pdf';
+
+        return $pdf->download($fileName);
     }
-
-    // 2. LOGIKA QR CODE TANDA TANGAN DIGITAL
-    // DISESUAIKAN: Menggunakan $detail->creator->name
-    $approverName = $detail->creator->fullname ?? 'Staff Purchasing';
-    
-    $qrText = "DOCUMENT VALIDATION\n"
-            . "Status: DIGITALLY SIGNED & APPROVED\n"
-            . "Doc Number: " . $detail->code . "\n"
-            . "Signed By: " . $approverName . "\n"
-            . "Date: " . ($detail->date ?? date('Y-m-d'));
-
-    $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qrText);
-    $qrContext = stream_context_create(["ssl" => ["verify_peer" => false, "verify_peer_name" => false]]);
-    
-    try {
-        $qrData = file_get_contents($qrUrl, false, $qrContext);
-        $qrCodeBase64 = 'data:image/png;base64,' . base64_encode($qrData);
-    } catch (\Exception $e) {
-        $qrCodeBase64 = null;
-    }
-
-    $pdf = Pdf::loadView('pdf.purchase_requisition_pdf', compact('detail', 'company', 'logoBase64', 'qrCodeBase64'))
-        ->setOptions([
-            'isHtml5ParserEnabled' => true,
-            'isRemoteEnabled'      => true,
-            'chroot'               => [public_path()],
-        ]);
-
-    $fileName = str_replace('/', '-', $detail->code) . '.pdf';
-    return $pdf->download($fileName);
-}
 }

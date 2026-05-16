@@ -185,8 +185,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/permintaan-pembelian/print/{id}', [PurchaseRequisitionController::class, 'print'])->name('permintaan-pembelian.print');
     Route::resource('permintaan-pembelian', PurchaseRequisitionController::class);
 
-    Route::get('/purchase-order/trash', [PurchaseOrderController::class, 'trash'])->name('purchase-order.trash');
-    Route::resource('purchase-order', PurchaseOrderController::class);
+    Route::prefix('purchase-order')->name('purchase-order.')->group(function () {
+        Route::get('/table-pr', [PurchaseOrderController::class, 'table_pr'])->name('table_pr');
+        Route::get('/trash', [PurchaseOrderController::class, 'trash'])->name('trash');
+        Route::resource('/', PurchaseOrderController::class);
+    });
 
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
     Route::resource('sales-order', SalesOrderController::class);

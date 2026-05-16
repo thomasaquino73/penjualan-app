@@ -48,6 +48,22 @@
 
         </div>
         <div class="card-datatable table-responsive p-3">
+            <div class="row">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text" id=""><i class="fa fa-filter me-1"></i>Filter</span>
+                        <select class="form-select " id="selectStatus" data-placeholder="Choose status...">
+                            <option value="" selected hidden>Select Status</option>
+                            <option value="">All Status</option>
+                            <option value="draft">Draft</option>
+                            <option value="processing">Processing</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <table class="table table-bordered" id="table">
                 <thead class="border-top" style="background-color: #AEDEFC; ">
                     <tr>
@@ -92,7 +108,12 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('permintaan-pembelian.index') }}',
+                ajax: {
+                    url: '{{ route('permintaan-pembelian.index') }}',
+                    data: function(d) {
+                        d.status = $('#selectStatus').val();
+                    }
+                },
                 columns: [{
                         data: 'cekbok',
                         name: 'cekbok',
@@ -353,7 +374,7 @@
                     if (result.isConfirmed) {
                         $.ajax({
                             url: '/permintaan-pembelian/change-status/' +
-                            id, // Match with your status update route
+                                id, // Match with your status update route
                             type: "POST",
                             data: {
                                 _token: "{{ csrf_token() }}",
@@ -406,6 +427,12 @@
                     }
                 });
             });
+
+            // filter
+            $('#selectStatus').on('change', function() {
+                table.ajax.reload();
+            });
+
         });
     </script>
 @endpush
