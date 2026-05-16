@@ -13,11 +13,19 @@ return new class extends Migration
     {
         Schema::create('purchase_requisition', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('customer_id');
-            $table->bigInteger('code');
+            $table->string('code');
             $table->date('date');
-            $table->bigInteger('sales_id')->nullable();
-            $table->enum('status', ['processing', 'deliver'])->default('processing')->comment('status penawaran');
+            $table->text('description')->nullable();
+            $table->enum('status', [
+                'draft',        // Data baru dibuat, masih bisa diedit oleh staff
+                'pending',      // Menunggu persetujuan (approval) dari Manager/Direktur
+                'processing',   // Disetujui, sedang dipersiapkan / dipacking di gudang
+                'deliver',      // Barang sedang dalam perjalanan (dikirim)
+                'received',     // Barang sudah sampai dan diterima oleh pemesan
+                'completed',    // Selesai (Semua dokumen & pembayaran sudah klop)
+                'rejected',     // Ditolak saat pengajuan approval
+                'cancelled',     // Dibatalkan oleh user
+            ])->default('draft');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

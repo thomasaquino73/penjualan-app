@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
-use App\Models\BasicCodeDetail;
 use App\Models\Master_Data\Barang;
 use App\Models\Master_Data\Customer;
 use App\Models\Master_Data\DataBarangConversion;
 use App\Models\Transaction\PurchaseRequisition;
 use App\Models\Transaction\PurchaseRequisitionDetail;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 class PurchaseRequisitionController extends Controller
@@ -39,10 +41,55 @@ class PurchaseRequisitionController extends Controller
                     return 'N/A';
                 })
                 ->addColumn('status', function ($row) {
-                    return '<span class="badge bg-info">Processing Queue</span>';
-                })
-                ->addColumn('customer', function ($row) {
-                    return $row->customer->nama;
+                    // Tentukan warna dan teks berdasarkan nilai status di database
+                    switch ($row->status) {
+                        case 'draft':
+                            $badge = 'bg-label-secondary'; // Abu-abu
+                            $text = 'Draft';
+                            break;
+
+                        case 'pending':
+                            $badge = 'bg-label-warning'; // Kuning
+                            $text = 'Pending Approval';
+                            break;
+
+                        case 'processing':
+                            $badge = 'bg-label-info'; // Biru Muda
+                            $text = 'Processing';
+                            break;
+
+                        case 'deliver':
+                            $badge = 'bg-label-primary'; // Biru Tua / Ungu
+                            $text = 'In Delivery';
+                            break;
+
+                        case 'received':
+                            $badge = 'bg-label-success'; // Hijau
+                            $text = 'Received';
+                            break;
+
+                        case 'completed':
+                            $badge = 'bg-success'; // Hijau Solid (Selesai Mutlak)
+                            $text = 'Completed';
+                            break;
+
+                        case 'rejected':
+                            $badge = 'bg-label-danger'; // Merah
+                            $text = 'Rejected';
+                            break;
+
+                        case 'cancelled':
+                            $badge = 'bg-danger'; // Merah Solid
+                            $text = 'Cancelled';
+                            break;
+
+                        default:
+                            $badge = 'bg-label-secondary';
+                            $text = ucfirst($row->status);
+                            break;
+                    }
+
+                    return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
                 })
                 ->addColumn('cekbok', function ($row) {
                     return '   <div class="form-check form-check-primary mt-3">
@@ -71,7 +118,7 @@ class PurchaseRequisitionController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'customer'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok'])
                 ->make(true);
         }
 
@@ -115,7 +162,7 @@ class PurchaseRequisitionController extends Controller
             return 'PR-0001';
         }
 
-        $lastId = $last->id_barang;
+        $lastId = $last->code;
 
         // 🔥 ambil angka terakhir
         preg_match('/(\d+)$/', $lastId, $matches);
@@ -154,12 +201,81 @@ class PurchaseRequisitionController extends Controller
         return view('transaction.purchase_requisition.purchase_requisition_create', $x);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        // 1. Validasi Input Form Induk / Utama
+        $request->validate([
+            'code'         => 'required|string', // Sesuai blueprint bigInteger
+            'date'         => 'required|date',
+            'description'  => 'nullable|string',
+            'items_detail' => 'required', // Harus mengirimkan data item dari DataTables lokal
+        ]);
+
+        // Mulai Database Transaction demi keamanan integritas relasi data
+        DB::beginTransaction();
+
+        try {
+            // 2. Simpan Data Master ke tabel `purchase_requisition`
+            $prMaster = PurchaseRequisition::create([
+                'code'        => $request->code,
+                'date'        => Carbon::parse($request->date)->format('Y-m-d'),
+                'description' => $request->description,
+                'status'      => 'draft', // Default value sesuai skema alur data baru
+                'active'      => 1,       // 1 = Active sesuai comment di blueprint
+                'created_by'  => Auth::id(), // ID User yang sedang login
+                'updated_by'  => null,
+            ]);
+
+            // 3. Decode data array string JSON (`items_detail`) yang dikirim dari DataTables lokal
+            $items = json_decode($request->items_detail, true);
+
+            if (is_array($items) && count($items) > 0) {
+                foreach ($items as $item) {
+                    // Simpan setiap baris item ke tabel `purchase_requisition_detail`
+                    PurchaseRequisitionDetail::create([
+                        'purchase_requisition_id' => $prMaster->id, // Mengambil ID dari master yang baru disimpan
+                        'product_id'              => $item['product_id'],
+                        'qty'                     => $item['quantity'] ?? $item['qty'],
+                        'unit_id'                 => $item['unit_id'],
+
+                        // Kolom di bawah ini ada di blueprint database, berikan nilai default jika tidak ada di modal
+                        'unit_price'              => $item['unit_price'] ?? 0,
+                        'discount'                => $item['discount'] ?? 0,
+                        'tax'                     => $item['tax'] ?? 0,
+
+                        'active'                  => 1, // 1 = Active
+                        'created_by'              => Auth::id(),
+                        'updated_by'              => null,
+                    ]);
+                }
+            } else {
+                // Gagalkan proses jika ternyata isi array kosong setelah didecode
+                throw new \Exception("Minimal harus ada 1 item produk yang dimasukkan.");
+            }
+
+            // Jika semua query aman tanpa error, terapkan simpan permanen ke database
+            DB::commit();
+
+            // 4. Atur arah redirect URL berdasarkan tombol footer yang diklik user
+            $redirectUrl = $request->save_and_new == 1
+                ? route('penawaran-pembelian.create') // Kembali kosongkan form untuk input data PR baru lagi
+                : route('penawaran-pembelian.index');  // Selesai dan kembali ke tabel index utama
+
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Purchase Requisition berhasil disimpan!',
+                'redirect' => $redirectUrl
+            ], 200);
+
+        } catch (\Exception $e) {
+            // Batalkan semua query yang sempat berjalan jika ada error di tengah jalan (Rollback)
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan data: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -277,7 +393,7 @@ class PurchaseRequisitionController extends Controller
     public function getUnitsByProduct($id)
     {
         // 1. Ambil semua baris data konversi berdasarkan data_barang_id
-        $conversions = \App\Models\Master_Data\DataBarangConversion::with(['toUnitID', 'fromUnitID']) 
+        $conversions = DataBarangConversion::with(['toUnitID', 'fromUnitID'])
             ->where('data_barang_id', $id)
             ->get();
 
@@ -290,20 +406,20 @@ class PurchaseRequisitionController extends Controller
 
         // 2. Cek apakah ada SALAH SATU atau SEMUA baris yang to_unit_id-nya terisi (TIDAK NULL)
         $hasToUnit = $conversions->contains(function ($item) {
-            return !is_null($item->getRawOriginal('to_unit_id')) && $item->getRawOriginal('to_unit_id') !== '';
+            return ! is_null($item->getRawOriginal('to_unit_id')) && $item->getRawOriginal('to_unit_id') !== '';
         });
 
         if ($hasToUnit) {
             // --- KONDISI A: to_unit_id ada yang terisi -> Tampilkan dari to_unit_id DAN from_unit_id ---
-            
+
             // Ambil SEMUA data to_unit_id yang valid (tidak null)
             foreach ($conversions as $item) {
                 $toId = $item->getRawOriginal('to_unit_id');
-                
-                if (!is_null($toId) && !in_array($toId, $addedIds)) {
+
+                if (! is_null($toId) && ! in_array($toId, $addedIds)) {
                     $result[] = [
-                        'id'   => $toId,
-                        'name' => $item->toUnitID ? $item->toUnitID->detail : 'Unit ' . $toId
+                        'id' => $toId,
+                        'name' => $item->toUnitID ? $item->toUnitID->detail : 'Unit '.$toId,
                     ];
                     $addedIds[] = $toId;
                 }
@@ -311,31 +427,31 @@ class PurchaseRequisitionController extends Controller
 
             // Tambahkan JUGAdari darifrom_unit_id (ambil 1 data saja)
             $firstFromUnit = $conversions->first(function ($item) {
-                return !is_null($item->getRawOriginal('from_unit_id'));
+                return ! is_null($item->getRawOriginal('from_unit_id'));
             });
 
             if ($firstFromUnit) {
                 $fromId = $firstFromUnit->getRawOriginal('from_unit_id');
-                if (!in_array($fromId, $addedIds)) {
+                if (! in_array($fromId, $addedIds)) {
                     $result[] = [
-                        'id'   => $fromId,
-                        'name' => $firstFromUnit->fromUnitID ? $firstFromUnit->fromUnitID->detail : 'Unit ' . $fromId
+                        'id' => $fromId,
+                        'name' => $firstFromUnit->fromUnitID ? $firstFromUnit->fromUnitID->detail : 'Unit '.$fromId,
                     ];
                 }
             }
 
         } else {
             // --- KONDISI B: to_unit_id KOSONG SEMUA -> Hanya tampilkan 1 data dari from_unit_id ---
-            
+
             $firstFromUnit = $conversions->first(function ($item) {
-                return !is_null($item->getRawOriginal('from_unit_id'));
+                return ! is_null($item->getRawOriginal('from_unit_id'));
             });
 
             if ($firstFromUnit) {
                 $fromId = $firstFromUnit->getRawOriginal('from_unit_id');
                 $result[] = [
-                    'id'   => $fromId,
-                    'name' => $firstFromUnit->fromUnitID ? $firstFromUnit->fromUnitID->detail : 'Unit ' . $fromId
+                    'id' => $fromId,
+                    'name' => $firstFromUnit->fromUnitID ? $firstFromUnit->fromUnitID->detail : 'Unit '.$fromId,
                 ];
             }
         }

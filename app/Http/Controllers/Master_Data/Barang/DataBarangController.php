@@ -343,7 +343,7 @@ class DataBarangController extends Controller
     {
         $idDetail = Barang::findorfail($id);
         $subUnit = DataBarangConversion::where('data_barang_id', $idDetail->id)->get();
-
+        $unit=BasicCodeDetail::where('master_id', 2)->get();
         return view('master_data.barang.data_barang.data_barang_edit', [
             'title' => 'Edit Product',
             'breadcrumb' => [
@@ -352,7 +352,8 @@ class DataBarangController extends Controller
             ],
             'idNumber' => $this->generateProductId(),
             'categories' => BasicCodeDetail::where('master_id', 1)->get(),
-            'unit' => BasicCodeDetail::where('master_id', 2)->get(),
+            'unit' => $unit,
+            'sub_unit' => BasicCodeDetail::where('master_id', 2)->get(),
             'warehouses' => Warehouse::where('status', 1)->get(),
             'inventoryTypes' => BasicCodeDetail::where('master_id', 4)->get(),
             'detail' => $idDetail,

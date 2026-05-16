@@ -57,8 +57,9 @@
                             </div>
                         </th>
                         <th>#</th>
-                        <th>Code</th>
-                        <th>Customer</th>
+                        <th>ID Number</th>
+                        <th>Date</th>
+                        <th>Description</th>
                         <th>Status</th>
                         <th>Created</th>
                         <th>Updated</th>
@@ -107,7 +108,10 @@
                         data: 'code',
                     },
                     {
-                        data: 'customer',
+                        data: 'date',
+                    },
+                    {
+                        data: 'description',
                     },
                     {
                         data: 'status',

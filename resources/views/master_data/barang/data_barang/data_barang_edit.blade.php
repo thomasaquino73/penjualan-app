@@ -108,13 +108,14 @@
                             <div class="col-md-3">
                                 <label class="form-label">Unit<small class="text-danger">*</small></label>
                                 <div class="input-group">
-                                    <select name="unit_id" id="unit_id" class="form-select "
+                                    <select name="unit_id" id="unit_id" class="form-select select2"
                                         data-placeholder="Select unit">
                                         <option></option>
-                                        @foreach ($unit as $units)
-                                            <option value="{{ $units->id }}"
-                                                {{ $detail->unit_id == $units->id ? 'selected' : '' }}>
-                                                {{ $units->detail }}</option>
+                                        @foreach ($unit as $item)
+                                            <option value="{{ $item->id }}"
+                                                {{ $detail->unit_id == $item->id ? 'selected' : '' }}>
+                                                {{ $item->detail }}
+                                            </option>
                                         @endforeach
                                     </select>
                                     {{-- <button type="button" id="showSubUnit"
@@ -258,10 +259,10 @@
 
                                                 <option value="">Select</option>
 
-                                                @foreach ($unit as $u)
-                                                    <option value="{{ $u->id }}"
-                                                        {{ $item->to_unit_id == $u->id ? 'selected' : '' }}>
-                                                        {{ $u->detail }}
+                                                @foreach ($sub_unit as $sub)
+                                                    <option value="{{ $sub->id }}"
+                                                        {{ $item->to_unit_id == $sub->id ? 'selected' : '' }}>
+                                                        {{ $sub->detail }}
                                                     </option>
                                                 @endforeach
 
@@ -288,61 +289,9 @@
     </form>
 @endsection
 
-{{-- @push('style')
-    <style>
-        #supplyForm {
-            transition: all 0.3s ease;
-        }
 
-        #unit1 {
-            border: none;
-            box-shadow: none;
-            /* hilangkan shadow bootstrap */
-        }
-
-        #unit2 {
-            border: none;
-            box-shadow: none;
-            /* hilangkan shadow bootstrap */
-        }
-
-        /* Container select2 hanya untuk #unit_id */
-        #unit_id+.select2-container {
-            flex: 1 1 auto;
-            width: 1% !important;
-        }
-
-        /* Tinggi select2 */
-        #unit_id+.select2-container .select2-selection--single {
-            height: 38px !important;
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-            border-right: 0;
-            /* biar nyatu sama button */
-        }
-
-        /* Text di tengah */
-        #unit_id+.select2-container .select2-selection__rendered {
-            line-height: 36px;
-            padding-left: 12px;
-        }
-
-        /* Arrow sejajar */
-        #unit_id+.select2-container .select2-selection__arrow {
-            height: 36px;
-        }
-    </style>
-@endpush --}}
 @push('scripts')
     <script>
-        $('.select2').select2({
-            allowClear: true,
-            width: '100%',
-        });
-        $('#unit_id').select2({
-            width: '100%',
-            dropdownAutoWidth: true
-        });
         document.addEventListener("DOMContentLoaded", function() {
             const supplyRadio = document.getElementById("radioSupply");
             const nonSupplyRadio = document.getElementById("radioNonSupply");

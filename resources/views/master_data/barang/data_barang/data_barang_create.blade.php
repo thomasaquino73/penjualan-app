@@ -263,51 +263,7 @@
     </form>
 @endsection
 
-{{-- @push('style')
-    <style>
-        #supplyForm {
-            transition: all 0.3s ease;
-        }
 
-        #unit1 {
-            border: none;
-            box-shadow: none;
-            /* hilangkan shadow bootstrap */
-        }
-
-        #unit2 {
-            border: none;
-            box-shadow: none;
-            /* hilangkan shadow bootstrap */
-        }
-
-        /* Container select2 hanya untuk #unit_id */
-        #unit_id+.select2-container {
-            flex: 1 1 auto;
-            width: 1% !important;
-        }
-
-        /* Tinggi select2 */
-        #unit_id+.select2-container .select2-selection--single {
-            height: 38px !important;
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-            border-right: 0;
-            /* biar nyatu sama button */
-        }
-
-        /* Text di tengah */
-        #unit_id+.select2-container .select2-selection__rendered {
-            line-height: 36px;
-            padding-left: 12px;
-        }
-
-        /* Arrow sejajar */
-        #unit_id+.select2-container .select2-selection__arrow {
-            height: 36px;
-        }
-    </style>
-@endpush --}}
 @push('scripts')
     <script>
         document.addEventListener("DOMContentLoaded", function() {
