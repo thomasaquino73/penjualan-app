@@ -19,10 +19,10 @@ class ProductSeeder extends Seeder
                 'kategori_id' => 1,
                 'gudang_id' => 1,
                 'tipe_persediaan_id' => 9,
-                'unit_id' => 3,
-                'product_type' => 'supply', // Sesuai dengan enum ('supply', 'non_supply')
-                'quantity' => 100, // Opsional: Contoh tambahan data sesuai migration
-                'price' => 25000,   // Opsional: Contoh tambahan data sesuai migration
+                'unit_id' => 3, // Misal unit_id dasar: Pcs
+                'product_type' => 'supply',
+                'quantity' => 100,
+                'price' => 25000,
                 'created_by' => 1,
             ],
             [
@@ -32,7 +32,7 @@ class ProductSeeder extends Seeder
                 'kategori_id' => 1,
                 'gudang_id' => 1,
                 'tipe_persediaan_id' => 9,
-                'unit_id' => 4,
+                'unit_id' => 4, // Misal unit_id dasar: Kg
                 'product_type' => 'supply',
                 'quantity' => 50,
                 'price' => 65000,
@@ -40,17 +40,31 @@ class ProductSeeder extends Seeder
             ]
         ];
 
-        // 2. Definisikan Data Konversi Satuan (Gunakan relasi id_barang sebagai key pencocokan)
+        // 2. Ubah struktur menjadi array dari list konversi (Agar tidak overwrite)
         $conversions = [
             'P-0001' => [
-                'from_unit_id' => 3, // Misal: Box
-                'to_unit_id' => 1,   // Misal: Pcs
-                'qty' => 12,         // 1 Box = 12 Pcs
+                [
+                    'from_unit_id' => 1, // Box
+                    'to_unit_id' => 4,   // Pcs
+                    'qty' => 12,         // 1 Box = 12 Pcs
+                ],
+                [
+                    'from_unit_id' => 1, // Pack
+                    'to_unit_id' => 5,   // Pcs
+                    'qty' => 6,          // 1 Pack = 6 Pcs
+                ],
             ],
             'P-0002' => [
-                'from_unit_id' => 4, // Misal: Sak
-                'to_unit_id' => 2,   // Misal: Kg
-                'qty' => 40,         // 1 Sak = 40 Kg
+                [
+                    'from_unit_id' => 2, // Sak
+                    'to_unit_id' => 3,   // Kg
+                    'qty' => 40,         // 1 Sak = 40 Kg
+                ],
+                [
+                    'from_unit_id' => 2, // Pallet
+                    'to_unit_id' => 5,   // Sak
+                    'qty' => 50,         // 1 Pallet = 50 Sak
+                ]
             ]
         ];
 
@@ -59,7 +73,7 @@ class ProductSeeder extends Seeder
             
             // Insert atau ambil data barang jika sudah ada
             $barang = Barang::firstOrCreate(
-                ['id_barang' => $p['id_barang']], // Unik berdasarkan id_barang agar aman
+                ['id_barang' => $p['id_barang']], 
                 [
                     'id' => $p['id'],
                     'nama_barang' => $p['nama_barang'],
@@ -75,24 +89,26 @@ class ProductSeeder extends Seeder
                 ]
             );
 
-            // Cek apakah produk ini memiliki data konversi di array $conversions
+            // 4. Lakukan looping jika terdapat daftar konversi untuk barang ini
             if (isset($conversions[$barang->id_barang])) {
-                $convData = $conversions[$barang->id_barang];
-
-                // Insert data konversi sesuai skema table data_barang_conversions
-                DataBarangConversion::firstOrCreate(
-                    [
-                        'data_barang_id' => $barang->id, // Mengambil ID otomatis dari hasil insert/find diatas
-                        'from_unit_id' => $convData['from_unit_id'],
-                        'to_unit_id' => $convData['to_unit_id'],
-                    ],
-                    [
-                        'qty' => $convData['qty']
-                    ]
-                );
+                
+                foreach ($conversions[$barang->id_barang] as $convData) {
+                    
+                    // Insert masing-masing list data konversi ke tabel database
+                    DataBarangConversion::firstOrCreate(
+                        [
+                            'data_barang_id' => $barang->id, 
+                            'from_unit_id' => $convData['from_unit_id'],
+                            'to_unit_id' => $convData['to_unit_id'],
+                        ],
+                        [
+                            'qty' => $convData['qty']
+                        ]
+                    );
+                }
             }
         }
 
-        $this->command->info('Products and Conversions seeded successfully.');
+        $this->command->info('Products and Multiple Conversions seeded successfully.');
     }
 }
