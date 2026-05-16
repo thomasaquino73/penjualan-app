@@ -105,12 +105,12 @@ class PurchaseRequisitionController extends Controller
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('customer-edit')) {
-                        $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
+                    if (auth()->user()->can('penawaran_pembelian-edit')) {
+                        $btn .= '<a class="dropdown-item " href="'.route("penawaran-pembelian.edit", $row->id).'"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
                     }
 
-                    if (auth()->user()->can('customer-delete')) {
+                    if (auth()->user()->can('penawaran_pembelian-delete')) {
                         $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->code.'"
@@ -287,13 +287,25 @@ class PurchaseRequisitionController extends Controller
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
-    {
-        //
-    }
+{
+    // Load master PR beserta detail, produk, dan relasi unitID (BasicCodeDetail)
+    $purchaseRequisition = PurchaseRequisition::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+
+    $x = [
+        'title'      => 'Purchase Requisition Edit',
+        'breadcrumb' => [
+            ['label' => 'Dashboard', 'url' => route('dashboard')],
+            ['label' => 'Purchase Requisition', 'url' => route('penawaran-pembelian.index')],
+            ['label' => 'Edit', 'url' => ''],
+        ],
+        'customer'   => Customer::where('status', '<>', 0)->get(),
+        'product'    => Barang::where('status', '<>', 0)->get(),
+        'model'      => $purchaseRequisition, 
+    ];
+
+    return view('transaction.purchase_requisition.purchase_requisition_edit', $x);
+}
 
     /**
      * Update the specified resource in storage.

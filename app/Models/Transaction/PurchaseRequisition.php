@@ -29,4 +29,8 @@ class PurchaseRequisition extends Model
     {
         return $this->belongsTo(Customer::class, 'customer_id');
     }
+    public function details()
+    {
+        return $this->hasMany(PurchaseRequisitionDetail::class, 'purchase_requisition_id');
+    }
 }

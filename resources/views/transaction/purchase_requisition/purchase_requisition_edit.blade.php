@@ -1,0 +1,458 @@
+@extends('layouts.app')
+@extends('layouts.app')
+@section('konten')
+    <h4>
+        <span class="text-muted fw-light">
+            @foreach ($breadcrumb as $key => $item)
+                @if (!empty($item['url']))
+                    <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
+                @else
+                    {{ $item['label'] }}
+                @endif
+                @if (!$loop->last)
+                    /
+                @endif
+            @endforeach
+        </span>
+    </h4>
+
+    <div class="card">
+        <div
+            class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
+            <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
+            <div class="col-12 col-lg-5">
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-start justify-content-lg-end">
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body table-responsive p-3">
+            <form
+                action="{{ isset($model) ? route('penawaran-pembelian.update', $model->id) : route('penawaran-pembelian.store') }}"
+                method="POST" id="postForm" enctype="multipart/form-data">
+                @csrf
+                @if (isset($model))
+                    @method('PUT')
+                @endif
+
+                <input type="hidden" name="items_detail" id="items_detail">
+                <input type="hidden" name="save_and_new" id="save_and_new" value="0">
+
+                <div class="row mb-5">
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Request Number<small class="text-danger">*</small></label>
+                                <input type="text" name="code" id="code" class="form-control"
+                                    value="{{ isset($model) ? $model->code : $idNumber }}"
+                                    {{ isset($model) ? 'readonly' : '' }}>
+                                <span class="error text-danger" id="codeError"></span>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Request Date<small class="text-danger">*</small></label>
+                                <input type="date" name="date" id="date" class="form-control"
+                                    value="{{ isset($model) ? $model->date : date('Y-m-d') }}">
+                                <span class="error text-danger" id="dateError"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" id="description" class="form-control">{{ isset($model) ? $model->description : '' }}</textarea>
+                            <span class="error text-danger" id="descriptionError"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider divider-dashed">
+                    <div class="divider-text">Purchase Requisition Detail</div>
+                </div>
+
+                <div class="row mt-3">
+                    <table class="table display responsive nowrap" id="table">
+                        <thead class="border-top" style="background-color: #AEDEFC;">
+                            <tr>
+                                <th>#</th>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>Unit</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+
+                <div class="card-footer d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-primary btn-save" data-action="close">
+                        <i class="fa fa-upload me-1"></i> Save and Close
+                    </button>
+
+                    @if (!isset($model))
+                        <button type="button" class="btn btn-success btn-save" data-action="new">
+                            <i class="fa fa-plus-circle me-1"></i> Save and Create New
+                        </button>
+                    @endif
+                    <a href="{{ route('penawaran-pembelian.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalPrDetail">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Create new entry</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formPrDetail">
+                    @csrf
+                    <input type="hidden" name="id" id="detail_id">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label" for="product_id">Product / Item</label>
+                                <select name="product_id" id="product_id" class="form-select select2-modal"
+                                    data-placeholder="Select Product">
+                                    <option></option>
+                                    @foreach ($product as $p)
+                                        <option value="{{ $p->id }}">{{ $p->nama_barang }}</option>
+                                    @endforeach
+                                </select>
+                                <span class="error text-danger" id="product_idError"></span>
+                            </div>
+
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="quantity">Quantity</label>
+                                <input type="number" id="quantity" name="quantity" class="form-control" placeholder="0"
+                                    min="1">
+                                <span class="error text-danger" id="quantityError"></span>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="unit_id">Unit</label>
+                                <select name="unit_id" id="unit_id" class="form-select select2-modal"
+                                    data-placeholder="Select Unit">
+                                    <option></option>
+                                </select>
+                                <span class="error text-danger" id="unit_idError"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="btnSubmitModal">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endsection
+@push('style')
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
+@endpush
+@push('scripts')
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
+
+    <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
+    <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
+    <script>
+        // 1. Inisialisasi awal penampung array detail (Mendukung Edit / Create)
+        let prDetailsData = [
+            @if (isset($model))
+                @foreach ($model->details as $detail)
+                    {
+                        'product_id': '{{ $detail->product_id }}',
+                        'data_produk': '{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}',
+                        'quantity': '{{ $detail->qty }}',
+                        'unit_id': '{{ $detail->unit_id }}',
+                        'unit': '{{ $detail->unitID ? $detail->unitID->name ?? ($detail->unitID->detail ?? $detail->unitID->nama) : 'Unit' }}'
+                    } {
+                        @if (!$loop->last)},
+                    @endif
+                @endforeach
+            @endif
+        ];
+
+        $(document).ready(function() {
+            // Inisialisasi Select2 di dalam modal
+            if ($.fn.select2) {
+                $('.select2-modal').select2({
+                    dropdownParent: $('#modalPrDetail')
+                });
+            }
+
+            // 2. Inisialisasi Utama Penampung DataTables Lokal
+            let table = $('#table').DataTable({
+                data: prDetailsData,
+                dom: '<"d-flex justify-content-between align-items-center mb-3"B>t<"d-flex justify-content-between mt-3"ip>',
+                select: {
+                    style: 'single'
+                },
+                columns: [{
+                        data: null,
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1;
+                        }
+                    },
+                    {
+                        data: 'data_produk'
+                    },
+                    {
+                        data: 'quantity'
+                    },
+                    {
+                        data: 'unit'
+                    }
+                ],
+                buttons: [{
+                        text: '<i class="ti ti-plus me-1"></i> New',
+                        className: 'btn btn-primary btn-sm me-2',
+                        action: function(e, dt, node, config) {
+                            $('#formPrDetail')[0].reset();
+                            $('#detail_id').val('');
+
+                            if ($.fn.select2) {
+                                $('#product_id').val('').trigger('change');
+                                $('#unit_id').val('').trigger('change');
+                            }
+
+                            $('#modalTitle').text('Create new entry');
+                            $('#btnSubmitModal').text('Create');
+                            $('#modalPrDetail').modal('show');
+                        }
+                    },
+                    {
+                        text: '<i class="ti ti-edit me-1"></i> Edit',
+                        className: 'btn btn-warning btn-sm me-2',
+                        extend: 'selectedSingle',
+                        action: function(e, dt, node, config) {
+                            let data = dt.row({
+                                selected: true
+                            }).data();
+                            let rowIndex = dt.row({
+                                selected: true
+                            }).index();
+
+                            $('#detail_id').val(rowIndex);
+                            $('#quantity').val(data.quantity);
+
+                            // Simpan id unit lama secara temporary di memori jQuery
+                            $('#unit_id').data('pending-val', data.unit_id);
+                            $('#product_id').val(data.product_id).trigger('change');
+
+                            $('#modalTitle').text('Edit entry');
+                            $('#btnSubmitModal').text('Update');
+                            $('#modalPrDetail').modal('show');
+                        }
+                    },
+                    {
+                        text: '<i class="ti ti-trash me-1"></i> Delete',
+                        className: 'btn btn-danger btn-sm',
+                        extend: 'selectedSingle',
+                        action: function(e, dt, node, config) {
+                            let rowIndex = dt.row({
+                                selected: true
+                            }).index();
+
+                            Swal.fire({
+                                title: 'Apakah anda yakin?',
+                                text: "Item ini akan dihapus dari daftar!",
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#3085d6',
+                                cancelButtonColor: '#d33',
+                                confirmButtonText: 'Ya, hapus!'
+                            }).with(function(result) {
+                                if (result.isConfirmed) {
+                                    // Hapus dari data array penampung
+                                    prDetailsData.splice(rowIndex, 1);
+                                    // Render ulang grafis tabel
+                                    table.clear().rows.add(prDetailsData).draw();
+                                }
+                            });
+                        }
+                    }
+                ]
+            });
+
+            // 3. Listener Perubahan Dropdown Produk (Mengambil Gabungan Unit di Tabel Konversi)
+            $(document).on('change', '#product_id', function() {
+                let productId = $(this).val();
+                let unitSelect = $('#unit_id');
+
+                if (!productId) {
+                    unitSelect.empty().append('<option></option>').trigger('change');
+                    return;
+                }
+
+                $.ajax({
+                    url: `/get-units-by-product/${productId}`,
+                    type: 'GET',
+                    dataType: 'json',
+                    beforeSend: function() {
+                        unitSelect.html('<option>Loading units...</option>').prop('disabled',
+                            true);
+                    },
+                    success: function(response) {
+                        unitSelect.empty().append('<option></option>').prop('disabled', false);
+
+                        if (response && response.length > 0) {
+                            $.each(response, function(key, item) {
+                                unitSelect.append(
+                                    `<option value="${item.id}">${item.name}</option>`
+                                    );
+                            });
+                        } else {
+                            unitSelect.append('<option value="">No unit available</option>');
+                        }
+
+                        unitSelect.trigger('change');
+
+                        // Kunci id unit jika dalam proses Aksi EDIT
+                        let pendingUnitId = unitSelect.data('pending-val');
+                        if (pendingUnitId) {
+                            unitSelect.val(pendingUnitId).trigger('change');
+                            unitSelect.removeData('pending-val');
+                        }
+                    },
+                    error: function() {
+                        console.error('Gagal mengambil data unit.');
+                        unitSelect.empty().append('<option></option>').prop('disabled', false)
+                            .trigger('change');
+                    }
+                });
+            });
+
+            // 4. Submit Modal Detail Form (Dilengkapi Filter Duplikasi)
+            $('#formPrDetail').on('submit', function(e) {
+                e.preventDefault();
+
+                let productId = $('#product_id').val();
+                let productName = $('#product_id option:selected').text();
+                let quantity = $('#quantity').val();
+                let unitId = $('#unit_id').val();
+                let unitName = $('#unit_id option:selected').text();
+                let detailId = $('#detail_id').val();
+
+                if (!productId || !quantity || !unitId) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Please fill all fields!'
+                    });
+                    return false;
+                }
+
+                // Cek Duplikat Produk di array lokal
+                let isDuplicate = false;
+                if (prDetailsData && prDetailsData.length > 0) {
+                    for (let i = 0; i < prDetailsData.length; i++) {
+                        if (prDetailsData[i].product_id == productId) {
+                            if (detailId === '') {
+                                isDuplicate = true;
+                                break;
+                            } else if (detailId !== '' && i != detailId) {
+                                isDuplicate = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (isDuplicate) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Produk Sudah Ada!',
+                        html: `Produk <b>"${productName}"</b> sudah terdaftar di list detail.`,
+                        confirmButtonColor: '#3085d6'
+                    });
+                    return false;
+                }
+
+                let itemData = {
+                    'product_id': productId,
+                    'data_produk': productName,
+                    'quantity': quantity,
+                    'unit_id': unitId,
+                    'unit': unitName
+                };
+
+                if (detailId === '') {
+                    prDetailsData.push(itemData);
+                } else {
+                    prDetailsData[detailId] = itemData;
+                }
+
+                table.clear().rows.add(prDetailsData).draw();
+                $('#modalPrDetail').modal('hide');
+            });
+
+            // 5. Submit Utama Form Induk Berbasis AJAX (Mendukung Save & Close / Save & New)
+            $(document).on('click', '.btn-save', function(e) {
+                e.preventDefault();
+
+                let actionType = $(this).data('action');
+
+                if (prDetailsData.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Detail Kosong!',
+                        text: 'Minimal harus memasukkan 1 produk detail.'
+                    });
+                    return false;
+                }
+
+                // Set flags data JSON array & tipe aksi simpan
+                $('#items_detail').val(JSON.stringify(prDetailsData));
+                $('#save_and_new').val(actionType === 'new' ? '1' : '0');
+
+                let form = $('#postForm');
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: form.attr('method'),
+                    data: form.serialize(),
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: response.message,
+                                timer: 1500
+                            });
+
+                            if (response.save_and_new) {
+                                // Reset data table detail lokal
+                                prDetailsData = [];
+                                table.clear().draw();
+                                // Bersihkan kolom isian deskripsi dan pasang nomor PR baru hasil auto generator
+                                $('#description').val('');
+                                $('#code').val(response.next_code);
+                            } else {
+                                window.location.href = response.redirect;
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors;
+                            $.each(errors, function(key, val) {
+                                $(`#${key}Error`).text(val[0]);
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: xhr.responseJSON.message ||
+                                    'Terjadi kesalahan sistem.'
+                            });
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+@endpush
