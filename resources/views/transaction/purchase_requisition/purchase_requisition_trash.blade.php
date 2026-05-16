@@ -55,8 +55,9 @@
                             </div>
                         </th>
                         <th>#</th>
-                        <th>Code</th>
-                        <th>Customer</th>
+                        <th>ID Number</th>
+                        <th>Date</th>
+                        <th>Description</th>
                         <th>Status</th>
                         <th>Created</th>
                         <th>Updated</th>
@@ -105,7 +106,10 @@
                         data: 'code',
                     },
                     {
-                        data: 'customer',
+                        data: 'date',
+                    },
+                    {
+                        data: 'description',
                     },
                     {
                         data: 'status',
@@ -124,6 +128,119 @@
                         searchable: false
                     },
                 ]
+            });
+
+            $('body').on('click', '.restore', function() {
+                let id = $(this).data('id');
+                let token = $("meta[name='csrf-token']").attr("content");
+                Swal.fire({
+                    title: 'Restore this purchase requisition?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, restore!',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-success me-3 waves-effect waves-light',
+                        cancelButton: 'btn btn-secondary waves-effect waves-light'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `/penawaran-pembelian/restore/${id}`,
+                            type: 'PUT',
+                            data: {
+                                _token: token
+                            },
+                            success: function(response) {
+                                table.draw();
+                                toastr.success(response.message, '', {
+                                    timeOut: 2000,
+                                    progressBar: true,
+                                    positionClass: 'toast-top-right'
+                                });
+
+                            },
+                            error: function(xhr) {
+                                let errMsg = 'Error restoring salesman';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errMsg = xhr.responseJSON.message;
+                                }
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Failed',
+                                    text: errMsg,
+                                    timer: 5000,
+                                    customClass: {
+                                        confirmButton: 'btn btn-info waves-effect waves-light'
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+            $('#restoreSelected').on('click', function() {
+
+                let ids = [];
+
+                $('.checkItem:checked').each(function() {
+                    ids.push($(this).val());
+                });
+
+                if (ids.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'An error occurred. Please try again later.',
+                        text: 'Please select data first!',
+                        timer: 5000,
+                        customClass: {
+                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Data will be restored!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, restore it!',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/penawaran-pembelian/restore-multiple',
+                            type: 'POST',
+                            data: {
+                                ids: ids,
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(res) {
+                                toastr.success('Restored Data Successfully', '', {
+                                    timeOut: 1500,
+                                    progressBar: true,
+                                    closeButton: false,
+                                    positionClass: 'toast-top-right',
+                                });
+                                $('#table').DataTable().ajax.reload();
+                            },
+                            error: function() {
+                                Swal.fire('Error!', 'Failed to restore data.', 'error');
+                            }
+                        });
+                    }
+
+                });
+
             });
         });
     </script>

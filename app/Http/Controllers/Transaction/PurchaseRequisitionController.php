@@ -313,7 +313,7 @@ class PurchaseRequisitionController extends Controller
     public function trash(Request $r)
     {
         if ($r->ajax()) {
-            $query = PurchaseRequisition::where('active', 0)->get();
+            $query = PurchaseRequisition::where('active',  0)->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -335,10 +335,55 @@ class PurchaseRequisitionController extends Controller
                     return 'N/A';
                 })
                 ->addColumn('status', function ($row) {
-                    return '<span class="badge bg-info">Processing Queue</span>';
-                })
-                ->addColumn('customer', function ($row) {
-                    return $row->customer->nama;
+                    // Tentukan warna dan teks berdasarkan nilai status di database
+                    switch ($row->status) {
+                        case 'draft':
+                            $badge = 'bg-label-secondary'; // Abu-abu
+                            $text = 'Draft';
+                            break;
+
+                        case 'pending':
+                            $badge = 'bg-label-warning'; // Kuning
+                            $text = 'Pending Approval';
+                            break;
+
+                        case 'processing':
+                            $badge = 'bg-label-info'; // Biru Muda
+                            $text = 'Processing';
+                            break;
+
+                        case 'deliver':
+                            $badge = 'bg-label-primary'; // Biru Tua / Ungu
+                            $text = 'In Delivery';
+                            break;
+
+                        case 'received':
+                            $badge = 'bg-label-success'; // Hijau
+                            $text = 'Received';
+                            break;
+
+                        case 'completed':
+                            $badge = 'bg-success'; // Hijau Solid (Selesai Mutlak)
+                            $text = 'Completed';
+                            break;
+
+                        case 'rejected':
+                            $badge = 'bg-label-danger'; // Merah
+                            $text = 'Rejected';
+                            break;
+
+                        case 'cancelled':
+                            $badge = 'bg-danger'; // Merah Solid
+                            $text = 'Cancelled';
+                            break;
+
+                        default:
+                            $badge = 'bg-label-secondary';
+                            $text = ucfirst($row->status);
+                            break;
+                    }
+
+                    return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
                 })
                 ->addColumn('cekbok', function ($row) {
                     return '   <div class="form-check form-check-primary mt-3">
@@ -346,48 +391,34 @@ class PurchaseRequisitionController extends Controller
                                     >
                             </div>';
                 })
-                ->addColumn('action', function ($row) {
+                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="ti ti-menu-2 ti-xs me-1"></i>
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('customer-edit')) {
-                        $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
-                            data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
-                    }
-
-                    if (auth()->user()->can('customer-delete')) {
-                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
-                                data-id="'.$row->id.'"
-                                data-name="'.$row->nama.'"
-                                ><i class="ti ti-trash"></i> Delete</a>';
+                    if (auth()->user()->can('penawaran_pembelian-restore')) {
+                        $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
+                            data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
                     }
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'customer'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok'])
                 ->make(true);
         }
 
         $x = [
-            'title' => 'Deleted Purchase Requisition ',
+            'title' => 'Deleted Purchase Requisition List',
             'breadcrumb' => [
-                ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Purchase Requisition', 'url' => ''],
+                ['label' => 'Purchase Requisition', 'url' => route('penawaran-pembelian.index')],
+                ['label' => 'Deleted Purchase Requisition', 'url' => ''],
             ],
+
         ];
 
         return view('transaction.purchase_requisition.purchase_requisition_trash', $x);
-    }
-
-    public function destroy_detail($id)
-    {
-        $detail = PurchaseRequisitionDetail::findOrFail($id);
-        $detail->delete(); // atau ubah active = 0 jika menggunakan soft delete manual
-
-        return response()->json(['success' => true]);
     }
 
     public function getUnitsByProduct($id)
@@ -458,5 +489,64 @@ class PurchaseRequisitionController extends Controller
 
         // Kembalikan data array JSON ter-filter ke JavaScript
         return response()->json($result);
+    }
+
+    public function deleteMultiple(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (! $ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
+        }
+
+        PurchaseRequisition::whereIn('id', $ids)->update([
+            'active' => '0',
+            'updated_by' => Auth::id(),
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+     public function restore($id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $penawaranpembelian = PurchaseRequisition::find($id);
+            $penawaranpembelian->active = 1;
+            $penawaranpembelian->updated_by = Auth::id();
+            $penawaranpembelian->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'redirect' => true,
+                'message' => 'Purchase requisition successfully restored.',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => true,
+                'redirect' => true,
+                'message' => 'Purchase requisition successfully restored.',
+            ]);
+        }
+    }
+
+    public function restoreMultiple(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (! $ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
+        }
+
+        PurchaseRequisition::whereIn('id', $ids)->update([
+            'active' => '1',
+            'updated_by' => Auth::id(),
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

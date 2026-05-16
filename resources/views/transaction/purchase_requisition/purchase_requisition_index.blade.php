@@ -131,6 +131,69 @@
                     },
                 ]
             });
+
+            $('#deleteSelected').on('click', function() {
+
+                let ids = [];
+
+                $('.checkItem:checked').each(function() {
+                    ids.push($(this).val());
+                });
+
+                if (ids.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'An error occurred. Please try again later.',
+                        text: 'Please select data first!',
+                        timer: 5000,
+                        customClass: {
+                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Data will be deleted!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/penawaran-pembelian/delete-multiple',
+                            type: 'POST',
+                            data: {
+                                ids: ids,
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(res) {
+                                toastr.success('Deleted Data Successfully', '', {
+                                    timeOut: 1500,
+                                    progressBar: true,
+                                    closeButton: false,
+                                    positionClass: 'toast-top-right',
+                                });
+                                $('#table').DataTable().ajax.reload();
+                            },
+                            error: function() {
+                                Swal.fire('Error!', 'Failed to delete data.', 'error');
+                            }
+                        });
+                    }
+
+                });
+
+            });
         });
     </script>
 @endpush
