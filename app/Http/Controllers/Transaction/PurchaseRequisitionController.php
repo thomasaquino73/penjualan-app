@@ -9,6 +9,7 @@ use App\Models\Master_Data\DataBarangConversion;
 use App\Models\Transaction\PurchaseRequisition;
 use App\Models\Transaction\PurchaseRequisitionDetail;
 use Carbon\Carbon;
+use Dotenv\Exception\ValidationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -112,7 +113,7 @@ class PurchaseRequisitionController extends Controller
                     if (auth()->user()->can('customer-delete')) {
                         $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
-                                data-name="'.$row->nama.'"
+                                data-name="'.$row->code.'"
                                 ><i class="ti ti-trash"></i> Delete</a>';
                     }
 
@@ -302,12 +303,19 @@ class PurchaseRequisitionController extends Controller
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Request $request, $id)
     {
-        //
+
+        try {
+            $table = PurchaseRequisition::findOrFail($id);
+            $table->active = 0;
+            $table->updated_by = Auth::user()->id;
+            $table->save();
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => $e->errors(),
+            ], 422);
+        }
     }
 
     public function trash(Request $r)
