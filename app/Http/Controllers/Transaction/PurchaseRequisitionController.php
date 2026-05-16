@@ -251,7 +251,7 @@ class PurchaseRequisitionController extends Controller
                 }
             } else {
                 // Gagalkan proses jika ternyata isi array kosong setelah didecode
-                throw new \Exception("Minimal harus ada 1 item produk yang dimasukkan.");
+                throw new \Exception("There must be at least 1 product item entered.");
             }
 
             // Jika semua query aman tanpa error, terapkan simpan permanen ke database
@@ -264,7 +264,7 @@ class PurchaseRequisitionController extends Controller
 
             return response()->json([
                 'success'  => true,
-                'message'  => 'Purchase Requisition berhasil disimpan!',
+                'message'  => 'Purchase Requisition saved successfully!',
                 'redirect' => $redirectUrl
             ], 200);
 
@@ -274,7 +274,7 @@ class PurchaseRequisitionController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menyimpan data: ' . $e->getMessage()
+                'message' => 'Failed to save data: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -375,7 +375,7 @@ class PurchaseRequisitionController extends Controller
 
         return response()->json([
             'success'  => true,
-            'message'  => 'Purchase Requisition berhasil diperbarui!',
+            'message'  => 'Purchase Requisition successfully updated!',
             'redirect' => $redirectUrl
         ], 200);
 
@@ -385,7 +385,7 @@ class PurchaseRequisitionController extends Controller
 
         return response()->json([
             'success' => false,
-            'message' => 'Gagal memperbarui data: ' . $e->getMessage()
+            'message' => 'Failed to update data: ' . $e->getMessage()
         ], 500);
     }
 }

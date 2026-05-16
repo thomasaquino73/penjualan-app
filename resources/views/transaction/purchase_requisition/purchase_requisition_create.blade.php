@@ -383,8 +383,8 @@
                 if (isDuplicate) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Produk Sudah Ada!',
-                        html: `Produk <b>"${productName}"</b> sudah terdaftar di list detail.<br>Silakan edit item tersebut jika ingin mengubah quantity atau unit.`,
+                        title: 'Product Already Exists!',
+                        html: `The product <b>"${productName}"</b> is already registered in the details list.<br>Please edit the item if you want to change the quantity or unit.`,
                         confirmButtonColor: '#3085d6',
                         customClass: {
                             confirmButton: 'btn btn-danger'
