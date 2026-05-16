@@ -253,6 +253,77 @@
                     }
                 });
             });
+
+            $(document).on('click', '.btn-submit-pr', function() {
+                let id = $(this).data('id');
+                let url = "{{ route('permintaan-pembelian.submit', ':id') }}".replace(':id', id);
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This Purchase Requisition will be submitted for approval!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, submit it!',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: url,
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    // Menggunakan toastr untuk sukses sesuai style Anda
+                                    toastr.success(response.message ||
+                                        'Submitted Data Successfully', '', {
+                                            timeOut: 1500,
+                                            progressBar: true,
+                                            closeButton: false,
+                                            positionClass: 'toast-top-right',
+                                        });
+
+                                    // Ganti #table dengan ID DataTable Anda jika berbeda
+                                    $('#table').DataTable().ajax.reload();
+                                } else {
+                                    Swal.fire({
+                                        title: 'Warning!',
+                                        text: response.message ||
+                                            'Failed to submit data.',
+                                        icon: 'warning',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                                        },
+                                        buttonsStyling: false
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                let errorMsg = xhr.responseJSON && xhr.responseJSON
+                                    .message ?
+                                    xhr.responseJSON.message :
+                                    'Failed to submit data.';
+
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: errorMsg,
+                                    icon: 'error',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary waves-effect waves-light'
+                                    },
+                                    buttonsStyling: false
+                                });
+                            }
+                        });
+                    }
+                });
+            });
         });
     </script>
 @endpush

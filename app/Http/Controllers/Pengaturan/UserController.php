@@ -133,53 +133,53 @@ class UserController extends Controller
                     $color = is_null($row->email_verified_at) ? 'warning' : 'primary';
 
                     $btn = '
-        <div class="btn-group">
-            <button type="button"
-                class="btn btn-'.$color.' dropdown-toggle waves-effect waves-light"
-                data-bs-toggle="dropdown" aria-expanded="false">
-                '.$icon.' 
-            </button>
-            <div class="dropdown-menu">
-     ';
+                            <div class="btn-group">
+                                <button type="button"
+                                    class="btn btn-'.$color.' dropdown-toggle waves-effect waves-light"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    '.$icon.' 
+                                </button>
+                                <div class="dropdown-menu">
+                        ';
 
                     // ✅ EDIT
                     if (auth()->user()->can('user-edit')) {
                         $btn .= '
-            <a class="dropdown-item has-icon" href="'.route('user.edit', $row->id).'">
-                <i class="far fa-edit"></i> Edit
-            </a>
-        ';
+                            <a class="dropdown-item has-icon" href="'.route('user.edit', $row->id).'">
+                                <i class="far fa-edit"></i> Edit
+                            </a>
+                        ';
                     }
 
                     // ✅ DETAIL
-                    if (auth()->user()->can('user-read')) {
-                        $btn .= '
-            <a class="dropdown-item has-icon" href="'.route('user.show', $row->id).'">
-                <i class="far fa-eye"></i> Detail
-            </a>
-        ';
+                                    if (auth()->user()->can('user-read')) {
+                                        $btn .= '
+                            <a class="dropdown-item has-icon" href="'.route('user.show', $row->id).'">
+                                <i class="far fa-eye"></i> Detail
+                            </a>
+                        ';
                     }
 
                     // ✅ DELETE
                     if (auth()->user()->can('user-delete')) {
-                        $btn .= '
-            <a class="dropdown-item has-icon" href="javascript:void(0)" id="delete"
-                data-id="'.$row->id.'"
-                data-name="'.$row->fullname.'">
-                <i class="fa fa-trash me-1"></i> Delete
-            </a>
-        ';
+                                        $btn .= '
+                            <a class="dropdown-item has-icon" href="javascript:void(0)" id="delete"
+                                data-id="'.$row->id.'"
+                                data-name="'.$row->fullname.'">
+                                <i class="fa fa-trash me-1"></i> Delete
+                            </a>
+                        ';
                     }
 
                     // ✅ VERIFY USER
-                    if (is_null($row->email_verified_at) && auth()->user()->can('user-verify')) {
+                    if (is_null($row->email_verified_at) ) {
                         $btn .= '
-            <a class="dropdown-item has-icon" href="javascript:void(0)" id="verify"
-                data-id="'.$row->id.'"
-                data-name="'.$row->fullname.'">
-                <i class="ti ti-user-check"></i> Verify User
-            </a>
-        ';
+                            <a class="dropdown-item has-icon" href="javascript:void(0)" id="verify"
+                                data-id="'.$row->id.'"
+                                data-name="'.$row->fullname.'">
+                                <i class="ti ti-user-check"></i> Verify User
+                            </a>
+                        ';
                     }
 
                     $btn .= '</div></div>';

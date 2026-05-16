@@ -18,121 +18,131 @@ use Yajra\DataTables\DataTables;
 class PurchaseRequisitionController extends Controller
 {
     public function index(Request $r)
-    {
-        if ($r->ajax()) {
-            $query = PurchaseRequisition::where('active', '<>', 0)->orderby('code','desc')->get();
+{
+    if ($r->ajax()) {
+        // Ambil ID user yang sedang login
+        $userId = auth()->id();
 
-            return DataTables::of($query)
-                ->addIndexColumn()
-                ->addColumn('created_at', function ($row) {
-                    return $row->created_at
-                        ? (($row->creator->fullname ?? 'Unknown')).
-                        ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
-                        : 'N/A';
-                })
-                ->addColumn('updated_at', function ($row) {
-                    if ($row->updated_at) {
-                        $updaterName = $row->updater->fullname ?? 'Unknown';
-                        $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
+        // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
+        $query = PurchaseRequisition::where('active', '<>', 0)
+            ->where(function ($q) use ($userId) {
+                $q->where('status', '<>', 'draft')
+                  ->orWhere(function ($subQ) use ($userId) {
+                      // Sesuaikan 'created_by' dengan nama kolom foreign key user di tabel Anda
+                      $subQ->where('status', 'draft')
+                           ->where('created_by', $userId); 
+                  });
+            })
+            ->orderby('code', 'desc'); // Jangan gunakan ->get() di sini agar server-side processing DataTables berjalan optimal
 
-                        return $updaterName.
-                            ' <br><small class="text-muted">'.$timeAgo.'</small>';
-                    }
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('created_at', function ($row) {
+                return $row->created_at
+                    ? (($row->creator->fullname ?? 'Unknown')).
+                    ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
+                    : 'N/A';
+            })
+            ->addColumn('updated_at', function ($row) {
+                if ($row->updated_at) {
+                    $updaterName = $row->updater->fullname ?? 'Unknown';
+                    $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
 
-                    return 'N/A';
-                })
-                ->addColumn('status', function ($row) {
-                    // Tentukan warna dan teks berdasarkan nilai status di database
-                    switch ($row->status) {
-                        case 'draft':
-                            $badge = 'bg-label-secondary'; // Abu-abu
-                            $text = 'Draft';
-                            break;
+                    return $updaterName.
+                        ' <br><small class="text-muted">'.$timeAgo.'</small>';
+                }
 
-                        case 'pending':
-                            $badge = 'bg-label-warning'; // Kuning
-                            $text = 'Pending Approval';
-                            break;
+                return 'N/A';
+            })
+            ->addColumn('status', function ($row) {
+                switch ($row->status) {
+                    case 'draft':
+                        $badge = 'bg-label-secondary';
+                        $text = 'Draft';
+                        break;
+                    case 'pending':
+                        $badge = 'bg-label-warning';
+                        $text = 'Pending Approval';
+                        break;
+                    case 'processing':
+                        $badge = 'bg-label-info';
+                        $text = 'Processing';
+                        break;
+                    case 'deliver':
+                        $badge = 'bg-label-primary';
+                        $text = 'In Delivery';
+                        break;
+                    case 'received':
+                        $badge = 'bg-label-success';
+                        $text = 'Received';
+                        break;
+                    case 'completed':
+                        $badge = 'bg-success';
+                        $text = 'Completed';
+                        break;
+                    case 'rejected':
+                        $badge = 'bg-label-danger';
+                        $text = 'Rejected';
+                        break;
+                    case 'cancelled':
+                        $badge = 'bg-danger';
+                        $text = 'Cancelled';
+                        break;
+                    default:
+                        $badge = 'bg-label-secondary';
+                        $text = ucfirst($row->status);
+                        break;
+                }
 
-                        case 'processing':
-                            $badge = 'bg-label-info'; // Biru Muda
-                            $text = 'Processing';
-                            break;
+                return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
+            })
+            ->addColumn('cekbok', function ($row) {
+                return '<div class="form-check form-check-primary mt-3">
+                            <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'">
+                        </div>';
+            })
+            ->addColumn('action', function ($row) {
+                $btn = '<div class="btn-group">
+                  <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-menu-2 ti-xs me-1"></i>
+                  </button>
+                  <ul class="dropdown-menu">';
 
-                        case 'deliver':
-                            $badge = 'bg-label-primary'; // Biru Tua / Ungu
-                            $text = 'In Delivery';
-                            break;
+                // Tombol EDIT (Hanya muncul jika user punya izin)
+                if (auth()->user()->can('permintaan_pembelian-edit')) {
+                    $btn .= '<a class="dropdown-item" href="'.route("permintaan-pembelian.edit", $row->id).'"><i class="far fa-edit"></i> Edit</a>';
+                }
 
-                        case 'received':
-                            $badge = 'bg-label-success'; // Hijau
-                            $text = 'Received';
-                            break;
+                // Tambahan: Tombol SUBMIT / AJUKAN jika statusnya masih draft
+                if ($row->status == 'draft' && $row->created_by == auth()->id()) {
+                    $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send"></i> Submit to Pending</a>';
+                }
 
-                        case 'completed':
-                            $badge = 'bg-success'; // Hijau Solid (Selesai Mutlak)
-                            $text = 'Completed';
-                            break;
-
-                        case 'rejected':
-                            $badge = 'bg-label-danger'; // Merah
-                            $text = 'Rejected';
-                            break;
-
-                        case 'cancelled':
-                            $badge = 'bg-danger'; // Merah Solid
-                            $text = 'Cancelled';
-                            break;
-
-                        default:
-                            $badge = 'bg-label-secondary';
-                            $text = ucfirst($row->status);
-                            break;
-                    }
-
-                    return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
-                })
-                ->addColumn('cekbok', function ($row) {
-                    return '   <div class="form-check form-check-primary mt-3">
-                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
-                                    >
-                            </div>';
-                })
-                ->addColumn('action', function ($row) {
-                    $btn = '<div class="btn-group">
-                      <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="ti ti-menu-2 ti-xs me-1"></i>
-                      </button>
-                      <ul class="dropdown-menu" style="">';
-
-                    if (auth()->user()->can('permintaan_pembelian-edit')) {
-                        $btn .= '<a class="dropdown-item " href="'.route("permintaan-pembelian.edit", $row->id).'"
-                            data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
-                    }
-
-                    if (auth()->user()->can('permintaan_pembelian-delete')) {
-                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                // Tombol DELETE
+                if (auth()->user()->can('permintaan_pembelian-delete')) {
+                    $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->code.'"
                                 ><i class="ti ti-trash"></i> Delete</a>';
-                    }
+                }
 
-                    return $btn;
-                })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok'])
-                ->make(true);
-        }
-
-        $x = [
-            'title' => 'Purchase Requisition List',
-            'breadcrumb' => [
-                ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Purchase Requisition', 'url' => ''],
-            ],
-        ];
-
-        return view('transaction.purchase_requisition.purchase_requisition_index', $x);
+                $btn .= '</ul></div>';
+                return $btn;
+            })
+            ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok'])
+            ->make(true);
     }
+
+    $x = [
+        'title' => 'Purchase Requisition List',
+        'breadcrumb' => [
+            ['label' => 'Dashboard', 'url' => route('dashboard')],
+            ['label' => 'Purchase Requisition', 'url' => ''],
+        ],
+    ];
+
+    return view('transaction.purchase_requisition.purchase_requisition_index', $x);
+}
 
     public function table_pr(Request $r)
     {
@@ -644,4 +654,20 @@ class PurchaseRequisitionController extends Controller
 
         return response()->json(['success' => true]);
     }
+    public function submitToPending($id)
+{
+    $pr = PurchaseRequisition::findOrFail($id);
+
+    // Validasi keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
+    if ($pr->status !== 'draft' || $pr->created_by !== auth()->id()) {
+        return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'], 403);
+    }
+
+    // Ubah status menjadi pending
+    $pr->status = 'pending';
+    $pr->updated_by = auth()->id(); // Jika Anda mencatat siapa yang melakukan update terakhir
+    $pr->save();
+
+    return response()->json(['success' => true, 'message' => 'Purchase Requisition berhasil diajukan!']);
+}
 }
