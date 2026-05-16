@@ -10,6 +10,9 @@ class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
+        // 1. Tentukan default actions untuk modul biasa
+        $defaultActions = ['browse', 'create', 'read', 'edit', 'delete', 'trash', 'restore'];
+
         $modules = [
             'role' => ['alias' => 'Role', 'group' => 'Access Management'],
             'user' => ['alias' => 'User', 'group' => 'Access Management'],
@@ -30,11 +33,18 @@ class PermissionSeeder extends Seeder
             'company' => ['alias' => 'Company', 'group' => 'General'],
             'general' => ['alias' => 'General', 'group' => 'General'],
 
-            'permintaan_pembelian' => ['alias' => 'Purchase Requisition', 'group' => 'Transaction'],
-            'purchase_order' => ['alias' => 'Purchase Order', 'group' => 'Transaction'],
+            // 🔥 Modul transaksi ditambah action 'approval' khusus
+            'permintaan_pembelian' => [
+                'alias' => 'Purchase Requisition',
+                'group' => 'Transaction',
+                'actions' => array_merge($defaultActions, ['approval']), // default + approval
+            ],
+            'purchase_order' => [
+                'alias' => 'Purchase Order',
+                'group' => 'Transaction',
+                'actions' => array_merge($defaultActions, ['approval']), // default + approval
+            ],
         ];
-
-        $actions = ['browse', 'create', 'read', 'edit', 'delete', 'trash', 'restore'];
 
         $role = Roles::firstOrCreate([
             'name' => 'Super Admin',
@@ -42,13 +52,15 @@ class PermissionSeeder extends Seeder
         ]);
 
         foreach ($modules as $module => $config) {
-            foreach ($actions as $action) {
+            // 2. Cek apakah ada custom actions, jika tidak gunakan default
+            $actions = $config['actions'] ?? $defaultActions;
 
+            foreach ($actions as $action) {
                 $permission = Permissions::firstOrCreate([
                     'name' => $module.'-'.$action,
                     'module' => $module,
                     'alias' => $config['alias'],
-                    'group_name' => $config['group'], // 🔥 ini penting
+                    'group_name' => $config['group'],
                     'guard_name' => 'web',
                 ]);
 

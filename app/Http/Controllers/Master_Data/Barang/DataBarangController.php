@@ -158,7 +158,7 @@ class DataBarangController extends Controller
             ->first();
 
         if (! $last) {
-            return 'C-0001';
+            return 'P-0001';
         }
 
         $lastId = $last->id_barang;

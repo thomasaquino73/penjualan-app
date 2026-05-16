@@ -92,57 +92,63 @@ class PurchaseRequisitionController extends Controller
                     </div>';
                 })
                 ->addColumn('action', function ($row) {
-                    // 1. Definisikan variabel ID user yang login di paling atas fungsi
+                    // 1. Definisikan variabel ID user yang login
                     $currentUserId = auth()->id();
+                    $user = auth()->user(); // Ambil data user login untuk cek permission
 
                     // 2. Buat pembuka komponen Dropdown Button
                     $btn = '<div class="btn-group">
-                <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="ti ti-menu-2 ti-xs me-1"></i>
-                </button>
-                <ul class="dropdown-menu">';
+                                <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="ti ti-menu-2 ti-xs me-1"></i>
+                                </button>
+                                <ul class="dropdown-menu">';
 
-                    // ✅ TOMBOL EDIT
-                    // Hanya muncul jika status draft DAN merupakan milik pembuat dokumen sendiri
-                    if (auth()->user()->can('permintaan_pembelian-edit') && $row->status == 'draft' && $row->created_by == $currentUserId) {
-                        $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
+                    // ─── AKSI UNTUK PEMBUAT DOKUMEN (OWNER) ──────────────────────────────────
+                    if ($row->created_by == $currentUserId) {
+                        // ✅ TOMBOL EDIT (Hanya jika status draft)
+                        if ($user->can('permintaan_pembelian-edit') && $row->status == 'draft') {
+                            $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
+                        }
+
+                        // ✅ TOMBOL SUBMIT (Hanya jika status draft)
+                        if ($row->status == 'draft') {
+                            $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Submit to Pending</a>';
+                        }
+
+                        // ✅ TOMBOL DELETE (Hanya jika status draft)
+                        if ($user->can('permintaan_pembelian-delete') && $row->status == 'draft') {
+                            $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete" data-id="'.$row->id.'" data-name="'.$row->code.'"><i class="ti ti-trash me-1"></i> Delete</a>';
+                        }
+
+                        // 🕒 TEKS JIKA STATUS PENDING (Untuk Pembuat Dokumen)
+                        if ($row->status == 'pending') {
+                            $btn .= '<span class="dropdown-item-text text-warning small"><i class="ti ti-clock me-1"></i> Awaiting approval</span>';
+                        }
                     }
 
-                    // ✅ TOMBOL SUBMIT (Oleh Pembuat Dokumen)
-                    if ($row->status == 'draft' && $row->created_by == $currentUserId) {
-                        $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Submit to Pending</a>';
-                    }
-
-                    // ⚡ PROSES PERSETUJUAN (Hanya untuk USER LAIN / Bukan Pembuat Dokumen)
-                    if ($row->created_by !== $currentUserId) {
-                        // Jika Status 'pending' -> Tampilkan pilihan: Approve atau Reject
+                    // ─── AKSI UNTUK USER LAIN (APPROVER) ──────────────────────────────────────
+                    // Syarat: Bukan pembuat dokumen AND Punya permission approval AND Status pending
+                    if ($row->created_by !== $currentUserId && $user->can('permintaan_pembelian-approval')) {
                         if ($row->status == 'pending') {
                             $btn .= '<a class="dropdown-item text-success btn-approval-pr" href="javascript:void(0)" data-status="processing" data-id="'.$row->id.'">
-                        <i class="ti ti-check me-1"></i> Approve & Process
-                     </a>';
+                <i class="ti ti-check me-1"></i> Approve & Process
+             </a>';
 
                             $btn .= '<a class="dropdown-item text-danger btn-approval-pr" href="javascript:void(0)" data-status="rejected" data-id="'.$row->id.'">
-                        <i class="ti ti-x me-1"></i> Reject PR
-                     </a>';
-                        }
-
-                        // 💡 OPTIONAL: Jika statusnya bukan pending dan tidak ada tombol untuk user lain,
-                        // kita bisa memberikan teks penanda di dalam dropdown agar tidak kosong
-                        if ($row->status !== 'pending') {
-                            $btn .= '<span class="dropdown-item-text text-muted small"><i class="ti ti-info-circle me-1"></i> Data processed successfully</span>';
+                <i class="ti ti-x me-1"></i> Reject PR
+             </a>';
                         }
                     }
 
-                    // ✅ TOMBOL DELETE
-                    if (auth()->user()->can('permintaan_pembelian-delete')) {
-                        // Hanya boleh dihapus jika statusnya masih draft dan milik sendiri
-                        if ($row->status == 'draft' && $row->created_by == $currentUserId) {
-                            $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
-                        data-id="'.$row->id.'"
-                        data-name="'.$row->code.'">
-                        <i class="ti ti-trash me-1"></i> Delete
-                     </a>';
-                        }
+                    // ─── KONDISI KHUSUS: JIKA DIA APPROVER TAPI DATA PUNYA DIA SENDIRI ─────────
+                    if ($row->created_by == $currentUserId && $row->status == 'pending' && $user->can('permintaan_pembelian-approval')) {
+                        // Baris ini opsional, untuk memperjelas kenapa dia tidak bisa approve dokumennya sendiri
+                        $btn .= '<span class="dropdown-item-text text-muted small"><i class="ti ti-alert-circle me-1"></i> Cannot approve your own PR</span>';
+                    }
+
+                    // ─── KONDISI GLOBAL: JIKA DATA SUDAH DI-PROCESS LANJUT ───────────────────
+                    if ($row->status !== 'draft' && $row->status !== 'pending') {
+                        $btn .= '<span class="dropdown-item-text text-muted small"><i class="ti ti-info-circle me-1"></i> Data processed successfully</span>';
                     }
 
                     // 3. Tutup komponen tag HTML dropdown
@@ -704,6 +710,7 @@ class PurchaseRequisitionController extends Controller
         }
 
         $pr->status = $request->status; // Menangkap 'processing' atau 'rejected' dari data AJAX
+        $pr->updated_by = Auth::id(); // Menangkap 'processing' atau 'rejected' dari data AJAX
         $pr->save();
 
         return response()->json(['message' => 'Status Purchase Requisition berhasil diperbarui!']);
