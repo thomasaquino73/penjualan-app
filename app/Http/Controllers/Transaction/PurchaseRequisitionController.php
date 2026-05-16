@@ -28,19 +28,18 @@ class PurchaseRequisitionController extends Controller
                 ->where(function ($q) use ($userId) {
                     $q->where('status', '<>', 'draft')
                         ->orWhere(function ($subQ) use ($userId) {
-                            // Sesuaikan 'created_by' dengan nama kolom foreign key user di tabel Anda
                             $subQ->where('status', 'draft')
                                 ->where('created_by', $userId);
                         });
                 })
-                ->orderby('code', 'desc'); // Jangan gunakan ->get() di sini agar server-side processing DataTables berjalan optimal
+                ->orderby('code', 'desc');
 
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('created_at', function ($row) {
                     return $row->created_at
                         ? (($row->creator->fullname ?? 'Unknown')).
-                        ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
+                            ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
                         : 'N/A';
                 })
                 ->addColumn('updated_at', function ($row) {
@@ -56,40 +55,31 @@ class PurchaseRequisitionController extends Controller
                 })
                 ->addColumn('status', function ($row) {
                     switch ($row->status) {
-                        case 'draft':
-                            $badge = 'bg-label-secondary';
+                        case 'draft': $badge = 'bg-label-secondary';
                             $text = 'Draft';
                             break;
-                        case 'pending':
-                            $badge = 'bg-label-warning';
+                        case 'pending': $badge = 'bg-label-warning';
                             $text = 'Pending Approval';
                             break;
-                        case 'processing':
-                            $badge = 'bg-label-info';
+                        case 'processing': $badge = 'bg-label-info';
                             $text = 'Processing';
                             break;
-                        case 'deliver':
-                            $badge = 'bg-label-primary';
+                        case 'deliver': $badge = 'bg-label-primary';
                             $text = 'In Delivery';
                             break;
-                        case 'received':
-                            $badge = 'bg-label-success';
+                        case 'received': $badge = 'bg-label-success';
                             $text = 'Received';
                             break;
-                        case 'completed':
-                            $badge = 'bg-success';
+                        case 'completed': $badge = 'bg-success';
                             $text = 'Completed';
                             break;
-                        case 'rejected':
-                            $badge = 'bg-label-danger';
+                        case 'rejected': $badge = 'bg-label-danger';
                             $text = 'Rejected';
                             break;
-                        case 'cancelled':
-                            $badge = 'bg-danger';
+                        case 'cancelled': $badge = 'bg-danger';
                             $text = 'Cancelled';
                             break;
-                        default:
-                            $badge = 'bg-label-secondary';
+                        default: $badge = 'bg-label-secondary';
                             $text = ucfirst($row->status);
                             break;
                     }
@@ -98,34 +88,64 @@ class PurchaseRequisitionController extends Controller
                 })
                 ->addColumn('cekbok', function ($row) {
                     return '<div class="form-check form-check-primary mt-3">
-                            <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'">
-                        </div>';
+                        <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'">
+                    </div>';
                 })
                 ->addColumn('action', function ($row) {
+                    // 1. Definisikan variabel ID user yang login di paling atas fungsi
+                    $currentUserId = auth()->id();
+
+                    // 2. Buat pembuka komponen Dropdown Button
                     $btn = '<div class="btn-group">
-                  <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="ti ti-menu-2 ti-xs me-1"></i>
-                  </button>
-                  <ul class="dropdown-menu">';
+                </button>
+                <ul class="dropdown-menu">';
 
-                    // Tombol EDIT (Hanya muncul jika user punya izin)
-                    if (auth()->user()->can('permintaan_pembelian-edit')) {
-                        $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'"><i class="far fa-edit"></i> Edit</a>';
+                    // ✅ TOMBOL EDIT
+                    // Hanya muncul jika status draft DAN merupakan milik pembuat dokumen sendiri
+                    if (auth()->user()->can('permintaan_pembelian-edit') && $row->status == 'draft' && $row->created_by == $currentUserId) {
+                        $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
                     }
 
-                    // Tambahan: Tombol SUBMIT / AJUKAN jika statusnya masih draft
-                    if ($row->status == 'draft' && $row->created_by == auth()->id()) {
-                        $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send"></i> Submit to Pending</a>';
+                    // ✅ TOMBOL SUBMIT (Oleh Pembuat Dokumen)
+                    if ($row->status == 'draft' && $row->created_by == $currentUserId) {
+                        $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Submit to Pending</a>';
                     }
 
-                    // Tombol DELETE
+                    // ⚡ PROSES PERSETUJUAN (Hanya untuk USER LAIN / Bukan Pembuat Dokumen)
+                    if ($row->created_by !== $currentUserId) {
+                        // Jika Status 'pending' -> Tampilkan pilihan: Approve atau Reject
+                        if ($row->status == 'pending') {
+                            $btn .= '<a class="dropdown-item text-success btn-approval-pr" href="javascript:void(0)" data-status="processing" data-id="'.$row->id.'">
+                        <i class="ti ti-check me-1"></i> Approve & Process
+                     </a>';
+
+                            $btn .= '<a class="dropdown-item text-danger btn-approval-pr" href="javascript:void(0)" data-status="rejected" data-id="'.$row->id.'">
+                        <i class="ti ti-x me-1"></i> Reject PR
+                     </a>';
+                        }
+
+                        // 💡 OPTIONAL: Jika statusnya bukan pending dan tidak ada tombol untuk user lain,
+                        // kita bisa memberikan teks penanda di dalam dropdown agar tidak kosong
+                        if ($row->status !== 'pending') {
+                            $btn .= '<span class="dropdown-item-text text-muted small"><i class="ti ti-info-circle me-1"></i> Data processed successfully</span>';
+                        }
+                    }
+
+                    // ✅ TOMBOL DELETE
                     if (auth()->user()->can('permintaan_pembelian-delete')) {
-                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
-                                data-id="'.$row->id.'"
-                                data-name="'.$row->code.'"
-                                ><i class="ti ti-trash"></i> Delete</a>';
+                        // Hanya boleh dihapus jika statusnya masih draft dan milik sendiri
+                        if ($row->status == 'draft' && $row->created_by == $currentUserId) {
+                            $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                        data-id="'.$row->id.'"
+                        data-name="'.$row->code.'">
+                        <i class="ti ti-trash me-1"></i> Delete
+                     </a>';
+                        }
                     }
 
+                    // 3. Tutup komponen tag HTML dropdown
                     $btn .= '</ul></div>';
 
                     return $btn;
@@ -672,5 +692,20 @@ class PurchaseRequisitionController extends Controller
         $pr->save();
 
         return response()->json(['success' => true, 'message' => 'Purchase Requisition berhasil diajukan!']);
+    }
+
+    public function changeStatus(Request $request, $id)
+    {
+        $pr = PurchaseRequisition::findOrFail($id);
+
+        // Validasi: Pastikan yang mengubah status BUKAN orang yang membuat dokumen
+        if ($pr->created_by === auth()->id()) {
+            return response()->json(['error' => 'Anda tidak boleh menyetujui/menolak dokumen yang Anda buat sendiri!'], 403);
+        }
+
+        $pr->status = $request->status; // Menangkap 'processing' atau 'rejected' dari data AJAX
+        $pr->save();
+
+        return response()->json(['message' => 'Status Purchase Requisition berhasil diperbarui!']);
     }
 }

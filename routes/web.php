@@ -179,6 +179,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/get-units-by-product/{id}', [PurchaseRequisitionController::class, 'getUnitsByProduct'])
         ->name('permintaan-pembelian.get_units');
     Route::post('/permintaan-pembelian/{id}/submit', [PurchaseRequisitionController::class, 'submitToPending'])->name('permintaan-pembelian.submit');
+    Route::post('/permintaan-pembelian/change-status/{id}', [PurchaseRequisitionController::class, 'changeStatus'])
+        ->name('permintaan-pembelian.change-status');
     Route::resource('permintaan-pembelian', PurchaseRequisitionController::class);
 
     Route::get('/purchase-order/trash', [PurchaseOrderController::class, 'trash'])->name('purchase-order.trash');

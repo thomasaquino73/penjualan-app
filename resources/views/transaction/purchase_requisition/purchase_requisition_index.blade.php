@@ -324,6 +324,67 @@
                     }
                 });
             });
+
+            $(document).on('click', '.btn-approval-pr', function() {
+                let id = $(this).data('id');
+                let statusTarget = $(this).data('status'); // Menghasilkan 'processing' atau 'rejected'
+                let textKeterangan = statusTarget === 'processing' ? 'menyetujui' : 'menolak';
+
+                Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: `Anda akan ${textKeterangan} dokumen Purchase Requisition ini.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: statusTarget === 'processing' ? '#28a745' : '#dc3545',
+                    confirmButtonText: statusTarget === 'processing' ? 'Ya, Approve!' :
+                        'Ya, Reject!',
+                    customClass: {
+                        confirmButton: 'btn btn-success me-3 waves-effect waves-light',
+                        cancelButton: 'btn btn-secondary'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/permintaan-pembelian/change-status/' +
+                                id, // Sesuaikan dengan route update status Anda
+                            type: "POST",
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                id: id,
+                                status: statusTarget
+                            },
+                            success: function(response) {
+                                Swal.fire({
+                                    title: 'Berhasil!',
+                                    text: response.message,
+                                    icon: 'success',
+                                    showCancelButton: false, // Menghilangkan tombol Cancel
+                                    confirmButtonColor: '#28a745', // Opsional: Mengubah warna tombol OK jadi hijau sukses
+                                    confirmButtonText: 'OK',
+                                    customClass: {
+                                        confirmButton: 'btn btn-success'
+                                    },
+                                    buttonsStyling: false // Memastikan teks tombol adalah OK
+                                });
+                                $('#table').DataTable().ajax
+                                    .reload(); // Reload table data
+                            },
+                            error: function(err) {
+                                Swal.fire({
+                                    title: 'Fail!',
+                                    text: err.responseJSON.error ||
+                                        'Terjadi kesalahan.',
+                                    icon: 'error',
+                                    showCancelButton: false, // Menyembunyikan tombol Cancel
+                                    confirmButtonColor: '#3085d6', // Warna tombol OK
+                                    confirmButtonText: 'OK' // Teks di dalam tombol
+                                });
+                            }
+                        });
+                    }
+                });
+            });
         });
     </script>
 @endpush
