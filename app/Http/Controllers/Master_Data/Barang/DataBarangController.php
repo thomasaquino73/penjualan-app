@@ -343,7 +343,8 @@ class DataBarangController extends Controller
     {
         $idDetail = Barang::findorfail($id);
         $subUnit = DataBarangConversion::where('data_barang_id', $idDetail->id)->get();
-        $unit=BasicCodeDetail::where('master_id', 2)->get();
+        $unit = BasicCodeDetail::where('master_id', 2)->get();
+
         return view('master_data.barang.data_barang.data_barang_edit', [
             'title' => 'Edit Product',
             'breadcrumb' => [

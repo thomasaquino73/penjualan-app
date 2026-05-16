@@ -18,131 +18,132 @@ use Yajra\DataTables\DataTables;
 class PurchaseRequisitionController extends Controller
 {
     public function index(Request $r)
-{
-    if ($r->ajax()) {
-        // Ambil ID user yang sedang login
-        $userId = auth()->id();
+    {
+        if ($r->ajax()) {
+            // Ambil ID user yang sedang login
+            $userId = auth()->id();
 
-        // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
-        $query = PurchaseRequisition::where('active', '<>', 0)
-            ->where(function ($q) use ($userId) {
-                $q->where('status', '<>', 'draft')
-                  ->orWhere(function ($subQ) use ($userId) {
-                      // Sesuaikan 'created_by' dengan nama kolom foreign key user di tabel Anda
-                      $subQ->where('status', 'draft')
-                           ->where('created_by', $userId); 
-                  });
-            })
-            ->orderby('code', 'desc'); // Jangan gunakan ->get() di sini agar server-side processing DataTables berjalan optimal
+            // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
+            $query = PurchaseRequisition::where('active', '<>', 0)
+                ->where(function ($q) use ($userId) {
+                    $q->where('status', '<>', 'draft')
+                        ->orWhere(function ($subQ) use ($userId) {
+                            // Sesuaikan 'created_by' dengan nama kolom foreign key user di tabel Anda
+                            $subQ->where('status', 'draft')
+                                ->where('created_by', $userId);
+                        });
+                })
+                ->orderby('code', 'desc'); // Jangan gunakan ->get() di sini agar server-side processing DataTables berjalan optimal
 
-        return DataTables::of($query)
-            ->addIndexColumn()
-            ->addColumn('created_at', function ($row) {
-                return $row->created_at
-                    ? (($row->creator->fullname ?? 'Unknown')).
-                    ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
-                    : 'N/A';
-            })
-            ->addColumn('updated_at', function ($row) {
-                if ($row->updated_at) {
-                    $updaterName = $row->updater->fullname ?? 'Unknown';
-                    $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('created_at', function ($row) {
+                    return $row->created_at
+                        ? (($row->creator->fullname ?? 'Unknown')).
+                        ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
+                        : 'N/A';
+                })
+                ->addColumn('updated_at', function ($row) {
+                    if ($row->updated_at) {
+                        $updaterName = $row->updater->fullname ?? 'Unknown';
+                        $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
 
-                    return $updaterName.
-                        ' <br><small class="text-muted">'.$timeAgo.'</small>';
-                }
+                        return $updaterName.
+                            ' <br><small class="text-muted">'.$timeAgo.'</small>';
+                    }
 
-                return 'N/A';
-            })
-            ->addColumn('status', function ($row) {
-                switch ($row->status) {
-                    case 'draft':
-                        $badge = 'bg-label-secondary';
-                        $text = 'Draft';
-                        break;
-                    case 'pending':
-                        $badge = 'bg-label-warning';
-                        $text = 'Pending Approval';
-                        break;
-                    case 'processing':
-                        $badge = 'bg-label-info';
-                        $text = 'Processing';
-                        break;
-                    case 'deliver':
-                        $badge = 'bg-label-primary';
-                        $text = 'In Delivery';
-                        break;
-                    case 'received':
-                        $badge = 'bg-label-success';
-                        $text = 'Received';
-                        break;
-                    case 'completed':
-                        $badge = 'bg-success';
-                        $text = 'Completed';
-                        break;
-                    case 'rejected':
-                        $badge = 'bg-label-danger';
-                        $text = 'Rejected';
-                        break;
-                    case 'cancelled':
-                        $badge = 'bg-danger';
-                        $text = 'Cancelled';
-                        break;
-                    default:
-                        $badge = 'bg-label-secondary';
-                        $text = ucfirst($row->status);
-                        break;
-                }
+                    return 'N/A';
+                })
+                ->addColumn('status', function ($row) {
+                    switch ($row->status) {
+                        case 'draft':
+                            $badge = 'bg-label-secondary';
+                            $text = 'Draft';
+                            break;
+                        case 'pending':
+                            $badge = 'bg-label-warning';
+                            $text = 'Pending Approval';
+                            break;
+                        case 'processing':
+                            $badge = 'bg-label-info';
+                            $text = 'Processing';
+                            break;
+                        case 'deliver':
+                            $badge = 'bg-label-primary';
+                            $text = 'In Delivery';
+                            break;
+                        case 'received':
+                            $badge = 'bg-label-success';
+                            $text = 'Received';
+                            break;
+                        case 'completed':
+                            $badge = 'bg-success';
+                            $text = 'Completed';
+                            break;
+                        case 'rejected':
+                            $badge = 'bg-label-danger';
+                            $text = 'Rejected';
+                            break;
+                        case 'cancelled':
+                            $badge = 'bg-danger';
+                            $text = 'Cancelled';
+                            break;
+                        default:
+                            $badge = 'bg-label-secondary';
+                            $text = ucfirst($row->status);
+                            break;
+                    }
 
-                return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
-            })
-            ->addColumn('cekbok', function ($row) {
-                return '<div class="form-check form-check-primary mt-3">
+                    return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
+                })
+                ->addColumn('cekbok', function ($row) {
+                    return '<div class="form-check form-check-primary mt-3">
                             <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'">
                         </div>';
-            })
-            ->addColumn('action', function ($row) {
-                $btn = '<div class="btn-group">
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '<div class="btn-group">
                   <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="ti ti-menu-2 ti-xs me-1"></i>
                   </button>
                   <ul class="dropdown-menu">';
 
-                // Tombol EDIT (Hanya muncul jika user punya izin)
-                if (auth()->user()->can('permintaan_pembelian-edit')) {
-                    $btn .= '<a class="dropdown-item" href="'.route("permintaan-pembelian.edit", $row->id).'"><i class="far fa-edit"></i> Edit</a>';
-                }
+                    // Tombol EDIT (Hanya muncul jika user punya izin)
+                    if (auth()->user()->can('permintaan_pembelian-edit')) {
+                        $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'"><i class="far fa-edit"></i> Edit</a>';
+                    }
 
-                // Tambahan: Tombol SUBMIT / AJUKAN jika statusnya masih draft
-                if ($row->status == 'draft' && $row->created_by == auth()->id()) {
-                    $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send"></i> Submit to Pending</a>';
-                }
+                    // Tambahan: Tombol SUBMIT / AJUKAN jika statusnya masih draft
+                    if ($row->status == 'draft' && $row->created_by == auth()->id()) {
+                        $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send"></i> Submit to Pending</a>';
+                    }
 
-                // Tombol DELETE
-                if (auth()->user()->can('permintaan_pembelian-delete')) {
-                    $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                    // Tombol DELETE
+                    if (auth()->user()->can('permintaan_pembelian-delete')) {
+                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->code.'"
                                 ><i class="ti ti-trash"></i> Delete</a>';
-                }
+                    }
 
-                $btn .= '</ul></div>';
-                return $btn;
-            })
-            ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok'])
-            ->make(true);
+                    $btn .= '</ul></div>';
+
+                    return $btn;
+                })
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok'])
+                ->make(true);
+        }
+
+        $x = [
+            'title' => 'Purchase Requisition List',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Purchase Requisition', 'url' => ''],
+            ],
+        ];
+
+        return view('transaction.purchase_requisition.purchase_requisition_index', $x);
     }
-
-    $x = [
-        'title' => 'Purchase Requisition List',
-        'breadcrumb' => [
-            ['label' => 'Dashboard', 'url' => route('dashboard')],
-            ['label' => 'Purchase Requisition', 'url' => ''],
-        ],
-    ];
-
-    return view('transaction.purchase_requisition.purchase_requisition_index', $x);
-}
 
     public function table_pr(Request $r)
     {
@@ -216,9 +217,9 @@ class PurchaseRequisitionController extends Controller
     {
         // 1. Validasi Input Form Induk / Utama
         $request->validate([
-            'code'         => 'required|string', // Sesuai blueprint bigInteger
-            'date'         => 'required|date',
-            'description'  => 'nullable|string',
+            'code' => 'required|string', // Sesuai blueprint bigInteger
+            'date' => 'required|date',
+            'description' => 'nullable|string',
             'items_detail' => 'required', // Harus mengirimkan data item dari DataTables lokal
         ]);
 
@@ -228,13 +229,13 @@ class PurchaseRequisitionController extends Controller
         try {
             // 2. Simpan Data Master ke tabel `purchase_requisition`
             $prMaster = PurchaseRequisition::create([
-                'code'        => $request->code,
-                'date'        => Carbon::parse($request->date)->format('Y-m-d'),
+                'code' => $request->code,
+                'date' => Carbon::parse($request->date)->format('Y-m-d'),
                 'description' => $request->description,
-                'status'      => 'draft', // Default value sesuai skema alur data baru
-                'active'      => 1,       // 1 = Active sesuai comment di blueprint
-                'created_by'  => Auth::id(), // ID User yang sedang login
-                'updated_by'  => null,
+                'status' => 'draft', // Default value sesuai skema alur data baru
+                'active' => 1,       // 1 = Active sesuai comment di blueprint
+                'created_by' => Auth::id(), // ID User yang sedang login
+                'updated_by' => null,
             ]);
 
             // 3. Decode data array string JSON (`items_detail`) yang dikirim dari DataTables lokal
@@ -245,23 +246,23 @@ class PurchaseRequisitionController extends Controller
                     // Simpan setiap baris item ke tabel `purchase_requisition_detail`
                     PurchaseRequisitionDetail::create([
                         'purchase_requisition_id' => $prMaster->id, // Mengambil ID dari master yang baru disimpan
-                        'product_id'              => $item['product_id'],
-                        'qty'                     => $item['quantity'] ?? $item['qty'],
-                        'unit_id'                 => $item['unit_id'],
+                        'product_id' => $item['product_id'],
+                        'qty' => $item['quantity'] ?? $item['qty'],
+                        'unit_id' => $item['unit_id'],
 
                         // Kolom di bawah ini ada di blueprint database, berikan nilai default jika tidak ada di modal
-                        'unit_price'              => $item['unit_price'] ?? 0,
-                        'discount'                => $item['discount'] ?? 0,
-                        'tax'                     => $item['tax'] ?? 0,
+                        'unit_price' => $item['unit_price'] ?? 0,
+                        'discount' => $item['discount'] ?? 0,
+                        'tax' => $item['tax'] ?? 0,
 
-                        'active'                  => 1, // 1 = Active
-                        'created_by'              => Auth::id(),
-                        'updated_by'              => null,
+                        'active' => 1, // 1 = Active
+                        'created_by' => Auth::id(),
+                        'updated_by' => null,
                     ]);
                 }
             } else {
                 // Gagalkan proses jika ternyata isi array kosong setelah didecode
-                throw new \Exception("There must be at least 1 product item entered.");
+                throw new \Exception('There must be at least 1 product item entered.');
             }
 
             // Jika semua query aman tanpa error, terapkan simpan permanen ke database
@@ -273,9 +274,9 @@ class PurchaseRequisitionController extends Controller
                 : route('permintaan-pembelian.index');  // Selesai dan kembali ke tabel index utama
 
             return response()->json([
-                'success'  => true,
-                'message'  => 'Purchase Requisition saved successfully!',
-                'redirect' => $redirectUrl
+                'success' => true,
+                'message' => 'Purchase Requisition saved successfully!',
+                'redirect' => $redirectUrl,
             ], 200);
 
         } catch (\Exception $e) {
@@ -284,7 +285,7 @@ class PurchaseRequisitionController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to save data: ' . $e->getMessage()
+                'message' => 'Failed to save data: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -298,107 +299,107 @@ class PurchaseRequisitionController extends Controller
     }
 
     public function edit(string $id)
-{
-    // Load master PR beserta detail, produk, dan relasi unitID (BasicCodeDetail)
-    $purchaseRequisition = PurchaseRequisition::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+    {
+        // Load master PR beserta detail, produk, dan relasi unitID (BasicCodeDetail)
+        $purchaseRequisition = PurchaseRequisition::with(['details.produkID', 'details.unitID'])->findOrFail($id);
 
-    $x = [
-        'title'      => 'Purchase Requisition Edit',
-        'breadcrumb' => [
-            ['label' => 'Dashboard', 'url' => route('dashboard')],
-            ['label' => 'Purchase Requisition', 'url' => route('permintaan-pembelian.index')],
-            ['label' => 'Edit', 'url' => ''],
-        ],
-        'customer'   => Customer::where('status', '<>', 0)->get(),
-        'product'    => Barang::where('status', '<>', 0)->get(),
-        'model'      => $purchaseRequisition, 
-    ];
+        $x = [
+            'title' => 'Purchase Requisition Edit',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Purchase Requisition', 'url' => route('permintaan-pembelian.index')],
+                ['label' => 'Edit', 'url' => ''],
+            ],
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'model' => $purchaseRequisition,
+        ];
 
-    return view('transaction.purchase_requisition.purchase_requisition_edit', $x);
-}
+        return view('transaction.purchase_requisition.purchase_requisition_edit', $x);
+    }
 
     /**
      * Update the specified resource in storage.
      */
-   public function update(Request $request, string $id)
-{
-    // 1. Validasi Input Form Induk / Utama (Sesuai dengan struktur store)
-    $request->validate([
-        'code'         => 'required|string|unique:purchase_requisition,code,' . $id, // Menghindari validasi unik bentrok saat update data yang sama
-        'date'         => 'required|date',
-        'description'  => 'nullable|string',
-        'items_detail' => 'required', // Harus mengirimkan data item dari DataTables lokal
-    ]);
-
-    // Cari data induk berdasarkan ID, jika tidak ketemu otomatis melempar error 404
-    $prMaster = PurchaseRequisition::findOrFail($id);
-
-    // Mulai Database Transaction demi keamanan integritas relasi data
-    DB::beginTransaction();
-
-    try {
-        // 2. Update Data Master ke tabel `purchase_requisition`
-        $prMaster->update([
-            'code'        => $request->code,
-            'date'        => Carbon::parse($request->date)->format('Y-m-d'),
-            'description' => $request->description,
-            // 'status' tidak diubah di sini karena mengikuti alur status yang sudah ada (misal: tetap draft/approved)
-            'updated_by'  => Auth::id(), // ID User yang mengubah data
+    public function update(Request $request, string $id)
+    {
+        // 1. Validasi Input Form Induk / Utama (Sesuai dengan struktur store)
+        $request->validate([
+            'code' => 'required|string|unique:purchase_requisition,code,'.$id, // Menghindari validasi unik bentrok saat update data yang sama
+            'date' => 'required|date',
+            'description' => 'nullable|string',
+            'items_detail' => 'required', // Harus mengirimkan data item dari DataTables lokal
         ]);
 
-        // 3. Decode data array string JSON (`items_detail`) yang dikirim dari DataTables lokal
-        $items = json_decode($request->items_detail, true);
+        // Cari data induk berdasarkan ID, jika tidak ketemu otomatis melempar error 404
+        $prMaster = PurchaseRequisition::findOrFail($id);
 
-        if (is_array($items) && count($items) > 0) {
-            
-            // Hapus semua detail lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
-            PurchaseRequisitionDetail::where('purchase_requisition_id', $prMaster->id)->delete();
+        // Mulai Database Transaction demi keamanan integritas relasi data
+        DB::beginTransaction();
 
-            foreach ($items as $item) {
-                // Masukkan kembali baris item baru/editan ke tabel `purchase_requisition_detail`
-                PurchaseRequisitionDetail::create([
-                    'purchase_requisition_id' => $prMaster->id,
-                    'product_id'              => $item['product_id'],
-                    'qty'                     => $item['quantity'] ?? $item['qty'],
-                    'unit_id'                 => $item['unit_id'],
+        try {
+            // 2. Update Data Master ke tabel `purchase_requisition`
+            $prMaster->update([
+                'code' => $request->code,
+                'date' => Carbon::parse($request->date)->format('Y-m-d'),
+                'description' => $request->description,
+                // 'status' tidak diubah di sini karena mengikuti alur status yang sudah ada (misal: tetap draft/approved)
+                'updated_by' => Auth::id(), // ID User yang mengubah data
+            ]);
 
-                    // Kolom default blueprint sesuai skema di fungsi store
-                    'unit_price'              => $item['unit_price'] ?? 0,
-                    'discount'                => $item['discount'] ?? 0,
-                    'tax'                     => $item['tax'] ?? 0,
+            // 3. Decode data array string JSON (`items_detail`) yang dikirim dari DataTables lokal
+            $items = json_decode($request->items_detail, true);
 
-                    'active'                  => 1, // 1 = Active
-                    'created_by'              => $prMaster->created_by, // Tetap pertahankan pembuat awal
-                    'updated_by'              => Auth::id(),
-                ]);
+            if (is_array($items) && count($items) > 0) {
+
+                // Hapus semua detail lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
+                PurchaseRequisitionDetail::where('purchase_requisition_id', $prMaster->id)->delete();
+
+                foreach ($items as $item) {
+                    // Masukkan kembali baris item baru/editan ke tabel `purchase_requisition_detail`
+                    PurchaseRequisitionDetail::create([
+                        'purchase_requisition_id' => $prMaster->id,
+                        'product_id' => $item['product_id'],
+                        'qty' => $item['quantity'] ?? $item['qty'],
+                        'unit_id' => $item['unit_id'],
+
+                        // Kolom default blueprint sesuai skema di fungsi store
+                        'unit_price' => $item['unit_price'] ?? 0,
+                        'discount' => $item['discount'] ?? 0,
+                        'tax' => $item['tax'] ?? 0,
+
+                        'active' => 1, // 1 = Active
+                        'created_by' => $prMaster->created_by, // Tetap pertahankan pembuat awal
+                        'updated_by' => Auth::id(),
+                    ]);
+                }
+            } else {
+                // Gagalkan proses jika ternyata isi array kosong setelah didecode
+                throw new \Exception('Minimal harus ada 1 item produk yang dimasukkan.');
             }
-        } else {
-            // Gagalkan proses jika ternyata isi array kosong setelah didecode
-            throw new \Exception("Minimal harus ada 1 item produk yang dimasukkan.");
+
+            // Jika semua query aman tanpa error, terapkan simpan permanen ke database
+            DB::commit();
+
+            // 4. Atur arah redirect URL (Aksi update biasanya langsung kembali ke halaman index utama)
+            $redirectUrl = route('permintaan-pembelian.index');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Purchase Requisition successfully updated!',
+                'redirect' => $redirectUrl,
+            ], 200);
+
+        } catch (\Exception $e) {
+            // Batalkan semua query yang sempat berjalan jika ada error di tengah jalan (Rollback)
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update data: '.$e->getMessage(),
+            ], 500);
         }
-
-        // Jika semua query aman tanpa error, terapkan simpan permanen ke database
-        DB::commit();
-
-        // 4. Atur arah redirect URL (Aksi update biasanya langsung kembali ke halaman index utama)
-        $redirectUrl = route('permintaan-pembelian.index');
-
-        return response()->json([
-            'success'  => true,
-            'message'  => 'Purchase Requisition successfully updated!',
-            'redirect' => $redirectUrl
-        ], 200);
-
-    } catch (\Exception $e) {
-        // Batalkan semua query yang sempat berjalan jika ada error di tengah jalan (Rollback)
-        DB::rollBack();
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to update data: ' . $e->getMessage()
-        ], 500);
     }
-}
 
     public function destroy(Request $request, $id)
     {
@@ -418,7 +419,7 @@ class PurchaseRequisitionController extends Controller
     public function trash(Request $r)
     {
         if ($r->ajax()) {
-            $query = PurchaseRequisition::where('active',  0)->orderby('code','desc')->get();
+            $query = PurchaseRequisition::where('active', 0)->orderby('code', 'desc')->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -496,7 +497,7 @@ class PurchaseRequisitionController extends Controller
                                     >
                             </div>';
                 })
-                 ->addColumn('action', function ($row) {
+                ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="ti ti-menu-2 ti-xs me-1"></i>
@@ -611,7 +612,8 @@ class PurchaseRequisitionController extends Controller
 
         return response()->json(['success' => true]);
     }
-     public function restore($id)
+
+    public function restore($id)
     {
         DB::beginTransaction();
 
@@ -654,20 +656,21 @@ class PurchaseRequisitionController extends Controller
 
         return response()->json(['success' => true]);
     }
+
     public function submitToPending($id)
-{
-    $pr = PurchaseRequisition::findOrFail($id);
+    {
+        $pr = PurchaseRequisition::findOrFail($id);
 
-    // Validasi keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
-    if ($pr->status !== 'draft' || $pr->created_by !== auth()->id()) {
-        return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'], 403);
+        // Validasi keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
+        if ($pr->status !== 'draft' || $pr->created_by !== auth()->id()) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'], 403);
+        }
+
+        // Ubah status menjadi pending
+        $pr->status = 'pending';
+        $pr->updated_by = auth()->id(); // Jika Anda mencatat siapa yang melakukan update terakhir
+        $pr->save();
+
+        return response()->json(['success' => true, 'message' => 'Purchase Requisition berhasil diajukan!']);
     }
-
-    // Ubah status menjadi pending
-    $pr->status = 'pending';
-    $pr->updated_by = auth()->id(); // Jika Anda mencatat siapa yang melakukan update terakhir
-    $pr->save();
-
-    return response()->json(['success' => true, 'message' => 'Purchase Requisition berhasil diajukan!']);
-}
 }

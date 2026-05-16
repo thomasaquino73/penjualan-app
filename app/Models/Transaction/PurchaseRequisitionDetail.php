@@ -30,9 +30,10 @@ class PurchaseRequisitionDetail extends Model
     {
         return $this->belongsTo(Barang::class, 'product_id', 'id');
     }
+
     public function unitID()
     {
         // Sesuaikan nama class Unit dengan model master unit Anda
-        return $this->belongsTo(BasicCodeDetail::class, 'unit_id', 'id'); 
+        return $this->belongsTo(BasicCodeDetail::class, 'unit_id', 'id');
     }
 }

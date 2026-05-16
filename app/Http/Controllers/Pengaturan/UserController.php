@@ -152,8 +152,8 @@ class UserController extends Controller
                     }
 
                     // ✅ DETAIL
-                                    if (auth()->user()->can('user-read')) {
-                                        $btn .= '
+                    if (auth()->user()->can('user-read')) {
+                        $btn .= '
                             <a class="dropdown-item has-icon" href="'.route('user.show', $row->id).'">
                                 <i class="far fa-eye"></i> Detail
                             </a>
@@ -162,7 +162,7 @@ class UserController extends Controller
 
                     // ✅ DELETE
                     if (auth()->user()->can('user-delete')) {
-                                        $btn .= '
+                        $btn .= '
                             <a class="dropdown-item has-icon" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
                                 data-name="'.$row->fullname.'">
@@ -172,7 +172,7 @@ class UserController extends Controller
                     }
 
                     // ✅ VERIFY USER
-                    if (is_null($row->email_verified_at) ) {
+                    if (is_null($row->email_verified_at)) {
                         $btn .= '
                             <a class="dropdown-item has-icon" href="javascript:void(0)" id="verify"
                                 data-id="'.$row->id.'"
