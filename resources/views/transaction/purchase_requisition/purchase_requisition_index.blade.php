@@ -327,19 +327,25 @@
 
             $(document).on('click', '.btn-approval-pr', function() {
                 let id = $(this).data('id');
-                let statusTarget = $(this).data('status'); // Menghasilkan 'processing' atau 'rejected'
-                let textKeterangan = statusTarget === 'processing' ? 'menyetujui' : 'menolak';
+                let statusTarget = $(this).data('status'); // Expected: 'processing' or 'rejected'
+
+                // Konfigurasi teks berdasarkan statusTarget
+                let textKeterangan = statusTarget === 'processing' ? 'approve' : 'reject';
+                let confirmBtnColor = statusTarget === 'processing' ? '#28a745' : '#dc3545';
+                let confirmBtnText = statusTarget === 'processing' ? 'Yes, Approve!' : 'Yes, Reject!';
+                let confirmBtnClass = statusTarget === 'processing' ?
+                    'btn btn-success me-3 waves-effect waves-light' :
+                    'btn btn-danger me-3 waves-effect waves-light';
 
                 Swal.fire({
-                    title: 'Apakah Anda yakin?',
-                    text: `Anda akan ${textKeterangan} dokumen Purchase Requisition ini.`,
+                    title: 'Are you sure?',
+                    text: `You are about to ${textKeterangan} this Purchase Requisition document.`,
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: statusTarget === 'processing' ? '#28a745' : '#dc3545',
-                    confirmButtonText: statusTarget === 'processing' ? 'Ya, Approve!' :
-                        'Ya, Reject!',
+                    confirmButtonColor: confirmBtnColor,
+                    confirmButtonText: confirmBtnText,
                     customClass: {
-                        confirmButton: 'btn btn-success me-3 waves-effect waves-light',
+                        confirmButton: confirmBtnClass,
                         cancelButton: 'btn btn-secondary'
                     },
                     buttonsStyling: false
@@ -347,7 +353,7 @@
                     if (result.isConfirmed) {
                         $.ajax({
                             url: '/permintaan-pembelian/change-status/' +
-                                id, // Sesuaikan dengan route update status Anda
+                            id, // Match with your status update route
                             type: "POST",
                             data: {
                                 _token: "{{ csrf_token() }}",
@@ -356,29 +362,44 @@
                             },
                             success: function(response) {
                                 Swal.fire({
-                                    title: 'Berhasil!',
-                                    text: response.message,
+                                    title: 'Success!',
+                                    text: response.message ||
+                                        'The status has been updated successfully.',
                                     icon: 'success',
-                                    showCancelButton: false, // Menghilangkan tombol Cancel
-                                    confirmButtonColor: '#28a745', // Opsional: Mengubah warna tombol OK jadi hijau sukses
+                                    showCancelButton: false,
+                                    confirmButtonColor: '#28a745',
                                     confirmButtonText: 'OK',
                                     customClass: {
                                         confirmButton: 'btn btn-success'
                                     },
-                                    buttonsStyling: false // Memastikan teks tombol adalah OK
+                                    buttonsStyling: false
                                 });
-                                $('#table').DataTable().ajax
-                                    .reload(); // Reload table data
+
+                                // Reload table data (Pastikan ID table sesuai, contoh: #table atau #datatable)
+                                if ($.fn.DataTable.isDataTable('#table')) {
+                                    $('#table').DataTable().ajax.reload();
+                                }
                             },
                             error: function(err) {
+                                let errorMessage = 'Something went wrong.';
+                                if (err.responseJSON && err.responseJSON.error) {
+                                    errorMessage = err.responseJSON.error;
+                                } else if (err.responseJSON && err.responseJSON
+                                    .message) {
+                                    errorMessage = err.responseJSON.message;
+                                }
+
                                 Swal.fire({
-                                    title: 'Fail!',
-                                    text: err.responseJSON.error ||
-                                        'Terjadi kesalahan.',
+                                    title: 'Failed!',
+                                    text: errorMessage,
                                     icon: 'error',
-                                    showCancelButton: false, // Menyembunyikan tombol Cancel
-                                    confirmButtonColor: '#3085d6', // Warna tombol OK
-                                    confirmButtonText: 'OK' // Teks di dalam tombol
+                                    showCancelButton: false,
+                                    confirmButtonColor: '#3085d6',
+                                    confirmButtonText: 'OK',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary'
+                                    },
+                                    buttonsStyling: false
                                 });
                             }
                         });

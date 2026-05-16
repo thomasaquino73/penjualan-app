@@ -119,7 +119,7 @@ class DataBarangController extends Controller
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
                     }
                     if (auth()->user()->can('barang-read')) {
-                        $btn .= '<a class="dropdown-item editPost" href="'.route('data-barang.show', $row->id).'"
+                        $btn .= '<a class="dropdown-item " href="'.route('data-barang.show', $row->id).'"
                             data-id="'.$row->id.'"> <i class="ti ti-list-details"></i> Detail</a>';
                     }
 

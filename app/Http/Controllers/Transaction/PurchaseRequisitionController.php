@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\General\Company;
 use App\Models\Master_Data\Barang;
 use App\Models\Master_Data\Customer;
 use App\Models\Master_Data\DataBarangConversion;
 use App\Models\Transaction\PurchaseRequisition;
 use App\Models\Transaction\PurchaseRequisitionDetail;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Dotenv\Exception\ValidationException;
 use Illuminate\Http\Request;
@@ -131,12 +133,12 @@ class PurchaseRequisitionController extends Controller
                     if ($row->created_by !== $currentUserId && $user->can('permintaan_pembelian-approval')) {
                         if ($row->status == 'pending') {
                             $btn .= '<a class="dropdown-item text-success btn-approval-pr" href="javascript:void(0)" data-status="processing" data-id="'.$row->id.'">
-                <i class="ti ti-check me-1"></i> Approve & Process
-             </a>';
+                                <i class="ti ti-check me-1"></i> Approve & Process
+                            </a>';
 
                             $btn .= '<a class="dropdown-item text-danger btn-approval-pr" href="javascript:void(0)" data-status="rejected" data-id="'.$row->id.'">
-                <i class="ti ti-x me-1"></i> Reject PR
-             </a>';
+                                <i class="ti ti-x me-1"></i> Reject PR
+                            </a>';
                         }
                     }
 
@@ -150,7 +152,12 @@ class PurchaseRequisitionController extends Controller
                     if ($row->status !== 'draft' && $row->status !== 'pending') {
                         $btn .= '<span class="dropdown-item-text text-muted small"><i class="ti ti-info-circle me-1"></i> Data processed successfully</span>';
                     }
-
+                    if (auth()->user()->can('permintaan_pembelian-read')) {
+                        $btn .= '<a class="dropdown-item " href="'.route('permintaan-pembelian.show', $row->id).'"
+                            data-id="'.$row->id.'"> <i class="ti ti-list-details"></i> Detail</a>';
+                    }
+                    $btn .= '<a class="dropdown-item " target="_blank" href="'.route('permintaan-pembelian.print', $row->id).'"
+                            data-id="'.$row->id.'"> <i class="ti ti-printer"></i> Print</a>';
                     // 3. Tutup komponen tag HTML dropdown
                     $btn .= '</ul></div>';
 
@@ -316,12 +323,28 @@ class PurchaseRequisitionController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
-        //
+        // 1. Ambil data master sekaligus detailnya di sini (Cukup 1 query utama)
+        $purchaseRequisition = PurchaseRequisition::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+
+        $x = [
+            'title' => 'Purchase Requisition Show',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Purchase Requisition', 'url' => route('permintaan-pembelian.index')],
+                ['label' => 'Show', 'url' => ''],
+            ],
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'model' => $purchaseRequisition,
+            'company' => Company::first(),
+
+            // REKOMENDASI: Ambil langsung dari object $purchaseRequisition tanpa query ulang
+            'modelDetail' => $purchaseRequisition->details,
+        ];
+
+        return view('transaction.purchase_requisition.purchase_requisition_show', $x);
     }
 
     public function edit(string $id)
@@ -706,13 +729,61 @@ class PurchaseRequisitionController extends Controller
 
         // Validasi: Pastikan yang mengubah status BUKAN orang yang membuat dokumen
         if ($pr->created_by === auth()->id()) {
-            return response()->json(['error' => 'Anda tidak boleh menyetujui/menolak dokumen yang Anda buat sendiri!'], 403);
+            return response()->json(['error' => 'You may not approve/reject documents you create yourself!'], 403);
         }
 
         $pr->status = $request->status; // Menangkap 'processing' atau 'rejected' dari data AJAX
         $pr->updated_by = Auth::id(); // Menangkap 'processing' atau 'rejected' dari data AJAX
         $pr->save();
 
-        return response()->json(['message' => 'Status Purchase Requisition berhasil diperbarui!']);
+        return response()->json(['message' => 'Purchase Requisition status successfully updated!']);
     }
+
+   public function print($id)
+{
+    // Menggunakan relasi 'creator' sesuai dengan yang ada di model Anda
+    $detail = PurchaseRequisition::with(['details.produkID', 'details.unitID', 'creator'])->findOrFail($id);
+    $company = Company::first(); 
+
+    // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+    $logoBase64 = null;
+    if ($company && $company->logo) {
+        $path = public_path($company->logo); 
+        if (file_exists($path)) {
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        }
+    }
+
+    // 2. LOGIKA QR CODE TANDA TANGAN DIGITAL
+    // DISESUAIKAN: Menggunakan $detail->creator->name
+    $approverName = $detail->creator->fullname ?? 'Staff Purchasing';
+    
+    $qrText = "DOCUMENT VALIDATION\n"
+            . "Status: DIGITALLY SIGNED & APPROVED\n"
+            . "Doc Number: " . $detail->code . "\n"
+            . "Signed By: " . $approverName . "\n"
+            . "Date: " . ($detail->date ?? date('Y-m-d'));
+
+    $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qrText);
+    $qrContext = stream_context_create(["ssl" => ["verify_peer" => false, "verify_peer_name" => false]]);
+    
+    try {
+        $qrData = file_get_contents($qrUrl, false, $qrContext);
+        $qrCodeBase64 = 'data:image/png;base64,' . base64_encode($qrData);
+    } catch (\Exception $e) {
+        $qrCodeBase64 = null;
+    }
+
+    $pdf = Pdf::loadView('pdf.purchase_requisition_pdf', compact('detail', 'company', 'logoBase64', 'qrCodeBase64'))
+        ->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled'      => true,
+            'chroot'               => [public_path()],
+        ]);
+
+    $fileName = str_replace('/', '-', $detail->code) . '.pdf';
+    return $pdf->download($fileName);
+}
 }

@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
                 'role' => 'Super Admin',
                 'role_group_id' => 1,
             ],
-              [
+            [
                 'id' => 2,
                 'fullname' => 'Rinto Prabowo',
                 'nickname' => 'Bowo',

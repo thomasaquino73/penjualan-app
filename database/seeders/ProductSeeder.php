@@ -37,7 +37,7 @@ class ProductSeeder extends Seeder
                 'quantity' => 50,
                 'price' => 65000,
                 'created_by' => 1,
-            ]
+            ],
         ];
 
         // 2. Ubah struktur menjadi array dari list konversi (Agar tidak overwrite)
@@ -64,16 +64,16 @@ class ProductSeeder extends Seeder
                     'from_unit_id' => 4, // Pallet
                     'to_unit_id' => 5,   // Sak
                     'qty' => 50,         // 1 Pallet = 50 Sak
-                ]
-            ]
+                ],
+            ],
         ];
 
         // 3. Proses Looping Input Data ke Database
         foreach ($products as $p) {
-            
+
             // Insert atau ambil data barang jika sudah ada
             $barang = Barang::firstOrCreate(
-                ['id_barang' => $p['id_barang']], 
+                ['id_barang' => $p['id_barang']],
                 [
                     'id' => $p['id'],
                     'nama_barang' => $p['nama_barang'],
@@ -91,18 +91,18 @@ class ProductSeeder extends Seeder
 
             // 4. Lakukan looping jika terdapat daftar konversi untuk barang ini
             if (isset($conversions[$barang->id_barang])) {
-                
+
                 foreach ($conversions[$barang->id_barang] as $convData) {
-                    
+
                     // Insert masing-masing list data konversi ke tabel database
                     DataBarangConversion::firstOrCreate(
                         [
-                            'data_barang_id' => $barang->id, 
+                            'data_barang_id' => $barang->id,
                             'from_unit_id' => $convData['from_unit_id'],
                             'to_unit_id' => $convData['to_unit_id'],
                         ],
                         [
-                            'qty' => $convData['qty']
+                            'qty' => $convData['qty'],
                         ]
                     );
                 }

@@ -181,6 +181,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/permintaan-pembelian/{id}/submit', [PurchaseRequisitionController::class, 'submitToPending'])->name('permintaan-pembelian.submit');
     Route::post('/permintaan-pembelian/change-status/{id}', [PurchaseRequisitionController::class, 'changeStatus'])
         ->name('permintaan-pembelian.change-status');
+    Route::get('/data-barang/print/{id}', [DataBarangController::class, 'print'])->name('data-barang.print');
+    Route::get('/permintaan-pembelian/print/{id}', [PurchaseRequisitionController::class, 'print'])->name('permintaan-pembelian.print');
     Route::resource('permintaan-pembelian', PurchaseRequisitionController::class);
 
     Route::get('/purchase-order/trash', [PurchaseOrderController::class, 'trash'])->name('purchase-order.trash');

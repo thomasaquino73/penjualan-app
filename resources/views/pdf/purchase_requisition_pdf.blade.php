@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Purchase Requisition - {{ $detail->code }}</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 15mm;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 9.5pt;
+            color: #333;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Layout Utama Atas (Kiri & Kanan) */
+        .top-layout {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+
+        .top-layout td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        /* Sisi Kiri - Profil Perusahaan */
+        .company-logo {
+            width: 75px;
+            height: auto;
+        }
+
+        .company-details {
+            padding-left: 15px;
+        }
+
+        .company-name {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #222;
+            margin-bottom: 3px;
+        }
+
+        .company-info {
+            font-size: 8.5pt;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        /* Sisi Kanan - Meta Form Data */
+        .form-group-box {
+            margin-bottom: 10px;
+        }
+
+        .form-label {
+            font-size: 8.5pt;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 3px;
+        }
+
+        .form-input-mock {
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 9.5pt;
+            color: #495057;
+            min-height: 16px;
+        }
+
+        .form-textarea-mock {
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 9.5pt;
+            color: #495057;
+            height: 50px;
+        }
+
+        /* Divider Tengah */
+        .divider-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .divider-line {
+            border-top: 1px dashed #bbb;
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .divider-text {
+            background: #fff;
+            padding: 0 15px;
+            position: relative;
+            z-index: 2;
+            font-size: 9pt;
+            color: #555;
+            font-weight: bold;
+        }
+
+        /* Tabel Detail Barang */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
+
+        .items-table th {
+            background-color: #4a4a4a;
+            color: #ffffff;
+            text-align: left;
+            padding: 10px;
+            font-size: 9pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .items-table td {
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 9.5pt;
+        }
+
+        .items-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        /* Blok Area Tanda Tangan */
+        .signature-container {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .signature-box {
+            width: 250px;
+            text-align: center;
+            font-size: 9.5pt;
+        }
+
+        .signature-title {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .signature-space {
+            height: 75px;
+            vertical-align: middle;
+            text-align: center;
+            position: relative;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #333;
+            width: 80%;
+            margin: 0 auto 3px auto;
+        }
+
+        .signature-name {
+            font-weight: bold;
+            color: #222;
+        }
+
+        .signature-role {
+            font-size: 8.5pt;
+            color: #777;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            font-size: 7.5pt;
+            color: #999;
+            text-align: right;
+            border-top: 1px solid #eee;
+            padding-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <table class="top-layout">
+        <tr>
+            <td style="width: 50%;">
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="width: 75px; padding-right: 10px;">
+                            @if (isset($company) && $company->logo)
+                                <img src="{{ $logoBase64 }}" style="height: 80px;">
+                            @else
+                                <div
+                                    style="width: 70px; height: 70px; border: 1px dashed #ccc; background: #fafafa; text-align: center; line-height: 70px; color: #aaa; font-size: 8pt;">
+                                    No Logo
+                                </div>
+                            @endif
+                        </td>
+                        <td class="company-details">
+                            <div class="company-name">{{ $company->nama_perusahaan ?? 'PT Almex Bintang Timur' }}</div>
+                            <div class="company-info">
+                                {{ $company->alamat ?? 'Green Lake City Ruko Food City RKFC-005 Petir Cipondoh' }}<br>
+                                {{ $company->negara ?? 'Indonesia' }} {{ $company->kodepos ?? '16424' }}<br>
+                                {{ $company->nomor_telepon ?? '081382397429' }}<br>
+                                {{ $company->email ?? 'info@almexbintangtimur.com' }}<br>
+                                <span
+                                    style="color: #3085d6;">{{ $company->website ?? 'https://www.almexbintangtimur.com' }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+
+            <td style="width: 5%;"></td>
+
+            <td style="width: 45%;">
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="width: 50%; padding-right: 10px;">
+                            <div class="form-group-box">
+                                <div class="form-label">Request Number</div>
+                                <div class="form-input-mock">{{ $detail->code }}</div>
+                            </div>
+                        </td>
+                        <td style="width: 50%;">
+                            <div class="form-group-box">
+                                <div class="form-label">Request Date</div>
+                                <div class="form-input-mock">{{ $detail->date ?? date('Y-m-d') }}</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <div class="form-group-box" style="margin-top: 5px;">
+                                <div class="form-label">Description</div>
+                                <div class="form-textarea-mock">{{ $detail->keterangan ?? '' }}</div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div class="divider-container">
+        <div class="divider-line"></div>
+        <span class="divider-text">Purchase Requisition Detail</span>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;" class="text-center">#</th>
+                <th style="width: 55%;">Item</th>
+                <th style="width: 20%;" class="text-center">Qty</th>
+                <th style="width: 20%;">Unit</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($detail->details as $index => $item)
+                <tr>
+                    <td class="text-center">{{ $index + 1 }}</td>
+                    <td>{{ $item->produkID->nama_barang ?? 'Pralon' }}</td>
+                    <td class="text-center">{{ $item->qty ?? 22 }}</td>
+                    <td>{{ $item->unitID->nama_unit ?? 'Pack' }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="4" class="text-center" style="color: #999; padding: 20px;">No items found in this
+                        request.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    <table class="signature-container">
+        <tr>
+            <td></td>
+            <td class="signature-box"
+                style="border: 1px solid #ddd; background-color: #fafafa; padding: 10px; border-radius: 6px;">
+                <div class="signature-title" style="margin-bottom: 5px;">Digitally Created By:</div>
+
+                <div class="signature-space" style="height: 90px; margin-bottom: 5px;">
+                    @if (isset($qrCodeBase64) && $qrCodeBase64 != null)
+                        <img src="{{ $qrCodeBase64 }}" style="width: 80px; height: 80px; display: inline-block;">
+                    @else
+                        <div
+                            style="font-size: 8pt; color: #777; border: 1px dashed #ccc; width: 80px; height: 80px; line-height: 80px; margin: 0 auto; background: #fff;">
+                            [QR CODE]
+                        </div>
+                    @endif
+                </div>
+
+                <div class="signature-line" style="width: 90%; border-bottom: 1px solid #999; margin: 0 auto 4px auto;">
+                </div>
+
+                <div class="signature-name" style="font-size: 9.5pt; color: #111;">
+                    {{ $detail->creator->fullname ?? 'Staff Purchasing' }}
+                </div>
+
+                <div class="signature-role"
+                    style="font-size: 8pt; color: #27ae60; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+                    E-SIGNED VERIFIED
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        Printed on: {{ date('Y-m-d H:i:s') }} | Confidential Document
+    </div>
+
+</body>
+
+</html>
