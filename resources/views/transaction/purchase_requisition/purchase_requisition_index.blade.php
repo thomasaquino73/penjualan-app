@@ -26,18 +26,18 @@
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
 
-                    @canany(['penawaran_pembelian-create'])
-                        <a href="{{ route('penawaran-pembelian.create') }}" class="btn btn-sm btn-primary">
+                    @canany(['permintaan_pembelian-create'])
+                        <a href="{{ route('permintaan-pembelian.create') }}" class="btn btn-sm btn-primary">
                             <i class="ti ti-plus me-1"></i> Add Data
                         </a>
                     @endcanany
-                    @canany(['penawaran_pembelian-trash'])
-                        <a href="{{ route('penawaran-pembelian.trash') }}" class="btn btn-sm btn-secondary">
+                    @canany(['permintaan_pembelian-trash'])
+                        <a href="{{ route('permintaan-pembelian.trash') }}" class="btn btn-sm btn-secondary">
                             <i class="ti ti-trash me-1"></i> Trash Bin
                         </a>
                     @endcanany
 
-                    @canany(['penawaran_pembelian-delete'])
+                    @canany(['permintaan_pembelian-delete'])
                         <button id="deleteSelected" class="btn btn-danger btn-sm">
                             <i class="ti ti-trash me-1"></i> Delete Selected
                         </button>
@@ -92,7 +92,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('penawaran-pembelian.index') }}',
+                ajax: '{{ route('permintaan-pembelian.index') }}',
                 columns: [{
                         data: 'cekbok',
                         name: 'cekbok',
@@ -170,7 +170,7 @@
 
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: '/penawaran-pembelian/delete-multiple',
+                            url: '/permintaan-pembelian/delete-multiple',
                             type: 'POST',
                             data: {
                                 ids: ids,
@@ -214,7 +214,7 @@
                 }).then(function(result) {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/penawaran-pembelian/${id}`,
+                            url: `/permintaan-pembelian/${id}`,
                             type: "DELETE",
                             cache: false,
                             data: {

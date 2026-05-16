@@ -122,8 +122,8 @@ class Sidebar extends Component
                 'children' => [
                     [
                         'name' => 'Purchase Requisition',
-                        'route' => 'penawaran-pembelian.index',
-                        'pattern' => 'penawaran-pembelian.*',
+                        'route' => 'permintaan-pembelian.index',
+                        'pattern' => 'permintaan-pembelian.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['barang-browse'],
                     ],

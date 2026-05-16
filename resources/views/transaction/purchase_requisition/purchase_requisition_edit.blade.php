@@ -27,7 +27,7 @@
 
         <div class="card-body table-responsive p-3">
             <form
-                action="{{ isset($model) ? route('penawaran-pembelian.update', $model->id) : route('penawaran-pembelian.store') }}"
+                action="{{ isset($model) ? route('permintaan-pembelian.update', $model->id) : route('permintaan-pembelian.store') }}"
                 method="POST" id="postForm" enctype="multipart/form-data">
                 @csrf
                 @if (isset($model))
@@ -91,7 +91,7 @@
                             <i class="fa fa-plus-circle me-1"></i> Save and Create New
                         </button>
                     @endif
-                    <a href="{{ route('penawaran-pembelian.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{{ route('permintaan-pembelian.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>

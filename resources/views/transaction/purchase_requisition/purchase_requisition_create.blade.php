@@ -33,7 +33,7 @@
 
         </div>
         <div class="card-body table-responsive p-3">
-            <form action="{{ route('penawaran-pembelian.store') }}" method="POST" id="postForm"
+            <form action="{{ route('permintaan-pembelian.store') }}" method="POST" id="postForm"
                 enctype="multipart/form-data">
                 @csrf
                 <div class="row mb-5">
@@ -89,7 +89,7 @@
                     <button type="submit" id="savedata" class="btn btn-success" data-save-and-new="true">
                         <i class="fa fa-plus-circle me-1"></i> Save and Create New
                     </button>
-                    <a href="{{ route('penawaran-pembelian.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{{ route('permintaan-pembelian.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>

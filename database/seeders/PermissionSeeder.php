@@ -30,7 +30,7 @@ class PermissionSeeder extends Seeder
             'company' => ['alias' => 'Company', 'group' => 'General'],
             'general' => ['alias' => 'General', 'group' => 'General'],
 
-            'penawaran_pembelian' => ['alias' => 'Purchase Requisition', 'group' => 'Transaction'],
+            'permintaan_pembelian' => ['alias' => 'Purchase Requisition', 'group' => 'Transaction'],
             'purchase_order' => ['alias' => 'Purchase Order', 'group' => 'Transaction'],
         ];
 
