@@ -19,7 +19,7 @@ class ProductSeeder extends Seeder
                 'kategori_id' => 1,
                 'gudang_id' => 1,
                 'tipe_persediaan_id' => 9,
-                'unit_id' => 3, // Misal unit_id dasar: Pcs
+                'unit_id' => 1, // Misal unit_id dasar: Pcs
                 'product_type' => 'supply',
                 'quantity' => 100,
                 'price' => 25000,
@@ -32,7 +32,7 @@ class ProductSeeder extends Seeder
                 'kategori_id' => 1,
                 'gudang_id' => 1,
                 'tipe_persediaan_id' => 9,
-                'unit_id' => 4, // Misal unit_id dasar: Kg
+                'unit_id' => 2, // Misal unit_id dasar: Kg
                 'product_type' => 'supply',
                 'quantity' => 50,
                 'price' => 65000,
