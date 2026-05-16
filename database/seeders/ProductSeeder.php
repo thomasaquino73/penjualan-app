@@ -19,7 +19,7 @@ class ProductSeeder extends Seeder
                 'kategori_id' => 1,
                 'gudang_id' => 1,
                 'tipe_persediaan_id' => 9,
-                'unit_id' => 1, // Misal unit_id dasar: Pcs
+                'unit_id' => 3, // Misal unit_id dasar: Pcs
                 'product_type' => 'supply',
                 'quantity' => 100,
                 'price' => 25000,
@@ -32,7 +32,7 @@ class ProductSeeder extends Seeder
                 'kategori_id' => 1,
                 'gudang_id' => 1,
                 'tipe_persediaan_id' => 9,
-                'unit_id' => 2, // Misal unit_id dasar: Kg
+                'unit_id' => 4, // Misal unit_id dasar: Kg
                 'product_type' => 'supply',
                 'quantity' => 50,
                 'price' => 65000,
@@ -44,24 +44,24 @@ class ProductSeeder extends Seeder
         $conversions = [
             'P-0001' => [
                 [
-                    'from_unit_id' => 1, // Box
+                    'from_unit_id' => 3, // Box
                     'to_unit_id' => 4,   // Pcs
                     'qty' => 12,         // 1 Box = 12 Pcs
                 ],
                 [
-                    'from_unit_id' => 1, // Pack
+                    'from_unit_id' => 3, // Pack
                     'to_unit_id' => 5,   // Pcs
                     'qty' => 6,          // 1 Pack = 6 Pcs
                 ],
             ],
             'P-0002' => [
                 [
-                    'from_unit_id' => 2, // Sak
+                    'from_unit_id' => 4, // Sak
                     'to_unit_id' => 3,   // Kg
                     'qty' => 40,         // 1 Sak = 40 Kg
                 ],
                 [
-                    'from_unit_id' => 2, // Pallet
+                    'from_unit_id' => 4, // Pallet
                     'to_unit_id' => 5,   // Sak
                     'qty' => 50,         // 1 Pallet = 50 Sak
                 ]
