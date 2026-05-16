@@ -1,5 +1,4 @@
 @extends('layouts.app')
-@extends('layouts.app')
 @section('konten')
     <h4>
         <span class="text-muted fw-light">
@@ -84,7 +83,7 @@
 
                 <div class="card-footer d-flex justify-content-end gap-2 mt-4">
                     <button type="button" class="btn btn-primary btn-save" data-action="close">
-                        <i class="fa fa-upload me-1"></i> Save and Close
+                        <i class="fa fa-upload me-1"></i> Update
                     </button>
 
                     @if (!isset($model))
@@ -158,7 +157,6 @@
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
-        // 1. Inisialisasi awal penampung array detail (Mendukung Edit / Create)
         let prDetailsData = [
             @if (isset($model))
                 @foreach ($model->details as $detail)
@@ -168,22 +166,31 @@
                         'quantity': '{{ $detail->qty }}',
                         'unit_id': '{{ $detail->unit_id }}',
                         'unit': '{{ $detail->unitID ? $detail->unitID->name ?? ($detail->unitID->detail ?? $detail->unitID->nama) : 'Unit' }}'
-                    } {
-                        @if (!$loop->last)},
-                    @endif
+                    }
+                    {{ !$loop->last ? ',' : '' }}
                 @endforeach
             @endif
         ];
 
+        // BACKUP: Copy initial data to a new variable using JSON parse/stringify to prevent reference binding (deep copy)
+        const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
+
         $(document).ready(function() {
-            // Inisialisasi Select2 di dalam modal
+            // 1. Initialize Select2 inside Modal
             if ($.fn.select2) {
-                $('.select2-modal').select2({
-                    dropdownParent: $('#modalPrDetail')
+                $('.select2-modal').each(function() {
+                    var $this = $(this);
+                    $this.wrap('<div class="position-relative"></div>').select2({
+                        placeholder: $this.attr('data-placeholder') || 'Select an option',
+                        width: '100%',
+                        dropdownParent: $(
+                            '#modalPrDetail'
+                        ) // Prevents scrolling & typing bugs in Bootstrap Modal
+                    });
                 });
             }
 
-            // 2. Inisialisasi Utama Penampung DataTables Lokal
+            // 2. Main Initialization for Local DataTables
             let table = $('#table').DataTable({
                 data: prDetailsData,
                 dom: '<"d-flex justify-content-between align-items-center mb-3"B>t<"d-flex justify-content-between mt-3"ip>',
@@ -238,7 +245,7 @@
                             $('#detail_id').val(rowIndex);
                             $('#quantity').val(data.quantity);
 
-                            // Simpan id unit lama secara temporary di memori jQuery
+                            // Temporarily store the old unit ID in jQuery memory
                             $('#unit_id').data('pending-val', data.unit_id);
                             $('#product_id').val(data.product_id).trigger('change');
 
@@ -249,27 +256,79 @@
                     },
                     {
                         text: '<i class="ti ti-trash me-1"></i> Delete',
-                        className: 'btn btn-danger btn-sm',
-                        extend: 'selectedSingle',
+                        className: 'btn btn-danger btn-sm me-2',
+                        extend: 'selected',
                         action: function(e, dt, node, config) {
                             let rowIndex = dt.row({
                                 selected: true
                             }).index();
+                            let data = dt.row({
+                                selected: true
+                            }).data();
+                            let name = data.data_produk ? data.data_produk : '';
 
                             Swal.fire({
-                                title: 'Apakah anda yakin?',
-                                text: "Item ini akan dihapus dari daftar!",
+                                title: 'Are you sure?',
+                                text: "Want to delete data: " + name,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Yes, delete it!',
+                                cancelButtonText: 'Cancel',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+                                    cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                                },
+                                buttonsStyling: false
+                            }).then(function(result) {
+                                if (result.isConfirmed) {
+                                    // Remove item from local array based on index
+                                    prDetailsData.splice(rowIndex, 1);
+
+                                    // Refresh visual table view
+                                    dt.clear().rows.add(prDetailsData).draw();
+
+                                    toastr.success('Deleted Data Successfully', '', {
+                                        timeOut: 1500,
+                                        progressBar: true
+                                    });
+                                }
+                            });
+                        }
+                    },
+                    {
+                        text: '<i class="ti ti-refresh me-1"></i> Refresh',
+                        className: 'btn btn-secondary btn-sm',
+                        action: function(e, dt, node, config) {
+                            Swal.fire({
+                                title: 'Reset Table?',
+                                text: "All temporary changes will be discarded and the original data from the database will be restored!",
                                 icon: 'warning',
                                 showCancelButton: true,
                                 confirmButtonColor: '#3085d6',
                                 cancelButtonColor: '#d33',
-                                confirmButtonText: 'Ya, hapus!'
-                            }).with(function(result) {
+                                confirmButtonText: 'Yes, Reset!',
+                                cancelButtonText: 'Cancel',
+                                customClass: {
+                                    confirmButton: 'btn btn-danger',
+                                    cancelButton: 'btn btn-secondary'
+                                },
+                                buttonsStyling: false
+                            }).then(function(result) {
                                 if (result.isConfirmed) {
-                                    // Hapus dari data array penampung
-                                    prDetailsData.splice(rowIndex, 1);
-                                    // Render ulang grafis tabel
-                                    table.clear().rows.add(prDetailsData).draw();
+                                    // 1. Restore prDetailsData using original data backup
+                                    prDetailsData = JSON.parse(JSON.stringify(
+                                        originalPrDetailsData));
+
+                                    // 2. Clear visual DataTables, populate with restored data, and redraw
+                                    dt.clear().rows.add(prDetailsData).draw();
+
+                                    // 3. Display success notification
+                                    toastr.success(
+                                        'Data successfully restored to original settings',
+                                        '', {
+                                            timeOut: 1500,
+                                            progressBar: true
+                                        });
                                 }
                             });
                         }
@@ -277,7 +336,7 @@
                 ]
             });
 
-            // 3. Listener Perubahan Dropdown Produk (Mengambil Gabungan Unit di Tabel Konversi)
+            // 3. Product Dropdown Change Listener (Fetch associated units)
             $(document).on('change', '#product_id', function() {
                 let productId = $(this).val();
                 let unitSelect = $('#unit_id');
@@ -302,7 +361,7 @@
                             $.each(response, function(key, item) {
                                 unitSelect.append(
                                     `<option value="${item.id}">${item.name}</option>`
-                                    );
+                                );
                             });
                         } else {
                             unitSelect.append('<option value="">No unit available</option>');
@@ -310,7 +369,7 @@
 
                         unitSelect.trigger('change');
 
-                        // Kunci id unit jika dalam proses Aksi EDIT
+                        // Lock unit ID if currently in EDIT mode process
                         let pendingUnitId = unitSelect.data('pending-val');
                         if (pendingUnitId) {
                             unitSelect.val(pendingUnitId).trigger('change');
@@ -318,14 +377,14 @@
                         }
                     },
                     error: function() {
-                        console.error('Gagal mengambil data unit.');
+                        console.error('Failed to fetch unit data.');
                         unitSelect.empty().append('<option></option>').prop('disabled', false)
                             .trigger('change');
                     }
                 });
             });
 
-            // 4. Submit Modal Detail Form (Dilengkapi Filter Duplikasi)
+            // 4. Submit Modal Detail Form (Includes Duplicate Filter)
             $('#formPrDetail').on('submit', function(e) {
                 e.preventDefault();
 
@@ -340,12 +399,16 @@
                     Swal.fire({
                         icon: 'error',
                         title: 'Oops...',
-                        text: 'Please fill all fields!'
+                        text: 'Please fill all fields!',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
                     });
                     return false;
                 }
 
-                // Cek Duplikat Produk di array lokal
+                // Check for duplicate products in local array
                 let isDuplicate = false;
                 if (prDetailsData && prDetailsData.length > 0) {
                     for (let i = 0; i < prDetailsData.length; i++) {
@@ -364,9 +427,13 @@
                 if (isDuplicate) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Produk Sudah Ada!',
-                        html: `Produk <b>"${productName}"</b> sudah terdaftar di list detail.`,
-                        confirmButtonColor: '#3085d6'
+                        title: 'Product Already Exists!',
+                        html: `The product <b>"${productName}"</b> is already registered in the details list.`,
+                        confirmButtonColor: '#3085d6',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
                     });
                     return false;
                 }
@@ -389,7 +456,7 @@
                 $('#modalPrDetail').modal('hide');
             });
 
-            // 5. Submit Utama Form Induk Berbasis AJAX (Mendukung Save & Close / Save & New)
+            // 5. Submit Main Form via AJAX (Supports Save & Close / Save & New)
             $(document).on('click', '.btn-save', function(e) {
                 e.preventDefault();
 
@@ -398,13 +465,17 @@
                 if (prDetailsData.length === 0) {
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Detail Kosong!',
-                        text: 'Minimal harus memasukkan 1 produk detail.'
+                        title: 'Details Empty!',
+                        text: 'You must add at least 1 product detail.',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
                     });
                     return false;
                 }
 
-                // Set flags data JSON array & tipe aksi simpan
+                // Set flags JSON data array & action save type
                 $('#items_detail').val(JSON.stringify(prDetailsData));
                 $('#save_and_new').val(actionType === 'new' ? '1' : '0');
 
@@ -419,16 +490,20 @@
                         if (response.success) {
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Berhasil!',
+                                title: 'Success!',
                                 text: response.message,
-                                timer: 1500
+                                timer: 1500,
+                                customClass: {
+                                    confirmButton: 'btn btn-danger'
+                                },
+                                buttonsStyling: false
                             });
 
                             if (response.save_and_new) {
-                                // Reset data table detail lokal
+                                // Reset local table details
                                 prDetailsData = [];
                                 table.clear().draw();
-                                // Bersihkan kolom isian deskripsi dan pasang nomor PR baru hasil auto generator
+                                // Clear description field and set auto-generated new PR number
                                 $('#description').val('');
                                 $('#code').val(response.next_code);
                             } else {
@@ -447,7 +522,11 @@
                                 icon: 'error',
                                 title: 'Error',
                                 text: xhr.responseJSON.message ||
-                                    'Terjadi kesalahan sistem.'
+                                    'A system error occurred.',
+                                customClass: {
+                                    confirmButton: 'btn btn-danger'
+                                },
+                                buttonsStyling: false
                             });
                         }
                     }

@@ -310,10 +310,85 @@ class PurchaseRequisitionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
+   public function update(Request $request, string $id)
+{
+    // 1. Validasi Input Form Induk / Utama (Sesuai dengan struktur store)
+    $request->validate([
+        'code'         => 'required|string|unique:purchase_requisition,code,' . $id, // Menghindari validasi unik bentrok saat update data yang sama
+        'date'         => 'required|date',
+        'description'  => 'nullable|string',
+        'items_detail' => 'required', // Harus mengirimkan data item dari DataTables lokal
+    ]);
+
+    // Cari data induk berdasarkan ID, jika tidak ketemu otomatis melempar error 404
+    $prMaster = PurchaseRequisition::findOrFail($id);
+
+    // Mulai Database Transaction demi keamanan integritas relasi data
+    DB::beginTransaction();
+
+    try {
+        // 2. Update Data Master ke tabel `purchase_requisition`
+        $prMaster->update([
+            'code'        => $request->code,
+            'date'        => Carbon::parse($request->date)->format('Y-m-d'),
+            'description' => $request->description,
+            // 'status' tidak diubah di sini karena mengikuti alur status yang sudah ada (misal: tetap draft/approved)
+            'updated_by'  => Auth::id(), // ID User yang mengubah data
+        ]);
+
+        // 3. Decode data array string JSON (`items_detail`) yang dikirim dari DataTables lokal
+        $items = json_decode($request->items_detail, true);
+
+        if (is_array($items) && count($items) > 0) {
+            
+            // Hapus semua detail lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
+            PurchaseRequisitionDetail::where('purchase_requisition_id', $prMaster->id)->delete();
+
+            foreach ($items as $item) {
+                // Masukkan kembali baris item baru/editan ke tabel `purchase_requisition_detail`
+                PurchaseRequisitionDetail::create([
+                    'purchase_requisition_id' => $prMaster->id,
+                    'product_id'              => $item['product_id'],
+                    'qty'                     => $item['quantity'] ?? $item['qty'],
+                    'unit_id'                 => $item['unit_id'],
+
+                    // Kolom default blueprint sesuai skema di fungsi store
+                    'unit_price'              => $item['unit_price'] ?? 0,
+                    'discount'                => $item['discount'] ?? 0,
+                    'tax'                     => $item['tax'] ?? 0,
+
+                    'active'                  => 1, // 1 = Active
+                    'created_by'              => $prMaster->created_by, // Tetap pertahankan pembuat awal
+                    'updated_by'              => Auth::id(),
+                ]);
+            }
+        } else {
+            // Gagalkan proses jika ternyata isi array kosong setelah didecode
+            throw new \Exception("Minimal harus ada 1 item produk yang dimasukkan.");
+        }
+
+        // Jika semua query aman tanpa error, terapkan simpan permanen ke database
+        DB::commit();
+
+        // 4. Atur arah redirect URL (Aksi update biasanya langsung kembali ke halaman index utama)
+        $redirectUrl = route('penawaran-pembelian.index');
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Purchase Requisition berhasil diperbarui!',
+            'redirect' => $redirectUrl
+        ], 200);
+
+    } catch (\Exception $e) {
+        // Batalkan semua query yang sempat berjalan jika ada error di tengah jalan (Rollback)
+        DB::rollBack();
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal memperbarui data: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     public function destroy(Request $request, $id)
     {
