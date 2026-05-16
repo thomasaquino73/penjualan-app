@@ -230,7 +230,7 @@
                     topStart: {
                         buttons: [{
                                 text: '<i class="ti ti-plus me-1"></i> New',
-                                className: 'btn btn-primary btn-sm',
+                                className: 'btn btn-primary btn-sm me-2',
                                 action: function(e, dt, node, config) {
                                     $('#formPrDetail')[0].reset();
                                     $('#detail_id').val('');
@@ -248,7 +248,7 @@
                             },
                             {
                                 text: '<i class="ti ti-edit me-1"></i> Edit',
-                                className: 'btn btn-warning btn-sm',
+                                className: 'btn btn-warning btn-sm me-2',
                                 extend: 'selectedSingle',
                                 action: function(e, dt, node, config) {
                                     let data = dt.row({
@@ -277,7 +277,7 @@
                             },
                             {
                                 text: '<i class="ti ti-trash me-1"></i> Delete',
-                                className: 'btn btn-danger btn-sm',
+                                className: 'btn btn-danger btn-sm me-2',
                                 extend: 'selected',
                                 action: function(e, dt, node, config) {
                                     let rowIndex = dt.row({
