@@ -167,19 +167,41 @@
                             </div>
 
 
-                            <div class="col-6 mb-3">
+                            <div class="col-3 mb-3">
                                 <label class="form-label" for="quantity">Quantity</label>
                                 <input type="number" id="quantity" name="quantity" class="form-control"
                                     placeholder="0">
                                 <span class="error text-danger" id="quantityError"></span>
                             </div>
-                            <div class="col-6 mb-3">
+                            <div class="col-3 mb-3">
                                 <label class="form-label" for="unit_id">Unit</label>
                                 <select name="unit_id" id="unit_id" class="form-select select2-modal "
                                     data-placeholder="Select Unit">
                                     <option></option>
                                 </select>
                                 <span class="error text-danger" id="unit_idError"></span>
+                            </div>
+                            <div class="col-3 mb-3">
+                                <label class="form-label" for="unit_price">Unit Price</label>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
+                                    <input type="number" id="unit_price" name="unit_price" class="form-control"
+                                        placeholder="0">
+                                </div>
+
+                                <span class="error text-danger" id="unit_priceError"></span>
+                            </div>
+                            <div class="col-3 mb-3">
+                                <label class="form-label" for="discount">Discount</label>
+                                <input type="number" id="discount" name="discount" class="form-control"
+                                    placeholder="0">
+                                <span class="error text-danger" id="discountError"></span>
+                            </div>
+                            <div class="col-3 mb-3">
+                                <label class="form-label" for="tax">Tax</label>
+                                <input type="number" id="tax" name="tax" class="form-control"
+                                    placeholder="0">
+                                <span class="error text-danger" id="taxError"></span>
                             </div>
                         </div>
                     </div>
@@ -448,16 +470,20 @@
             $(document).on('change', '#product_id', function() {
                 let productId = $(this).val();
                 let unitSelect = $('#unit_id');
+                let priceInput = $('#unit_price'); // Selector untuk elemen input Unit Price
 
-                // Jika produk kosong, bersihkan selectbox unit
+                // Jika produk kosong, bersihkan selectbox unit dan input harga
                 if (!productId) {
                     unitSelect.empty().append('<option></option>').trigger('change');
+                    priceInput.val('');
                     return;
                 }
 
-                // Panggil Controller bawaan Anda yang tidak boleh diubah tadi
+                // ==========================================
+                // 1. AJAX UNTUK MENGAMBIL LIST UNIT
+                // ==========================================
                 $.ajax({
-                    url: `/get-units-by-product/${productId}`,
+                    url: `/purchase-order/get-units-by-product/${productId}`,
                     type: 'GET',
                     dataType: 'json',
                     beforeSend: function() {
@@ -467,7 +493,7 @@
                     success: function(response) {
                         unitSelect.empty().append('<option></option>').prop('disabled', false);
 
-                        // Response dari controller Anda berupa array berisi objek {id: ..., name: ...}
+                        // Response dari controller berupa array berisi objek {id: ..., name: ...}
                         if (response && response.length > 0) {
                             $.each(response, function(key, item) {
                                 // Masukkan id dan name (detail nama satuan dari relation unit)
@@ -494,6 +520,31 @@
                         console.error('Gagal memuat list unit dari Controller.');
                         unitSelect.empty().append('<option></option>').prop('disabled', false)
                             .trigger('change');
+                    }
+                });
+
+                // ==========================================
+                // 2. AJAX UNTUK MENGAMBIL UNIT PRICE
+                // ==========================================
+                $.ajax({
+                    url: `/purchase-order/get-product-price/${productId}`, // Sesuai dengan route prefix purchase-order
+                    type: 'GET',
+                    dataType: 'json',
+                    beforeSend: function() {
+                        priceInput.attr('placeholder', 'Loading...');
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Masukkan nilai price (dari database data_barang) ke elemen input harga
+                            priceInput.val(response.price);
+                        } else {
+                            priceInput.val(0);
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error("Gagal mengambil data harga produk:", xhr);
+                        priceInput.val(0);
+                        priceInput.attr('placeholder', '0');
                     }
                 });
             });

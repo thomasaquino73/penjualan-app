@@ -4,7 +4,7 @@ namespace App\Http\Controllers\General;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CompanyInfoRequest;
-use App\Models\Currency;
+use App\Models\General\Currency;
 use App\Models\General\Company;
 use Illuminate\Support\Facades\DB;
 

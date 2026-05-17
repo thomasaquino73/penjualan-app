@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Models\BasicCodeDetail;
+use App\Models\General\Company;
 use App\Models\Master_Data\Barang;
 use App\Models\Master_Data\Customer;
 use App\Models\Master_Data\Kendaraan;
@@ -145,6 +146,7 @@ class PurchaseOrderController extends Controller
                 ['label' => 'Purchase Order', 'url' => ''],
             ],
             'customer' => Customer::where('status', 1)->get(),
+            'company' => Company::first(),
             'idNumber' => $this->generateNumberId(),
             'kendaraan' => Kendaraan::where('status', 1)->get(),
             'term' => BasicCodeDetail::where('master_id', 5)->get(),
@@ -153,5 +155,22 @@ class PurchaseOrderController extends Controller
         ];
 
         return view('transaction.purchase_order.purchase_order_create', $x);
+    }
+    public function getPrice($id)
+    {
+        // Mencari data barang berdasarkan ID
+        $product = Barang::find($id);
+
+        if ($product) {
+            return response()->json([
+                'success' => true,
+                'price'   => $product->price 
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Product tidak ditemukan'
+        ], 404);
     }
 }

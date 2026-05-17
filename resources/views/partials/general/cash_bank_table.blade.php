@@ -252,11 +252,11 @@
                     contentType: false,
                     datatype: 'json',
                     beforeSend: function(e) {
-                        $('#savedatabank').html(
+                        $('#savedataBank').html(
                             '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
                     },
                     complete: function(e) {
-                        $('#savedatabank').html(' <i class="fa fa-save me-1"></i>Save');
+                        $('#savedataBank').html(' <i class="fa fa-save me-1"></i>Save');
                     },
                     success: function(response) {
                         $('#modalsBank').modal('hide');

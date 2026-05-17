@@ -130,34 +130,60 @@ class CurrencyController extends Controller
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
+   public function destroy($id)
     {
-        try {
-            $currency = Currency::findOrFail($id);
-            $currency->delete();
+        // 1. Cari data currency yang ingin dihapus
+        $currency = Currency::findOrFail($id);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Data mata uang berhasil dihapus.',
-            ], 200);
-
-        } catch (QueryException $e) {
-            // Cek apakah error disebabkan oleh pelanggaran Foreign Key (Error Code 23000 atau 1451)
-            if ($e->getCode() === '23000' || str_contains($e->getMessage(), '1451')) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Currency failed to delete because this data is already used in another table transaction!',
-                ], 422); // Gunakan HTTP status 422 (Unprocessable Entity)
-            }
-
-            // Antisipasi jika ada error database lainnya
+        // 2. Cek apakah currency ini sudah terpakai di tabel Company
+        if ($currency->companies()->exists()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan pada database: '.$e->getMessage(),
-            ], 500);
+                'message' => 'Mata uang tidak dapat dihapus karena sedang digunakan oleh data Perusahaan (Company).'
+            ], 422); // Status 422 Unprocessable Entity
         }
+
+        // 3. Cek apakah currency ini sudah terpakai di tabel Cash Bank
+        if ($currency->cashBanks()->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Mata uang tidak dapat dihapus karena sedang digunakan oleh data Kas & Bank.'
+            ], 422);
+        }
+
+        // 4. JIKA LOLOS PENCEKAN DI ATAS, BARU SELEKSI UNTUK DIHAPUS
+        $currency->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Mata uang ' . $currency->name . ' berhasil dihapus.'
+        ], 200);
     }
+    // public function destroy($id)
+    // {
+    //     try {
+    //         $currency = Currency::findOrFail($id);
+    //         $currency->delete();
+
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Data mata uang berhasil dihapus.',
+    //         ], 200);
+
+    //     } catch (QueryException $e) {
+    //         // Cek apakah error disebabkan oleh pelanggaran Foreign Key (Error Code 23000 atau 1451)
+    //         if ($e->getCode() === '23000' || str_contains($e->getMessage(), '1451')) {
+    //             return response()->json([
+    //                 'status' => 'error',
+    //                 'message' => 'Currency failed to delete because this data is already used in another table transaction!',
+    //             ], 422); // Gunakan HTTP status 422 (Unprocessable Entity)
+    //         }
+
+    //         // Antisipasi jika ada error database lainnya
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Terjadi kesalahan pada database: '.$e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
 }

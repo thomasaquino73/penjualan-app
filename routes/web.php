@@ -188,6 +188,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('permintaan-pembelian', PurchaseRequisitionController::class);
 
     Route::prefix('purchase-order')->name('purchase-order.')->group(function () {
+        Route::get('/get-product-price/{id}', [PurchaseOrderController::class, 'getPrice']);
         Route::get('/table-pr', [PurchaseOrderController::class, 'table_pr'])->name('table_pr');
         Route::get('/trash', [PurchaseOrderController::class, 'trash'])->name('trash');
         Route::resource('/', PurchaseOrderController::class);

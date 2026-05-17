@@ -286,6 +286,9 @@
                                 confirmButton: 'btn btn-primary waves-effect waves-light'
                             },
                             buttonsStyling: false
+                        }).then((result) => {
+                            // 🔥 REFRESH PAGE OTOMATIS setelah user klik tombol OK di SweetAlert
+                            location.reload();
                         });
 
                     },
