@@ -160,7 +160,7 @@ class SalesmanController extends Controller
         //
     }
 
-    public function store(SalesmanRequest $request)
+     public function store(SalesmanRequest $request)
     {
         try {
             $id = $request->input('id');
@@ -168,7 +168,9 @@ class SalesmanController extends Controller
 
             if (! empty($id)) {
 
-                // UPDATE
+                // ==========================================
+                // PROCESS: UPDATE DATA
+                // ==========================================
                 $data['updated_by'] = Auth::id();
 
                 Salesman::where('id', $id)->update($data);
@@ -180,39 +182,65 @@ class SalesmanController extends Controller
 
             } else {
 
-                // CREATE
+                // ==========================================
+                // PROCESS: CREATE DATA (Safe from Race Condition)
+                // ==========================================
                 $data['created_by'] = Auth::id();
                 $data['status'] = 1;
 
-                // 🔥 CEK ID SALESMAN
-                if (empty($data['id_salesman'])) {
-                    $data['id_salesman'] = $this->generateSalesmanId();
-                } else {
+                // Mulai database transaction sebelum pengecekan ID
+                DB::beginTransaction();
 
-                    // 🔥 VALIDASI: jangan sampai duplicate
-                    $exists = Salesman::where('id_salesman', $data['id_salesman'])->exists();
+                try {
+                    if (empty($data['id_supplier'])) {
 
-                    if ($exists) {
-                        return response()->json([
-                            'error' => 'Salesman ID already in use',
-                        ], 422);
+                        // Looping otomatis jika ID keduluan diambil user lain
+                        do {
+                            $data['id_supplier'] = $this->generateSalesmanId();
+
+                            // Kunci baris dengan lockForUpdate agar request lain mengantre
+                            $exists = Salesman::where('id_supplier', $data['id_supplier'])->lockForUpdate()->exists();
+                        } while ($exists);
+
+                    } else {
+                        // Validasi jika input manual: pastikan belum terdaftar
+                        $exists = Salesman::where('id_supplier', $data['id_supplier'])->lockForUpdate()->exists();
+
+                        if ($exists) {
+                            DB::rollBack();
+
+                            return response()->json([
+                                'error' => 'ID Salesman sudah digunakan',
+                            ], 422);
+                        }
                     }
+
+                    // Simpan data ke database
+                    Salesman::create($data);
+
+                    // Commit semua transaksi jika berhasil tanpa error
+                    DB::commit();
+
+                    return response()->json([
+                        'action' => 'create',
+                        'message' => 'Data created successfully',
+                    ], 201);
+
+                } catch (\Exception $e) {
+                    // Batalkan transaksi jika terjadi error di dalam blok DB
+                    DB::rollBack();
+                    throw $e; // Lempar ke catch paling luar untuk response error 500
                 }
-
-                Salesman::create($data);
-
-                return response()->json([
-                    'action' => 'create',
-                    'message' => 'Data created successfully',
-                ], 201);
             }
 
         } catch (\Exception $e) {
+            // Menangkap semua error (termasuk dari throw $e di atas)
             return response()->json([
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
+    
 
     /**
      * Display the specified resource.
