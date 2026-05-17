@@ -89,12 +89,7 @@
 
             </div>
         </div>
-
         <div class="card-body table-responsive p-3">
-            <div class="divider divider-dashed">
-                <div class="divider-text">Purchase Requisition Detail</div>
-            </div>
-
             <div class="row mt-3">
                 <table class="table display responsive nowrap" id="table">
                     <thead class="table-dark">
@@ -103,6 +98,8 @@
                             <th>Item</th>
                             <th>Qty</th>
                             <th>Unit</th>
+                            <th>Required Date</th>
+                            <th>Notes</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -112,6 +109,8 @@
                                 <td>{{ $detail->produkID->nama_barang ?? 'N/A' }}</td>
                                 <td>{{ $detail->qty }}</td>
                                 <td>{{ $detail->unitID->detail ?? 'N/A' }}</td>
+                                <td>{{ $detail->required_date }}</td>
+                                <td>{{ $detail->notes ?? 'N/A' }}</td>
                             </tr>
                         @endforeach
                     </tbody>

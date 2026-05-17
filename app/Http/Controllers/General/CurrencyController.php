@@ -40,7 +40,7 @@ class CurrencyController extends Controller
 
                     return 'N/A';
                 })
-              
+
                 ->rawColumns(['created_at', 'updated_at', 'status', 'gambar'])
                 ->make(true);
         }

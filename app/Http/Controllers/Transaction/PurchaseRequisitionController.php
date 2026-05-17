@@ -284,12 +284,8 @@ class PurchaseRequisitionController extends Controller
                         'product_id' => $item['product_id'],
                         'qty' => $item['quantity'] ?? $item['qty'],
                         'unit_id' => $item['unit_id'],
-
-                        // Kolom di bawah ini ada di blueprint database, berikan nilai default jika tidak ada di modal
-                        'unit_price' => $item['unit_price'] ?? 0,
-                        'discount' => $item['discount'] ?? 0,
-                        'tax' => $item['tax'] ?? 0,
-
+                        'required_date' => Carbon::parse($item['required_date'])->format('Y-m-d'),
+                        'notes' => $item['notes'] ?? null,
                         'active' => 1, // 1 = Active
                         'created_by' => Auth::id(),
                         'updated_by' => null,
@@ -413,12 +409,8 @@ class PurchaseRequisitionController extends Controller
                         'product_id' => $item['product_id'],
                         'qty' => $item['quantity'] ?? $item['qty'],
                         'unit_id' => $item['unit_id'],
-
-                        // Kolom default blueprint sesuai skema di fungsi store
-                        'unit_price' => $item['unit_price'] ?? 0,
-                        'discount' => $item['discount'] ?? 0,
-                        'tax' => $item['tax'] ?? 0,
-
+                        'required_date' => Carbon::parse($item['required_date'])->format('Y-m-d'),
+                        'notes' => $item['notes'] ?? null,
                         'active' => 1, // 1 = Active
                         'created_by' => $prMaster->created_by, // Tetap pertahankan pembuat awal
                         'updated_by' => Auth::id(),

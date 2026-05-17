@@ -80,7 +80,7 @@
                             <div class="col-6 mb-3">
                                 <label class="form-label">Expected Date<small class="text-danger">*</small> </label>
                                 <input type="text" name="expected_date" id="expected_date" class="form-control"
-                                    value="">
+                                    placeholder="Select Date">
                                 <span class="error text-danger" id="expected_dateError"></span>
                             </div>
                             <div class="col-6 mb-3">

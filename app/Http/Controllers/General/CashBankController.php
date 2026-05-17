@@ -43,8 +43,8 @@ class CashBankController extends Controller
                 ->addColumn('currency', function ($row) {
                     return $row->currency ? $row->currency->name : 'N/A';
                 })
-               
-                ->rawColumns([ 'created_at', 'updated_at', 'currency'])
+
+                ->rawColumns(['created_at', 'updated_at', 'currency'])
                 ->make(true);
         }
 

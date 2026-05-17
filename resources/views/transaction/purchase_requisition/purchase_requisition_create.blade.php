@@ -74,6 +74,8 @@
                                 <th>Item</th>
                                 <th>Qty</th>
                                 <th>Unit</th>
+                                <th>Required Date</th>
+                                <th>Notes</th>
                             </tr>
                         </thead>
 
@@ -93,7 +95,7 @@
         </div>
     </div>
     <div class="modal fade" id="modalPrDetail">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">Create new entry</h5>
@@ -115,20 +117,30 @@
                                 </select>
                                 <span class="error text-danger" id="product_idError"></span>
                             </div>
-
-
-                            <div class="col-6 mb-3">
+                            <div class="col-3 mb-3">
                                 <label class="form-label" for="quantity">Quantity</label>
                                 <input type="number" id="quantity" name="quantity" class="form-control" placeholder="0">
                                 <span class="error text-danger" id="quantityError"></span>
                             </div>
-                            <div class="col-6 mb-3">
+                            <div class="col-3 mb-3">
                                 <label class="form-label" for="unit_id">Unit</label>
                                 <select name="unit_id" id="unit_id" class="form-select select2-modal "
                                     data-placeholder="Select Unit">
                                     <option></option>
                                 </select>
                                 <span class="error text-danger" id="unit_idError"></span>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="required_date">Required Date</label>
+                                <input type="text" id="required_date" name="required_date" class="form-control"
+                                    placeholder="Select Date">
+                                <span class="error text-danger" id="required_dateError"></span>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label" for="notes">Notes</label>
+                                <input type="text" id="notes" name="notes" class="form-control"
+                                    placeholder="Enter notes">
+                                <span class="error text-danger" id="notesError"></span>
                             </div>
                         </div>
                     </div>
@@ -160,6 +172,14 @@
                 dateFormat: "d-m-Y",
                 minDate: "today",
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}"
+            });
+            flatpickr("#required_date", {
+                enableTime: false,
+                time_24hr: true,
+                enableSeconds: false,
+                dateFormat: "d-m-Y",
+                minDate: "today",
+                defaultDate: ""
             });
         });
         $(document).ready(function() {
@@ -232,6 +252,10 @@
                     },
                     {
                         data: 'unit',
+                    }, {
+                        data: 'required_date',
+                    }, {
+                        data: 'notes',
                     }
                 ],
                 layout: {
@@ -348,11 +372,13 @@
                 let productName = $('#product_id option:selected').text();
                 let quantity = $('#quantity').val();
                 let unitId = $('#unit_id').val();
+                let requiredDate = $('#required_date').val();
+                let notes = $('#notes').val();
                 let unitName = $('#unit_id option:selected').text();
                 let detailId = $('#detail_id').val(); // Berisi index array jika edit
 
                 // 1. Validasi field kosong
-                if (!productId || !quantity || !unitId) {
+                if (!productId || !quantity || !unitId || !requiredDate || !notes) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Oops...',
@@ -408,7 +434,9 @@
                     'data_produk': productName,
                     'quantity': quantity,
                     'unit_id': unitId,
-                    'unit': unitName
+                    'unit': unitName,
+                    'required_date': requiredDate,
+                    'notes': notes,
                 };
 
                 if (detailId === '') {

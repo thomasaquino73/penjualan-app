@@ -37,9 +37,8 @@ return new class extends Migration
             $table->bigInteger('product_id');
             $table->bigInteger('qty');
             $table->bigInteger('unit_id');
-            $table->bigInteger('unit_price');
-            $table->bigInteger('discount');
-            $table->bigInteger('tax');
+            $table->date('required_date')->nullable();
+            $table->string('notes')->nullable();
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
