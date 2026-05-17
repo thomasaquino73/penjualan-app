@@ -52,6 +52,18 @@ class BasicCodeDetailSeeder extends Seeder
             ],
             [
                 'id' => $i++,
+                'master_id' => '3',
+                'detail' => 'Shipping Point',
+                'description' => '',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '3',
+                'detail' => 'Destination',
+                'description' => '',
+            ],
+            [
+                'id' => $i++,
                 'master_id' => '4',
                 'detail' => 'Bahan Baku',
                 'description' => '',

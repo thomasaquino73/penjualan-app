@@ -25,7 +25,6 @@
                 <div
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
-
                     <button class="btn btn-success btn-sm " id="showModalpr">
                         <i class="ti ti-clipboard me-1"></i> REQUISITION
                     </button>
@@ -84,6 +83,17 @@
                                 <span class="error text-danger" id="expected_dateError"></span>
                             </div>
                             <div class="col-6 mb-3">
+                                <label class="form-label">FOB<small class="text-danger">*</small> </label>
+                                <select name="fob_id" id="fob_id" class="form-select select2"
+                                    data-placeholder="Select FOB">
+                                    <option></option>
+                                    @foreach ($fob as $f)
+                                        <option value="{{ $f->id }}"> {{ $f->detail }}</option>
+                                    @endforeach
+                                </select>
+                                <span class="error text-danger" id="fob_idError"></span>
+                            </div>
+                            <div class="col-6 mb-3">
                                 <label class="form-label">Term<small class="text-danger">*</small> </label>
                                 <select name="term" id="term" class="form-select select2"
                                     data-placeholder="Select Term">
@@ -111,7 +121,7 @@
 
                 </div>
                 <div class="divider divider-dashed">
-                    <div class="divider-text">Purchase Requisition Detail</div>
+                    <div class="divider-text">Purchase Order Detail</div>
                 </div>
                 <div class="row mt-3">
                     <table class="table display responsive nowrap" id="table">
@@ -130,16 +140,16 @@
                     </table>
                 </div>
                 <div class="row mb-5">
-                    <div class="col-lg-6">
+                    <div class="col-lg-6 ">
                         <label class="form-label" for="description">Description</label>
-                        <textarea name="description" id="description" class="form-control" row="10" placeholder="Enter description"></textarea>
+                        <textarea name="description" id="description" class="form-control" rows="8" placeholder="Enter description"></textarea>
                         <span class="error text-danger" id="descriptionError"></span>
                     </div>
-                    <div class="col-lg-2">
+                    <div class="col-lg-2 mb-3 ">
 
                     </div>
                     <div class="col-lg-4">
-                        <div class="col-12 mb-3">
+                        <div class="col-12 mb-3 ">
                             <label class="form-label" for="sub_total">Sub Total</label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
@@ -151,14 +161,14 @@
                         <div class="col-12 mb-3">
                             <label class="form-label" for="discount_all">Discount</label>
                             <div class="row">
-                                <div class="col-3">
+                                <div class="col-4">
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text">%</span>
                                         <input type="number" id="percent" name="percent" min='0'
                                             class="form-control" placeholder="0">
                                     </div>
                                 </div>
-                                <div class="col-9">
+                                <div class="col-8">
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                         <input type="number" id="discount_all" name="discount_all" class="form-control"
@@ -270,14 +280,31 @@
         <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Requisition</h5>
+                    <h5 class="modal-title" id="modalTitle">Requisition Processing</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="form-check form-check-primary">
+                                        <input class="form-check-input" type="checkbox" id="checkAll">
+                                    </div>
+                                </th>
+                                <th>Invoice Number</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requisitionTableBody">
+                        </tbody>
+                    </table>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="btnSubmitSelected">
+                        <i class="ti ti-check me-1"></i> Process Selected
+                    </button>
                 </div>
             </div>
         </div>
@@ -332,8 +359,109 @@
             let prDetailsData = [];
 
             // Tampilkan Modal via Tombol Custom jika ada
-            $('#showModalpr').click(function() {
+            $('#showModalpr').on('click', function(e) {
+                e.preventDefault();
+
+                let tbody = $('#requisitionTableBody');
+
+                // Reset checkbox 'Check All' menjadi tidak tercentang saat modal dibuka
+                $('#checkAll').prop('checked', false);
+
+                tbody.html(
+                    '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>'
+                );
                 $('#modalRequisitionDetail').modal('show');
+
+                $.ajax({
+                    url: "{{ route('purchase-order.requisitions.processing') }}",
+                    type: "GET",
+                    dataType: "json",
+                    success: function(response) {
+                        tbody.empty();
+
+                        if (response && response.length > 0) {
+                            $.each(response, function(key, item) {
+                                let dateFormatted = new Date(item.created_at)
+                                    .toLocaleDateString('id-ID');
+
+                                // Tambahkan checkbox dengan class 'checkItem' dan value berupa ID data
+                                tbody.append(`
+                            <tr>
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input checkItem" type="checkbox" value="${item.id}">
+                                    </div>
+                                </td>
+                                <td><strong>${item.code}</strong></td>
+                                <td>${dateFormatted}</td>
+                            </tr>
+                        `);
+                            });
+                        } else {
+                            tbody.html(
+                                '<tr><td colspan="3" class="text-center text-muted">No processing data found.</td></tr>'
+                            );
+                        }
+                    },
+                    error: function(xhr) {
+                        tbody.html(
+                            '<tr><td colspan="3" class="text-center text-danger">Failed to fetch data.</td></tr>'
+                        );
+                    }
+                });
+            });
+
+            // 2. LOGIC LOCK: CHECK ALL / UNCHECK ALL
+            $('#checkAll').on('change', function() {
+                // Jika checkAll dicentang, semua .checkItem ikut dicentang, begitu sebaliknya
+                $('.checkItem').prop('checked', $(this).prop('checked'));
+            });
+
+            // Jika salah satu item diuncheck secara manual, matikan checkAll di atas head tabel
+            $(document).on('change', '.checkItem', function() {
+                if ($('.checkItem:checked').length === $('.checkItem').length) {
+                    $('#checkAll').prop('checked', true);
+                } else {
+                    $('#checkAll').prop('checked', false);
+                }
+            });
+
+            // TOMBOL UNTUK MASUKKAN KE TABEL DARI REQUISITION YANG DIPULIH
+            $('#btnSubmitSelected').on('click', function() {
+                let checkedBoxes = $('.checkItem:checked');
+
+                // Validasi jika user belum memilih data sama sekali
+                if (checkedBoxes.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan',
+                        text: 'Silakan pilih minimal satu data requisition!',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+
+                // Tampilkan konfirmasi klak-klik lokal
+                Swal.fire({
+                    title: 'Proses data terpilih?',
+                    text: `Anda memilih ${checkedBoxes.length} data untuk dimasukkan ke tabel.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Masukkan!',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        confirmButton: 'btn btn-danger',
+                        cancelButton: 'btn btn-secondary'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                    }
+                });
             });
 
             // 3. Inisialisasi DataTable
@@ -492,6 +620,10 @@
                                 action: function(e, dt, node, config) {
                                     prDetailsData = [];
                                     dt.clear().draw();
+                                    calculateGrandTotal();
+                                    calculateTotalOrder()
+                                    $('#percent').val(0); // Jika ada tax
+
                                 }
                             }
                         ]
@@ -678,6 +810,94 @@
                 $('#modalPrDetail').modal('hide');
             });
 
+            let saveAndNew = false;
+            let activeBtn = null;
+
+            $(document).on('click', '.card-footer button[type="submit"]', function() {
+                saveAndNew = $(this).data('save-and-new');
+                activeBtn = $(this);
+            });
+
+            $('#postForm').on('submit', function(e) {
+                e.preventDefault();
+
+                let form = this;
+                let formData = new FormData(form);
+
+                if (!activeBtn) {
+                    activeBtn = $('#postForm').find('button[data-save-and-new="false"]');
+                    saveAndNew = false;
+                }
+
+                if (typeof prDetailsData === 'undefined' || prDetailsData.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Empty Items',
+                        text: 'Please add at least one item detail to the table before saving.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                }
+
+                formData.append('save_and_new', saveAndNew ? 1 : 0);
+                formData.append('items_detail', JSON.stringify(prDetailsData));
+
+                $.ajax({
+                    url: $(form).attr('action'),
+                    method: $(form).attr('method'),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    beforeSend: function() {
+                        activeBtn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
+                        $('.card-footer button').prop('disabled', true);
+                    },
+                    complete: function() {
+                        let closeBtn = $('#postForm').find('button[data-save-and-new="false"]');
+                        let newBtn = $('#postForm').find('button[data-save-and-new="true"]');
+                        closeBtn.html('<i class="fa fa-upload me-1"></i> Save and Close');
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New');
+                        $('.card-footer button').prop('disabled', false);
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Data Created Successfully',
+                            text: response.message,
+                            customClass: {
+                                confirmButton: 'btn btn-primary waves-effect waves-light'
+                            },
+                            buttonsStyling: false
+                        }).then(() => {
+                            window.location.href = response.redirect;
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Failed to Create Data',
+                            text: xhr.responseJSON.message ||
+                                'Please check your data again.',
+                            customClass: {
+                                confirmButton: 'btn btn-primary waves-effect waves-light'
+                            },
+                            buttonsStyling: false
+                        });
+
+                        let errors = xhr.responseJSON.errors || {};
+                        $.each(errors, function(key, value) {
+                            $(`#${key}Error`).text(value[0]);
+                        });
+                    }
+                });
+            });
+
             // 6. Event Handler: Ganti Customer Otomatis Isi Alamat
             $('#customer_id').on('change', function() {
                 var alamatTerpilih = $(this).find(':selected').data('alamat');
@@ -802,6 +1022,8 @@
                 // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
                 calculateTotalOrder();
             });
+
+
         });
     </script>
 @endpush

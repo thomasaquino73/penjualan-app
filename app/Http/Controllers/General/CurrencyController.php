@@ -130,7 +130,7 @@ class CurrencyController extends Controller
         //
     }
 
-   public function destroy($id)
+    public function destroy($id)
     {
         // 1. Cari data currency yang ingin dihapus
         $currency = Currency::findOrFail($id);
@@ -139,7 +139,7 @@ class CurrencyController extends Controller
         if ($currency->companies()->exists()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Mata uang tidak dapat dihapus karena sedang digunakan oleh data Perusahaan (Company).'
+                'message' => 'Mata uang tidak dapat dihapus karena sedang digunakan oleh data Perusahaan (Company).',
             ], 422); // Status 422 Unprocessable Entity
         }
 
@@ -147,7 +147,7 @@ class CurrencyController extends Controller
         if ($currency->cashBanks()->exists()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Mata uang tidak dapat dihapus karena sedang digunakan oleh data Kas & Bank.'
+                'message' => 'Mata uang tidak dapat dihapus karena sedang digunakan oleh data Kas & Bank.',
             ], 422);
         }
 
@@ -156,7 +156,7 @@ class CurrencyController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Mata uang ' . $currency->name . ' berhasil dihapus.'
+            'message' => 'Mata uang '.$currency->name.' berhasil dihapus.',
         ], 200);
     }
     // public function destroy($id)

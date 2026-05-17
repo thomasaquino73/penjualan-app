@@ -4,8 +4,8 @@ namespace App\Http\Controllers\General;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CompanyInfoRequest;
-use App\Models\General\Currency;
 use App\Models\General\Company;
+use App\Models\General\Currency;
 use Illuminate\Support\Facades\DB;
 
 class CompanyInfoController extends Controller

@@ -160,7 +160,7 @@ class SalesmanController extends Controller
         //
     }
 
-     public function store(SalesmanRequest $request)
+    public function store(SalesmanRequest $request)
     {
         try {
             $id = $request->input('id');
@@ -240,7 +240,6 @@ class SalesmanController extends Controller
             ], 500);
         }
     }
-    
 
     /**
      * Display the specified resource.

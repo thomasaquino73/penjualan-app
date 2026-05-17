@@ -117,7 +117,7 @@ class PurchaseRequisitionController extends Controller
 
                         // ✅ TOMBOL SUBMIT (Hanya jika status draft)
                         if ($row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Submit to Pending</a>';
+                            $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Submit to Approval</a>';
                         }
 
                         // ✅ TOMBOL DELETE (Hanya jika status draft)
@@ -127,7 +127,8 @@ class PurchaseRequisitionController extends Controller
 
                         // 🕒 TEKS JIKA STATUS PENDING (Untuk Pembuat Dokumen)
                         if ($row->status == 'pending') {
-                            $btn .= '<span class="dropdown-item-text text-warning small"><i class="ti ti-clock me-1"></i> Awaiting approval</span>';
+                            $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
+                            // $btn .= '<span class="dropdown-item-text text-warning small"><i class="ti ti-clock me-1"></i> Awaiting approval</span>';
                         }
                     }
 
@@ -148,7 +149,7 @@ class PurchaseRequisitionController extends Controller
                     // ─── KONDISI KHUSUS: JIKA DIA APPROVER TAPI DATA PUNYA DIA SENDIRI ─────────
                     if ($row->created_by == $currentUserId && $row->status == 'pending' && $user->can('permintaan_pembelian-approval')) {
                         // Baris ini opsional, untuk memperjelas kenapa dia tidak bisa approve dokumennya sendiri
-                        $btn .= '<span class="dropdown-item-text text-muted small"><i class="ti ti-alert-circle me-1"></i> Cannot approve your own PR</span>';
+                        // $btn .= '<span class="dropdown-item-text text-muted small"><i class="ti ti-alert-circle me-1"></i> Cannot approve your own PR</span>';
                     }
 
                     // ─── KONDISI GLOBAL: JIKA DATA SUDAH DI-PROCESS LANJUT ───────────────────
@@ -265,7 +266,7 @@ class PurchaseRequisitionController extends Controller
             // Melakukan loop otomatis jika nomor kode keduluan diambil user lain
             do {
                 $generatedCode = $this->generateNumberId();
-                
+
                 // Cek dengan lockForUpdate untuk mengunci baris pengecekan
                 $exists = PurchaseRequisition::where('code', $generatedCode)->lockForUpdate()->exists();
             } while ($exists);

@@ -10,6 +10,7 @@ use App\Models\Master_Data\Customer;
 use App\Models\Master_Data\Kendaraan;
 use App\Models\Transaction\PurchaseOrder;
 use App\Models\Transaction\PurchaseOrderDetail;
+use App\Models\Transaction\PurchaseRequisition;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 
@@ -151,11 +152,19 @@ class PurchaseOrderController extends Controller
             'kendaraan' => Kendaraan::where('status', 1)->get(),
             'term' => BasicCodeDetail::where('master_id', 5)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
+            'fob' => BasicCodeDetail::where('master_id', 3)->get(),
 
         ];
 
         return view('transaction.purchase_order.purchase_order_create', $x);
     }
+
+    public function getProcessingData()
+    {
+        $requisitions = PurchaseRequisition::where('status', 'processing')->get();
+        return response()->json($requisitions);
+    }
+
     public function getPrice($id)
     {
         // Mencari data barang berdasarkan ID
@@ -164,13 +173,13 @@ class PurchaseOrderController extends Controller
         if ($product) {
             return response()->json([
                 'success' => true,
-                'price'   => $product->price 
+                'price' => $product->price,
             ]);
         }
 
         return response()->json([
             'success' => false,
-            'message' => 'Product tidak ditemukan'
+            'message' => 'Product tidak ditemukan',
         ], 404);
     }
 }

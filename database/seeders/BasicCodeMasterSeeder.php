@@ -25,6 +25,11 @@ class BasicCodeMasterSeeder extends Seeder
                 'description' => 'Daftar satuan barang',
             ],
             [
+                'id' => '3',
+                'detail' => 'FOB',
+                'description' => '',
+            ],
+            [
                 'id' => '4',
                 'detail' => 'Tipe Persediaan',
                 'description' => 'Tipe persediaan untuk barang',

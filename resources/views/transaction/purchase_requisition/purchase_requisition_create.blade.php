@@ -337,11 +337,11 @@
                 let detailId = $('#detail_id').val();
 
                 // Validasi input wajib
-                if (!productId || quantity <= 0 || !unitId || !requiredDate) {
+                if (!productId || quantity <= 0 || !unitId) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Oops...',
-                        text: 'Please fill all required fields! (Product, Quantity, Unit, and Required Date)',
+                        text: 'Please fill all required fields! (Product, Quantity, Unit)',
                         customClass: {
                             confirmButton: 'btn btn-danger'
                         },

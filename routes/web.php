@@ -165,6 +165,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/data-barang/restore-multiple', [DataBarangController::class, 'restoreMultiple']);
     Route::get('/data-barang/trash', [DataBarangController::class, 'trash'])->name('data-barang.trash');
     Route::put('/data-barang/restore/{id}', [DataBarangController::class, 'restore'])->name('data-barang.restore');
+    Route::get('/data-barang/print/{id}', [DataBarangController::class, 'print'])->name('data-barang.print');
     Route::resource('data-barang', DataBarangController::class);
 
     Route::post('/satuan-barang/delete-multiple', [SatuanBarangController::class, 'deleteMultiple']);
@@ -183,7 +184,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/permintaan-pembelian/{id}/submit', [PurchaseRequisitionController::class, 'submitToPending'])->name('permintaan-pembelian.submit');
     Route::post('/permintaan-pembelian/change-status/{id}', [PurchaseRequisitionController::class, 'changeStatus'])
         ->name('permintaan-pembelian.change-status');
-    Route::get('/data-barang/print/{id}', [DataBarangController::class, 'print'])->name('data-barang.print');
+  
     Route::get('/permintaan-pembelian/print/{id}', [PurchaseRequisitionController::class, 'print'])->name('permintaan-pembelian.print');
     Route::resource('permintaan-pembelian', PurchaseRequisitionController::class);
 
@@ -191,6 +192,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/get-product-price/{id}', [PurchaseOrderController::class, 'getPrice']);
         Route::get('/table-pr', [PurchaseOrderController::class, 'table_pr'])->name('table_pr');
         Route::get('/trash', [PurchaseOrderController::class, 'trash'])->name('trash');
+        Route::get('/get-processing-requisitions', [PurchaseOrderController::class, 'getProcessingData'])->name('requisitions.processing');
         Route::resource('/', PurchaseOrderController::class);
     });
 

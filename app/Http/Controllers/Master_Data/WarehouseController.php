@@ -152,86 +152,86 @@ class WarehouseController extends Controller
     }
 
     public function store(WarehouseRequest $request)
-{
-    try {
-        $id = $request->input('id');
-        $data = $request->validated();
+    {
+        try {
+            $id = $request->input('id');
+            $data = $request->validated();
 
-        if (! empty($id)) {
+            if (! empty($id)) {
 
-            // ==========================================
-            // PROCESS: UPDATE DATA
-            // ==========================================
-            $data['updated_by'] = Auth::id();
+                // ==========================================
+                // PROCESS: UPDATE DATA
+                // ==========================================
+                $data['updated_by'] = Auth::id();
 
-            Warehouse::where('id', $id)->update($data);
-
-            return response()->json([
-                'action' => 'update',
-                'message' => 'Data updated successfully',
-            ], 200);
-
-        } else {
-
-            // ==========================================
-            // PROCESS: CREATE DATA (Safe from Race Condition)
-            // ==========================================
-            $data['created_by'] = Auth::id();
-            $data['status'] = 1;
-
-            // Mulai database transaction sebelum pengecekan ID
-            DB::beginTransaction();
-
-            try {
-                // Menggunakan kolom 'id_gudang' sesuai DB kamu
-                if (empty($data['id_gudang'])) {
-
-                    // Looping otomatis jika ID keduluan diambil user lain
-                    do {
-                        $data['id_gudang'] = $this->generateWarehouseId();
-
-                        // Kunci baris dengan lockForUpdate agar request lain mengantre
-                        $exists = Warehouse::where('id_gudang', $data['id_gudang'])->lockForUpdate()->exists();
-                    } while ($exists);
-
-                } else {
-                    // Validasi jika input manual: pastikan belum terdaftar
-                    $exists = Warehouse::where('id_gudang', $data['id_gudang'])->lockForUpdate()->exists();
-
-                    if ($exists) {
-                        DB::rollBack();
-
-                        return response()->json([
-                            'error' => 'ID Warehouse sudah digunakan',
-                        ], 422);
-                    }
-                }
-
-                // Simpan data ke database
-                Warehouse::create($data);
-
-                // Commit semua transaksi jika berhasil tanpa error
-                DB::commit();
+                Warehouse::where('id', $id)->update($data);
 
                 return response()->json([
-                    'action' => 'create',
-                    'message' => 'Data created successfully',
-                ], 201);
+                    'action' => 'update',
+                    'message' => 'Data updated successfully',
+                ], 200);
 
-            } catch (\Exception $e) {
-                // Batalkan transaksi jika terjadi error di dalam blok DB
-                DB::rollBack();
-                throw $e; // Lempar ke catch paling luar untuk response error 500
+            } else {
+
+                // ==========================================
+                // PROCESS: CREATE DATA (Safe from Race Condition)
+                // ==========================================
+                $data['created_by'] = Auth::id();
+                $data['status'] = 1;
+
+                // Mulai database transaction sebelum pengecekan ID
+                DB::beginTransaction();
+
+                try {
+                    // Menggunakan kolom 'id_gudang' sesuai DB kamu
+                    if (empty($data['id_gudang'])) {
+
+                        // Looping otomatis jika ID keduluan diambil user lain
+                        do {
+                            $data['id_gudang'] = $this->generateWarehouseId();
+
+                            // Kunci baris dengan lockForUpdate agar request lain mengantre
+                            $exists = Warehouse::where('id_gudang', $data['id_gudang'])->lockForUpdate()->exists();
+                        } while ($exists);
+
+                    } else {
+                        // Validasi jika input manual: pastikan belum terdaftar
+                        $exists = Warehouse::where('id_gudang', $data['id_gudang'])->lockForUpdate()->exists();
+
+                        if ($exists) {
+                            DB::rollBack();
+
+                            return response()->json([
+                                'error' => 'ID Warehouse sudah digunakan',
+                            ], 422);
+                        }
+                    }
+
+                    // Simpan data ke database
+                    Warehouse::create($data);
+
+                    // Commit semua transaksi jika berhasil tanpa error
+                    DB::commit();
+
+                    return response()->json([
+                        'action' => 'create',
+                        'message' => 'Data created successfully',
+                    ], 201);
+
+                } catch (\Exception $e) {
+                    // Batalkan transaksi jika terjadi error di dalam blok DB
+                    DB::rollBack();
+                    throw $e; // Lempar ke catch paling luar untuk response error 500
+                }
             }
-        }
 
-    } catch (\Exception $e) {
-        // Menangkap semua error (termasuk dari throw $e di atas)
-        return response()->json([
-            'error' => $e->getMessage(),
-        ], 500);
+        } catch (\Exception $e) {
+            // Menangkap semua error (termasuk dari throw $e di atas)
+            return response()->json([
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
-}
 
     public function create() {}
 
