@@ -372,17 +372,19 @@
                 let productName = $('#product_id option:selected').text();
                 let quantity = $('#quantity').val();
                 let unitId = $('#unit_id').val();
-                let requiredDate = $('#required_date').val();
-                let notes = $('#notes').val();
                 let unitName = $('#unit_id option:selected').text();
                 let detailId = $('#detail_id').val(); // Berisi index array jika edit
 
-                // 1. Validasi field kosong
-                if (!productId || !quantity || !unitId || !requiredDate || !notes) {
+                // required_date & notes sekarang opsional (jika kosong, beri default string kosong "" atau "-")
+                let requiredDate = $('#required_date').val() || '';
+                let notes = $('#notes').val() || '';
+
+                // 1. Validasi field kosong (DIKOREKSI: requiredDate dan notes sudah dihapus dari sini)
+                if (!productId || !quantity || !unitId) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Oops...',
-                        text: 'Please fill all fields!',
+                        text: 'Please fill all required fields! (Product, Quantity, and Unit)',
                         customClass: {
                             confirmButton: 'btn btn-danger'
                         },
@@ -436,7 +438,7 @@
                     'unit_id': unitId,
                     'unit': unitName,
                     'required_date': requiredDate,
-                    'notes': notes,
+                    'notes': notes
                 };
 
                 if (detailId === '') {

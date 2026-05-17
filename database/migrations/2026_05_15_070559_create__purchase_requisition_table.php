@@ -29,6 +29,8 @@ return new class extends Migration
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->date('approved_at')->nullable();
             $table->timestamps();
         });
         Schema::create('purchase_requisition_detail', function (Blueprint $table) {

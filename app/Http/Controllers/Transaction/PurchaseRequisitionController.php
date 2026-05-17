@@ -278,17 +278,22 @@ class PurchaseRequisitionController extends Controller
 
             if (is_array($items) && count($items) > 0) {
                 foreach ($items as $item) {
+                    // Cek apakah required_date diisi dan tidak kosong
+                    $requiredDate = !empty($item['required_date']) 
+                        ? Carbon::parse($item['required_date'])->format('Y-m-d') 
+                        : null; // Jika kosong, langsung set ke null secara mutlak
+
                     // Simpan setiap baris item ke tabel `purchase_requisition_detail`
                     PurchaseRequisitionDetail::create([
-                        'purchase_requisition_id' => $prMaster->id, // Mengambil ID dari master yang baru disimpan
-                        'product_id' => $item['product_id'],
-                        'qty' => $item['quantity'] ?? $item['qty'],
-                        'unit_id' => $item['unit_id'],
-                        'required_date' => Carbon::parse($item['required_date'])->format('Y-m-d'),
-                        'notes' => $item['notes'] ?? null,
-                        'active' => 1, // 1 = Active
-                        'created_by' => Auth::id(),
-                        'updated_by' => null,
+                        'purchase_requisition_id' => $prMaster->id,
+                        'product_id'              => $item['product_id'],
+                        'qty'                     => $item['quantity'] ?? $item['qty'],
+                        'unit_id'                 => $item['unit_id'],
+                        'required_date'           => $requiredDate, 
+                        'notes'                   => !empty($item['notes']) ? $item['notes'] : null,
+                        'active'                  => 1,
+                        'created_by'              => Auth::id(),
+                        'updated_by'              => null,
                     ]);
                 }
             } else {
@@ -390,8 +395,7 @@ class PurchaseRequisitionController extends Controller
                 'code' => $request->code,
                 'date' => Carbon::parse($request->date)->format('Y-m-d'),
                 'description' => $request->description,
-                // 'status' tidak diubah di sini karena mengikuti alur status yang sudah ada (misal: tetap draft/approved)
-                'updated_by' => Auth::id(), // ID User yang mengubah data
+                'updated_by' => Auth::id(), 
             ]);
 
             // 3. Decode data array string JSON (`items_detail`) yang dikirim dari DataTables lokal
@@ -403,16 +407,17 @@ class PurchaseRequisitionController extends Controller
                 PurchaseRequisitionDetail::where('purchase_requisition_id', $prMaster->id)->delete();
 
                 foreach ($items as $item) {
-                    // Masukkan kembali baris item baru/editan ke tabel `purchase_requisition_detail`
+                    $requiredDate = !empty($item['required_date']) 
+                        ? Carbon::parse($item['required_date'])->format('Y-m-d') 
+                        : null;
                     PurchaseRequisitionDetail::create([
                         'purchase_requisition_id' => $prMaster->id,
                         'product_id' => $item['product_id'],
                         'qty' => $item['quantity'] ?? $item['qty'],
                         'unit_id' => $item['unit_id'],
-                        'required_date' => Carbon::parse($item['required_date'])->format('Y-m-d'),
+                        'required_date' => $requiredDate,
                         'notes' => $item['notes'] ?? null,
-                        'active' => 1, // 1 = Active
-                        'created_by' => $prMaster->created_by, // Tetap pertahankan pembuat awal
+                        'active' => 1, 
                         'updated_by' => Auth::id(),
                     ]);
                 }
@@ -733,52 +738,78 @@ class PurchaseRequisitionController extends Controller
         return response()->json(['message' => 'Purchase Requisition status successfully updated!']);
     }
 
-    public function print($id)
-    {
-        // Menggunakan relasi 'creator' sesuai dengan yang ada di model Anda
-        $detail = PurchaseRequisition::with(['details.produkID', 'details.unitID', 'creator'])->findOrFail($id);
-        $company = Company::first();
+public function print($id)
+{
+    // Load data detail PR beserta relasi creator dan updater (updated_by)
+    $detail = PurchaseRequisition::with(['details.produkID', 'details.unitID', 'creator', 'updater'])->findOrFail($id);
+    $company = Company::first();
 
-        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
-        $logoBase64 = null;
-        if ($company && $company->logo) {
-            $path = public_path($company->logo);
-            if (file_exists($path)) {
-                $type = pathinfo($path, PATHINFO_EXTENSION);
-                $data = file_get_contents($path);
-                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
-            }
+    // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+    $logoBase64 = null;
+    if ($company && $company->logo) {
+        $path = public_path($company->logo);
+        if (file_exists($path)) {
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
         }
+    }
 
-        // 2. LOGIKA QR CODE TANDA TANGAN DIGITAL
-        // DISESUAIKAN: Menggunakan $detail->creator->name
-        $approverName = $detail->creator->fullname ?? 'Staff Purchasing';
+    // Context SSL agar file_get_contents tidak error saat menembak API QR Code secara HTTPS
+    $qrContext = stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
 
-        $qrText = "DOCUMENT VALIDATION\n"
-                ."Status: DIGITALLY SIGNED & APPROVED\n"
-                .'Doc Number: '.$detail->code."\n"
-                .'Signed By: '.$approverName."\n"
-                .'Date: '.($detail->date ?? date('Y-m-d'));
 
-        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='.urlencode($qrText);
-        $qrContext = stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+    // 2. LOGIKA QR CODE PEMBUAT (CREATED BY) - Selalu Muncul
+    $creatorName = $detail->creator->fullname ?? 'Staff Purchasing';
+    $creatorText = "DOCUMENT VALIDATION\n"
+                  ."Status: DIGITALLY SIGNED & CREATED\n"
+                  ."Doc Number: " . $detail->code . "\n"
+                  ."Created By: " . $creatorName . "\n"
+                  ."Date: " . ($detail->date ?? date('Y-m-d'));
+
+    $qrCreatorUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($creatorText);
+    
+    try {
+        $qrCreatorData = file_get_contents($qrCreatorUrl, false, $qrContext);
+        $qrCodeBase64 = 'data:image/png;base64,' . base64_encode($qrCreatorData);
+    } catch (\Exception $e) {
+        $qrCodeBase64 = null;
+    }
+
+
+    // 3. LOGIKA QR CODE APPROVER (APPROVED BY) - Hanya jika status sudah disetujui
+    $qrApprovalBase64 = null;
+    $approvedStatuses = ['processing','rejected'];
+
+    if (in_array($detail->status, $approvedStatuses)) {
+        $updaterName = $detail->updater->fullname ?? 'Manager Purchasing';
+        $approvalText = "DOCUMENT VALIDATION\n"
+                      ."Status: DIGITALLY VERIFIED & APPROVED\n"
+                      ."Doc Number: " . $detail->code . "\n"
+                      ."Approved By: " . $updaterName . "\n"
+                      ."Approve Date: " . ($detail->updated_at ? $detail->updated_at->format('Y-m-d H:i') : date('Y-m-d H:i'));
+
+        $qrApprovalUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($approvalText);
 
         try {
-            $qrData = file_get_contents($qrUrl, false, $qrContext);
-            $qrCodeBase64 = 'data:image/png;base64,'.base64_encode($qrData);
+            $qrApprovalData = file_get_contents($qrApprovalUrl, false, $qrContext);
+            $qrApprovalBase64 = 'data:image/png;base64,' . base64_encode($qrApprovalData);
         } catch (\Exception $e) {
-            $qrCodeBase64 = null;
+            $qrApprovalBase64 = null;
         }
-
-        $pdf = Pdf::loadView('pdf.purchase_requisition_pdf', compact('detail', 'company', 'logoBase64', 'qrCodeBase64'))
-            ->setOptions([
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
-                'chroot' => [public_path()],
-            ]);
-
-        $fileName = str_replace('/', '-', $detail->code).'.pdf';
-
-        return $pdf->download($fileName);
     }
+
+
+    // 4. GENERATE PDF (Kirimkan variabel qrCodeBase64 dan qrApprovalBase64 ke view)
+    $pdf = Pdf::loadView('pdf.purchase_requisition_pdf', compact('detail', 'company', 'logoBase64', 'qrCodeBase64', 'qrApprovalBase64'))
+        ->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'chroot' => [public_path()],
+        ]);
+
+    $fileName = str_replace('/', '-', $detail->code).'.pdf';
+
+    return $pdf->download($fileName);
+}
 }

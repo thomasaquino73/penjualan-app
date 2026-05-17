@@ -109,7 +109,8 @@
                                 <td>{{ $detail->produkID->nama_barang ?? 'N/A' }}</td>
                                 <td>{{ $detail->qty }}</td>
                                 <td>{{ $detail->unitID->detail ?? 'N/A' }}</td>
-                                <td>{{ $detail->required_date }}</td>
+                                <td>{{ $detail->required_date ? Carbon\Carbon::parse($detail->required_date)->format('Y-m-d') : 'N/A' }}
+                                </td>
                                 <td>{{ $detail->notes ?? 'N/A' }}</td>
                             </tr>
                         @endforeach
