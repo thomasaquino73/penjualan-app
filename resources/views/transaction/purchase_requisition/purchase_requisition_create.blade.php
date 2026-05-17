@@ -168,7 +168,6 @@
             flatpickr("#date", {
                 enableTime: false,
                 time_24hr: true,
-                enableSeconds: false,
                 dateFormat: "d-m-Y",
                 minDate: "today",
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}"
@@ -176,57 +175,27 @@
             flatpickr("#required_date", {
                 enableTime: false,
                 time_24hr: true,
-                enableSeconds: false,
                 dateFormat: "d-m-Y",
                 minDate: "today",
                 defaultDate: ""
             });
         });
+
         $(document).ready(function() {
+            // Inisialisasi Select2 untuk Modal
             $('.select2-modal').each(function() {
                 var $this = $(this);
                 $this.wrap('<div class="position-relative"></div>').select2({
                     placeholder: $this.attr('data-placeholder'),
                     width: '100%',
-                    dropdownParent: $(
-                        '#modalPrDetail'
-                    ) // <--- WAJIB: Sesuaikan dengan ID Modal Bootstrap kamu
+                    dropdownParent: $('#modalPrDetail')
                 });
-            });
-
-            $('#product_id').on('change', function() {
-                let productId = $(this).val();
-                let unitDropdown = $('#unit_id');
-
-                // Kosongkan dropdown unit terlebih dahulu dan set ke keadaan loading
-                unitDropdown.empty().append('<option></option>').trigger('change');
-
-                if (productId) {
-                    $.ajax({
-                        url: `/get-units-by-product/${productId}`,
-                        type: 'GET',
-                        dataType: 'json',
-                        success: function(data) {
-                            // Isi kembali dropdown unit dengan data baru dari server
-                            $.each(data, function(key, value) {
-                                unitDropdown.append(new Option(value.name, value.id,
-                                    false, false));
-                            });
-
-                            // Refresh tampilan select2 agar memperbarui opsinya
-                            unitDropdown.trigger('change');
-                        },
-                        error: function() {
-                            toastr.error('Failed to fetch units data.');
-                        }
-                    });
-                }
             });
 
             let prDetailsData = [];
             let table = new DataTable('#table', {
                 processing: true,
-                serverSide: false, // Diubah ke false agar bisa menambah data sementara secara lokal
+                serverSide: false,
                 responsive: true,
                 select: true,
                 searching: false,
@@ -234,28 +203,29 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                // Sumber data dialihkan menggunakan array JavaScript lokal kita
                 data: prDetailsData,
                 columns: [{
                         data: null,
                         orderable: false,
                         searchable: false,
                         render: function(data, type, row, meta) {
-                            return meta.row + 1; // Nomor urut otomatis (DT_RowIndex lokal)
+                            return meta.row + 1;
                         }
                     },
                     {
-                        data: 'data_produk',
+                        data: 'data_produk'
                     },
                     {
-                        data: 'quantity',
+                        data: 'quantity'
                     },
                     {
-                        data: 'unit',
-                    }, {
-                        data: 'required_date',
-                    }, {
-                        data: 'notes',
+                        data: 'unit'
+                    },
+                    {
+                        data: 'required_date'
+                    },
+                    {
+                        data: 'notes'
                     }
                 ],
                 layout: {
@@ -267,7 +237,6 @@
                                     $('#formPrDetail')[0].reset();
                                     $('#detail_id').val('');
 
-                                    // Reset komponen select2 jika Anda menggunakannya
                                     if ($.fn.select2) {
                                         $('#product_id').val('').trigger('change');
                                         $('#unit_id').val('').trigger('change');
@@ -290,18 +259,15 @@
                                         selected: true
                                     }).index();
 
-                                    // 1. Ambil nomor index row tabel lokal untuk penanda update array
                                     $('#detail_id').val(rowIndex);
                                     $('#quantity').val(data.quantity);
+                                    $('#required_date').val(data.required_date);
+                                    $('#notes').val(data.notes);
 
-                                    // 2. Simpan ID Unit yang sedang aktif ke data-attribute jQuery secara sementara
-                                    // Ini agar ketika AJAX Produk selesai memuat data, nilai unit_id langsung terkunci ke nilai ini
+                                    // Simpan ID unit secara temporer untuk trigger di AJAX product change
                                     $('#unit_id').data('pending-val', data.unit_id);
-
-                                    // 3. Set value produk (ini otomatis memicu Event Listener Ajax di atas)
                                     $('#product_id').val(data.product_id).trigger('change');
 
-                                    // 4. Munculkan Modal
                                     $('#modalTitle').text('Edit entry');
                                     $('#btnSubmitModal').text('Update');
                                     $('#modalPrDetail').modal('show');
@@ -334,12 +300,8 @@
                                         buttonsStyling: false
                                     }).then(function(result) {
                                         if (result.isConfirmed) {
-                                            // Hapus data dari array JavaScript berdasarkan indexnya
                                             prDetailsData.splice(rowIndex, 1);
-
-                                            // Refresh visual tabel lokal
                                             dt.clear().rows.add(prDetailsData).draw();
-
                                             toastr.success('Deleted Data Successfully',
                                                 '', {
                                                     timeOut: 1500,
@@ -353,7 +315,6 @@
                                 text: '<i class="ti ti-refresh me-1"></i> Clear All',
                                 className: 'btn btn-secondary btn-sm',
                                 action: function(e, dt, node, config) {
-                                    // Kosongkan seluruh data sementara di tabel
                                     prDetailsData = [];
                                     dt.clear().draw();
                                 }
@@ -363,28 +324,24 @@
                 }
             });
 
-            // 3. Event Handler saat Form di dalam Modal di-Submit
             $('#formPrDetail').on('submit', function(e) {
                 e.preventDefault();
 
-                // Mengambil value dan text dari form modal
                 let productId = $('#product_id').val();
                 let productName = $('#product_id option:selected').text();
-                let quantity = $('#quantity').val();
                 let unitId = $('#unit_id').val();
                 let unitName = $('#unit_id option:selected').text();
-                let detailId = $('#detail_id').val(); // Berisi index array jika edit
+                let quantity = parseFloat($('#quantity').val()) || 0;
+                let requiredDate = $('#required_date').val();
+                let notes = $('#notes').val();
+                let detailId = $('#detail_id').val();
 
-                // required_date & notes sekarang opsional (jika kosong, beri default string kosong "" atau "-")
-                let requiredDate = $('#required_date').val() || '';
-                let notes = $('#notes').val() || '';
-
-                // 1. Validasi field kosong (DIKOREKSI: requiredDate dan notes sudah dihapus dari sini)
-                if (!productId || !quantity || !unitId) {
+                // Validasi input wajib
+                if (!productId || quantity <= 0 || !unitId || !requiredDate) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Oops...',
-                        text: 'Please fill all required fields! (Product, Quantity, and Unit)',
+                        text: 'Please fill all required fields! (Product, Quantity, Unit, and Required Date)',
                         customClass: {
                             confirmButton: 'btn btn-danger'
                         },
@@ -393,21 +350,15 @@
                     return false;
                 }
 
-                // 2. VALIDASI DUPLIKASI PRODUK BERDASARKAN ARRAY prDetailsData
+                // Validasi Duplikasi Produk
                 let isDuplicate = false;
-
                 if (prDetailsData && prDetailsData.length > 0) {
                     for (let i = 0; i < prDetailsData.length; i++) {
-                        // Cek apakah ada product_id yang sama di dalam array
                         if (prDetailsData[i].product_id == productId) {
-
-                            // Kondisi A: Jika aksi TAMBAH BARU (detailId kosong) -> Langsung duplikat
                             if (detailId === '') {
                                 isDuplicate = true;
                                 break;
-                            }
-                            // Kondisi B: Jika aksi EDIT -> Duplikat hanya jika produk ditemukan di INDEX YANG BERBEDA
-                            else if (detailId !== '' && i != detailId) {
+                            } else if (detailId !== '' && i != detailId) {
                                 isDuplicate = true;
                                 break;
                             }
@@ -415,13 +366,11 @@
                     }
                 }
 
-                // Jika terdeteksi duplikat, batalkan submit dan munculkan SweetAlert
                 if (isDuplicate) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Product Already Exists!',
-                        html: `The product <b>"${productName}"</b> is already registered in the details list.<br>Please edit the item if you want to change the quantity or unit.`,
-                        confirmButtonColor: '#3085d6',
+                        html: `The product <b>"${productName}"</b> is already registered in the list.`,
                         customClass: {
                             confirmButton: 'btn btn-danger'
                         },
@@ -430,7 +379,7 @@
                     return false;
                 }
 
-                // 3. Susun objek data sesuai struktur kolom tabel jika lolos validasi
+                // Susun Object Data Baru sesuai Kolom Tabel Anda sekarang
                 let itemData = {
                     'product_id': productId,
                     'data_produk': productName,
@@ -442,45 +391,37 @@
                 };
 
                 if (detailId === '') {
-                    // AKSI NEW: Tambah baru ke dalam array
                     prDetailsData.push(itemData);
                 } else {
-                    // AKSI EDIT: Update data di array berdasarkan index-nya
                     prDetailsData[detailId] = itemData;
                 }
 
-                // Masukkan data array terbaru ke DataTables dan gambar ulang (render) grafisnya
+                // Bersihkan tabel lama, masukkan array baru, gambar ulang tabel
                 table.clear().rows.add(prDetailsData).draw();
 
-                // Sembunyikan modal
+                // Tutup modal secara aman
                 $('#modalPrDetail').modal('hide');
             });
 
-            // Variabel helper untuk mendeteksi tombol aktif
             let saveAndNew = false;
             let activeBtn = null;
 
-            // 1. Tangkap aksi klik pada tombol footer terlebih dahulu untuk menentukan mode simpan
             $(document).on('click', '.card-footer button[type="submit"]', function() {
-                // Membaca attribute data-save-and-new="true/false" dari HTML tombol yang diklik
                 saveAndNew = $(this).data('save-and-new');
                 activeBtn = $(this);
             });
 
-            // 2. Event Handler Submit pada Form Utama
             $('#postForm').on('submit', function(e) {
                 e.preventDefault();
 
                 let form = this;
                 let formData = new FormData(form);
 
-                // Jika user langsung tekan enter tanpa klik tombol, pasang default ke Save and Close
                 if (!activeBtn) {
                     activeBtn = $('#postForm').find('button[data-save-and-new="false"]');
                     saveAndNew = false;
                 }
 
-                // --- VALIDASI: Pastikan user sudah mengisi minimal 1 item detail di tabel lokal ---
                 if (typeof prDetailsData === 'undefined' || prDetailsData.length === 0) {
                     Swal.fire({
                         icon: 'warning',
@@ -492,13 +433,10 @@
                         },
                         buttonsStyling: false
                     });
-                    return false; // ❌ STOP SUBMIT
+                    return false;
                 }
 
-                // Append flag status save_and_new ke form data (1 jika true, 0 jika false)
                 formData.append('save_and_new', saveAndNew ? 1 : 0);
-
-                // Append data array detail produk dari memori lokal dengan mengubahnya menjadi JSON String
                 formData.append('items_detail', JSON.stringify(prDetailsData));
 
                 $.ajax({
@@ -509,82 +447,60 @@
                     contentType: false,
                     dataType: 'json',
                     beforeSend: function() {
-                        // Berikan efek loading teks spinner pada tombol yang sedang diklik aktif
                         activeBtn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
-                        $('.card-footer button').prop('disabled',
-                            true); // Kunci semua tombol biar tidak double click
+                        $('.card-footer button').prop('disabled', true);
                     },
                     complete: function() {
-                        // Kembalikan teks asli tombol setelah proses AJAX selesai
                         let closeBtn = $('#postForm').find('button[data-save-and-new="false"]');
                         let newBtn = $('#postForm').find('button[data-save-and-new="true"]');
-
                         closeBtn.html('<i class="fa fa-upload me-1"></i> Save and Close');
                         newBtn.html(
                             '<i class="fa fa-plus-circle me-1"></i> Save and Create New');
-
-                        $('.card-footer button').prop('disabled',
-                            false); // Buka kembali kunci tombol
+                        $('.card-footer button').prop('disabled', false);
                     },
                     success: function(response) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Data Created Successfully',
                             text: response.message,
-                            showClass: {
-                                popup: 'animate__animated animate__bounceIn'
-                            },
                             customClass: {
                                 confirmButton: 'btn btn-primary waves-effect waves-light'
                             },
                             buttonsStyling: false
                         }).then(() => {
-                            // Redirect halaman sesuai instruksi url balikan dari Controller Laravel Anda
                             window.location.href = response.redirect;
                         });
                     },
                     error: function(xhr) {
-                        // Bersihkan pesan error validasi lama
-                        if (typeof resetValidation === "function") {
-                            resetValidation();
-                        }
-
                         Swal.fire({
                             icon: 'error',
                             title: 'Failed to Create Data',
                             text: xhr.responseJSON.message ||
                                 'Please check your data again.',
-                            showClass: {
-                                popup: 'animate__animated animate__bounceIn'
-                            },
                             customClass: {
                                 confirmButton: 'btn btn-primary waves-effect waves-light'
                             },
                             buttonsStyling: false
                         });
 
-                        // Tampilkan pesan error validasi spesifik di bawah input field masing-masing
                         let errors = xhr.responseJSON.errors || {};
                         $.each(errors, function(key, value) {
-                            if (typeof displayFieldError === "function") {
-                                displayFieldError(key, value[0]);
-                            }
+                            $(`#${key}Error`).text(value[0]);
                         });
                     }
                 });
             });
 
+
             $(document).on('change', '#product_id', function() {
                 let productId = $(this).val();
                 let unitSelect = $('#unit_id');
 
-                // Jika produk kosong, bersihkan selectbox unit
                 if (!productId) {
                     unitSelect.empty().append('<option></option>').trigger('change');
                     return;
                 }
 
-                // Panggil Controller bawaan Anda yang tidak boleh diubah tadi
                 $.ajax({
                     url: `/get-units-by-product/${productId}`,
                     type: 'GET',
@@ -596,39 +512,32 @@
                     success: function(response) {
                         unitSelect.empty().append('<option></option>').prop('disabled', false);
 
-                        // Response dari controller Anda berupa array berisi objek {id: ..., name: ...}
                         if (response && response.length > 0) {
                             $.each(response, function(key, item) {
-                                // Masukkan id dan name (detail nama satuan dari relation unit)
                                 unitSelect.append(
                                     `<option value="${item.id}">${item.name}</option>`
                                 );
                             });
                         } else {
-                            // Antisipasi jika response kosong dari backend
                             unitSelect.append('<option value="">No unit available</option>');
                         }
 
                         unitSelect.trigger('change');
 
-                        // [PROSES EDIT]: Jika ada unit lama yang menggantung di memori, pasang langsung nilainya di sini
+                        // Jika dalam mode EDIT, pasang kembali unit yang terpilih sebelumnya
                         let pendingUnitId = unitSelect.data('pending-val');
                         if (pendingUnitId) {
                             unitSelect.val(pendingUnitId).trigger('change');
-                            unitSelect.removeData(
-                                'pending-val'); // Hapus cache temporary setelah digunakan
+                            unitSelect.removeData('pending-val');
                         }
                     },
                     error: function() {
-                        console.error('Gagal memuat list unit dari Controller.');
+                        toastr.error('Failed to fetch units data.');
                         unitSelect.empty().append('<option></option>').prop('disabled', false)
                             .trigger('change');
                     }
                 });
             });
-
-
-
         });
     </script>
 @endpush
