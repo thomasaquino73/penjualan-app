@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\General;
 
 use App\Http\Controllers\Controller;
+use App\Models\General\Currency;
 
 class GeneralSettingController extends Controller
 {
@@ -35,13 +36,15 @@ class GeneralSettingController extends Controller
 
     public function index()
     {
-
+        $currencies = Currency::all();
         $x = [
             'title' => 'General Setting',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'General Setting', 'url' => ''],
             ],
+            // Masukkan variabel currencies ke dalam array $x agar terbaca di view
+            'currencies' => $currencies,
         ];
 
         return view('general.general-setting.general_setting_index', $x);

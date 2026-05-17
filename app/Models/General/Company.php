@@ -2,7 +2,7 @@
 
 namespace App\Models\General;
 
-use App\Models\BasicCodeDetail;
+use App\Models\Currency;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
@@ -18,6 +18,6 @@ class Company extends Model
 
     public function currency()
     {
-        return $this->belongsTo(BasicCodeDetail::class, 'mata_uang_id');
+        return $this->belongsTo(Currency::class, 'mata_uang_id');
     }
 }

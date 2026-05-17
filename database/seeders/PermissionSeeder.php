@@ -28,8 +28,6 @@ class PermissionSeeder extends Seeder
             'barang' => ['alias' => 'Product', 'group' => 'Master Data'],
             'kategori_barang' => ['alias' => 'Category', 'group' => 'Master Data'],
             'satuan_barang' => ['alias' => 'Unit', 'group' => 'Master Data'],
-
-            'mata_uang' => ['alias' => 'Currency', 'group' => 'General'],
             'company' => ['alias' => 'Company', 'group' => 'General'],
             'general' => ['alias' => 'General', 'group' => 'General'],
 

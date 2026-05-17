@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\General\CashBankController;
 use App\Http\Controllers\General\CompanyInfoController;
 use App\Http\Controllers\General\CurrencyController;
 use App\Http\Controllers\General\GeneralSettingController;
@@ -77,6 +78,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/general-setting', [GeneralSettingController::class, 'index'])->name('general-setting.index');
 
     Route::resource('/mata-uang', CurrencyController::class);
+    Route::resource('/cash-bank', CashBankController::class);
 
     Route::prefix('token')->group(function () {
         Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');

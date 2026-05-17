@@ -4,7 +4,7 @@ namespace App\Http\Controllers\General;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CompanyInfoRequest;
-use App\Models\BasicCodeDetail;
+use App\Models\Currency;
 use App\Models\General\Company;
 use Illuminate\Support\Facades\DB;
 
@@ -29,7 +29,7 @@ class CompanyInfoController extends Controller
     public function edit($id)
     {
         $sistem = Company::findOrFail($id);
-        $currenci = BasicCodeDetail::where('master_id', 3)->get();
+        $currenci = Currency::all();
 
         $x = [
             'title' => 'Company Information',

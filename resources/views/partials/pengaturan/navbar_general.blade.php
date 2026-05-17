@@ -15,13 +15,4 @@
             </a>
         </li>
     @endif
-    @if (auth()->user()->can('mata_uang-browse'))
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('mata-uang.*') ? 'active' : '' }}"
-                href="{{ route('mata-uang.index') }}">
-                <i class="ti ti-coins ti-xs me-1"></i>Currency
-            </a>
-        </li>
-    @endif
-
 </ul>

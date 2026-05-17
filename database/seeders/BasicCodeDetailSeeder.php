@@ -52,18 +52,6 @@ class BasicCodeDetailSeeder extends Seeder
             ],
             [
                 'id' => $i++,
-                'master_id' => '3',
-                'detail' => 'IDR',
-                'description' => 'Indonesia Rupiah',
-            ],
-            [
-                'id' => $i++,
-                'master_id' => '3',
-                'detail' => 'USD',
-                'description' => 'US Dollar',
-            ],
-            [
-                'id' => $i++,
                 'master_id' => '4',
                 'detail' => 'Bahan Baku',
                 'description' => '',
