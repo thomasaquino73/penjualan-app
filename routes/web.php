@@ -86,7 +86,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/check', [IdleController::class, 'checkToken'])->name('token.check');
     });
 
-    
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
@@ -200,7 +199,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/get-processing-requisitions', [PurchaseOrderController::class, 'getProcessingData'])->name('requisitions.processing');
         Route::post('/{id}/submit', [PurchaseOrderController::class, 'submitToPending'])->name('submit');
         Route::post('/change-status/{id}', [PurchaseOrderController::class, 'changeStatus']);
-    Route::get('/print/{id}', [PurchaseOrderController::class, 'print'])->name('print');
+        Route::get('/print/{id}', [PurchaseOrderController::class, 'print'])->name('print');
         Route::resource('', PurchaseOrderController::class)->parameters(['' => 'purchase_order']);
     });
 

@@ -14,9 +14,10 @@ class PurchaseOrder extends Model
     protected $table = 'purchase_order';
 
     protected $guarded = [];
+
     protected $casts = [
-    'expected_date' => 'datetime',
-    'date' => 'datetime',
+        'expected_date' => 'datetime',
+        'date' => 'datetime',
     ];
 
     public function creator()
@@ -32,5 +33,10 @@ class PurchaseOrder extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(PurchaseOrderDetail::class, 'purchase_order_id');
     }
 }

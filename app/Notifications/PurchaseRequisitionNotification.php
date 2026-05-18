@@ -26,13 +26,13 @@ class PurchaseRequisitionNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-           $sistem = PengaturanSistem::first();
-    $appName = $sistem->nama_aplikasi ?? config('app.name');
-    $company = Company::first();
-    $companyName = $company->nama_perusahaan ?? config('app.name');
+        $sistem = PengaturanSistem::first();
+        $appName = $sistem->nama_aplikasi ?? config('app.name');
+        $company = Company::first();
+        $companyName = $company->nama_perusahaan ?? config('app.name');
 
         return (new MailMessage)
-        ->from(env('MAIL_FROM_ADDRESS'), $appName)
+            ->from(env('MAIL_FROM_ADDRESS'), $appName)
             ->subject('Purchase Requisition New')
             ->view('emails.permintaan-pembelian-new', [
                 'user' => $notifiable,
@@ -50,8 +50,8 @@ class PurchaseRequisitionNotification extends Notification
             'user_id' => $this->purchaseRequisition->creator->id,
             'avatar' => $this->purchaseRequisition->creator->avatar ?? asset('assets/img/avatars/1.png'),
             'title' => 'New Purchase Requisition Created',
-            'messages' => $this->purchaseRequisition->creator->fullname .
-                ' has created PR "' . $this->purchaseRequisition->code . '"',
+            'messages' => $this->purchaseRequisition->creator->fullname.
+                ' has created PR "'.$this->purchaseRequisition->code.'"',
             'link' => route('permintaan-pembelian.show', $this->purchaseRequisition),
         ];
     }

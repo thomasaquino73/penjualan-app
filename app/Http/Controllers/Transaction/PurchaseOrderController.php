@@ -112,7 +112,7 @@ class PurchaseOrderController extends Controller
                         // ✅ TOMBOL SUBMIT (Hanya jika status draft)
                         if ($row->status == 'draft') {
                             $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Submit to Approval</a>';
-                            $btn.='<hr class="dropdown-divider">';
+                            $btn .= '<hr class="dropdown-divider">';
                         }
                         // ✅ TOMBOL EDIT (Hanya jika status draft)
                         if ($user->can('permintaan_pembelian-edit') && $row->status == 'draft') {
@@ -254,9 +254,9 @@ class PurchaseOrderController extends Controller
 
     public function getProcessingData()
     {
-        $requisitions = PurchaseOrder::where('status', 'processing')->get();
+        $orders = PurchaseOrder::where('status', 'processing')->get();
 
-        return response()->json($requisitions);
+        return response()->json($orders);
     }
 
     public function getPrice($id)
@@ -297,7 +297,7 @@ class PurchaseOrderController extends Controller
             $data['sub_total'] = $request->sub_total;
             $data['disc_percent'] = $request->percent;
             $data['disc_nominal'] = $request->discount_all;
-            $data['grand_total'] = $request->grand_total;
+            $data['grand_total'] = $request->total_order;
             $data['date'] = Carbon::parse($request->date)->format('Y-m-d');
             $data['expected_date'] = $request->expected_date ? Carbon::parse($request->expected_date)->format('Y-m-d') : null;
 
@@ -377,8 +377,8 @@ class PurchaseOrderController extends Controller
 
     public function edit(string $id)
     {
-         $purchaseOrder = PurchaseOrder::findOrFail($id);
-         $x = [
+        $purchaseOrder = PurchaseOrder::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $x = [
             'title' => 'Edit Purchase Order ',
             'breadcrumb' => [
                 ['label' => 'Purchase Order', 'url' => route('purchase-order.index')],
@@ -396,6 +396,81 @@ class PurchaseOrderController extends Controller
         ];
 
         return view('transaction.purchase_order.purchase_order_edit', $x);
+    }
+
+    public function update(PurchaseOrderRequest $request, string $id)
+    {
+        // Cari data induk berdasarkan ID, jika tidak ketemu otomatis melempar error 404
+        $prMaster = PurchaseOrder::findOrFail($id);
+
+        // Mulai Database Transaction demi keamanan integritas relasi data
+        DB::beginTransaction();
+
+        try {
+            // 2. Update Data Master ke tabel `purchase_order`
+            $prMaster->update([
+                'supplier_id' => $request->supplier_id,
+                'code' => $request->code,
+                'date' => Carbon::parse($request->date)->format('Y-m-d'),
+                'expected_date' => Carbon::parse($request->expected_date)->format('Y-m-d'),
+                'fob_id' => $request->fob_id,
+                'term' => $request->term,
+                'vehicle_id' => $request->vehicle_id,
+                'description' => $request->description,
+                'sub_total' => $request->sub_total,
+                'disc_percent' => $request->percent,
+                'disc_nominal' => $request->discount_all,
+                'grand_total' => $request->total_order,
+                'updated_by' => Auth::id(),
+            ]);
+
+            // 3. Decode data array string JSON (`items_detail`) yang dikirim dari DataTables lokal
+            $items = json_decode($request->items_detail, true);
+
+            if (is_array($items) && count($items) > 0) {
+
+                // Hapus semua detail lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
+                PurchaseOrderDetail::where('purchase_order_id', $prMaster->id)->delete();
+
+                foreach ($items as $item) {
+                    PurchaseOrderDetail::create([
+                        'purchase_order_id' => $prMaster->id,
+                        'product_id' => $item['product_id'],
+                         'qty' => $item['quantity'] ?? $item['qty'],
+                        'unit_id' => $item['unit_id'],
+                        'unit_price' => $item['unit_price'],
+                        'discount' => $item['discount'],
+                        'tax' => $item['tax'],
+                        'amount' => $item['amount'],
+                        'updated_by' => Auth::id(),
+                    ]);
+                }
+            } else {
+                // Gagalkan proses jika ternyata isi array kosong setelah didecode
+                throw new \Exception('Minimal harus ada 1 item produk yang dimasukkan.');
+            }
+
+            // Jika semua query aman tanpa error, terapkan simpan permanen ke database
+            DB::commit();
+
+            // 4. Atur arah redirect URL (Aksi update biasanya langsung kembali ke halaman index utama)
+            $redirectUrl = route('purchase-order.index');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Purchase Requisition successfully updated!',
+                'redirect' => $redirectUrl,
+            ], 200);
+
+        } catch (\Exception $e) {
+            // Batalkan semua query yang sempat berjalan jika ada error di tengah jalan (Rollback)
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update data: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     public function destroy(Request $request, $id)
@@ -519,7 +594,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'redirect' => true,
-                'message' => 'Purchase requisition successfully restored.',
+                'message' => 'Purchase order successfully restored.',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -527,7 +602,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'redirect' => true,
-                'message' => 'Purchase requisition successfully restored.',
+                'message' => 'Purchase order successfully restored.',
             ]);
         }
     }

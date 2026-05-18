@@ -113,17 +113,15 @@ class PurchaseRequisitionController extends Controller
 
                     // ─── AKSI UNTUK PEMBUAT DOKUMEN (OWNER) ──────────────────────────────────
                     if ($row->created_by == $currentUserId) {
-                          // ✅ TOMBOL SUBMIT (Hanya jika status draft)
-                         if ($row->status == 'draft') {
+                        // ✅ TOMBOL SUBMIT (Hanya jika status draft)
+                        if ($row->status == 'draft') {
                             $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Submit to Approval</a>';
-                            $btn.='<hr class="dropdown-divider">';
+                            $btn .= '<hr class="dropdown-divider">';
                         }
                         // ✅ TOMBOL EDIT (Hanya jika status draft)
                         if ($user->can('permintaan_pembelian-edit') && $row->status == 'draft') {
                             $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
                         }
-
-                      
 
                         // ✅ TOMBOL DELETE (Hanya jika status draft)
                         if ($user->can('permintaan_pembelian-delete') && $row->status == 'draft') {
@@ -315,7 +313,6 @@ class PurchaseRequisitionController extends Controller
                 throw new \Exception('There must be at least 1 product item entered.');
             }
 
-           
             DB::commit();
 
             $redirectUrl = $request->save_and_new == 1
@@ -731,11 +728,12 @@ class PurchaseRequisitionController extends Controller
         $pr->status = 'pending';
         $pr->updated_by = auth()->id(); // Jika Anda mencatat siapa yang melakukan update terakhir
         $pr->save();
- $users = User::whereHas('roles.permissions', function ($q) {
-                $q->where('name', 'permintaan_pembelian-approval');
-            })->get();
+        $users = User::whereHas('roles.permissions', function ($q) {
+            $q->where('name', 'permintaan_pembelian-approval');
+        })->get();
 
-            Notification::send($users, new PurchaseRequisitionNotification($pr));
+        Notification::send($users, new PurchaseRequisitionNotification($pr));
+
         return response()->json(['success' => true, 'message' => 'Purchase Requisition berhasil diajukan!']);
     }
 

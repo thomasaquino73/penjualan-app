@@ -84,15 +84,9 @@
                 </div>
 
                 <div class="card-footer d-flex justify-content-end gap-2 mt-4">
-                    <button type="button" class="btn btn-primary btn-save" data-action="close">
+                    <button type="button" class="btn btn-primary btn-save">
                         <i class="fa fa-upload me-1"></i> Update
                     </button>
-
-                    @if (!isset($model))
-                        <button type="button" class="btn btn-success btn-save" data-action="new">
-                            <i class="fa fa-plus-circle me-1"></i> Save and Create New
-                        </button>
-                    @endif
                     <a href="{{ route('permintaan-pembelian.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
@@ -191,25 +185,37 @@
         // BACKUP: Copy initial data to a new variable using JSON parse/stringify to prevent reference binding (deep copy)
         const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
         $(function() {
-            flatpickr("#date", {
+
+            const datePicker = flatpickr("#date", {
                 enableTime: false,
-                time_24hr: true,
-                enableSeconds: false,
                 dateFormat: "d-m-Y",
                 minDate: "today",
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}"
             });
-            flatpickr("#required_date", {
+
+            const expectedPicker = flatpickr("#required_date", {
                 enableTime: false,
-                time_24hr: true,
-                enableSeconds: false,
                 dateFormat: "d-m-Y",
                 minDate: "today",
-                defaultDate: ""
+
+                onChange: function(selectedDates, dateStr) {
+                    if (selectedDates.length > 0) {
+                        // set max date untuk PO Date
+                        datePicker.set('maxDate', selectedDates[0]);
+
+                        // ambil tanggal PO sekarang
+                        let poDate = datePicker.selectedDates[0];
+
+                        // kalau PO Date > Expected Date → reset
+                        if (poDate && poDate > selectedDates[0]) {
+                            datePicker.clear();
+                        }
+                    }
+                }
             });
+
         });
         $(document).ready(function() {
-            // 1. Initialize Select2 inside Modal
             if ($.fn.select2) {
                 $('.select2-modal').each(function() {
                     var $this = $(this);
@@ -223,7 +229,6 @@
                 });
             }
 
-            // 2. Main Initialization for Local DataTables
             let table = $('#table').DataTable({
                 data: prDetailsData,
                 dom: '<"d-flex justify-content-between align-items-center mb-3"B>t<"d-flex justify-content-between mt-3"ip>',
@@ -244,9 +249,11 @@
                     },
                     {
                         data: 'unit'
-                    }, {
+                    },
+                    {
                         data: 'required_date'
-                    }, {
+                    },
+                    {
                         data: 'notes'
                     }
                 ],
@@ -375,7 +382,6 @@
                 ]
             });
 
-            // 3. Product Dropdown Change Listener (Fetch associated units)
             $(document).on('change', '#product_id', function() {
                 let productId = $(this).val();
                 let unitSelect = $('#unit_id');
@@ -423,7 +429,6 @@
                 });
             });
 
-            // 4. Submit Modal Detail Form (Includes Duplicate Filter)
             $('#formPrDetail').on('submit', function(e) {
                 e.preventDefault();
 
@@ -499,11 +504,10 @@
                 $('#modalPrDetail').modal('hide');
             });
 
-            // 5. Submit Main Form via AJAX (Supports Save & Close / Save & New)
             $(document).on('click', '.btn-save', function(e) {
                 e.preventDefault();
-
-                let actionType = $(this).data('action');
+                let activeBtn = $(this);
+                let actionType = activeBtn.data('action');
 
                 if (prDetailsData.length === 0) {
                     Swal.fire({
@@ -529,6 +533,18 @@
                     type: form.attr('method'),
                     data: form.serialize(),
                     dataType: 'json',
+                    beforeSend: function() {
+                        activeBtn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
+                        $('.card-footer button').prop('disabled', true);
+                    },
+                    complete: function() {
+                        let closeBtn = $('#postForm').find('button[data-save-and-new="false"]');
+                        let newBtn = $('#postForm').find('button[data-save-and-new="true"]');
+                        closeBtn.html('<i class="fa fa-upload me-1"></i> Save and Close');
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New');
+                        $('.card-footer button').prop('disabled', false);
+                    },
                     success: function(response) {
                         if (response.success) {
                             Swal.fire({

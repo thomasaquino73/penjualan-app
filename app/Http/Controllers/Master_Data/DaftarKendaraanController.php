@@ -104,7 +104,7 @@ class DaftarKendaraanController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                        
+                          <i class="ti ti-menu-2 ti-xs me-1"></i>
                       </button>
                       <ul class="dropdown-menu" style="">';
                     if (auth()->user()->can('kendaraan-edit')) {

@@ -165,20 +165,35 @@
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
         $(function() {
-            flatpickr("#date", {
+
+            const datePicker = flatpickr("#date", {
                 enableTime: false,
-                time_24hr: true,
                 dateFormat: "d-m-Y",
                 minDate: "today",
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}"
             });
-            flatpickr("#required_date", {
+
+            const expectedPicker = flatpickr("#required_date", {
                 enableTime: false,
-                time_24hr: true,
                 dateFormat: "d-m-Y",
                 minDate: "today",
-                defaultDate: ""
+
+                onChange: function(selectedDates, dateStr) {
+                    if (selectedDates.length > 0) {
+                        // set max date untuk PO Date
+                        datePicker.set('maxDate', selectedDates[0]);
+
+                        // ambil tanggal PO sekarang
+                        let poDate = datePicker.selectedDates[0];
+
+                        // kalau PO Date > Expected Date → reset
+                        if (poDate && poDate > selectedDates[0]) {
+                            datePicker.clear();
+                        }
+                    }
+                }
             });
+
         });
 
         $(document).ready(function() {

@@ -15,8 +15,8 @@ class PurchaseRequisition extends Model
 
     protected $guarded = [];
 
-      protected $casts = [
-    'date' => 'datetime',
+    protected $casts = [
+        'date' => 'datetime',
     ];
 
     public function creator()

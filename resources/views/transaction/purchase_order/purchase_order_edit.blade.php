@@ -38,6 +38,8 @@
                 enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="items_detail" id="items_detail">
+                <input type="hidden" name="save_and_new" id="save_and_new" value="0">
                 <div class="row mb-5">
 
                     <div class="col-md-6 mb-3">
@@ -153,7 +155,7 @@
                 <div class="row mb-5">
                     <div class="col-lg-6 ">
                         <label class="form-label" for="description">Description</label>
-                        <textarea name="description" id="description" class="form-control" rows="8" placeholder="Enter description"></textarea>
+                        <textarea name="description" id="description" class="form-control" rows="8" placeholder="Enter description">{{ $model->description }}</textarea>
                         <span class="error text-danger" id="descriptionError"></span>
                     </div>
                     <div class="col-lg-2 mb-3 ">
@@ -165,7 +167,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                 <input type="number" id="sub_total" name="sub_total" class="form-control"
-                                    placeholder="0" readonly>
+                                    value="{{ old('sub_total', $model->sub_total) }}" placeholder="0" readonly>
                             </div>
 
                         </div>
@@ -176,14 +178,16 @@
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text">%</span>
                                         <input type="number" id="percent" name="percent" min="0"
-                                            step="any" class="form-control" placeholder="0">
+                                            step="any" class="form-control" placeholder="0"
+                                            value="{{ old('percent', $model->disc_percent) }}">
                                     </div>
                                 </div>
                                 <div class="col-8">
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                         <input type="number" id="discount_all" name="discount_all" class="form-control"
-                                            placeholder="0" min='0'>
+                                            placeholder="0" min='0'
+                                            value="{{ old('discount_all', $model->disc_nominal) }}">
                                     </div>
                                 </div>
                             </div>
@@ -195,7 +199,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                 <input type="number" id="total_order" name="total_order" class="form-control"
-                                    placeholder="0" readonly>
+                                    placeholder="0" readonly value="{{ old('total_order', $model->grand_total) }}">
                             </div>
 
                         </div>
@@ -203,13 +207,16 @@
 
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">
-                    <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
-                        <i class="fa fa-upload me-1"></i> Save and Close
+                    <button type="button" class="btn btn-primary btn-save">
+                        <i class="fa fa-upload me-1"></i> Update
                     </button>
 
-                    <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
-                        <i class="fa fa-plus-circle me-1"></i> Save and Create New
-                    </button>
+                    @if (!isset($model))
+                        <button type="button" class="btn btn-success btn-save" data-action="new">
+                            <i class="fa fa-plus-circle me-1"></i> Save and Create New
+                        </button>
+                    @endif
+
                     <a href="{{ route('purchase-order.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
@@ -333,6 +340,26 @@
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
 
     <script>
+        let prDetailsData = [
+            @if (isset($model))
+                @foreach ($model->details as $detail)
+                    {
+                        'product_id': '{{ $detail->product_id }}',
+                        'data_produk': '{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}',
+                        'quantity': '{{ $detail->qty }}',
+                        'unit_id': '{{ $detail->unit_id }}',
+                        'unit_price': '{{ $detail->unit_price }}',
+                        'discount': '{{ $detail->discount }}',
+                        'tax': '{{ $detail->tax }}',
+                        'amount': '{{ $detail->amount }}',
+                        'unit': '{{ $detail->unitID ? $detail->unitID->name ?? ($detail->unitID->detail ?? $detail->unitID->nama) : 'Unit' }}'
+
+                    }
+                    {{ !$loop->last ? ',' : '' }}
+                @endforeach
+            @endif
+        ];
+        const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
         $(function() {
             flatpickr("#date", {
                 enableTime: false,
@@ -367,7 +394,7 @@
             });
 
             // 2. Deklarasikan Variabel Global Scope (Di dalam Ready Utama)
-            let prDetailsData = [];
+            // let prDetailsData = [];
 
             // Tampilkan Modal via Tombol Custom jika ada
             $('#showModalpr').on('click', function(e) {
@@ -486,7 +513,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                data: prDetailsData, // Mengarah ke array di atas
+                data: prDetailsData,
                 columns: [{
                         data: null,
                         orderable: false,
@@ -819,93 +846,93 @@
                 $('#modalPrDetail').modal('hide');
             });
 
-            let saveAndNew = false;
-            let activeBtn = null;
+            // let saveAndNew = false;
+            // let activeBtn = null;
 
-            $(document).on('click', '.card-footer button[type="submit"]', function() {
-                saveAndNew = $(this).data('save-and-new');
-                activeBtn = $(this);
-            });
+            // $(document).on('click', '.card-footer button[type="submit"]', function() {
+            //     saveAndNew = $(this).data('save-and-new');
+            //     activeBtn = $(this);
+            // });
 
-            $('#postForm').on('submit', function(e) {
-                e.preventDefault();
+            // $('#postForm').on('submit', function(e) {
+            //     e.preventDefault();
 
-                let form = this;
-                let formData = new FormData(form);
+            //     let form = this;
+            //     let formData = new FormData(form);
 
-                if (!activeBtn) {
-                    activeBtn = $('#postForm').find('button[data-save-and-new="false"]');
-                    saveAndNew = false;
-                }
+            //     if (!activeBtn) {
+            //         activeBtn = $('#postForm').find('button[data-save-and-new="false"]');
+            //         saveAndNew = false;
+            //     }
 
-                if (typeof prDetailsData === 'undefined' || prDetailsData.length === 0) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Empty Items',
-                        text: 'Please add at least one item detail to the table before saving.',
-                        confirmButtonText: 'OK',
-                        customClass: {
-                            confirmButton: 'btn btn-primary waves-effect waves-light'
-                        },
-                        buttonsStyling: false
-                    });
-                    return false;
-                }
+            //     if (typeof prDetailsData === 'undefined' || prDetailsData.length === 0) {
+            //         Swal.fire({
+            //             icon: 'warning',
+            //             title: 'Empty Items',
+            //             text: 'Please add at least one item detail to the table before saving.',
+            //             confirmButtonText: 'OK',
+            //             customClass: {
+            //                 confirmButton: 'btn btn-primary waves-effect waves-light'
+            //             },
+            //             buttonsStyling: false
+            //         });
+            //         return false;
+            //     }
 
-                formData.append('save_and_new', saveAndNew ? 1 : 0);
-                formData.append('items_detail', JSON.stringify(prDetailsData));
+            //     formData.append('save_and_new', saveAndNew ? 1 : 0);
+            //     formData.append('items_detail', JSON.stringify(prDetailsData));
 
-                $.ajax({
-                    url: $(form).attr('action'),
-                    method: $(form).attr('method'),
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: 'json',
-                    beforeSend: function() {
-                        activeBtn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
-                        $('.card-footer button').prop('disabled', true);
-                    },
-                    complete: function() {
-                        let closeBtn = $('#postForm').find('button[data-save-and-new="false"]');
-                        let newBtn = $('#postForm').find('button[data-save-and-new="true"]');
-                        closeBtn.html('<i class="fa fa-upload me-1"></i> Save and Close');
-                        newBtn.html(
-                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New');
-                        $('.card-footer button').prop('disabled', false);
-                    },
-                    success: function(response) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Data Created Successfully',
-                            text: response.message,
-                            customClass: {
-                                confirmButton: 'btn btn-primary waves-effect waves-light'
-                            },
-                            buttonsStyling: false
-                        }).then(() => {
-                            window.location.href = response.redirect;
-                        });
-                    },
-                    error: function(xhr) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Failed to Create Data',
-                            text: xhr.responseJSON.message ||
-                                'Please check your data again.',
-                            customClass: {
-                                confirmButton: 'btn btn-primary waves-effect waves-light'
-                            },
-                            buttonsStyling: false
-                        });
+            //     $.ajax({
+            //         url: $(form).attr('action'),
+            //         method: $(form).attr('method'),
+            //         data: formData,
+            //         processData: false,
+            //         contentType: false,
+            //         dataType: 'json',
+            //         beforeSend: function() {
+            //             activeBtn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
+            //             $('.card-footer button').prop('disabled', true);
+            //         },
+            //         complete: function() {
+            //             let closeBtn = $('#postForm').find('button[data-save-and-new="false"]');
+            //             let newBtn = $('#postForm').find('button[data-save-and-new="true"]');
+            //             closeBtn.html('<i class="fa fa-upload me-1"></i> Save and Close');
+            //             newBtn.html(
+            //                 '<i class="fa fa-plus-circle me-1"></i> Save and Create New');
+            //             $('.card-footer button').prop('disabled', false);
+            //         },
+            //         success: function(response) {
+            //             Swal.fire({
+            //                 icon: 'success',
+            //                 title: 'Data Created Successfully',
+            //                 text: response.message,
+            //                 customClass: {
+            //                     confirmButton: 'btn btn-primary waves-effect waves-light'
+            //                 },
+            //                 buttonsStyling: false
+            //             }).then(() => {
+            //                 window.location.href = response.redirect;
+            //             });
+            //         },
+            //         error: function(xhr) {
+            //             Swal.fire({
+            //                 icon: 'error',
+            //                 title: 'Failed to Create Data',
+            //                 text: xhr.responseJSON.message ||
+            //                     'Please check your data again.',
+            //                 customClass: {
+            //                     confirmButton: 'btn btn-primary waves-effect waves-light'
+            //                 },
+            //                 buttonsStyling: false
+            //             });
 
-                        let errors = xhr.responseJSON.errors || {};
-                        $.each(errors, function(key, value) {
-                            $(`#${key}Error`).text(value[0]);
-                        });
-                    }
-                });
-            });
+            //             let errors = xhr.responseJSON.errors || {};
+            //             $.each(errors, function(key, value) {
+            //                 $(`#${key}Error`).text(value[0]);
+            //             });
+            //         }
+            //     });
+            // });
 
             // 6. Event Handler: Ganti Customer Otomatis Isi Alamat
             $('#supplier_id').on('change', function() {
@@ -1031,8 +1058,95 @@
                 // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
                 calculateTotalOrder();
             });
+            $(document).on('click', '.btn-save', function(e) {
+                e.preventDefault();
+                let activeBtn = $(this);
+                let actionType = activeBtn.data('action');
 
+                if (prDetailsData.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Details Empty!',
+                        text: 'You must add at least 1 product detail.',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                }
 
+                // Set flags JSON data array & action save type
+                $('#items_detail').val(JSON.stringify(prDetailsData));
+                $('#save_and_new').val(actionType === 'new' ? '1' : '0');
+
+                let form = $('#postForm');
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: form.attr('method'),
+                    data: form.serialize(),
+                    dataType: 'json',
+                    beforeSend: function() {
+                        activeBtn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
+                        $('.card-footer button').prop('disabled', true);
+                    },
+                    complete: function() {
+                        let closeBtn = $('#postForm').find('button[data-save-and-new="false"]');
+                        let newBtn = $('#postForm').find('button[data-save-and-new="true"]');
+                        closeBtn.html('<i class="fa fa-upload me-1"></i> Save and Close');
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New');
+                        $('.card-footer button').prop('disabled', false);
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: response.message,
+                                timer: 1500,
+                                customClass: {
+                                    confirmButton: 'btn btn-success'
+                                },
+                                buttonsStyling: false
+                            });
+
+                            if (response.save_and_new) {
+                                // Reset local table details
+                                prDetailsData = [];
+                                table.clear().draw();
+                                // Clear description field and set auto-generated new PR number
+                                $('#description').val('');
+                                $('#code').val(response.next_code);
+                            } else {
+                                window.location.href = response.redirect;
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        console.log("STATUS:", xhr.status);
+                        console.log("RESPONSE:", xhr.responseJSON);
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors;
+                            $.each(errors, function(key, val) {
+                                $(`#${key}Error`).text(val[0]);
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: xhr.responseJSON.message ||
+                                    'A system error occurred.',
+                                customClass: {
+                                    confirmButton: 'btn btn-danger'
+                                },
+                                buttonsStyling: false
+                            });
+                        }
+                    }
+                });
+            });
         });
     </script>
 @endpush

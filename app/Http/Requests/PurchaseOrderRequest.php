@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PurchaseOrderRequest extends FormRequest
 {
@@ -14,15 +15,18 @@ class PurchaseOrderRequest extends FormRequest
         return true;
     }
 
-    public function rules(): array
+   public function rules(): array
     {
+        $id = $this->route('purchase_order');
 
         return [
+            'code' => [
+                'required',
+                Rule::unique('purchase_order', 'code')->ignore($id),
+            ],
             'supplier_id' => 'required',
-            'code' => 'required|unique:purchase_order,code',
             'date' => 'required|date',
             'expected_date' => 'nullable|date',
-       
             'description' => 'nullable|string',
             'items_detail' => 'required',
         ];
