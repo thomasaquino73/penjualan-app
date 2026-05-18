@@ -387,7 +387,7 @@ class PurchaseRequisitionController extends Controller
     {
         // 1. Validasi Input Form Induk / Utama (Sesuai dengan struktur store)
         $request->validate([
-            'code' => 'required|string|unique:purchase_requisition,code,'.$id, // Menghindari validasi unik bentrok saat update data yang sama
+            'code' => 'required|string|unique:purchase_requisition_'.date('Y').',code,'.$id, // Menghindari validasi unik bentrok saat update data yang sama
             'date' => 'required|date',
             'description' => 'nullable|string',
             'items_detail' => 'required', // Harus mengirimkan data item dari DataTables lokal

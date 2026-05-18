@@ -85,7 +85,7 @@
                             <div class="col-md-6 col-sm-6 mb-3">
                                 <label for="" class="form-label">Username:</label>
                                 <input class="form-control" type="text" id="username" name="username"
-                                    value="{{ old($user->username, $user->username) }}" readonly />
+                                    value="{{ old($user->username, $user->username) }}" />
                                 <span class="error text-danger" id="usernameError"></span>
                             </div>
                             <div class=" col-md-6  col-sm-6 mb-3">

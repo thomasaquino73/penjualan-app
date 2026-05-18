@@ -335,7 +335,7 @@ class PurchaseOrderController extends Controller
                         $amount = $setelahDiskon + $totalTax;
 
                         // Insert data baris barang menggunakan Query Builder (Lebih cepat untuk batch insert)
-                        DB::table('purchase_order_detail')->insert([
+                        PurchaseOrderDetail::create([
                             'purchase_order_id' => $purchaseOrder->id, // Hubungkan dengan ID tabel master di atas
                             'product_id' => $item['product_id'],
                             'qty' => $item['quantity'], // Format dari prDetailsData JS adalah 'quantity'

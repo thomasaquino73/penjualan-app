@@ -18,7 +18,13 @@ class PurchaseRequisition extends Model
     protected $casts = [
         'date' => 'datetime',
     ];
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
 
+        $year = date('Y');
+        $this->table = "purchase_requisition_{$year}";
+    }
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

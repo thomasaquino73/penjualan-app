@@ -6,12 +6,16 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+    
+     protected string $year;
+
+    public function __construct()
+    {
+        $this->year = date('Y'); // tahun berjalan
+    }
     public function up(): void
     {
-        Schema::create('purchase_order', function (Blueprint $table) {
+        Schema::create("purchase_order_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->bigInteger('supplier_id');
             $table->string('code');
@@ -40,7 +44,7 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
         });
-        Schema::create('purchase_order_detail', function (Blueprint $table) {
+        Schema::create("purchase_order_detail_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->bigInteger('purchase_order_id');
             $table->bigInteger('product_id');
@@ -62,6 +66,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchase_order');
+        Schema::dropIfExists("purchase_order_{$this->year}");
+        Schema::dropIfExists("purchase_order_detail_{$this->year}");
     }
 };

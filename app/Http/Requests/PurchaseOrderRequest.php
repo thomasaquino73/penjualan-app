@@ -22,7 +22,7 @@ class PurchaseOrderRequest extends FormRequest
         return [
             'code' => [
                 'required',
-                Rule::unique('purchase_order', 'code')->ignore($id),
+                Rule::unique('purchase_order_'.date('Y'), 'code')->ignore($id),
             ],
             'supplier_id' => 'required',
             'date' => 'required|date',

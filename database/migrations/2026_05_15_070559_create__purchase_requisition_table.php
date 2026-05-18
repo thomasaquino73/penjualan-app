@@ -6,12 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+     protected string $year;
+
+    public function __construct()
+    {
+        $this->year = date('Y'); // tahun berjalan
+    }
     public function up(): void
     {
-        Schema::create('purchase_requisition', function (Blueprint $table) {
+        Schema::create("purchase_requisition_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->string('code');
             $table->date('date');
@@ -33,7 +36,7 @@ return new class extends Migration
             $table->date('approved_at')->nullable();
             $table->timestamps();
         });
-        Schema::create('purchase_requisition_detail', function (Blueprint $table) {
+        Schema::create("purchase_requisition_detail_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->bigInteger('purchase_requisition_id');
             $table->bigInteger('product_id');
@@ -53,7 +56,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchase_requisition');
-        Schema::dropIfExists('purchase_requisition_id');
+        Schema::dropIfExists("purchase_requisition_{$this->year}");
+        Schema::dropIfExists("purchase_requisition_detail_{$this->year}");
     }
 };

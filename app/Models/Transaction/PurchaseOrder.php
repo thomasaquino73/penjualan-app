@@ -19,7 +19,13 @@ class PurchaseOrder extends Model
         'expected_date' => 'datetime',
         'date' => 'datetime',
     ];
+ public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
 
+        $year = date('Y');
+        $this->table = "purchase_order_{$year}";
+    }
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
