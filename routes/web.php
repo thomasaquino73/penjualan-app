@@ -86,6 +86,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/check', [IdleController::class, 'checkToken'])->name('token.check');
     });
 
+    
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');

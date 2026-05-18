@@ -309,10 +309,10 @@
                                             closeButton: false,
                                             positionClass: 'toast-top-right',
                                         });
+                                    loadNotifications();
 
                                     // Ganti #table dengan ID DataTable Anda jika berbeda
                                     $('#table').DataTable().ajax.reload();
-                                    loadNotifications();
                                 } else {
                                     Swal.fire({
                                         title: 'Warning!',

@@ -24,7 +24,7 @@ class PurchaseRequisitionNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database','mail'];
     }
 
     /**
@@ -33,9 +33,13 @@ class PurchaseRequisitionNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+            ->subject('Purchase Requisition New')
+            ->view('emails.permintaan-pembelian-new', [
+                'user' => $notifiable,
+                'creator' => $this->PurchaseRequisition->creator,
+                'album' => $this->PurchaseRequisition,
+                'url' => route('permintaan-pembelian.show', ['id' => $this->PurchaseRequisition->id]),
+            ]);
     }
 
     /**
@@ -53,7 +57,6 @@ class PurchaseRequisitionNotification extends Notification
             'messages' => $this->PurchaseRequisition->creator->fullname .
                 ' has created PR "' . $this->PurchaseRequisition->code . '"',
             'link' => route('permintaan-pembelian.index'),
-            'module_app' => 'permintaan-pembelian',
         ];
     }
 }

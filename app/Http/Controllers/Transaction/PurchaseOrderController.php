@@ -109,14 +109,14 @@ class PurchaseOrderController extends Controller
 
                     // ─── AKSI UNTUK PEMBUAT DOKUMEN (OWNER) ──────────────────────────────────
                     if ($row->created_by == $currentUserId) {
-                        // ✅ TOMBOL EDIT (Hanya jika status draft)
-                        if ($user->can('permintaan_pembelian-edit') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
-                        }
-
                         // ✅ TOMBOL SUBMIT (Hanya jika status draft)
                         if ($row->status == 'draft') {
                             $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Submit to Approval</a>';
+                            $btn.='<hr class="dropdown-divider">';
+                        }
+                        // ✅ TOMBOL EDIT (Hanya jika status draft)
+                        if ($user->can('permintaan_pembelian-edit') && $row->status == 'draft') {
+                            $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
                         }
 
                         // ✅ TOMBOL DELETE (Hanya jika status draft)

@@ -100,9 +100,7 @@
 </body>
 
 </html>
-<script>
-    window.APP_PREFIX = "{{ request()->segment(1) }}";
-</script>
+
 <script>
     let idleTime = 0;
     let idleInterval;

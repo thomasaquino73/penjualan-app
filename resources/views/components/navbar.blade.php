@@ -88,64 +88,60 @@
               <!-- Notification -->
               <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-1">
                   <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown"
-                      data-bs-auto-close="outside" aria-expanded="false">
+                      data-bs-auto-close="outside">
+
                       <i class="ti ti-bell ti-md"></i>
 
                       @php
-                          $prefix = request('prefix') ?? request()->segment(1);
-
-                          $unreadCount = auth()
-                              ->user()
-                              ->unreadNotifications()
-                              ->where('data->module_app', $prefix)
-                              ->count();
+                          $unreadCount = auth()->user()->unreadNotifications()->count();
                       @endphp
 
-                      <span class="badge bg-danger rounded-pill badge-notifications">{{ $unreadCount }}</span>
+                      @if ($unreadCount > 0)
+                          <span class="badge bg-danger rounded-pill badge-notifications">{{ $unreadCount }}</span>
+                      @endif
                   </a>
 
                   <ul class="dropdown-menu dropdown-menu-end py-0">
+
+                      {{-- HEADER --}}
                       <li class="dropdown-menu-header border-bottom">
                           <div class="dropdown-header d-flex align-items-center py-3">
                               <h5 class="text-body mb-0 me-auto">Notification</h5>
-                              <a href="javascript:void(0)" class="dropdown-notifications-all text-body"
-                                  data-bs-toggle="tooltip" title="Mark all as read">
+
+                              <a href="javascript:void(0)" id="markAllRead" class="text-body" title="Mark all as read">
                                   <i class="ti ti-mail-opened fs-4"></i>
                               </a>
                           </div>
                       </li>
 
+                      {{-- LIST --}}
                       <li class="dropdown-notifications-list scrollable-container">
                           <ul class="list-group list-group-flush">
 
                               @php
-                                  $prefix = request('prefix') ?? request()->segment(1);
-
-                                  $notifications = auth()
-                                      ->user()
-                                      ->unreadNotifications()
-                                      ->where('data->module_app', $prefix)
-                                      ->latest()
-                                      ->limit(10)
-                                      ->get();
+                                  $notifications = auth()->user()->unreadNotifications()->latest()->limit(10)->get();
                               @endphp
 
                               @forelse ($notifications as $notification)
-                                  <li class="list-group-item list-group-item-action dropdown-notifications-item notification-item"
+                                  <li class="list-group-item list-group-item-action notification-item"
                                       data-id="{{ $notification->id }}"
-                                      data-link="{{ $notification->data['link'] ?? '#' }}" style="cursor: pointer;">
+                                      data-link="{{ $notification->data['link'] ?? '#' }}" style="cursor:pointer;">
 
                                       <div class="d-flex align-items-center">
                                           <div class="flex-shrink-0 me-3">
                                               <div class="avatar">
                                                   <img src="{{ $notification->data['avatar'] ?? asset('assets/img/avatars/1.png') }}"
-                                                      class="rounded-circle" alt="avatar" />
+                                                      class="rounded-circle" />
                                               </div>
                                           </div>
 
                                           <div class="flex-grow-1">
-                                              <h6 class="mb-1">{{ $notification->data['title'] ?? 'No Title' }}</h6>
-                                              <p class="mb-0">{{ $notification->data['messages'] ?? '' }}</p>
+                                              <h6 class="mb-1">
+                                                  {{ $notification->data['title'] ?? '-' }}
+                                              </h6>
+                                              <p class="mb-0">
+                                                  {{ $notification->data['messages'] ?? '' }}
+                                              </p>
                                               <small class="text-muted">
                                                   {{ $notification->created_at->diffForHumans() }}
                                               </small>
@@ -165,12 +161,14 @@
                           </ul>
                       </li>
 
+                      {{-- FOOTER --}}
                       <li class="dropdown-menu-footer border-top">
                           <a href="{{ route('notifications.index') }}"
-                              class="dropdown-item d-flex justify-content-center text-primary p-2 h-px-40 mb-1 align-items-center">
+                              class="dropdown-item text-center text-primary p-2">
                               View all notifications
                           </a>
                       </li>
+
                   </ul>
               </li>
               <!--/ Notification -->
