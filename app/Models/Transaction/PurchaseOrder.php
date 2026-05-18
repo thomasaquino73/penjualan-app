@@ -14,6 +14,10 @@ class PurchaseOrder extends Model
     protected $table = 'purchase_order';
 
     protected $guarded = [];
+    protected $casts = [
+    'expected_date' => 'datetime',
+    'date' => 'datetime',
+    ];
 
     public function creator()
     {

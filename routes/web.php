@@ -200,6 +200,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/get-processing-requisitions', [PurchaseOrderController::class, 'getProcessingData'])->name('requisitions.processing');
         Route::post('/{id}/submit', [PurchaseOrderController::class, 'submitToPending'])->name('submit');
         Route::post('/change-status/{id}', [PurchaseOrderController::class, 'changeStatus']);
+    Route::get('/print/{id}', [PurchaseOrderController::class, 'print'])->name('print');
         Route::resource('', PurchaseOrderController::class)->parameters(['' => 'purchase_order']);
     });
 

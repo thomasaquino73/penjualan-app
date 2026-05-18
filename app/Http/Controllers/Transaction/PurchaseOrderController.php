@@ -116,7 +116,7 @@ class PurchaseOrderController extends Controller
                         }
                         // ✅ TOMBOL EDIT (Hanya jika status draft)
                         if ($user->can('permintaan_pembelian-edit') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
+                            $btn .= '<a class="dropdown-item" href="'.route('purchase-order.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
                         }
 
                         // ✅ TOMBOL DELETE (Hanya jika status draft)
@@ -126,7 +126,7 @@ class PurchaseOrderController extends Controller
 
                         // 🕒 TEKS JIKA STATUS PENDING (Untuk Pembuat Dokumen)
                         if ($row->status == 'pending') {
-                            $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
+                            $btn .= '<a class="dropdown-item" href="'.route('purchase-order.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
                             // $btn .= '<span class="dropdown-item-text text-warning small"><i class="ti ti-clock me-1"></i> Awaiting approval</span>';
                         }
                     }
@@ -156,10 +156,10 @@ class PurchaseOrderController extends Controller
                         $btn .= '<span class="dropdown-item-text text-muted small"><i class="ti ti-info-circle me-1"></i> Data processed successfully</span>';
                     }
                     if (auth()->user()->can('permintaan_pembelian-read')) {
-                        $btn .= '<a class="dropdown-item " href="'.route('permintaan-pembelian.show', $row->id).'"
+                        $btn .= '<a class="dropdown-item " href="'.route('purchase-order.show', $row->id).'"
                             data-id="'.$row->id.'"> <i class="ti ti-list-details"></i> Detail</a>';
                     }
-                    $btn .= '<a class="dropdown-item " target="_blank" href="'.route('permintaan-pembelian.print', $row->id).'"
+                    $btn .= '<a class="dropdown-item " target="_blank" href="'.route('purchase-order.print', $row->id).'"
                             data-id="'.$row->id.'"> <i class="ti ti-printer"></i> Print</a>';
                     // 3. Tutup komponen tag HTML dropdown
                     $btn .= '</ul></div>';
@@ -293,6 +293,11 @@ class PurchaseOrderController extends Controller
             // 3. Lengkapi data audit log untuk tabel master
             $data['created_by'] = Auth::id();
             $data['updated_by'] = null;
+            $data['vehicle_id'] = $request->vehicle_id;
+            $data['sub_total'] = $request->sub_total;
+            $data['disc_percent'] = $request->percent;
+            $data['disc_nominal'] = $request->discount_all;
+            $data['grand_total'] = $request->grand_total;
             $data['date'] = Carbon::parse($request->date)->format('Y-m-d');
             $data['expected_date'] = $request->expected_date ? Carbon::parse($request->expected_date)->format('Y-m-d') : null;
 
@@ -370,7 +375,28 @@ class PurchaseOrderController extends Controller
         }
     }
 
-    public function edit($id) {}
+    public function edit(string $id)
+    {
+         $purchaseOrder = PurchaseOrder::findOrFail($id);
+         $x = [
+            'title' => 'Edit Purchase Order ',
+            'breadcrumb' => [
+                ['label' => 'Purchase Order', 'url' => route('purchase-order.index')],
+                ['label' => 'Edit Purchase Order', 'url' => ''],
+            ],
+            'supplier' => Supplier::where('status', 1)->get(),
+            'company' => Company::first(),
+            'idNumber' => $this->generateNumberId(),
+            'kendaraan' => Kendaraan::where('status', 1)->get(),
+            'term' => BasicCodeDetail::where('master_id', 5)->get(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'fob' => BasicCodeDetail::where('master_id', 3)->get(),
+            'model' => $purchaseOrder,
+
+        ];
+
+        return view('transaction.purchase_order.purchase_order_edit', $x);
+    }
 
     public function destroy(Request $request, $id)
     {

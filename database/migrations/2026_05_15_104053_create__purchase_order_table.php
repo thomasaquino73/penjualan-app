@@ -16,12 +16,15 @@ return new class extends Migration
             $table->bigInteger('supplier_id');
             $table->string('code');
             $table->date('date');
-            $table->date('expected_date');
-            $table->string('fob_id');
-            $table->integer('term');
+            $table->date('expected_date')->nullable();
+            $table->string('fob_id')->nullable();
+            $table->integer('term')->nullable();
             $table->string('description')->nullable();
-            $table->bigInteger('term_id')->nullable();
             $table->bigInteger('vehicle_id')->nullable();
+            $table->bigInteger('sub_total')->nullable();
+            $table->integer('disc_percent')->nullable();
+            $table->bigInteger('disc_nominal')->nullable();
+            $table->bigInteger('grand_total')->nullable();
             $table->enum('status', [
                 'draft',        // Data baru dibuat, masih bisa diedit oleh staff
                 'pending',      // Menunggu persetujuan (approval) dari Manager/Direktur

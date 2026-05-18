@@ -15,6 +15,10 @@ class PurchaseRequisition extends Model
 
     protected $guarded = [];
 
+      protected $casts = [
+    'date' => 'datetime',
+    ];
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

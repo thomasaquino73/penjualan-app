@@ -34,8 +34,10 @@
 
         </div>
         <div class="card-body table-responsive p-3">
-            <form action="{{ route('purchase-order.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
+            <form action="{{ route('purchase-order.update', $model->id) }}" method="POST" id="postForm"
+                enctype="multipart/form-data">
                 @csrf
+                @method('PUT')
                 <div class="row mb-5">
 
                     <div class="col-md-6 mb-3">
@@ -47,7 +49,8 @@
                                         data-placeholder="Select Supplier">
                                         <option></option>
                                         @foreach ($supplier as $supp)
-                                            <option value="{{ $supp->id }}" data-alamat="{{ $supp->alamat }}">
+                                            <option value="{{ $supp->id }}" data-alamat="{{ $supp->alamat }}"
+                                                {{ $model->supplier_id == $supp->id ? 'selected' : '' }}>
                                                 {{ $supp->nama }}
                                             </option>
                                         @endforeach
@@ -58,7 +61,7 @@
                             <div class="col-md-12">
                                 <label class="form-label">Address</label>
                                 <textarea name="alamat" id="alamat" cols="" rows="5" class="form-control" disabled
-                                    placeholder="Address"></textarea>
+                                    placeholder="Address">{{ $model->supplier->alamat }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -68,18 +71,20 @@
                             <div class="col-6 mb-3">
                                 <label class="form-label">PO Number <small class="text-danger">*</small> </label>
                                 <input type="text" name="code" id="code" class="form-control"
-                                    value="{{ $idNumber }}">
+                                    value="{{ $model->code }}" readonly>
                                 <span class="error text-danger" id="codeError"></span>
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="form-label">PO Date<small class="text-danger">*</small> </label>
-                                <input type="text" name="date" id="date" class="form-control" value="">
+                                <input type="text" name="date" id="date" class="form-control"
+                                    value="{{ isset($model) ? $model->date : date('d-m-Y') }}">
                                 <span class="error text-danger" id="dateError"></span>
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="form-label">Expected Date<small class="text-danger">*</small> </label>
                                 <input type="text" name="expected_date" id="expected_date" class="form-control"
-                                    placeholder="Select Date">
+                                    placeholder="Select Date"
+                                    value="{{ isset($model) && $model->expected_date ? $model->expected_date->format('d-m-Y') : '' }}">
                                 <span class="error text-danger" id="expected_dateError"></span>
                             </div>
                             <div class="col-6 mb-3">
@@ -88,7 +93,9 @@
                                     data-placeholder="Select FOB">
                                     <option></option>
                                     @foreach ($fob as $f)
-                                        <option value="{{ $f->detail }}"> {{ $f->detail }}</option>
+                                        <option
+                                            value="{{ $f->detail }}"{{ $model->fob_id == $f->detail ? 'selected' : '' }}>
+                                            {{ $f->detail }}</option>
                                     @endforeach
                                 </select>
                                 <span class="error text-danger" id="fob_idError"></span>
@@ -99,7 +106,9 @@
                                     data-placeholder="Select Term">
                                     <option></option>
                                     @foreach ($term as $term)
-                                        <option value="{{ $term->id }}">{{ $term->detail }}</option>
+                                        <option value="{{ $term->id }}"
+                                            {{ $model->term == $term->id ? 'selected' : '' }}>
+                                            {{ $term->detail }}</option>
                                     @endforeach
                                 </select>
                                 <span class="error text-danger" id="termError"></span>
@@ -110,7 +119,9 @@
                                     data-placeholder="Select Vehicle">
                                     <option></option>
                                     @foreach ($kendaraan as $kendaraan)
-                                        <option value="{{ $kendaraan->id }}"> {{ $kendaraan->merk }} -
+                                        <option value="{{ $kendaraan->id }}"
+                                            {{ $model->vehicle_id == $kendaraan->id ? 'selected' : '' }}>
+                                            {{ $kendaraan->merk }} -
                                             {{ $kendaraan->plat_nomor }}</option>
                                     @endforeach
                                 </select>
@@ -323,35 +334,23 @@
 
     <script>
         $(function() {
-
-            const datePicker = flatpickr("#date", {
+            flatpickr("#date", {
                 enableTime: false,
+                time_24hr: true,
+                enableSeconds: false,
                 dateFormat: "d-m-Y",
                 minDate: "today",
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}"
             });
 
-            const expectedPicker = flatpickr("#expected_date", {
+            flatpickr("#expected_date", {
                 enableTime: false,
+                time_24hr: true,
+                enableSeconds: false,
                 dateFormat: "d-m-Y",
                 minDate: "today",
-
-                onChange: function(selectedDates, dateStr) {
-                    if (selectedDates.length > 0) {
-                        // set max date untuk PO Date
-                        datePicker.set('maxDate', selectedDates[0]);
-
-                        // ambil tanggal PO sekarang
-                        let poDate = datePicker.selectedDates[0];
-
-                        // kalau PO Date > Expected Date → reset
-                        if (poDate && poDate > selectedDates[0]) {
-                            datePicker.clear();
-                        }
-                    }
-                }
+                defaultDate: ""
             });
-
         });
 
         // HANYA GUNAKAN SATU DOCUMENT READY DI SINI

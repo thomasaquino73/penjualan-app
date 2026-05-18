@@ -22,8 +22,7 @@ class PurchaseOrderRequest extends FormRequest
             'code' => 'required|unique:purchase_order,code',
             'date' => 'required|date',
             'expected_date' => 'nullable|date',
-            'fob_id' => 'required',
-            'term' => 'required',
+       
             'description' => 'nullable|string',
             'items_detail' => 'required',
         ];
@@ -38,8 +37,6 @@ class PurchaseOrderRequest extends FormRequest
             'date.required' => 'Date is required',
             'date.date' => 'Date must be a valid date',
             'expected_date.date' => 'Expected date must be a valid date',
-            'fob_id.required' => 'FOB is required',
-            'term.required' => 'Term is required',
             'items_detail.required' => 'Items detail is required',
         ];
     }
