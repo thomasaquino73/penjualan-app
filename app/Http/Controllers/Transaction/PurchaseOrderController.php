@@ -191,7 +191,7 @@ class PurchaseOrderController extends Controller
             return 'PO-0001';
         }
 
-        $lastId = $last->id_barang;
+        $lastId = $last->code;
 
         // 🔥 ambil angka terakhir
         preg_match('/(\d+)$/', $lastId, $matches);

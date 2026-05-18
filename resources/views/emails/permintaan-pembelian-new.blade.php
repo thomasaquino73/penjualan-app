@@ -79,7 +79,7 @@
                 <p><strong>{{ $creator->fullname }}</strong> baru saja membuat purchase requisition baru:</p>
 
                 <p style="font-size: 18px; font-weight: bold; color:#007bff;">
-                    “{{ $album->code }}”
+                    “{{ $pr->code }}”
                 </p>
 
                 <p>Silakan klik tombol di bawah untuk membuka detail purchase requisitionnya:</p>
@@ -97,8 +97,8 @@
 
             <!-- FOOTER -->
             <div class="footer">
-                Email ini dikirim otomatis oleh sistem Loka Urban.<br>
-                © {{ date('Y') }} Berita Jakarta. All Rights Reserved.
+                Email ini dikirim otomatis oleh sistem .<br>
+                © {{ date('Y') }} PT. Almex bintang Timur All Rights Reserved.
             </div>
 
         </div>
