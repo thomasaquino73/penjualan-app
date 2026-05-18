@@ -79,7 +79,7 @@
                 <p><strong>{{ $creator->fullname }}</strong> baru saja membuat purchase requisition baru:</p>
 
                 <p style="font-size: 18px; font-weight: bold; color:#007bff;">
-                    “{{ $pr->code }}”
+                    “{{ $purchaseRequisition->code }}”
                 </p>
 
                 <p>Silakan klik tombol di bawah untuk membuka detail purchase requisitionnya:</p>
@@ -91,14 +91,14 @@
                 <p>Jika Anda bukan bagian dari proses editorial, Anda dapat mengabaikan email ini.</p>
 
                 <p>Terima kasih,<br>
-                    <strong>Tim IT Almex Bintang Timur</strong>
+                    <strong>Tim {{ $company->nama_perusahaan ?? config('app.name') }}</strong>
                 </p>
             </div>
 
             <!-- FOOTER -->
             <div class="footer">
                 Email ini dikirim otomatis oleh sistem .<br>
-                © {{ date('Y') }} PT. Almex bintang Timur All Rights Reserved.
+                © {{ date('Y') }} - {{ $company->nama_perusahaan ?? config('app.name') }}. All rights reserved.
             </div>
 
         </div>

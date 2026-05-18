@@ -23,7 +23,7 @@ class PurchaseOrderController extends Controller
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = PurchaseOrder::where('active', '<>', 0)->get();
+            $query = PurchaseOrder::where('active', '<>', 0)->orderBy('code', 'desc')->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
