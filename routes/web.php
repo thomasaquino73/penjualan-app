@@ -184,16 +184,22 @@ Route::middleware('auth')->group(function () {
     Route::post('/permintaan-pembelian/{id}/submit', [PurchaseRequisitionController::class, 'submitToPending'])->name('permintaan-pembelian.submit');
     Route::post('/permintaan-pembelian/change-status/{id}', [PurchaseRequisitionController::class, 'changeStatus'])
         ->name('permintaan-pembelian.change-status');
-  
+
     Route::get('/permintaan-pembelian/print/{id}', [PurchaseRequisitionController::class, 'print'])->name('permintaan-pembelian.print');
     Route::resource('permintaan-pembelian', PurchaseRequisitionController::class);
 
     Route::prefix('purchase-order')->name('purchase-order.')->group(function () {
+        Route::get('/trash', [PurchaseOrderController::class, 'trash'])->name('trash');
+        Route::post('/delete-multiple', [PurchaseOrderController::class, 'deleteMultiple']);
+        Route::post('/restore-multiple', [PurchaseOrderController::class, 'restoreMultiple']);
+        Route::put('/restore/{id}', [PurchaseOrderController::class, 'restore'])->name('purchase-order.restore');
         Route::get('/get-product-price/{id}', [PurchaseOrderController::class, 'getPrice']);
         Route::get('/table-pr', [PurchaseOrderController::class, 'table_pr'])->name('table_pr');
         Route::get('/trash', [PurchaseOrderController::class, 'trash'])->name('trash');
         Route::get('/get-processing-requisitions', [PurchaseOrderController::class, 'getProcessingData'])->name('requisitions.processing');
-        Route::resource('/', PurchaseOrderController::class);
+        Route::post('/{id}/submit', [PurchaseOrderController::class, 'submitToPending'])->name('submit');
+        Route::post('/change-status/{id}', [PurchaseOrderController::class, 'changeStatus']);
+        Route::resource('', PurchaseOrderController::class)->parameters(['' => 'purchase_order']);
     });
 
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');

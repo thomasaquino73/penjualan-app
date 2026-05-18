@@ -13,14 +13,25 @@ return new class extends Migration
     {
         Schema::create('purchase_order', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('customer_id');
-            $table->bigInteger('code');
+            $table->bigInteger('supplier_id');
+            $table->string('code');
             $table->date('date');
             $table->date('expected_date');
-            $table->bigInteger('sales_id')->nullable();
+            $table->string('fob_id');
+            $table->integer('term');
+            $table->string('description')->nullable();
             $table->bigInteger('term_id')->nullable();
             $table->bigInteger('vehicle_id')->nullable();
-            $table->enum('status', ['processing', 'deliver'])->default('processing')->comment('status penawaran');
+            $table->enum('status', [
+                'draft',        // Data baru dibuat, masih bisa diedit oleh staff
+                'pending',      // Menunggu persetujuan (approval) dari Manager/Direktur
+                'processing',   // Disetujui, sedang dipersiapkan / dipacking di gudang
+                'deliver',      // Barang sedang dalam perjalanan (dikirim)
+                'received',     // Barang sudah sampai dan diterima oleh pemesan
+                'completed',    // Selesai (Semua dokumen & pembayaran sudah klop)
+                'rejected',     // Ditolak saat pengajuan approval
+                'cancelled',     // Dibatalkan oleh user
+            ])->default('draft');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
@@ -33,8 +44,9 @@ return new class extends Migration
             $table->bigInteger('qty');
             $table->bigInteger('unit_id');
             $table->bigInteger('unit_price');
-            $table->bigInteger('discount');
+            $table->decimal('discount', 10, 2)->default(0);
             $table->bigInteger('tax');
+            $table->bigInteger('amount');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

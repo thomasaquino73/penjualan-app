@@ -34,7 +34,7 @@
 
         </div>
         <div class="card-body table-responsive p-3">
-            <form action="{{ route('user.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
+            <form action="{{ route('purchase-order.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
                 @csrf
                 <div class="row mb-5">
 
@@ -42,17 +42,17 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Order By</label>
-                                    <select name="customer_id" id="customer_id" class="form-select select2"
-                                        data-placeholder="Select Customer">
+                                    <label class="form-label">Supplier</label>
+                                    <select name="supplier_id" id="supplier_id" class="form-select select2"
+                                        data-placeholder="Select Supplier">
                                         <option></option>
-                                        @foreach ($customer as $cust)
-                                            <option value="{{ $cust->id }}" data-alamat="{{ $cust->alamat }}">
-                                                {{ $cust->nama }}
+                                        @foreach ($supplier as $supp)
+                                            <option value="{{ $supp->id }}" data-alamat="{{ $supp->alamat }}">
+                                                {{ $supp->nama }}
                                             </option>
                                         @endforeach
                                     </select>
-                                    <span class="error text-danger" id="avatarError"></span>
+                                    <span class="error text-danger" id="supplier_idError"></span>
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -88,7 +88,7 @@
                                     data-placeholder="Select FOB">
                                     <option></option>
                                     @foreach ($fob as $f)
-                                        <option value="{{ $f->id }}"> {{ $f->detail }}</option>
+                                        <option value="{{ $f->detail }}"> {{ $f->detail }}</option>
                                     @endforeach
                                 </select>
                                 <span class="error text-danger" id="fob_idError"></span>
@@ -132,7 +132,7 @@
                                 <th>Qty</th>
                                 <th>Unit</th>
                                 <th>Unit Price</th>
-                                <th>Disc %</th>
+                                <th>Disc</th>
                                 <th>Tax</th>
                                 <th>Amount</th>
                             </tr>
@@ -164,8 +164,8 @@
                                 <div class="col-4">
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text">%</span>
-                                        <input type="number" id="percent" name="percent" min='0'
-                                            class="form-control" placeholder="0">
+                                        <input type="number" id="percent" name="percent" min="0"
+                                            step="any" class="form-control" placeholder="0">
                                     </div>
                                 </div>
                                 <div class="col-8">
@@ -512,9 +512,9 @@
                                 text: '<i class="ti ti-plus me-1"></i> New',
                                 className: 'btn btn-primary btn-sm me-2',
                                 action: function(e, dt, node, config) {
-                                    var customerId = $('#customer_id').val();
+                                    var supplierId = $('#supplier_id').val();
 
-                                    if (!customerId || customerId === '') {
+                                    if (!supplierId || supplierId === '') {
                                         Swal.fire({
                                             icon: 'warning',
                                             title: 'Warning!',
@@ -719,7 +719,6 @@
                 let tax = parseFloat($('#tax').val()) || 0;
 
                 let requiredDate = $('#required_date').val() || '';
-                let notes = $('#notes').val() || '';
 
                 if (!productId || quantity <= 0 || !unitId) {
                     Swal.fire({
@@ -794,7 +793,6 @@
                     'tax': tax,
                     'amount': amount,
                     'required_date': requiredDate,
-                    'notes': notes
                 };
 
                 if (detailId === '') {
@@ -899,7 +897,7 @@
             });
 
             // 6. Event Handler: Ganti Customer Otomatis Isi Alamat
-            $('#customer_id').on('change', function() {
+            $('#supplier_id').on('change', function() {
                 var alamatTerpilih = $(this).find(':selected').data('alamat');
                 if (alamatTerpilih) {
                     $('#alamat').val(alamatTerpilih);

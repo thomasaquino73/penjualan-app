@@ -312,6 +312,7 @@
 
                                     // Ganti #table dengan ID DataTable Anda jika berbeda
                                     $('#table').DataTable().ajax.reload();
+                                    loadNotifications();
                                 } else {
                                     Swal.fire({
                                         title: 'Warning!',
@@ -432,6 +433,22 @@
             $('#selectStatus').on('change', function() {
                 table.ajax.reload();
             });
+
+            function loadNotifications() {
+                $.get("{{ route('notifications.index') }}", {
+                    prefix: window.APP_PREFIX
+                }, function(res) {
+
+                    let parsed = $('<div>').html(res);
+
+                    let html = parsed.find('.dropdown-notifications-list ul').html();
+                    $('.dropdown-notifications-list ul').html(html);
+
+                    let count = parsed.find('.badge-notifications').text();
+                    $('.badge-notifications').text(count);
+                });
+            }
+
 
         });
     </script>

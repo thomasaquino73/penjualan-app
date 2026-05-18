@@ -101,6 +101,9 @@
 
 </html>
 <script>
+    window.APP_PREFIX = "{{ request()->segment(1) }}";
+</script>
+<script>
     let idleTime = 0;
     let idleInterval;
     // const idleLimit = 60*60; // 1 jam

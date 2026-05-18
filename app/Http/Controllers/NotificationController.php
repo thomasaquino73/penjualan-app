@@ -10,27 +10,28 @@ class NotificationController extends Controller
      * Show all notifications (both unread & read)
      */
     public function index(Request $request)
-    {
-        $user = auth()->user();
+{
+    $user = auth()->user();
 
-        // Dapatkan prefix, contoh: 'bjid'
-        $prefix = $request->segment(1);
+    $module = $request->get('module'); // 🔥 bukan segment lagi
 
-        // Query unread dengan filter JSON langsung
-        $unreadNotifications = $user->unreadNotifications()
-            ->where('data->module_app', $prefix)
-            ->paginate(10, ['*'], 'unread_page');
+    $unreadNotifications = $user->unreadNotifications()
+        ->when($module, function ($q) use ($module) {
+            $q->where('data->module_app', $module);
+        })
+        ->paginate(10, ['*'], 'unread_page');
 
-        // Query read dengan filter JSON langsung
-        $readNotifications = $user->readNotifications()
-            ->where('data->module_app', $prefix)
-            ->paginate(10, ['*'], 'read_page');
+    $readNotifications = $user->readNotifications()
+        ->when($module, function ($q) use ($module) {
+            $q->where('data->module_app', $module);
+        })
+        ->paginate(10, ['*'], 'read_page');
 
-        return view('notifications.notifications_index', compact(
-            'unreadNotifications',
-            'readNotifications'
-        ));
-    }
+    return view('notifications.notifications_index', compact(
+        'unreadNotifications',
+        'readNotifications'
+    ));
+}
 
     /**
      * Mark a notification as read (AJAX)

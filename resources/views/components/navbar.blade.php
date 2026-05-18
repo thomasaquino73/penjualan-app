@@ -90,71 +90,81 @@
                   <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown"
                       data-bs-auto-close="outside" aria-expanded="false">
                       <i class="ti ti-bell ti-md"></i>
+
                       @php
-                          $prefix = request()->segment(1); // ambil prefix URL, contoh: 'bjid'
+                          $prefix = request('prefix') ?? request()->segment(1);
+
                           $unreadCount = auth()
                               ->user()
-                              ->unreadNotifications->filter(function ($notification) use ($prefix) {
-                                  return isset($notification->data['module_app']) &&
-                                      $notification->data['module_app'] === $prefix;
-                              })
+                              ->unreadNotifications()
+                              ->where('data->module_app', $prefix)
                               ->count();
                       @endphp
 
                       <span class="badge bg-danger rounded-pill badge-notifications">{{ $unreadCount }}</span>
-
                   </a>
+
                   <ul class="dropdown-menu dropdown-menu-end py-0">
                       <li class="dropdown-menu-header border-bottom">
                           <div class="dropdown-header d-flex align-items-center py-3">
                               <h5 class="text-body mb-0 me-auto">Notification</h5>
                               <a href="javascript:void(0)" class="dropdown-notifications-all text-body"
-                                  data-bs-toggle="tooltip" data-bs-placement="top" title="Mark all as read"><i
-                                      class="ti ti-mail-opened fs-4"></i></a>
+                                  data-bs-toggle="tooltip" title="Mark all as read">
+                                  <i class="ti ti-mail-opened fs-4"></i>
+                              </a>
                           </div>
                       </li>
+
                       <li class="dropdown-notifications-list scrollable-container">
                           <ul class="list-group list-group-flush">
+
                               @php
-                                  $prefix = request()->segment(1); // Ambil prefix dari URL, contoh: 'bjid'
-                                  $filteredNotifications = auth()
+                                  $prefix = request('prefix') ?? request()->segment(1);
+
+                                  $notifications = auth()
                                       ->user()
-                                      ->unreadNotifications->filter(function ($notification) use ($prefix) {
-                                          return isset($notification->data['module_app']) &&
-                                              $notification->data['module_app'] === $prefix;
-                                      });
+                                      ->unreadNotifications()
+                                      ->where('data->module_app', $prefix)
+                                      ->latest()
+                                      ->limit(10)
+                                      ->get();
                               @endphp
 
-                              @foreach ($filteredNotifications as $notification)
+                              @forelse ($notifications as $notification)
                                   <li class="list-group-item list-group-item-action dropdown-notifications-item notification-item"
                                       data-id="{{ $notification->id }}"
                                       data-link="{{ $notification->data['link'] ?? '#' }}" style="cursor: pointer;">
+
                                       <div class="d-flex align-items-center">
                                           <div class="flex-shrink-0 me-3">
                                               <div class="avatar">
-                                                  <img src="{{ asset($notification->data['avatar']) ?? asset('image/foto_user/68e99ec6de7e41760140998.avif') }}"
+                                                  <img src="{{ $notification->data['avatar'] ?? asset('assets/img/avatars/1.png') }}"
                                                       class="rounded-circle" alt="avatar" />
                                               </div>
                                           </div>
+
                                           <div class="flex-grow-1">
                                               <h6 class="mb-1">{{ $notification->data['title'] ?? 'No Title' }}</h6>
                                               <p class="mb-0">{{ $notification->data['messages'] ?? '' }}</p>
-                                              <small
-                                                  class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
+                                              <small class="text-muted">
+                                                  {{ $notification->created_at->diffForHumans() }}
+                                              </small>
                                           </div>
+
                                           <div class="flex-shrink-0 ms-3">
                                               <span class="badge badge-dot bg-primary"></span>
                                           </div>
                                       </div>
                                   </li>
-                              @endforeach
-
-                              @if ($filteredNotifications->isEmpty())
-                                  <li class="list-group-item text-center text-muted">No new notifications</li>
-                              @endif
+                              @empty
+                                  <li class="list-group-item text-center text-muted">
+                                      No new notifications
+                                  </li>
+                              @endforelse
 
                           </ul>
                       </li>
+
                       <li class="dropdown-menu-footer border-top">
                           <a href="{{ route('notifications.index') }}"
                               class="dropdown-item d-flex justify-content-center text-primary p-2 h-px-40 mb-1 align-items-center">

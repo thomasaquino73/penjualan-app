@@ -2,7 +2,7 @@
 
 namespace App\Models\Transaction;
 
-use App\Models\Master_Data\Customer;
+use App\Models\Master_Data\Supplier;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,8 +25,8 @@ class PurchaseOrder extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function customer()
+    public function supplier()
     {
-        return $this->belongsTo(Customer::class, 'customer_id');
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 }

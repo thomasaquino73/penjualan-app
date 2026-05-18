@@ -29,7 +29,7 @@ class MasterDataSeeder extends Seeder
 
         Supplier::create([
             'id_supplier' => 'C-0001',
-            'nama' => 'Thomas',
+            'nama' => 'Thomas Supplier',
             'alamat' => 'Tangerang',
             'alamat_pajak' => 'Tangerang',
             'kodepos' => '15321',

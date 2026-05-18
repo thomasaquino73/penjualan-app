@@ -9,12 +9,15 @@ use App\Models\Master_Data\Customer;
 use App\Models\Master_Data\DataBarangConversion;
 use App\Models\Transaction\PurchaseRequisition;
 use App\Models\Transaction\PurchaseRequisitionDetail;
+use App\Models\User;
+use App\Notifications\PurchaseRequisitionNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Dotenv\Exception\ValidationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Yajra\DataTables\DataTables;
 
 class PurchaseRequisitionController extends Controller
@@ -110,15 +113,16 @@ class PurchaseRequisitionController extends Controller
 
                     // ─── AKSI UNTUK PEMBUAT DOKUMEN (OWNER) ──────────────────────────────────
                     if ($row->created_by == $currentUserId) {
+                          // ✅ TOMBOL SUBMIT (Hanya jika status draft)
+                        if ($row->status == 'draft') {
+                            $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Submit to Approval</a>';
+                        }
                         // ✅ TOMBOL EDIT (Hanya jika status draft)
                         if ($user->can('permintaan_pembelian-edit') && $row->status == 'draft') {
                             $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
                         }
 
-                        // ✅ TOMBOL SUBMIT (Hanya jika status draft)
-                        if ($row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Submit to Approval</a>';
-                        }
+                      
 
                         // ✅ TOMBOL DELETE (Hanya jika status draft)
                         if ($user->can('permintaan_pembelian-delete') && $row->status == 'draft') {
@@ -310,10 +314,9 @@ class PurchaseRequisitionController extends Controller
                 throw new \Exception('There must be at least 1 product item entered.');
             }
 
-            // Jika semua query aman tanpa error, terapkan simpan permanen ke database
+           
             DB::commit();
 
-            // 4. Atur arah redirect URL berdasarkan tombol footer yang diklik user
             $redirectUrl = $request->save_and_new == 1
                 ? route('permintaan-pembelian.create') // Kembali kosongkan form untuk input data PR baru lagi
                 : route('permintaan-pembelian.index');  // Selesai dan kembali ke tabel index utama
@@ -727,7 +730,11 @@ class PurchaseRequisitionController extends Controller
         $pr->status = 'pending';
         $pr->updated_by = auth()->id(); // Jika Anda mencatat siapa yang melakukan update terakhir
         $pr->save();
+ $users = User::whereHas('roles.permissions', function ($q) {
+                $q->where('name', 'permintaan_pembelian-approval');
+            })->get();
 
+            Notification::send($users, new PurchaseRequisitionNotification($pr));
         return response()->json(['success' => true, 'message' => 'Purchase Requisition berhasil diajukan!']);
     }
 
