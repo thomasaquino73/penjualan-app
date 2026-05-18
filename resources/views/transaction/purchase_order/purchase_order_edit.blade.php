@@ -207,15 +207,9 @@
 
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-primary btn-save">
-                        <i class="fa fa-upload me-1"></i> Update
+                    <button type="submit" id="savedata" class="btn btn-primary">
+                        <i class="fa fa-save me-1"></i> Update
                     </button>
-
-                    @if (!isset($model))
-                        <button type="button" class="btn btn-success btn-save" data-action="new">
-                            <i class="fa fa-plus-circle me-1"></i> Save and Create New
-                        </button>
-                    @endif
 
                     <a href="{{ route('purchase-order.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
@@ -846,93 +840,7 @@
                 $('#modalPrDetail').modal('hide');
             });
 
-            // let saveAndNew = false;
-            // let activeBtn = null;
 
-            // $(document).on('click', '.card-footer button[type="submit"]', function() {
-            //     saveAndNew = $(this).data('save-and-new');
-            //     activeBtn = $(this);
-            // });
-
-            // $('#postForm').on('submit', function(e) {
-            //     e.preventDefault();
-
-            //     let form = this;
-            //     let formData = new FormData(form);
-
-            //     if (!activeBtn) {
-            //         activeBtn = $('#postForm').find('button[data-save-and-new="false"]');
-            //         saveAndNew = false;
-            //     }
-
-            //     if (typeof prDetailsData === 'undefined' || prDetailsData.length === 0) {
-            //         Swal.fire({
-            //             icon: 'warning',
-            //             title: 'Empty Items',
-            //             text: 'Please add at least one item detail to the table before saving.',
-            //             confirmButtonText: 'OK',
-            //             customClass: {
-            //                 confirmButton: 'btn btn-primary waves-effect waves-light'
-            //             },
-            //             buttonsStyling: false
-            //         });
-            //         return false;
-            //     }
-
-            //     formData.append('save_and_new', saveAndNew ? 1 : 0);
-            //     formData.append('items_detail', JSON.stringify(prDetailsData));
-
-            //     $.ajax({
-            //         url: $(form).attr('action'),
-            //         method: $(form).attr('method'),
-            //         data: formData,
-            //         processData: false,
-            //         contentType: false,
-            //         dataType: 'json',
-            //         beforeSend: function() {
-            //             activeBtn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
-            //             $('.card-footer button').prop('disabled', true);
-            //         },
-            //         complete: function() {
-            //             let closeBtn = $('#postForm').find('button[data-save-and-new="false"]');
-            //             let newBtn = $('#postForm').find('button[data-save-and-new="true"]');
-            //             closeBtn.html('<i class="fa fa-upload me-1"></i> Save and Close');
-            //             newBtn.html(
-            //                 '<i class="fa fa-plus-circle me-1"></i> Save and Create New');
-            //             $('.card-footer button').prop('disabled', false);
-            //         },
-            //         success: function(response) {
-            //             Swal.fire({
-            //                 icon: 'success',
-            //                 title: 'Data Created Successfully',
-            //                 text: response.message,
-            //                 customClass: {
-            //                     confirmButton: 'btn btn-primary waves-effect waves-light'
-            //                 },
-            //                 buttonsStyling: false
-            //             }).then(() => {
-            //                 window.location.href = response.redirect;
-            //             });
-            //         },
-            //         error: function(xhr) {
-            //             Swal.fire({
-            //                 icon: 'error',
-            //                 title: 'Failed to Create Data',
-            //                 text: xhr.responseJSON.message ||
-            //                     'Please check your data again.',
-            //                 customClass: {
-            //                     confirmButton: 'btn btn-primary waves-effect waves-light'
-            //                 },
-            //                 buttonsStyling: false
-            //             });
-
-            //             let errors = xhr.responseJSON.errors || {};
-            //             $.each(errors, function(key, value) {
-            //                 $(`#${key}Error`).text(value[0]);
-            //             });
-            //         }
-            //     });
-            // });
 
             // 6. Event Handler: Ganti Customer Otomatis Isi Alamat
             $('#supplier_id').on('change', function() {
@@ -1058,11 +966,10 @@
                 // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
                 calculateTotalOrder();
             });
-            $(document).on('click', '.btn-save', function(e) {
-                e.preventDefault();
-                let activeBtn = $(this);
-                let actionType = activeBtn.data('action');
 
+            $('#postForm').on('submit', function(e) {
+                e.preventDefault();
+                var form = this;
                 if (prDetailsData.length === 0) {
                     Swal.fire({
                         icon: 'warning',
@@ -1078,72 +985,61 @@
 
                 // Set flags JSON data array & action save type
                 $('#items_detail').val(JSON.stringify(prDetailsData));
-                $('#save_and_new').val(actionType === 'new' ? '1' : '0');
-
-                let form = $('#postForm');
-
                 $.ajax({
-                    url: form.attr('action'),
-                    type: form.attr('method'),
-                    data: form.serialize(),
+                    url: $(form).attr('action'),
+                    method: $(form).attr('method'),
+                    data: new FormData(form),
+                    processData: false,
+                    contentType: false,
                     dataType: 'json',
-                    beforeSend: function() {
-                        activeBtn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
-                        $('.card-footer button').prop('disabled', true);
-                    },
-                    complete: function() {
-                        let closeBtn = $('#postForm').find('button[data-save-and-new="false"]');
-                        let newBtn = $('#postForm').find('button[data-save-and-new="true"]');
-                        closeBtn.html('<i class="fa fa-upload me-1"></i> Save and Close');
-                        newBtn.html(
-                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New');
-                        $('.card-footer button').prop('disabled', false);
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: response.message,
-                                timer: 1500,
-                                customClass: {
-                                    confirmButton: 'btn btn-success'
-                                },
-                                buttonsStyling: false
-                            });
 
-                            if (response.save_and_new) {
-                                // Reset local table details
-                                prDetailsData = [];
-                                table.clear().draw();
-                                // Clear description field and set auto-generated new PR number
-                                $('#description').val('');
-                                $('#code').val(response.next_code);
-                            } else {
-                                window.location.href = response.redirect;
-                            }
-                        }
+                    beforeSend: function() {
+                        $('#savedata').html(
+                            '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
                     },
+
+                    complete: function() {
+                        $('#savedata').html('<i class="fa fa-save me-1"></i> Save');
+                    },
+
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            showClass: {
+                                popup: 'animate__animated animate__bounceIn'
+                            },
+                            customClass: {
+                                confirmButton: 'btn btn-primary waves-effect waves-light'
+                            },
+                            buttonsStyling: false
+                        });
+
+                        window.location.href = response.redirect;
+                    },
+
                     error: function(xhr) {
-                        console.log("STATUS:", xhr.status);
-                        console.log("RESPONSE:", xhr.responseJSON);
-                        if (xhr.status === 422) {
-                            let errors = xhr.responseJSON.errors;
-                            $.each(errors, function(key, val) {
-                                $(`#${key}Error`).text(val[0]);
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: xhr.responseJSON.message ||
-                                    'A system error occurred.',
-                                customClass: {
-                                    confirmButton: 'btn btn-danger'
-                                },
-                                buttonsStyling: false
-                            });
-                        }
+                        resetValidation();
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Update Failed',
+                            text: 'Please check your input data.',
+                            showClass: {
+                                popup: 'animate__animated animate__bounceIn'
+                            },
+                            customClass: {
+                                confirmButton: 'btn btn-primary waves-effect waves-light'
+                            },
+                            buttonsStyling: false
+                        });
+
+                        let errors = xhr.responseJSON?.errors;
+
+                        $.each(errors, function(key, value) {
+                            displayFieldError(key, value[0]);
+                        });
                     }
                 });
             });
