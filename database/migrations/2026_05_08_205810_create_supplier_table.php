@@ -50,6 +50,7 @@ return new class extends Migration
         });
         Schema::create('supplier_pembelian', function (Blueprint $table) {
             $table->unsignedBigInteger('supplier_id')->unique();
+            $table->integer('payment_term')->nullable();
             $table->string('discount')->nullable();
             $table->string('default_deskripsi')->nullable();
         });

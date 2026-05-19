@@ -68,7 +68,18 @@ class BasicCodeDetailSeeder extends Seeder
                 'detail' => 'NET 30',
                 'description' => '',
             ],
-         
+            [
+                'id' => $i++,
+                'master_id' => '5',
+                'detail' => 'Bank Central Asia',
+                'description' => '014',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '5',
+                'detail' => 'Bank Mandiri',
+                'description' => '008',
+            ],
 
         ]);
 

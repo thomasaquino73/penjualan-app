@@ -76,14 +76,14 @@
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="notel_bisnis" class="form-label">Bussines Phone
                                                     Number<small class="text-danger">*</small></label>
-                                                <input type="text" id="notel_bisnis" name="notel_bisnis"
+                                                <input type="number" id="notel_bisnis" name="notel_bisnis"
                                                     class="form-control" placeholder="Enter Business Phone Number">
                                                 <span class="error text-danger" id="notel_bisnisError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="no_hp" class="form-label">Phonecell<small
                                                         class="text-danger">*</small></label>
-                                                <input type="text" id="no_hp" name="no_hp" class="form-control"
+                                                <input type="number" id="no_hp" name="no_hp" class="form-control"
                                                     placeholder="Enter Phonecell Number">
                                                 <span class="error text-danger" id="no_hpError"></span>
                                             </div>
@@ -91,7 +91,7 @@
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="no_whatsapp" class="form-label">Whatsapp<small
                                                         class="text-danger">*</small></label>
-                                                <input type="text" id="no_whatsapp" name="no_whatsapp"
+                                                <input type="number" id="no_whatsapp" name="no_whatsapp"
                                                     class="form-control" placeholder="Enter Whatsapp Number">
                                                 <span class="error text-danger" id="no_whatsappError"></span>
                                             </div>
@@ -102,8 +102,8 @@
                                                 <span class="error text-danger" id="emailError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
-                                                <label for="faximili" class="form-label">Faximili</label>
-                                                <input type="text" id="faximili" name="faximili"
+                                                <label for="faximili" class="form-label">Fax Number</label>
+                                                <input type="number" id="faximili" name="faximili"
                                                     class="form-control" placeholder="Enter Fax Number">
                                                 <span class="error text-danger" id="faximiliError"></span>
                                             </div>
@@ -221,15 +221,15 @@
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="faximili_kontak" class="form-label">Fax Number
-                                                    Number</label>
-                                                <input type="text" id="faximili_kontak" name="faximili_kontak"
+                                                </label>
+                                                <input type="number" id="faximili_kontak" name="faximili_kontak"
                                                     class="form-control" placeholder="Enter Business Phone Number">
                                                 <span class="error text-danger" id="faximili_kontakError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="no_whatsapp_kontak" class="form-label">Whatsapp
                                                     Number</label>
-                                                <input type="text" id="no_whatsapp_kontak" name="no_whatsapp_kontak"
+                                                <input type="number" id="no_whatsapp_kontak" name="no_whatsapp_kontak"
                                                     class="form-control" placeholder="Enter Business Phone Number">
                                                 <span class="error text-danger" id="no_whatsapp_kontakError"></span>
                                             </div>
@@ -243,7 +243,7 @@
                                             <div class="col-md-12 col-sm-12 mb-3">
                                                 <label for="catatan" class="form-label">Notes</label>
                                                 <input type="text" id="catatan" name="catatan" class="form-control"
-                                                    placeholder="Enter Business Phone Number">
+                                                    placeholder="Enter Notes">
                                                 <span class="error text-danger" id="catatanError"></span>
                                             </div>
                                         </div>
@@ -256,14 +256,14 @@
                                         <div class="row">
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label class="form-label">Payment Term<small>*</small></label>
-                                                <select name="tipe_pemasok_id" id="tipe_pemasok_id"
+                                                <select name="payment_term" id="payment_term"
                                                     class="form-control select2" data-placeholder="Select Payment Term">
                                                     <option></option>
                                                     @foreach ($paymentTerm as $term)
                                                         <option value="{{ $term->id }}">{{ $term->detail }}</option>
                                                     @endforeach
                                                 </select>
-                                                <span class="error text-danger" id="tipe_pemasok_idError"></span>
+                                                <span class="error text-danger" id="payment_termError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="discount" class="form-label">Discount</label>
@@ -325,19 +325,23 @@
                                 <select name="nama_bank" id="nama_bank" class="form-select select2-modal "
                                     data-placeholder="Select Bank Name">
                                     <option></option>
+                                    @foreach ($databank as $item)
+                                        <option value="{{ $item->id }}">{{ $item->detail }} - {{ $item->description }}
+                                        </option>
+                                    @endforeach
                                 </select>
                                 <span class="error text-danger" id="nama_bankError"></span>
                             </div>
                             <div class="col-12 mb-3">
-                                <label class="form-label" for="quantity">Account Name</label>
-                                <input type="number" id="quantity" name="quantity" class="form-control"
-                                    placeholder="0">
-                                <span class="error text-danger" id="quantityError"></span>
+                                <label class="form-label" for="nama_rekening">Account Name</label>
+                                <input type="text" id="nama_rekening" name="nama_rekening" class="form-control"
+                                    placeholder="Enter Account Name">
+                                <span class="error text-danger" id="nama_rekeningError"></span>
                             </div>
                             <div class="col-12 mb-3">
                                 <label class="form-label" for="nomor_rekening">Account Number</label>
                                 <input type="number" id="nomor_rekening" name="nomor_rekening" class="form-control"
-                                    placeholder="0">
+                                    placeholder="Enter Account Number" min="0">
                                 <span class="error text-danger" id="nomor_rekeningError"></span>
                             </div>
                         </div>
@@ -416,6 +420,282 @@
                 });
 
 
+            });
+
+
+            let prDetailsData = [];
+            let table = new DataTable('#table', {
+                processing: true,
+                serverSide: false,
+                responsive: true,
+                select: true,
+                searching: false,
+                lengthMenu: [
+                    [10, 25, 50, -1],
+                    [10, 25, 50, 'All']
+                ],
+                data: prDetailsData, // Mengarah ke array di atas
+                columns: [{
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1;
+                        }
+                    },
+
+                    {
+                        data: 'nomor_rekening'
+                    },
+                    {
+                        data: 'nama_rekening'
+                    },
+                    {
+                        data: 'nama_bank'
+                    },
+
+                ],
+                layout: {
+                    topStart: {
+                        buttons: [{
+                                text: '<i class="ti ti-plus me-1"></i> New',
+                                className: 'btn btn-primary btn-sm me-2',
+                                action: function(e, dt, node, config) {
+                                    var supplierId = $('#nama_supplier').val();
+
+                                    if (!supplierId || supplierId === '') {
+                                        Swal.fire({
+                                            icon: 'warning',
+                                            title: 'Warning!',
+                                            text: 'Please enter Supplier Name first before adding new data.',
+                                            confirmButtonColor: '#3085d6',
+                                            confirmButtonText: 'OK',
+                                            customClass: {
+                                                confirmButton: 'btn btn-danger'
+                                            },
+                                            buttonsStyling: false
+                                        });
+                                        return false;
+                                    }
+
+                                    $('#formPrDetail')[0].reset();
+                                    $('#detail_id').val('');
+                                    $('#modalTitle').text('Create new entry');
+                                    $('#btnSubmitModal').text('Create');
+                                    $('#modalPrDetail').modal('show');
+                                }
+                            },
+                            {
+                                text: '<i class="ti ti-edit me-1"></i> Edit',
+                                className: 'btn btn-warning btn-sm me-2',
+                                extend: 'selectedSingle',
+                                action: function(e, dt, node, config) {
+                                    let data = dt.row({
+                                        selected: true
+                                    }).data();
+                                    let rowIndex = dt.row({
+                                        selected: true
+                                    }).index();
+
+                                    // 1. Set penanda bahwa ini adalah mode EDIT
+                                    window.isEditingMode = true;
+
+                                    $('#detail_id').val(rowIndex);
+                                    $('#quantity').val(data.quantity);
+                                    $('#unit_id').data('pending-val', data.unit_id);
+
+                                    // 2. Set value produk dan trigger change
+                                    $('#product_id').val(data.product_id).trigger('change');
+
+                                    // 3. Set harga unit price asli dari tabel data
+                                    $('#unit_price').val(data.unit_price);
+                                    $('#discount').val(data.discount || 0); // Jika ada diskon
+                                    $('#modalTitle').text('Edit entry');
+                                    $('#btnSubmitModal').text('Update');
+                                    $('#modalPrDetail').modal('show');
+                                }
+                            },
+                            {
+                                text: '<i class="ti ti-trash me-1"></i> Delete',
+                                className: 'btn btn-danger btn-sm me-2',
+                                extend: 'selected',
+                                action: function(e, dt, node, config) {
+                                    let rowIndex = dt.row({
+                                        selected: true
+                                    }).index();
+                                    let data = dt.row({
+                                        selected: true
+                                    }).data();
+                                    let name = data.data_produk ? data.data_produk : '';
+
+                                    Swal.fire({
+                                        title: 'Are you sure?',
+                                        text: "Want to delete data: " + name,
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Yes, delete it!',
+                                        cancelButtonText: 'Cancel',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+                                            cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                                        },
+                                        buttonsStyling: false
+                                    }).then(function(result) {
+                                        if (result.isConfirmed) {
+                                            prDetailsData.splice(rowIndex, 1);
+                                            dt.clear().rows.add(prDetailsData).draw();
+                                            calculateGrandTotal();
+                                            calculateTotalOrder()
+                                            toastr.success('Deleted Data Successfully',
+                                                '', {
+                                                    timeOut: 1500,
+                                                    progressBar: true
+                                                });
+                                        }
+                                    });
+                                }
+                            },
+                            {
+                                text: '<i class="ti ti-refresh me-1"></i> Clear All',
+                                className: 'btn btn-secondary btn-sm',
+                                action: function(e, dt, node, config) {
+                                    prDetailsData = [];
+                                    dt.clear().draw();
+                                    calculateGrandTotal();
+                                    calculateTotalOrder()
+                                    $('#percent').val(0);
+
+                                }
+                            }
+                        ]
+                    }
+                }
+            });
+
+            $('.select2-modal').each(function() {
+                var $this = $(this);
+                $this.wrap('<div class="position-relative"></div>').select2({
+                    placeholder: $this.attr('data-placeholder'),
+                    width: '100%',
+                    dropdownParent: $('#modalPrDetail')
+                });
+            });
+            $('#showModalpr').on('click', function(e) {
+                e.preventDefault();
+
+                let tbody = $('#requisitionTableBody');
+
+                // Reset checkbox 'Check All' menjadi tidak tercentang saat modal dibuka
+                $('#checkAll').prop('checked', false);
+
+                tbody.html(
+                    '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>'
+                );
+                $('#modalRequisitionDetail').modal('show');
+
+                $.ajax({
+                    url: "{{ route('purchase-order.requisitions.processing') }}",
+                    type: "GET",
+                    dataType: "json",
+                    success: function(response) {
+                        tbody.empty();
+
+                        if (response && response.length > 0) {
+                            $.each(response, function(key, item) {
+                                let dateFormatted = new Date(item.created_at)
+                                    .toLocaleDateString('id-ID');
+
+                                // Tambahkan checkbox dengan class 'checkItem' dan value berupa ID data
+                                tbody.append(`
+                            <tr>
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input checkItem" type="checkbox" value="${item.id}">
+                                    </div>
+                                </td>
+                                <td><strong>${item.code}</strong></td>
+                                <td>${dateFormatted}</td>
+                            </tr>
+                        `);
+                            });
+                        } else {
+                            tbody.html(
+                                '<tr><td colspan="3" class="text-center text-muted">No processing data found.</td></tr>'
+                            );
+                        }
+                    },
+                    error: function(xhr) {
+                        tbody.html(
+                            '<tr><td colspan="3" class="text-center text-danger">Failed to fetch data.</td></tr>'
+                        );
+                    }
+                });
+            });
+
+            $('#formPrDetail').on('submit', function(e) {
+                e.preventDefault();
+
+                let BankID = $('#nama_bank').val();
+                let namaBank = $('#nama_bank option:selected').text();
+                let nomorRekening = $('#nomor_rekening').val();
+                let namaRekening = $('#nama_rekening').val();
+                let detailId = $('#detail_id').val();
+                if (!namaBank || !nomorRekening) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Please fill all required fields! (Bank Name and Account Number)',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                }
+
+                // Validasi Duplikasi
+                let isDuplicate = false;
+                if (prDetailsData && prDetailsData.length > 0) {
+                    for (let i = 0; i < prDetailsData.length; i++) {
+                        if (prDetailsData[i].nama_bank == namaBank && prDetailsData[i].nomor_rekening ==
+                            nomorRekening) {
+                            if (detailId === '') {
+                                isDuplicate = true;
+                                break;
+                            } else if (detailId !== '' && i != detailId) {
+                                isDuplicate = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (isDuplicate) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Bank Account Already Exists!',
+                        html: `The bank account <b>"${namaBank}"</b> with number <b>"${nomorRekening}"</b> is already registered.<br>Please edit the item if you want to change it.`,
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                }
+                let itemData = {
+                    'nama_bank': namaBank,
+                    'nomor_rekening': nomorRekening,
+                    'nama_rekening': namaRekening
+                };
+
+                if (detailId === '') {
+                    prDetailsData.push(itemData);
+                } else {
+                    prDetailsData[detailId] = itemData;
+                }
+
+                table.clear().rows.add(prDetailsData).draw();
+                $('#modalPrDetail').modal('hide');
             });
 
         });

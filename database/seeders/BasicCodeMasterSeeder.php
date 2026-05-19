@@ -12,11 +12,11 @@ class BasicCodeMasterSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('basic_code_master')->insert([  [
-                'id' => '1',
-                'detail' => 'Kategori',
-                'description' => 'Daftar kategori barang',
-            ],
+        DB::table('basic_code_master')->insert([[
+            'id' => '1',
+            'detail' => 'Kategori',
+            'description' => 'Daftar kategori barang',
+        ],
             [
                 'id' => '2',
                 'detail' => 'Satuan',
@@ -31,6 +31,11 @@ class BasicCodeMasterSeeder extends Seeder
                 'id' => '4',
                 'detail' => 'Syarat Pembayaran',
                 'description' => 'Daftar syarat pembayaran',
+            ],
+            [
+                'id' => '5',
+                'detail' => 'Data Bank',
+                'description' => 'Daftar data bank',
             ],
 
         ]);

@@ -86,7 +86,7 @@ class SupplierController extends Controller
                       <ul class="dropdown-menu" style="">';
 
                     if (auth()->user()->can('supplier-edit')) {
-                        $btn .= '<a class="dropdown-item editPost" href="'.route("supplier.edit", $row->id).'"
+                        $btn .= '<a class="dropdown-item editPost" href="'.route('supplier.edit', $row->id).'"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
                     }
 
@@ -234,6 +234,22 @@ class SupplierController extends Controller
     //         ], 500);
     //     }
     // }
+    public function create()
+    {
+        $x = [
+            'title' => 'Supplier List New',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Supplier New', 'url' => ''],
+            ],
+            'idNumber' => $this->generateNumberId(),
+            'paymentTerm' => BasicCodeDetail::where('master_id', 4)->get(),
+            'databank' => BasicCodeDetail::where('master_id', 5)->get(),
+
+        ];
+
+        return view('master_data.supplier.supplier_create', $x);
+    }
 
     public function store(SupplierRequest $request)
     {
@@ -241,7 +257,6 @@ class SupplierController extends Controller
         try {
             $data = $request->validated();
             $data['created_by'] = Auth::id();
-            $data['status'] = 1;
             if (empty($data['id_supplier'])) {
                 do {
                     $data['id_supplier'] = $this->generateSupplierId();
@@ -258,23 +273,30 @@ class SupplierController extends Controller
                 }
             }
             $supplier = Supplier::create($data);
-           DB::table('supplier_kontak')->insert([
-                'supplier_id'          => $supplier->id,
-                'sapaan'               => $request->sapaan,
-                'contact_person'       => $request->contact_person,
-                'posisi_jabatan'       => $request->posisi_jabatan,
-                'email_kontak'         => $request->email_kontak,
-                'handphone_kontak'     => $request->handphone_kontak,
-                'notel_bisnis_kontak'  => $request->notel_bisnis_kontak,
-                'faximili_kontak'      => $request->faximili_kontak,
-                'no_whatsapp_kontak'   =>$request->no_whatsapp_kontak,
-                'website_kontak'       => $request->website_kontak,
+            DB::table('supplier_kontak')->insert([
+                'supplier_id' => $supplier->id,
+                'sapaan' => $request->sapaan,
+                'contact_person' => $request->contact_person,
+                'posisi_jabatan' => $request->posisi_jabatan,
+                'email_kontak' => $request->email_kontak,
+                'handphone_kontak' => $request->handphone_kontak,
+                'notel_bisnis_kontak' => $request->notel_bisnis_kontak,
+                'faximili_kontak' => $request->faximili_kontak,
+                'no_whatsapp_kontak' => $request->no_whatsapp_kontak,
+                'website_kontak' => $request->website_kontak,
+                'catatan' => $request->catatan,
+            ]);
+            DB::table('supplier_pembelian')->insert([
+                'supplier_id' => $supplier->id,
+                'payment_term' => $request->payment_term,
+                'discount' => $request->discount,
+                'default_deskripsi' => $request->default_deskripsi,
             ]);
             DB::commit();
 
             return response()->json([
                 'action' => 'create',
-                 'redirect' => route('supplier.index'),
+                'redirect' => route('supplier.index'),
                 'message' => 'Data created successfully',
             ], 201);
 
@@ -283,22 +305,6 @@ class SupplierController extends Controller
             throw $e;
         }
 
-    }
-
-    public function create()
-    {
-        $x = [
-            'title' => 'Supplier List New',
-            'breadcrumb' => [
-                ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Supplier New', 'url' => ''],
-            ],
-            'idNumber' => $this->generateNumberId(),
-            'paymentTerm' => BasicCodeDetail::where('master_id',4)->get(),
-
-        ];
-
-        return view('master_data.supplier.supplier_create', $x);
     }
 
     public function show(string $id)
