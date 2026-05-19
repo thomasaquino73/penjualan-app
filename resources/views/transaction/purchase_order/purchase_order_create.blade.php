@@ -530,7 +530,7 @@
                                         Swal.fire({
                                             icon: 'warning',
                                             title: 'Warning!',
-                                            text: 'Please select Customer first before adding new data.',
+                                            text: 'Please select Supplier first before adding new data.',
                                             confirmButtonColor: '#3085d6',
                                             confirmButtonText: 'OK',
                                             customClass: {
@@ -908,7 +908,7 @@
                 });
             });
 
-            // 6. Event Handler: Ganti Customer Otomatis Isi Alamat
+            // 6. Event Handler: Ganti Supplier Otomatis Isi Alamat
             $('#supplier_id').on('change', function() {
                 var alamatTerpilih = $(this).find(':selected').data('alamat');
                 if (alamatTerpilih) {

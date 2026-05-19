@@ -256,6 +256,8 @@ class SupplierController extends Controller
         DB::beginTransaction();
         try {
             $data = $request->validated();
+               $itemsDetailRaw = $request->input('items_detail');
+            unset($data['items_detail']);
             $data['created_by'] = Auth::id();
             if (empty($data['id_supplier'])) {
                 do {
@@ -292,6 +294,37 @@ class SupplierController extends Controller
                 'discount' => $request->discount,
                 'default_deskripsi' => $request->default_deskripsi,
             ]);
+            DB::table('supplier_pajak')->insert([
+                'supplier_id' => $supplier->id,
+                'tipe_id_pajak' => $request->tipe_id_pajak,
+                'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
+                'nama_wajib_pajak' => $request->nama_wajib_pajak,
+                'id_tku' => $request->id_tku,
+                'alamat_pajak' => $request->alamat_pajak,
+                'kota_pajak' => $request->kota_pajak,
+                'kodepos_pajak' => $request->kodepos_pajak,
+                'provinsi_pajak' => $request->provinsi_pajak,
+                'negara_pajak' => $request->negara_pajak,
+            ]);
+
+              // 6. Proses simpan data ke tabel detail 'purchase_order_detail'
+            if ($itemsDetailRaw) {
+                // Bongkar string JSON data barang dari AJAX menjadi array PHP
+                $items = json_decode($itemsDetailRaw, true);
+
+                if (is_array($items) && count($items) > 0) {
+                    foreach ($items as $item) {
+
+                        DB::table('supplier_rekening')->insert([
+                            'supplier_id' => $supplier->id,
+                            'nama_bank' => $item['nama_bank'] ?? null,
+                            'nomor_rekening' => $item['nomor_rekening'] ?? null,
+                            'nama_rekening' => $item['nama_rekening'] ?? null,
+                        ]);
+                    }
+                }
+            }
+
             DB::commit();
 
             return response()->json([

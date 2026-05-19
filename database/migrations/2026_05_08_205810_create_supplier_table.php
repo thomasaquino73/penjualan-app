@@ -63,9 +63,15 @@ return new class extends Migration
         Schema::create('supplier_pajak', function (Blueprint $table) {
             $table->unsignedBigInteger('supplier_id')->unique();
             $table->boolean('default_pajak')->default(1)->comment('ppn atau non ppn');
-            $table->string('no_npwp')->nullable();
-            $table->string('nama_npwp')->nullable();
-            $table->string('NPPKP')->nullable();
+            $table->string('tipe_id_pajak')->nullable();
+            $table->string('nomor_wajib_pajak')->nullable();
+            $table->string('nama_wajib_pajak')->nullable();
+            $table->string('id_tku')->nullable();
+            $table->string('alamat_pajak')->nullable();
+            $table->string('kota_pajak')->nullable();
+            $table->string('kodepos_pajak')->nullable();
+            $table->string('provinsi_pajak')->nullable();
+            $table->string('negara_pajak')->nullable();
         });
     }
 

@@ -40,7 +40,7 @@
                                 <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
                                     data-bs-target="#navs-pills-top-term" aria-controls="navs-pills-top-term"
                                     aria-selected="false">
-                                    Term & Bank
+                                    Payment & Bank
                                 </button>
                             </li>
                             <li class="nav-item">
@@ -151,9 +151,9 @@
                                                 <label class="form-label">Supplier Type<small>*</small></label>
                                                 <select name="tipe_pemasok_id" id="tipe_pemasok_id" class="form-control">
                                                     <option value="" selected hidden>Select Supplier Type</option>
-                                                    <option value="1">Perorangan</option>
-                                                    <option value="2">Perusahaan</option>
-                                                    <option value="3">Pemerintah</option>
+                                                    <option value="Perorangan">Perorangan</option>
+                                                    <option value="Perusahaan">Perusahaan</option>
+                                                    <option value="Pemerintah">Pemerintah</option>
                                                 </select>
                                                 <span class="error text-danger" id="tipe_pemasok_idError"></span>
                                             </div>
@@ -253,6 +253,9 @@
                             <div class="tab-pane fade" id="navs-pills-top-term" role="tabpanel">
                                 <div class="row">
                                     <div class="col-md-6 col-sm-12">
+                                        <div class="divider my-4">
+                                            <div class="divider-text">Payment Detail</div>
+                                        </div>
                                         <div class="row">
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label class="form-label">Payment Term<small>*</small></label>
@@ -283,13 +286,119 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-sm-12">
+                                        <div class="divider my-4">
+                                            <div class="divider-text">Bank Detail</div>
+                                        </div>
                                         @include('master_data.supplier.part.data_bank')
                                     </div>
 
                                 </div>
                             </div>
                             <div class="tab-pane fade" id="navs-pills-top-tax" role="tabpanel">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="row mb-3">
+                                            <label class="col-sm-3 col-form-label" for="basic-default-name">Tax</label>
+                                            <div class="col-sm-9">
+                                                <div class="form-check form-check-primary col-8">
+                                                    <input class="form-check-input" type="checkbox" value="1"
+                                                        name="default_pajak" id="default_pajak" checked="">
+                                                    <label class="form-check-label" for="default_pajak">Default Invoice
+                                                        includes Tax</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <label class="col-sm-3 col-form-label" for="basic-default-name">Type ID
+                                                Tax</label>
+                                            <div class="col-sm-9">
+                                                <select name="tipe_id_pajak" id="tipe_id_pajak" class="form-select">
+                                                    <option value="" selected hidden>Select Type ID Tax</option>
+                                                    <option value="NIK">NIK</option>
+                                                    <option value="NPWP">NPWP</option>
+                                                    <option value="Paspor">Paspor</option>
+                                                    <option value="Lainnya">Lainnya</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <label class="col-sm-3 col-form-label" for="basic-default-name">NPWP
+                                                Number</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" id="nomor_wajib_pajak"
+                                                    name="nomor_wajib_pajak" placeholder="Enter NPWP number">
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <label class="col-sm-3 col-form-label" for="basic-default-name">Taxpayer
+                                                Name</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" id="nama_wajib_pajak"
+                                                    name="nama_wajib_pajak" placeholder="Enter Taxpayer Name">
+                                            </div>
+                                        </div>
 
+                                        <div class="row mb-3">
+                                            <label class="col-sm-3 col-form-label" for="basic-default-name">ID TKU</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" id="id_tku" name="id_tku"
+                                                    placeholder="Enter ID TKU">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="row mb-3">
+                                            <label class="col-sm-3 col-form-label" for="basic-default-name">Tax
+                                                address</label>
+                                            <div class="col-sm-9">
+                                                <div class="form-check form-check-primary col-8">
+                                                    <input class="form-check-input" type="checkbox" value="1"
+                                                        name="check_address" id="check_address" checked="">
+                                                    <label class="form-check-label" for="check_address">Tax address is
+                                                        the same as payment address</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <label class="col-sm-3 col-form-label"
+                                                for="basic-default-name">Address</label>
+                                            <div class="col-sm-9">
+                                                <textarea class="form-control" id="alamat_pajak" name="alamat_pajak" placeholder="Enter Tax Address"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <label class="col-sm-3 col-form-label" for="basic-default-name">City</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" id="kota_pajak"
+                                                    name="kota_pajak" placeholder="Enter City">
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <label class="col-sm-3 col-form-label" for="basic-default-name">Postal
+                                                Code</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" id="kodepos_pajak"
+                                                    name="kodepos_pajak" placeholder="Enter Postal Code">
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <label class="col-sm-3 col-form-label"
+                                                for="basic-default-name">Province</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" id="provinsi_pajak"
+                                                    name="provinsi_pajak" placeholder="Enter Province">
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <label class="col-sm-3 col-form-label"
+                                                for="basic-default-name">Country</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" id="negara_pajak"
+                                                    name="negara_pajak" placeholder="Enter Country">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -326,7 +435,8 @@
                                     data-placeholder="Select Bank Name">
                                     <option></option>
                                     @foreach ($databank as $item)
-                                        <option value="{{ $item->id }}">{{ $item->detail }} - {{ $item->description }}
+                                        <option value="{{ $item->id }}">{{ $item->detail }} -
+                                            {{ $item->description }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -359,67 +469,121 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+
+
+            function toggleAddress() {
+                if ($('#check_address').is(':checked')) {
+                    $('#alamat_pajak').prop('readonly', true);
+                    $('#kota_pajak').prop('readonly', true);
+                    $('#kodepos_pajak').prop('readonly', true);
+                    $('#provinsi_pajak').prop('readonly', true);
+                    $('#negara_pajak').prop('readonly', true);
+
+                    // optional: isi otomatis dari alamat pembayaran
+                    // $('#alamat_pajak').val($('#alamat_pembayaran').val());
+                } else {
+                    $('#alamat_pajak').prop('readonly', false);
+                    $('#kota_pajak').prop('readonly', false);
+                    $('#kodepos_pajak').prop('readonly', false);
+                    $('#provinsi_pajak').prop('readonly', false);
+                    $('#negara_pajak').prop('readonly', false);
+                }
+            }
+
+            // jalan saat pertama load
+            toggleAddress();
+
+            // jalan saat checkbox di klik
+            $('#check_address').on('change', function() {
+                toggleAddress();
+            });
+
             $('#postForm').on('submit', function(e) {
                 e.preventDefault();
                 var form = this;
+                let formData = new FormData(form);
+
+                // if (typeof prDetailsData === 'undefined' || prDetailsData.length === 0) {
+                //     Swal.fire({
+                //         icon: 'warning',
+                //         title: 'Empty Items',
+                //         text: 'Please add at least one item detail to the table before saving.',
+                //         confirmButtonText: 'OK',
+                //         customClass: {
+                //             confirmButton: 'btn btn-primary waves-effect waves-light'
+                //         },
+                //         buttonsStyling: false
+                //     });
+                //     return false;
+                // }
+
+                formData.append('items_detail', JSON.stringify(prDetailsData));
+
+                let rekeningData = [];
+                $('.rekening-item').each(function() {
+                    rekeningData.push({
+                        nama_bank: $(this).find('.nama_bank').val(),
+                        nomor_rekening: $(this).find('.nomor_rekening').val(),
+                        nama_rekening: $(this).find('.nama_rekening').val()
+                    });
+                });
+
+                formData.append('rekening_data', JSON.stringify(rekeningData));
+
                 $.ajax({
                     url: $(form).attr('action'),
                     method: $(form).attr('method'),
-                    data: new FormData(form),
+                    data: formData, // ✅ pakai ini
                     processData: false,
                     contentType: false,
-                    datatype: 'json',
-                    beforeSend: function(e) {
+                    dataType: 'json', // ✅ FIX typo
+
+                    beforeSend: function() {
                         $('#savedata').html(
                             '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
                     },
-                    complete: function(e) {
-                        $('#savedata').html(' <i class="fa fa-save me-1"></i>Save');
+
+                    complete: function() {
+                        $('#savedata').html('<i class="fa fa-save me-1"></i> Save');
                     },
+
                     success: function(response) {
                         $('#modals').modal('hide');
-                        window.location.href = response.redirect;
+
                         Swal.fire({
                             icon: 'success',
                             title: response.title,
                             text: response.message,
-                            showClass: {
-                                popup: 'animate__animated animate__bounceIn'
-                            },
                             customClass: {
                                 confirmButton: 'btn btn-primary waves-effect waves-light'
                             },
                             buttonsStyling: false
+                        }).then(() => {
+                            window.location.href = response.redirect;
                         });
-
                     },
+
                     error: function(xhr) {
-                        // reset validation messages (buat kamu implement sendiri)
                         resetValidation();
 
                         Swal.fire({
                             icon: 'error',
                             title: 'Failed to Create Data',
-                            text: 'Please check your data again.',
-                            showClass: {
-                                popup: 'animate__animated animate__bounceIn'
-                            },
+                            text: xhr.responseJSON?.message ||
+                                'Please check your data again.',
                             customClass: {
                                 confirmButton: 'btn btn-primary waves-effect waves-light'
                             },
                             buttonsStyling: false
                         });
 
-                        let errors = xhr.responseJSON.errors || {};
+                        let errors = xhr.responseJSON?.errors || {};
 
                         $.each(errors, function(key, value) {
-                            displayFieldError(key, value[
-                                0]); // fungsi buat nampilin error per field
+                            displayFieldError(key, value[0]);
                         });
                     }
                 });
-
-
             });
 
 
