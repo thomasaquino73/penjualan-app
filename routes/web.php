@@ -12,7 +12,7 @@ use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
 use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
 use App\Http\Controllers\Master_Data\CustomerController;
 use App\Http\Controllers\Master_Data\DaftarKendaraanController;
-use App\Http\Controllers\Master_Data\SalesmanController;
+// use App\Http\Controllers\Master_Data\SalesmanController;
 use App\Http\Controllers\Master_Data\SupplierController;
 use App\Http\Controllers\Master_Data\WarehouseController;
 use App\Http\Controllers\NotificationController;
@@ -133,12 +133,12 @@ Route::middleware('auth')->group(function () {
     Route::put('/supplier/restore/{id}', [SupplierController::class, 'restore'])->name('supplier.restore');
     Route::resource('supplier', SupplierController::class);
 
-    Route::post('/salesman/delete-multiple', [SalesmanController::class, 'deleteMultiple']);
-    Route::post('/salesman/restore-multiple', [SalesmanController::class, 'restoreMultiple']);
-    Route::get('/salesman/generate-id', [SalesmanController::class, 'generateId']);
-    Route::get('/salesman/trash', [SalesmanController::class, 'trash'])->name('salesman.trash');
-    Route::put('/salesman/restore/{id}', [SalesmanController::class, 'restore'])->name('salesman.restore');
-    Route::resource('salesman', SalesmanController::class);
+    // Route::post('/salesman/delete-multiple', [SalesmanController::class, 'deleteMultiple']);
+    // Route::post('/salesman/restore-multiple', [SalesmanController::class, 'restoreMultiple']);
+    // Route::get('/salesman/generate-id', [SalesmanController::class, 'generateId']);
+    // Route::get('/salesman/trash', [SalesmanController::class, 'trash'])->name('salesman.trash');
+    // Route::put('/salesman/restore/{id}', [SalesmanController::class, 'restore'])->name('salesman.restore');
+    // Route::resource('salesman', SalesmanController::class);
 
     Route::post('/warehouse/delete-multiple', [WarehouseController::class, 'deleteMultiple']);
     Route::post('/warehouse/restore-multiple', [WarehouseController::class, 'restoreMultiple']);

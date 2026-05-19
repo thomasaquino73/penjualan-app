@@ -90,16 +90,6 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'single',
-                'name' => 'Salesman',
-                'route' => 'salesman.index',
-                'icon' => 'ti ti-tie',
-                'pattern' => 'salesman.*',
-                'active' => true,
-                'roles' => ['Super Admin'],
-                'permissions' => ['salesman-browse'],
-            ],
-            [
-                'type' => 'single',
                 'name' => 'Vehicle',
                 'route' => 'daftar-kendaraan.index',
                 'icon' => 'ti-car',

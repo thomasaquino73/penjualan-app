@@ -41,7 +41,7 @@ class PenggunaRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('users', 'phone')->ignore($userId),
+                // Rule::unique('users', 'phone')->ignore($userId),
             ],
             'status' => 'required|in:Active,Not Active',
             'roles' => 'required', // pastikan minimal 1 role dipilih
