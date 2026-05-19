@@ -42,7 +42,7 @@
         }
 
         .company-name {
-            font-size: 13pt;
+            font-size: 12pt;
             font-weight: bold;
             color: #222;
             margin-bottom: 3px;
@@ -218,14 +218,13 @@
                             @endif
                         </td>
                         <td class="company-details">
-                            <div class="company-name">{{ $company->nama_perusahaan ?? 'PT Almex Bintang Timur' }}</div>
+                            <div class="company-name">{{ $company->nama_perusahaan }}</div>
                             <div class="company-info">
-                                {{ $company->alamat ?? 'Green Lake City Ruko Food City RKFC-005 Petir Cipondoh' }}<br>
-                                {{ $company->negara ?? 'Indonesia' }} {{ $company->kodepos ?? '16424' }}<br>
-                                {{ $company->nomor_telepon ?? '081382397429' }}<br>
-                                {{ $company->email ?? 'info@almexbintangtimur.com' }}<br>
-                                <span
-                                    style="color: #3085d6;">{{ $company->website ?? 'https://www.almexbintangtimur.com' }}</span>
+                                {{ $company->alamat }}<br>
+                                {{ $company->negara }} {{ $company->kodepos ?? '16424' }}<br>
+                                 {{ $company->nomor_telepon }}<br>
+                               {{ $company->email }}<br>
+                                <span style="color: #3085d6;">{{ $company->website }}</span>
                             </div>
                         </td>
                     </tr>

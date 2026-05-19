@@ -15,6 +15,7 @@ class PurchaseRequisitionDetail extends Model
     protected $table = 'purchase_requisition_detail';
 
     protected $guarded = [];
+
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
@@ -22,6 +23,7 @@ class PurchaseRequisitionDetail extends Model
         $year = date('Y');
         $this->table = "purchase_requisition_detail_{$year}";
     }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

@@ -6,12 +6,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-     protected string $year;
+    protected string $year;
 
     public function __construct()
     {
         $this->year = date('Y'); // tahun berjalan
     }
+
     public function up(): void
     {
         Schema::create("purchase_requisition_{$this->year}", function (Blueprint $table) {

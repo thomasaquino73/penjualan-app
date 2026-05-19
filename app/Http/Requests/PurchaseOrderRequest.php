@@ -15,7 +15,7 @@ class PurchaseOrderRequest extends FormRequest
         return true;
     }
 
-   public function rules(): array
+    public function rules(): array
     {
         $id = $this->route('purchase_order');
 

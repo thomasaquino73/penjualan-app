@@ -12,9 +12,7 @@ class BasicCodeMasterSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('basic_code_master')->insert([
-
-            [
+        DB::table('basic_code_master')->insert([  [
                 'id' => '1',
                 'detail' => 'Kategori',
                 'description' => 'Daftar kategori barang',
@@ -26,18 +24,13 @@ class BasicCodeMasterSeeder extends Seeder
             ],
             [
                 'id' => '3',
-                'detail' => 'FOB',
-                'description' => '',
+                'detail' => 'Tipe Supplier',
+                'description' => 'Daftar tipe supplier',
             ],
             [
                 'id' => '4',
-                'detail' => 'Tipe Persediaan',
-                'description' => 'Tipe persediaan untuk barang',
-            ],
-            [
-                'id' => '5',
-                'detail' => 'Term',
-                'description' => 'Jenis Pembayaran',
+                'detail' => 'Syarat Pembayaran',
+                'description' => 'Daftar syarat pembayaran',
             ],
 
         ]);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Master_Data;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SupplierRequest;
+use App\Models\BasicCodeDetail;
 use App\Models\Master_Data\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -85,7 +86,7 @@ class SupplierController extends Controller
                       <ul class="dropdown-menu" style="">';
 
                     if (auth()->user()->can('supplier-edit')) {
-                        $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
+                        $btn .= '<a class="dropdown-item editPost" href="'.route("supplier.edit", $row->id).'"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
                     }
 
@@ -113,14 +114,14 @@ class SupplierController extends Controller
         return view('master_data.supplier.supplier_index', $x);
     }
 
-    private function generateSupplierId()
+    private function generateNumberId()
     {
         $last = Supplier::whereNotNull('id_supplier')
             ->orderBy('id', 'desc')
             ->first();
 
         if (! $last) {
-            return 'SP-001';
+            return 'SP-0001';
         }
 
         $lastId = $last->id_supplier;
@@ -148,93 +149,157 @@ class SupplierController extends Controller
     public function generateId()
     {
         return response()->json([
-            'id_supplier' => $this->generateSupplierId(),
+            'id_supplier' => $this->generateNumberId(),
         ]);
     }
 
+    // public function store(SupplierRequest $request)
+    // {
+    //     try {
+    //         $id = $request->input('id');
+    //         $data = $request->validated();
+
+    //         if (! empty($id)) {
+
+    //             // ==========================================
+    //             // PROCESS: UPDATE DATA
+    //             // ==========================================
+    //             $data['updated_by'] = Auth::id();
+
+    //             Supplier::where('id', $id)->update($data);
+
+    //             return response()->json([
+    //                 'action' => 'update',
+    //                 'message' => 'Data updated successfully',
+    //             ], 200);
+
+    //         } else {
+
+    //             // ==========================================
+    //             // PROCESS: CREATE DATA (Safe from Race Condition)
+    //             // ==========================================
+    //             $data['created_by'] = Auth::id();
+    //             $data['status'] = 1;
+
+    //             // Mulai database transaction sebelum pengecekan ID
+    //             DB::beginTransaction();
+
+    //             try {
+    //                 // Menggunakan kolom 'id_supplier' sesuai DB kamu
+    //                 if (empty($data['id_supplier'])) {
+
+    //                     // Looping otomatis jika ID keduluan diambil user lain
+    //                     do {
+    //                         $data['id_supplier'] = $this->generateSupplierId();
+
+    //                         // Kunci baris dengan lockForUpdate agar request lain mengantre
+    //                         $exists = Supplier::where('id_supplier', $data['id_supplier'])->lockForUpdate()->exists();
+    //                     } while ($exists);
+
+    //                 } else {
+    //                     // Validasi jika input manual: pastikan belum terdaftar
+    //                     $exists = Supplier::where('id_supplier', $data['id_supplier'])->lockForUpdate()->exists();
+
+    //                     if ($exists) {
+    //                         DB::rollBack();
+
+    //                         return response()->json([
+    //                             'error' => 'ID Supplier sudah digunakan',
+    //                         ], 422);
+    //                     }
+    //                 }
+
+    //                 // Simpan data ke database
+    //                 Supplier::create($data);
+
+    //                 // Commit semua transaksi jika berhasil tanpa error
+    //                 DB::commit();
+
+    //                 return response()->json([
+    //                     'action' => 'create',
+    //                     'message' => 'Data created successfully',
+    //                 ], 201);
+
+    //             } catch (\Exception $e) {
+    //                 // Batalkan transaksi jika terjadi error di dalam blok DB
+    //                 DB::rollBack();
+    //                 throw $e; // Lempar ke catch paling luar untuk response error 500
+    //             }
+    //         }
+
+    //     } catch (\Exception $e) {
+    //         // Menangkap semua error (termasuk dari throw $e di atas)
+    //         return response()->json([
+    //             'error' => $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
     public function store(SupplierRequest $request)
     {
+        DB::beginTransaction();
         try {
-            $id = $request->input('id');
             $data = $request->validated();
-
-            if (! empty($id)) {
-
-                // ==========================================
-                // PROCESS: UPDATE DATA
-                // ==========================================
-                $data['updated_by'] = Auth::id();
-
-                Supplier::where('id', $id)->update($data);
-
-                return response()->json([
-                    'action' => 'update',
-                    'message' => 'Data updated successfully',
-                ], 200);
-
+            $data['created_by'] = Auth::id();
+            $data['status'] = 1;
+            if (empty($data['id_supplier'])) {
+                do {
+                    $data['id_supplier'] = $this->generateSupplierId();
+                    $exists = Supplier::where('id_supplier', $data['id_supplier'])->lockForUpdate()->exists();
+                } while ($exists);
             } else {
-
-                // ==========================================
-                // PROCESS: CREATE DATA (Safe from Race Condition)
-                // ==========================================
-                $data['created_by'] = Auth::id();
-                $data['status'] = 1;
-
-                // Mulai database transaction sebelum pengecekan ID
-                DB::beginTransaction();
-
-                try {
-                    // Menggunakan kolom 'id_supplier' sesuai DB kamu
-                    if (empty($data['id_supplier'])) {
-
-                        // Looping otomatis jika ID keduluan diambil user lain
-                        do {
-                            $data['id_supplier'] = $this->generateSupplierId();
-
-                            // Kunci baris dengan lockForUpdate agar request lain mengantre
-                            $exists = Supplier::where('id_supplier', $data['id_supplier'])->lockForUpdate()->exists();
-                        } while ($exists);
-
-                    } else {
-                        // Validasi jika input manual: pastikan belum terdaftar
-                        $exists = Supplier::where('id_supplier', $data['id_supplier'])->lockForUpdate()->exists();
-
-                        if ($exists) {
-                            DB::rollBack();
-
-                            return response()->json([
-                                'error' => 'ID Supplier sudah digunakan',
-                            ], 422);
-                        }
-                    }
-
-                    // Simpan data ke database
-                    Supplier::create($data);
-
-                    // Commit semua transaksi jika berhasil tanpa error
-                    DB::commit();
+                $exists = Supplier::where('id_supplier', $data['id_supplier'])->lockForUpdate()->exists();
+                if ($exists) {
+                    DB::rollBack();
 
                     return response()->json([
-                        'action' => 'create',
-                        'message' => 'Data created successfully',
-                    ], 201);
-
-                } catch (\Exception $e) {
-                    // Batalkan transaksi jika terjadi error di dalam blok DB
-                    DB::rollBack();
-                    throw $e; // Lempar ke catch paling luar untuk response error 500
+                        'error' => 'ID Supplier sudah digunakan',
+                    ], 422);
                 }
             }
+            $supplier = Supplier::create($data);
+           DB::table('supplier_kontak')->insert([
+                'supplier_id'          => $supplier->id,
+                'sapaan'               => $request->sapaan,
+                'contact_person'       => $request->contact_person,
+                'posisi_jabatan'       => $request->posisi_jabatan,
+                'email_kontak'         => $request->email_kontak,
+                'handphone_kontak'     => $request->handphone_kontak,
+                'notel_bisnis_kontak'  => $request->notel_bisnis_kontak,
+                'faximili_kontak'      => $request->faximili_kontak,
+                'no_whatsapp_kontak'   =>$request->no_whatsapp_kontak,
+                'website_kontak'       => $request->website_kontak,
+            ]);
+            DB::commit();
+
+            return response()->json([
+                'action' => 'create',
+                 'redirect' => route('supplier.index'),
+                'message' => 'Data created successfully',
+            ], 201);
 
         } catch (\Exception $e) {
-            // Menangkap semua error (termasuk dari throw $e di atas)
-            return response()->json([
-                'error' => $e->getMessage(),
-            ], 500);
+            DB::rollBack();
+            throw $e;
         }
+
     }
 
-    public function create() {}
+    public function create()
+    {
+        $x = [
+            'title' => 'Supplier List New',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Supplier New', 'url' => ''],
+            ],
+            'idNumber' => $this->generateNumberId(),
+            'paymentTerm' => BasicCodeDetail::where('master_id',4)->get(),
+
+        ];
+
+        return view('master_data.supplier.supplier_create', $x);
+    }
 
     public function show(string $id)
     {

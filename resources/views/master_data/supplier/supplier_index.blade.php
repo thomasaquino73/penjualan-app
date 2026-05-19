@@ -27,9 +27,9 @@
                     justify-content-start justify-content-lg-end">
 
                     @canany(['supplier-create'])
-                        <button id="create" class="btn  btn-sm btn-primary">
+                        <a href="{{ route('supplier.create') }}" class="btn  btn-sm btn-primary">
                             <i class="ti ti-plus me-1"></i> Add Data
-                        </button>
+                        </a>
                     @endcanany
                     @canany(['supplier-trash'])
                         <a href="{{ route('supplier.trash') }}" class="btn btn-sm btn-secondary">
@@ -73,104 +73,6 @@
     </div>
 @endsection
 @push('scripts')
-    <div class="modal fade" id="modals" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="mb-2" id="modal-title"></h3>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="postForm" name="postForm" method="POST" action="{{ route('supplier.store') }}">
-                        @csrf
-                        <input type="text" name="id" id="id" hidden>
-                        <div class="row">
-                            <div class="col-md-6 col-sm-12 mb-3">
-                                <label for="id_supplier" class="form-label">Supplier ID<small>*</small></label>
-                                <input type="text" id="id_supplier" name="id_supplier" class="form-control"
-                                    placeholder="Enter Supplier ID">
-                                <span class="error text-danger" id="id_supplierError"></span>
-
-                            </div>
-                            <div class="col-md-6 col-sm-12 mb-3">
-                                <label for="nama" class="form-label">Supplier Name<small>*</small></label>
-                                <input type="text" id="nama" name="nama" class="form-control"
-                                    placeholder="Enter Supplier Name">
-                                <span class="error text-danger" id="namaError"></span>
-
-                            </div>
-                            <div class="col-md-12 col-sm-12 mb-3">
-                                <label for="alamat" class="form-label">Address<small>*</small></label>
-                                <input type="text" id="alamat" name="alamat" class="form-control"
-                                    placeholder="Enter Supplier Address">
-                                <span class="error text-danger" id="alamatError"></span>
-                            </div>
-                            <div class="col-md-12 col-sm-12 mb-3">
-                                <label for="alamat_pajak" class="form-label">Tax Address</label>
-                                <input type="text" id="alamat_pajak" name="alamat_pajak" class="form-control"
-                                    placeholder="Enter Supplier Tax Address">
-                                <span class="error text-danger" id="alamat_pajakError"></span>
-                            </div>
-
-                            <div class="col-md-3 col-sm-12 mb-3">
-                                <label for="kodepos" class="form-label">Postal Code</label>
-                                <input type="text" id="kodepos" name="kodepos" class="form-control"
-                                    placeholder="Enter Postal Code">
-                                <span class="error text-danger" id="kodeposError"></span>
-                            </div>
-                            <div class="col-md-3 col-sm-12 mb-3">
-                                <label for="negara" class="form-label">Country<small>*</small></label>
-                                <input type="text" id="negara" name="negara" class="form-control"
-                                    placeholder="Enter Country">
-                                <span class="error text-danger" id="negaraError"></span>
-                            </div>
-                            <div class="col-md-3 col-sm-12 mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="text" id="email" name="email" class="form-control"
-                                    placeholder="Enter Email">
-                                <span class="error text-danger" id="emailError"></span>
-                            </div>
-                            <div class="col-md-3 col-sm-12 mb-3">
-                                <label for="website" class="form-label">Website</label>
-                                <input type="text" id="website" name="website" class="form-control"
-                                    placeholder="Enter Website">
-                                <span class="error text-danger" id="websiteError"></span>
-                            </div>
-                            <div class="col-md-3 col-sm-12 mb-3">
-                                <label for="telepon" class="form-label">Phone Number<small>*</small></label>
-                                <input type="text" id="telepon" name="telepon" class="form-control"
-                                    placeholder="Enter Phone Number">
-                                <span class="error text-danger" id="teleponError"></span>
-                            </div>
-                            <div class="col-md-3 col-sm-12 mb-3">
-                                <label for="personal_kontak" class="form-label">Contact Person</label>
-                                <input type="text" id="personal_kontak" name="personal_kontak" class="form-control"
-                                    placeholder="Enter Contact Person">
-                                <span class="error text-danger" id="personal_kontakError"></span>
-                            </div>
-                            <div class="col-md-6 col-sm-12 mb-3">
-                                <label class="form-label">Status<small>*</small></label>
-                                <select name="status" id="status" class="form-control">
-                                    <option value="">Select Status</option>
-                                    <option value="1">Active</option>
-                                    <option value="2">Not Active</option>
-                                </select>
-                                <span class="error text-danger" id="statusError"></span>
-                            </div>
-                        </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-label-secondary waves-effect" data-bs-dismiss="modal">
-                        Close
-                    </button>
-                    <button type="submit" id="savedata" name="savedata" class="btn btn-primary me-sm-3 me-1">
-                    </button>
-                </div>
-                </form>
-
-            </div>
-        </div>
-    </div>
     <script>
         $(document).ready(function() {
             $('#checkAll').on('click', function() {
@@ -208,16 +110,16 @@
                         data: 'id_supplier',
                     },
                     {
-                        data: 'nama',
+                        data: 'nama_supplier',
                     },
                     {
                         data: 'email',
                     },
                     {
-                        data: 'telepon',
+                        data: 'notel_bisnis',
                     },
                     {
-                        data: 'alamat',
+                        data: 'alamat_pembayaran',
                     },
 
                     {
@@ -238,133 +140,9 @@
                 ]
             });
 
-            $('#create').click(function() {
-
-                $('#modals').modal('show');
-                $('#modal-title').html('Add Supplier');
-                $('#savedata').html('<i class="fa fa-save me-1"></i> Save');
-
-                $('#postForm').trigger('reset');
-                $('#id').val('');
-
-                resetValidation();
-
-                // 🔥 AUTO GENERATE ID LANGSUNG KE MODAL
-                $.get('/supplier/generate-id', function(res) {
-                    console.log(res); // 🔥 lihat di inspect
-                    $('#id_supplier').val(res.id_supplier);
-                });
-
-            });
-            $('#postForm').on('submit', function(e) {
-                e.preventDefault();
-                var form = this;
-                $.ajax({
-                    url: $(form).attr('action'),
-                    method: $(form).attr('method'),
-                    data: new FormData(form),
-                    processData: false,
-                    contentType: false,
-                    datatype: 'json',
-                    beforeSend: function(e) {
-                        $('#savedata').html(
-                            '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
-                    },
-                    complete: function(e) {
-                        $('#savedata').html(' <i class="fa fa-save me-1"></i>Save');
-                    },
-                    success: function(response) {
-                        $('#modals').modal('hide');
-                        table.draw();
-                        Swal.fire({
-                            icon: 'success',
-                            title: response.title,
-                            text: response.message,
-                            showClass: {
-                                popup: 'animate__animated animate__bounceIn'
-                            },
-                            customClass: {
-                                confirmButton: 'btn btn-primary waves-effect waves-light'
-                            },
-                            buttonsStyling: false
-                        });
-
-                    },
-                    error: function(xhr) {
-
-                        resetValidation();
-
-                        let message = 'Terjadi kesalahan';
-
-                        if (xhr.responseJSON) {
-
-                            // jika ada message dari controller
-                            if (xhr.responseJSON.message) {
-                                message = xhr.responseJSON.message;
-                            }
-
-                            // jika error validasi
-                            if (xhr.responseJSON.errors) {
-
-                                let errors = xhr.responseJSON.errors;
-                                let errorList = '';
-
-                                $.each(errors, function(key, value) {
-                                    errorList += value[0] + '<br>';
-                                    displayFieldError(key, value[0]);
-                                });
-
-                                message = errorList;
-                            }
-                        }
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal',
-                            html: message,
-                            customClass: {
-                                confirmButton: 'btn btn-danger'
-                            },
-                            buttonsStyling: false
-                        });
-                    }
-                });
 
 
-            });
-            $('body').on('click', '.editPost', function(a) {
-                $('#modals').modal('show');
-                $('#savedata').html('<i class="fa fa-save me-1"></i>Save');
-                resetValidation();
 
-                var id = $(this).data('id');
-
-                $.ajax({
-                    type: "GET",
-                    url: "/supplier/" + id + "/edit",
-                    data: {
-                        id: id
-                    },
-                    dataType: 'json',
-                    success: function(data) {
-                        console.log(data);
-                        $('#modal-title').html('Edit Supplier');
-                        $('#id').val(data.id);
-                        $('#id_supplier').val(data.id_supplier);
-                        $('#nama').val(data.nama);
-                        $('#alamat').val(data.alamat);
-                        $('#alamat_pajak').val(data.alamat_pajak);
-                        $('#kodepos').val(data.kodepos);
-                        $('#negara').val(data.negara);
-                        $('#telepon').val(data.telepon);
-                        $('#personal_kontak').val(data.personal_kontak);
-                        $('#email').val(data.email);
-                        $('#website').val(data.website);
-                        $('#status').val(data.status).trigger('change');
-                        resetValidation();
-                    }
-                });
-            });
             $('body').on('click', '#delete', function() {
                 let id = $(this).data('id');
                 let name = $(this).data('name');

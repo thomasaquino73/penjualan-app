@@ -353,7 +353,6 @@ class PurchaseRequisitionController extends Controller
             'model' => $purchaseRequisition,
             'company' => Company::first(),
 
-            // REKOMENDASI: Ambil langsung dari object $purchaseRequisition tanpa query ulang
             'modelDetail' => $purchaseRequisition->details,
         ];
 

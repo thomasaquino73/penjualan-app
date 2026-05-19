@@ -15,13 +15,15 @@ class PurchaseOrderDetail extends Model
     protected $table = 'purchase_order_detail';
 
     protected $guarded = [];
- public function __construct(array $attributes = [])
+
+    public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
 
         $year = date('Y');
         $this->table = "purchase_order_detail_{$year}";
     }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

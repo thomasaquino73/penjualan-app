@@ -11,6 +11,7 @@ use App\Models\Master_Data\Kendaraan;
 use App\Models\Master_Data\Supplier;
 use App\Models\Transaction\PurchaseOrder;
 use App\Models\Transaction\PurchaseOrderDetail;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Dotenv\Exception\ValidationException;
 use Illuminate\Http\Request;
@@ -181,14 +182,29 @@ class PurchaseOrderController extends Controller
         return view('transaction.purchase_order.purchase_order_index', $x);
     }
 
+    public function bulanRomawi($bulan)
+    {
+        $romawi = [
+            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',
+            5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII',
+            9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII',
+        ];
+
+        return $romawi[$bulan] ?? 'I';
+    }
+
     private function generateNumberId()
     {
-        $last = PurchaseOrder::whereNotNull('code')
+        $year = date('Y');
+        $month = $this->bulanRomawi(date('n'));
+
+        // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
+        $last = PurchaseOrder::where('code', 'like', "PO/$year/$month/%")
             ->orderBy('id', 'desc')
             ->first();
 
         if (! $last) {
-            return 'PO-0001';
+            return "PO/$year/$month/0001";
         }
 
         $lastId = $last->code;
@@ -246,6 +262,7 @@ class PurchaseOrderController extends Controller
             'term' => BasicCodeDetail::where('master_id', 5)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
             'fob' => BasicCodeDetail::where('master_id', 3)->get(),
+            'taxes' => BasicCodeDetail::where('master_id', 6)->get(),
 
         ];
 
@@ -436,7 +453,7 @@ class PurchaseOrderController extends Controller
                     PurchaseOrderDetail::create([
                         'purchase_order_id' => $prMaster->id,
                         'product_id' => $item['product_id'],
-                         'qty' => $item['quantity'] ?? $item['qty'],
+                        'qty' => $item['quantity'] ?? $item['qty'],
                         'unit_id' => $item['unit_id'],
                         'unit_price' => $item['unit_price'],
                         'discount' => $item['discount'],
@@ -654,5 +671,49 @@ class PurchaseOrderController extends Controller
         $pr->save();
 
         return response()->json(['message' => 'Purchase Requisition status successfully updated!']);
+    }
+
+    public function show(string $id)
+    {
+        $purchaseOrder = PurchaseOrder::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $x = [
+            'model' => $purchaseOrder,
+            'modelDetail' => $purchaseOrder->details,
+            'company' => Company::first(),
+
+        ];
+
+        return view('transaction.purchase_order.purchase_order_show', $x);
+    }
+
+    public function print($id)
+    {
+        $purchaseOrder = PurchaseOrder::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $company = Company::first();
+        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+        $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+            }
+        }
+        $data = [
+            'model' => $purchaseOrder,
+            'company' => $company,
+            'modelDetail' => $purchaseOrder->details,
+            'logoBase64' => $logoBase64,
+        ];
+
+        $pdf = Pdf::loadView('pdf.purchase_order_pdf', $data)
+            ->setPaper('a4', 'portrait');
+
+        // preview di browser
+        return $pdf->stream($purchaseOrder->code.'-'.$purchaseOrder->supplier->nama.'.pdf');
+
+        // kalau mau download:
+        // return $pdf->download('purchase-order.pdf');
     }
 }

@@ -6,13 +6,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    
-     protected string $year;
+    protected string $year;
 
     public function __construct()
     {
         $this->year = date('Y'); // tahun berjalan
     }
+
     public function up(): void
     {
         Schema::create("purchase_order_{$this->year}", function (Blueprint $table) {
@@ -29,6 +29,7 @@ return new class extends Migration
             $table->integer('disc_percent')->nullable();
             $table->bigInteger('disc_nominal')->nullable();
             $table->bigInteger('grand_total')->nullable();
+            $table->bigInteger('tax')->nullable();
             $table->enum('status', [
                 'draft',        // Data baru dibuat, masih bisa diedit oleh staff
                 'pending',      // Menunggu persetujuan (approval) dari Manager/Direktur
@@ -52,7 +53,6 @@ return new class extends Migration
             $table->bigInteger('unit_id');
             $table->bigInteger('unit_price');
             $table->decimal('discount', 10, 2)->default(0);
-            $table->bigInteger('tax');
             $table->bigInteger('amount');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
