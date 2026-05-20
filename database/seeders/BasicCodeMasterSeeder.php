@@ -42,6 +42,11 @@ class BasicCodeMasterSeeder extends Seeder
                 'detail' => 'Tipe Pajak',
                 'description' => 'Daftar tipe pajak',
             ],
+            [
+                'id' => '7',
+                'detail' => 'FOB',
+                'description' => 'Daftar FOB',
+            ],
 
         ]);
 

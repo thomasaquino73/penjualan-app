@@ -66,12 +66,10 @@
 
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
-                                                <label for="nama_supplier" class="form-label">Supplier
-                                                    Name
-                                                    <input type="text" id="nama_supplier" name="nama_supplier"
-                                                        class="form-control" placeholder="Enter Supplier Name">
-                                                    <span class="error text-danger" id="nama_supplierError"></span>
-
+                                                <label for="nama_supplier" class="form-label">Supplier Name</label>
+                                                <input type="text" id="nama_supplier" name="nama_supplier"
+                                                    class="form-control" placeholder="Enter Supplier Name">
+                                                <span class="error text-danger" id="nama_supplierError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="notel_bisnis" class="form-label">Bussines Phone

@@ -261,7 +261,7 @@ class PurchaseOrderController extends Controller
             'kendaraan' => Kendaraan::where('status', 1)->get(),
             'term' => BasicCodeDetail::where('master_id', 5)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
-            'fob' => BasicCodeDetail::where('master_id', 3)->get(),
+            'fob' => BasicCodeDetail::where('master_id', 7)->get(),
             'taxes' => BasicCodeDetail::where('master_id', 6)->get(),
 
         ];

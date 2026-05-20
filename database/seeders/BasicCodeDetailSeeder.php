@@ -92,6 +92,18 @@ class BasicCodeDetailSeeder extends Seeder
                 'detail' => 'Bank Mandiri',
                 'description' => '008',
             ],
+            [
+                'id' => $i++,
+                'master_id' => '7',
+                'detail' => 'Destination',
+                'description' => '',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '7',
+                'detail' => 'Shipping Point',
+                'description' => '008',
+            ],
 
         ]);
 
