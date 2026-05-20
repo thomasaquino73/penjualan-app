@@ -36,7 +36,8 @@ return new class extends Migration
             $table->timestamps();
         });
         Schema::create('supplier_kontak', function (Blueprint $table) {
-            $table->unsignedBigInteger('supplier_id')->unique();
+            $table->id();
+            $table->unsignedBigInteger('supplier_id');
             $table->string('sapaan')->nullable();
             $table->string('contact_person')->nullable();
             $table->string('posisi_jabatan')->nullable();
@@ -47,31 +48,39 @@ return new class extends Migration
             $table->string('no_whatsapp_kontak')->nullable();
             $table->string('website_kontak')->nullable();
             $table->string('catatan')->nullable();
+            $table->timestamps();
         });
         Schema::create('supplier_pembelian', function (Blueprint $table) {
-            $table->unsignedBigInteger('supplier_id')->unique();
+            $table->id();
+            $table->unsignedBigInteger('supplier_id');
             $table->integer('payment_term')->nullable();
             $table->string('discount')->nullable();
             $table->string('default_deskripsi')->nullable();
+            $table->timestamps();
         });
         Schema::create('supplier_rekening', function (Blueprint $table) {
-            $table->unsignedBigInteger('supplier_id')->unique();
-            $table->string('nama_bank')->nullable();
+            $table->id();
+            $table->unsignedBigInteger('supplier_id');
+            $table->integer('nama_bank')->nullable();
             $table->string('nomor_rekening')->nullable();
             $table->string('nama_rekening')->nullable();
+            $table->timestamps();
         });
         Schema::create('supplier_pajak', function (Blueprint $table) {
-            $table->unsignedBigInteger('supplier_id')->unique();
-            $table->boolean('default_pajak')->default(1)->comment('ppn atau non ppn');
+            $table->id();
+            $table->unsignedBigInteger('supplier_id');
+            $table->boolean('default_pajak')->default(1)->comment('ppn atau non ppn')->nullable();
             $table->string('tipe_id_pajak')->nullable();
             $table->string('nomor_wajib_pajak')->nullable();
             $table->string('nama_wajib_pajak')->nullable();
             $table->string('id_tku')->nullable();
+            $table->boolean('check_address')->default(1)->comment('ppn atau non ppn')->nullable();
             $table->string('alamat_pajak')->nullable();
             $table->string('kota_pajak')->nullable();
             $table->string('kodepos_pajak')->nullable();
             $table->string('provinsi_pajak')->nullable();
             $table->string('negara_pajak')->nullable();
+            $table->timestamps();
         });
     }
 

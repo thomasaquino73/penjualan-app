@@ -107,16 +107,16 @@
                         data: 'id_supplier',
                     },
                     {
-                        data: 'nama',
+                        data: 'nama_supplier',
                     },
                     {
                         data: 'email',
                     },
                     {
-                        data: 'telepon',
+                        data: 'notel_bisnis',
                     },
                     {
-                        data: 'alamat',
+                        data: 'alamat_pembayaran',
                     },
                     {
                         data: 'created_at',

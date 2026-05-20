@@ -2,7 +2,6 @@
     <table class="table display responsive nowrap" id="table">
         <thead class="border-top" style="background-color: #AEDEFC; ">
             <tr>
-                <th>#</th>
                 <th>Account Number</th>
                 <th>Account Name</th>
                 <th>Bank</th>
@@ -21,6 +20,4 @@
 
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
-
-    
 @endpush

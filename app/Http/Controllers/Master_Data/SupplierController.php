@@ -86,7 +86,7 @@ class SupplierController extends Controller
                       <ul class="dropdown-menu" style="">';
 
                     if (auth()->user()->can('supplier-edit')) {
-                        $btn .= '<a class="dropdown-item editPost" href="'.route('supplier.edit', $row->id).'"
+                        $btn .= '<a class="dropdown-item" href="'.route('supplier.edit', $row->id).'"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
                     }
 
@@ -153,87 +153,6 @@ class SupplierController extends Controller
         ]);
     }
 
-    // public function store(SupplierRequest $request)
-    // {
-    //     try {
-    //         $id = $request->input('id');
-    //         $data = $request->validated();
-
-    //         if (! empty($id)) {
-
-    //             // ==========================================
-    //             // PROCESS: UPDATE DATA
-    //             // ==========================================
-    //             $data['updated_by'] = Auth::id();
-
-    //             Supplier::where('id', $id)->update($data);
-
-    //             return response()->json([
-    //                 'action' => 'update',
-    //                 'message' => 'Data updated successfully',
-    //             ], 200);
-
-    //         } else {
-
-    //             // ==========================================
-    //             // PROCESS: CREATE DATA (Safe from Race Condition)
-    //             // ==========================================
-    //             $data['created_by'] = Auth::id();
-    //             $data['status'] = 1;
-
-    //             // Mulai database transaction sebelum pengecekan ID
-    //             DB::beginTransaction();
-
-    //             try {
-    //                 // Menggunakan kolom 'id_supplier' sesuai DB kamu
-    //                 if (empty($data['id_supplier'])) {
-
-    //                     // Looping otomatis jika ID keduluan diambil user lain
-    //                     do {
-    //                         $data['id_supplier'] = $this->generateSupplierId();
-
-    //                         // Kunci baris dengan lockForUpdate agar request lain mengantre
-    //                         $exists = Supplier::where('id_supplier', $data['id_supplier'])->lockForUpdate()->exists();
-    //                     } while ($exists);
-
-    //                 } else {
-    //                     // Validasi jika input manual: pastikan belum terdaftar
-    //                     $exists = Supplier::where('id_supplier', $data['id_supplier'])->lockForUpdate()->exists();
-
-    //                     if ($exists) {
-    //                         DB::rollBack();
-
-    //                         return response()->json([
-    //                             'error' => 'ID Supplier sudah digunakan',
-    //                         ], 422);
-    //                     }
-    //                 }
-
-    //                 // Simpan data ke database
-    //                 Supplier::create($data);
-
-    //                 // Commit semua transaksi jika berhasil tanpa error
-    //                 DB::commit();
-
-    //                 return response()->json([
-    //                     'action' => 'create',
-    //                     'message' => 'Data created successfully',
-    //                 ], 201);
-
-    //             } catch (\Exception $e) {
-    //                 // Batalkan transaksi jika terjadi error di dalam blok DB
-    //                 DB::rollBack();
-    //                 throw $e; // Lempar ke catch paling luar untuk response error 500
-    //             }
-    //         }
-
-    //     } catch (\Exception $e) {
-    //         // Menangkap semua error (termasuk dari throw $e di atas)
-    //         return response()->json([
-    //             'error' => $e->getMessage(),
-    //         ], 500);
-    //     }
-    // }
     public function create()
     {
         $x = [
@@ -256,7 +175,7 @@ class SupplierController extends Controller
         DB::beginTransaction();
         try {
             $data = $request->validated();
-               $itemsDetailRaw = $request->input('items_detail');
+            $itemsDetailRaw = $request->input('items_detail');
             unset($data['items_detail']);
             $data['created_by'] = Auth::id();
             if (empty($data['id_supplier'])) {
@@ -307,7 +226,7 @@ class SupplierController extends Controller
                 'negara_pajak' => $request->negara_pajak,
             ]);
 
-              // 6. Proses simpan data ke tabel detail 'purchase_order_detail'
+            // 6. Proses simpan data ke tabel detail 'purchase_order_detail'
             if ($itemsDetailRaw) {
                 // Bongkar string JSON data barang dari AJAX menjadi array PHP
                 $items = json_decode($itemsDetailRaw, true);
@@ -317,7 +236,7 @@ class SupplierController extends Controller
 
                         DB::table('supplier_rekening')->insert([
                             'supplier_id' => $supplier->id,
-                            'nama_bank' => $item['nama_bank'] ?? null,
+                            'nama_bank' => $item['bank_id'] ?? null,
                             'nomor_rekening' => $item['nomor_rekening'] ?? null,
                             'nama_rekening' => $item['nama_rekening'] ?? null,
                         ]);
@@ -345,23 +264,179 @@ class SupplierController extends Controller
         //
     }
 
-    public function edit(Request $request)
+    public function edit($id)
     {
+        // supplier utama
+        $supplier = DB::table('supplier')->where('id', $id)->first();
 
-        $where = [
-            'id' => $request->id,
+        // relasi
+        $kontak = DB::table('supplier_kontak')->where('supplier_id', $id)->first();
+        $pajak = DB::table('supplier_pajak')->where('supplier_id', $id)->first();
+        $pembelian = DB::table('supplier_pembelian')->where('supplier_id', $id)->first();
+        $rekening = DB::table('supplier_rekening as sr')
+            ->leftJoin('basic_code_detail as bcd', function ($join) {
+                $join->on('sr.nama_bank', '=', 'bcd.id')
+                    ->where('bcd.master_id', 5); // kategori BANK
+            })
+            ->where('sr.supplier_id', $id)
+            ->select(
+                'sr.*',
+                DB::raw("CONCAT(bcd.detail, ' - ', bcd.description) as nama_bank_text")
+            )
+            ->get();
+        $x = [
+            'title' => 'Edit Supplier List ',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Edit Supplier ', 'url' => ''],
+            ],
+            'idNumber' => $this->generateNumberId(),
+
+            'paymentTerm' => BasicCodeDetail::where('master_id', 4)->get(),
+            'databank' => BasicCodeDetail::where('master_id', 5)->get(),
+
+            // kirim data
+            'supplier' => $supplier,
+            'kontak' => $kontak,
+            'pajak' => $pajak,
+            'pembelian' => $pembelian,
+            'rekening' => $rekening,
         ];
-        $data = Supplier::where($where)->first();
 
-        return response()->json($data);
+        return view('master_data.supplier.supplier_edit', $x);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(SupplierRequest $request, $id)
     {
-        //
+        DB::beginTransaction();
+        try {
+            // ✅ Ambil supplier
+            $supplier = Supplier::findOrFail($id);
+
+            $data = $request->validated();
+            $itemsDetailRaw = $request->input('items_detail');
+            unset($data['items_detail']);
+
+            $data['updated_by'] = Auth::id();
+
+            // ❌ Jangan ubah id_supplier saat update
+            unset($data['id_supplier']);
+
+            // ✅ Update master
+            $supplier->update($data);
+
+            // =========================
+            // 🔥 UPDATE DATA SINGLE
+            // =========================
+
+            DB::table('supplier_kontak')
+                ->updateOrInsert(
+                    ['supplier_id' => $supplier->id],
+                    [
+                        'sapaan' => $request->sapaan,
+                        'contact_person' => $request->contact_person,
+                        'posisi_jabatan' => $request->posisi_jabatan,
+                        'email_kontak' => $request->email_kontak,
+                        'handphone_kontak' => $request->handphone_kontak,
+                        'notel_bisnis_kontak' => $request->notel_bisnis_kontak,
+                        'faximili_kontak' => $request->faximili_kontak,
+                        'no_whatsapp_kontak' => $request->no_whatsapp_kontak,
+                        'website_kontak' => $request->website_kontak,
+                        'catatan' => $request->catatan,
+                        'updated_at' => now(),
+                    ]
+                );
+
+            DB::table('supplier_pembelian')
+                ->updateOrInsert(
+                    ['supplier_id' => $supplier->id],
+                    [
+                        'payment_term' => $request->payment_term,
+                        'discount' => $request->discount,
+                        'default_deskripsi' => $request->default_deskripsi,
+                        'updated_at' => now(),
+                    ]
+                );
+
+            DB::table('supplier_pajak')
+                ->updateOrInsert(
+                    ['supplier_id' => $supplier->id],
+                    [
+                        'tipe_id_pajak' => $request->tipe_id_pajak,
+                        'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
+                        'nama_wajib_pajak' => $request->nama_wajib_pajak,
+                        'id_tku' => $request->id_tku,
+                        'alamat_pajak' => $request->alamat_pajak,
+                        'kota_pajak' => $request->kota_pajak,
+                        'kodepos_pajak' => $request->kodepos_pajak,
+                        'provinsi_pajak' => $request->provinsi_pajak,
+                        'negara_pajak' => $request->negara_pajak,
+                        'updated_at' => now(),
+                    ]
+                );
+
+            // =========================
+            // 🔥 DETAIL REKENING (MULTIPLE)
+            // =========================
+
+            if ($itemsDetailRaw) {
+                $items = json_decode($itemsDetailRaw, true);
+
+                if (is_array($items)) {
+
+                    $idsFromRequest = [];
+
+                    foreach ($items as $item) {
+
+                        // ✅ UPDATE kalau ada ID
+                        if (! empty($item['id'])) {
+
+                            $idsFromRequest[] = $item['id'];
+
+                            DB::table('supplier_rekening')
+                                ->where('id', $item['id'])
+                                ->where('supplier_id', $supplier->id)
+                                ->update([
+                                    'nama_bank' => $item['bank_id'] ?? null,
+                                    'nomor_rekening' => $item['nomor_rekening'] ?? null,
+                                    'nama_rekening' => $item['nama_rekening'] ?? null,
+                                    'updated_at' => now(),
+                                ]);
+                        }
+                        // ➕ INSERT kalau baru
+                        else {
+                            $newId = DB::table('supplier_rekening')->insertGetId([
+                                'supplier_id' => $supplier->id,
+                                'nama_bank' => $item['bank_id'] ?? null,
+                                'nomor_rekening' => $item['nomor_rekening'] ?? null,
+                                'nama_rekening' => $item['nama_rekening'] ?? null,
+                                'created_at' => now(),
+                            ]);
+
+                            $idsFromRequest[] = $newId;
+                        }
+                    }
+
+                    // ❌ DELETE yang tidak ada di request (user hapus di UI)
+                    DB::table('supplier_rekening')
+                        ->where('supplier_id', $supplier->id)
+                        ->whereNotIn('id', $idsFromRequest)
+                        ->delete();
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'action' => 'update',
+                'redirect' => route('supplier.index'),
+                'message' => 'Data updated successfully',
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     public function destroy(Request $request, $id)

@@ -59,14 +59,26 @@ class BasicCodeDetailSeeder extends Seeder
             [
                 'id' => $i++,
                 'master_id' => '4',
-                'detail' => 'COD',
-                'description' => '',
+                'detail' => 'Set Manual',
+                'description' => 'Set syarat pembayaran manual',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '4',
+                'detail' => 'NET 15',
+                'description' => 'Jatuh tempo 15 hari',
             ],
             [
                 'id' => $i++,
                 'master_id' => '4',
                 'detail' => 'NET 30',
-                'description' => '',
+                'description' => 'Jatuh tempo 30 hari',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '4',
+                'detail' => 'NET 45',
+                'description' => 'Jatuh tempo 45 hari',
             ],
             [
                 'id' => $i++,

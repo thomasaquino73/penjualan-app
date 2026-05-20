@@ -27,9 +27,9 @@
                     justify-content-start justify-content-lg-end">
 
                     @canany(['customer-create'])
-                        <button id="create" class="btn  btn-sm btn-primary">
+                        <a href="{{ route('customer.create') }}" class="btn  btn-sm btn-primary">
                             <i class="ti ti-plus me-1"></i> Add Data
-                        </button>
+                        </a>
                     @endcanany
                     @canany(['customer-trash'])
                         <a href="{{ route('customer.trash') }}" class="btn btn-sm btn-secondary">
@@ -86,17 +86,17 @@
                         <input type="text" name="id" id="id" hidden>
                         <div class="row">
                             <div class="col-md-6 col-sm-12 mb-3">
-                                <label for="id_pelanggan" class="form-label">Customer ID<small>*</small></label>
-                                <input type="text" id="id_pelanggan" name="id_pelanggan" class="form-control"
+                                <label for="id_customer" class="form-label">Customer ID<small>*</small></label>
+                                <input type="text" id="id_customer" name="id_customer" class="form-control"
                                     placeholder="Enter Customer ID">
-                                <span class="error text-danger" id="id_pelangganError"></span>
+                                <span class="error text-danger" id="id_customerError"></span>
 
                             </div>
                             <div class="col-md-6 col-sm-12 mb-3">
-                                <label for="nama" class="form-label">Customer Name<small>*</small></label>
-                                <input type="text" id="nama" name="nama" class="form-control"
+                                <label for="nama_customer" class="form-label">Customer Name<small>*</small></label>
+                                <input type="text" id="nama_customer" name="nama_customer" class="form-control"
                                     placeholder="Enter Customer Name">
-                                <span class="error text-danger" id="namaError"></span>
+                                <span class="error text-danger" id="nama_customerError"></span>
 
                             </div>
                             <div class="col-md-12 col-sm-12 mb-3">
@@ -205,19 +205,19 @@
                         searchable: false
                     },
                     {
-                        data: 'id_pelanggan',
+                        data: 'id_customer',
                     },
                     {
-                        data: 'nama',
+                        data: 'nama_customer',
                     },
                     {
                         data: 'email',
                     },
                     {
-                        data: 'telepon',
+                        data: 'notel_bisnis',
                     },
                     {
-                        data: 'alamat',
+                        data: 'alamat_tagihan',
                     },
 
                     {
@@ -238,24 +238,6 @@
                 ]
             });
 
-            $('#create').click(function() {
-
-                $('#modals').modal('show');
-                $('#modal-title').html('Add Customer');
-                $('#savedata').html('<i class="fa fa-save me-1"></i> Save');
-
-                $('#postForm').trigger('reset');
-                $('#id').val('');
-
-                resetValidation();
-
-                // 🔥 AUTO GENERATE ID LANGSUNG KE MODAL
-                $.get('/customer/generate-id', function(res) {
-                    console.log(res); // 🔥 lihat di inspect
-                    $('#id_pelanggan').val(res.id_pelanggan);
-                });
-
-            });
             $('#postForm').on('submit', function(e) {
                 e.preventDefault();
                 var form = this;
@@ -332,39 +314,7 @@
 
 
             });
-            $('body').on('click', '.editPost', function(a) {
-                $('#modals').modal('show');
-                $('#savedata').html('<i class="fa fa-save me-1"></i>Save');
-                resetValidation();
 
-                var id = $(this).data('id');
-
-                $.ajax({
-                    type: "GET",
-                    url: "/customer/" + id + "/edit",
-                    data: {
-                        id: id
-                    },
-                    dataType: 'json',
-                    success: function(data) {
-                        console.log(data);
-                        $('#modal-title').html('Edit Customer');
-                        $('#id').val(data.id);
-                        $('#id_pelanggan').val(data.id_pelanggan);
-                        $('#nama').val(data.nama);
-                        $('#alamat').val(data.alamat);
-                        $('#alamat_pajak').val(data.alamat_pajak);
-                        $('#kodepos').val(data.kodepos);
-                        $('#negara').val(data.negara);
-                        $('#telepon').val(data.telepon);
-                        $('#personal_kontak').val(data.personal_kontak);
-                        $('#email').val(data.email);
-                        $('#website').val(data.website);
-                        $('#status').val(data.status).trigger('change');
-                        resetValidation();
-                    }
-                });
-            });
             $('body').on('click', '#delete', function() {
                 let id = $(this).data('id');
                 let name = $(this).data('name');

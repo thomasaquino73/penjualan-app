@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class CustomerRequest extends FormRequest
 {
@@ -14,88 +13,89 @@ class CustomerRequest extends FormRequest
 
     public function rules(): array
     {
-        $id = $this->input('id');
+        $id = $this->route('customer'); // untuk update
 
         return [
+            'id_customer' => 'required|string|max:50|unique:customer,id_customer,'.$id,
+            'nama_customer' => 'required|string|max:255',
 
-            'id_pelanggan' => [
-                'nullable', // 🔥 boleh kosong (auto generate di controller)
-                'string',
-                Rule::unique('customer', 'id_pelanggan')->ignore($id),
-            ],
+            'notel_bisnis' => 'nullable|string|max:20',
+            'no_hp' => 'nullable|string|max:20',
+            'no_whatsapp' => 'nullable|string|max:20',
 
-            'nama' => [
-                'required',
-                'string',
-            ],
+            'email' => 'nullable|email|max:255',
+            'faximili' => 'nullable|string|max:20',
+            'website' => 'nullable|string|max:255',
 
-            'alamat' => [
-                'required',
-                'string',
-            ],
+            'alamat_tagihan' => 'required|string|max:255',
+            'kota_tagihan' => 'required|string|max:100',
+            'kodepos_tagihan' => 'required|string|max:10',
+            'provinsi_tagihan' => 'required|string|max:100',
+            'negara_tagihan' => 'required|string|max:100',
 
-            'alamat_pajak' => [
-                'nullable',
-                'string',
-            ],
-
-            'kodepos' => [
-                'nullable',
-                'string',
-            ],
-
-            'negara' => [
-                'required',
-                'string',
-            ],
-
-            'telepon' => [
-                'required',
-                'string',
-            ],
-
-            'personal_kontak' => [
-                'nullable',
-                'string',
-            ],
-
-            'email' => [
-                'nullable',
-                'email',
-            ],
-
-            'website' => [
-                'nullable',
-                'string',
-            ],
-
-            'status' => [
-                'nullable',
-                Rule::in(['1', '2']),
-            ],
+            'status' => 'required|in:0,1,2',
         ];
     }
 
     public function messages(): array
     {
         return [
+            // ID Customer
+            'id_customer.required' => 'Customer ID is required.',
+            'id_customer.string' => 'Customer ID must be a valid string.',
+            'id_customer.max' => 'Customer ID may not be greater than 50 characters.',
+            'id_customer.unique' => 'Customer ID already exists.',
 
-            'id_pelanggan.unique' => 'Customer ID has already been taken',
+            // Nama Customer
+            'nama_customer.required' => 'Customer name is required.',
+            'nama_customer.string' => 'Customer name must be a valid string.',
+            'nama_customer.max' => 'Customer name may not be greater than 255 characters.',
 
-            'nama.required' => 'Name is required',
+            // Kontak
+            'notel_bisnis.string' => 'Business phone must be a valid string.',
+            'notel_bisnis.max' => 'Business phone may not be greater than 20 characters.',
 
-            'alamat.required' => 'Address is required',
+            'no_hp.string' => 'Phone number must be a valid string.',
+            'no_hp.max' => 'Phone number may not be greater than 20 characters.',
 
-            'kodepos.required' => 'Postal code is required',
+            'no_whatsapp.string' => 'WhatsApp number must be a valid string.',
+            'no_whatsapp.max' => 'WhatsApp number may not be greater than 20 characters.',
 
-            'negara.required' => 'Country is required',
+            // Email
+            'email.email' => 'Email must be a valid email address.',
+            'email.max' => 'Email may not be greater than 255 characters.',
 
-            'telepon.required' => 'Phone number is required',
+            // Fax & Website
+            'faximili.string' => 'Fax must be a valid string.',
+            'faximili.max' => 'Fax may not be greater than 20 characters.',
 
-            'personal_kontak.required' => 'Contact person is required',
+            'website.string' => 'Website must be a valid string.',
+            'website.max' => 'Website may not be greater than 255 characters.',
 
-            'email.email' => 'Invalid email format',
-            'email.unique' => 'Email has already been taken',
+            // Alamat Tagihan
+            'alamat_tagihan.required' => 'Billing address is required.',
+            'alamat_tagihan.string' => 'Billing address must be a valid string.',
+            'alamat_tagihan.max' => 'Billing address may not be greater than 255 characters.',
+
+            'kota_tagihan.required' => 'Billing city is required.',
+            'kota_tagihan.string' => 'Billing city must be a valid string.',
+            'kota_tagihan.max' => 'Billing city may not be greater than 100 characters.',
+
+            'kodepos_tagihan.required' => 'Billing postal code is required.',
+            'kodepos_tagihan.string' => 'Billing postal code must be a valid string.',
+            'kodepos_tagihan.max' => 'Billing postal code may not be greater than 10 characters.',
+
+            'provinsi_tagihan.required' => 'Billing province is required.',
+            'provinsi_tagihan.string' => 'Billing province must be a valid string.',
+            'provinsi_tagihan.max' => 'Billing province may not be greater than 100 characters.',
+
+            'negara_tagihan.required' => 'Billing country is required.',
+            'negara_tagihan.string' => 'Billing country must be a valid string.',
+            'negara_tagihan.max' => 'Billing country may not be greater than 100 characters.',
+
+            // Status
+            'status.required' => 'Status is required.',
+            'status.in' => 'Invalid status selected.',
         ];
     }
 }

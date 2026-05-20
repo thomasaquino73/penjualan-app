@@ -27,8 +27,8 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'Manage Product',
-                'icon' => 'ti ti-box',
+                'name' => 'Inventory',
+                'icon' => 'ti ti-trolley',
                 'roles' => ['Super Admin'],
                 'permissions' => ['role-browse', 'permission-browse'],
                 'children' => [
