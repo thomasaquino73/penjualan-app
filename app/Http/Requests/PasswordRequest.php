@@ -65,7 +65,7 @@ class PasswordRequest extends FormRequest
     {
         $this->merge([
             'email' => strtolower($this->email),
-            'username' => strtolower($this->username),
+            // 'username' => strtolower($this->username),
         ]);
     }
 }
