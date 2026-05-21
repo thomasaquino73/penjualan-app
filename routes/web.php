@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\General\CashBankController;
@@ -44,6 +45,9 @@ Route::post('/send-verification', [GuestEmailVerificationController::class, 'sen
     ->name('guest.verify.email.send');
 Route::get('/verify-guest-email/{id}', [GuestEmailVerificationController::class, 'verify'])
     ->name('guest.verify.email');
+
+Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
 Route::get('/verify-email/{id}/{hash}', function (Request $request, $id, $hash) {
     $user = User::findOrFail($id);
@@ -215,10 +219,7 @@ Route::middleware('auth')->group(function () {
 
 });
 
-/*
-| Fallback (jika route tidak ditemukan)
-|--------------------------------------------------------------------------
-*/
+
 Route::fallback(function () {
     Log::warning('Fallback route triggered', [
         'url' => request()->fullUrl(),

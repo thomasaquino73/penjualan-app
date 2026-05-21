@@ -54,6 +54,15 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
+                    @if (session('google_error'))
+                        <div class="alert alert-danger alert-dismissible d-flex align-items-center" role="alert">
+                            <i class="ti ti-ban ti-xs me-2"></i>
+
+                            {{ session('google_error') }}
+
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
                     <!-- Logo -->
                     {{-- <div class="app-brand justify-content-center mb-4 mt-2">
                         <a href="index.html" class="app-brand-link gap-2">
@@ -115,31 +124,26 @@
                             <button id="savedata" type="submit" class="btn btn-primary w-100">Sign In</button>
                         </div>
                     </form>
-
-                    {{-- <p class="text-center">
-                        <span>New on our platform?</span>
-                        <a href="auth-register-basic.html">
-                            <span>Create an account</span>
-                        </a>
-                    </p>
-
                     <div class="divider my-4">
-                        <div class="divider-text">or</div>
+                        <div class="divider-text">or Login with</div>
                     </div>
 
                     <div class="d-flex justify-content-center">
-                        <a href="javascript:;" class="btn btn-icon btn-label-facebook me-3">
-                            <i class="tf-icons fa-brands fa-facebook-f fs-5"></i>
+
+                        <a href="{{ url('/auth/google') }}" class="btn btn-icon btn-label-secondary waves-effect me-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                                <path fill="#EA4335"
+                                    d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.107C18.282 2.101 15.54 1 12.24 1 5.48 1 0 6.48 0 13s5.48 12 12.24 12c7.06 0 11.75-4.962 11.75-11.95 0-.804-.087-1.417-.19-1.765H12.24z" />
+                                <path fill="#4285F4"
+                                    d="M23.8 11.235H12.24V14.4h6.887c-.12.68-.53 1.3-1.12 1.7l2.67 2.07c1.56-1.44 2.47-3.56 2.47-5.93 0-.36-.03-.7-.09-1.005z" />
+                                <path fill="#FBBC05"
+                                    d="M17.74 18.105l-2.67-2.07c-.74.5-1.69.8-2.83.8-2.18 0-4.03-1.45-4.69-3.48l-2.76 2.13C6.18 20.15 8.95 22 12.24 22c2.09 0 3.96-.69 5.5-1.9z" />
+                                <path fill="#34A853"
+                                    d="M12.24 5.4c1.48 0 2.82.51 3.87 1.51l2.9-2.9C17.25 2.44 14.94 1.6 12.24 1.6c-3.29 0-6.06 1.85-7.44 4.56l2.76 2.14c.66-2.03 2.51-3.48 4.68-3.48z" />
+                            </svg>
                         </a>
 
-                        <a href="javascript:;" class="btn btn-icon btn-label-google-plus me-3">
-                            <i class="tf-icons fa-brands fa-google fs-5"></i>
-                        </a>
-
-                        <a href="javascript:;" class="btn btn-icon btn-label-twitter">
-                            <i class="tf-icons fa-brands fa-twitter fs-5"></i>
-                        </a>
-                    </div> --}}
+                    </div>
                 </div>
             </div>
             <!-- /Register -->

@@ -54,6 +54,7 @@
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="navs-pills-top-general" role="tabpanel">
                                 <div class="row">
+                                    @include('master_data.barang.data_barang.part.data_umum')
 
                                 </div>
                             </div>
@@ -122,15 +123,15 @@
                                 <span class="error text-danger" id="quantityError"></span>
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label" for="unit_id">Unit</label>
-                                <select name="unit_id" id="unit_id" class="form-select select2-unit "
+                                <label class="form-label" for="unit_id_modals">Unit</label>
+                                <select name="unit_id_modals" id="unit_id_modals" class="form-select select2-unit "
                                     data-placeholder="Select Unit">
                                     <option></option>
                                     @foreach ($unit as $unit)
                                         <option value="{{ $unit->id }}">{{ $unit->detail }}</option>
                                     @endforeach
                                 </select>
-                                <span class="error text-danger" id="unit_idError"></span>
+                                <span class="error text-danger" id="unit_id_modalsError"></span>
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="form-label" for="unit_price">Unit Price</label>
@@ -198,7 +199,20 @@
             });
 
         });
+        $('#unit_id').on('change', function() {
+            let unitId = $(this).val();
+            let unitText = $('#unit_id option:selected').text();
+
+            $('.from_unit_text').val(unitText);
+
+            // isi ke hidden input (buat backend)
+            $('.from_unit_id').val(unitId);
+            // 🔥 AKTIFKAN INPUT
+            $('.qty').prop('disabled', false);
+            $('.to_unit').prop('disabled', false);
+        });
         $(document).ready(function() {
+
             $('.select2-warehouse').each(function() {
                 var $this = $(this);
                 $this.wrap('<div class="position-relative"></div>').select2({
@@ -359,8 +373,8 @@
                 let warehouseID = $('#warehouse_id').val();
                 let warehouseName = $('#warehouse_id option:selected').text();
                 let quantity = parseFloat($('#quantity').val()) || 0;
-                let unitId = $('#unit_id').val();
-                let unitName = $('#unit_id option:selected').text();
+                let unitId = $('#unit_id_modals').val();
+                let unitName = $('#unit_id_modals option:selected').text();
                 let unitPrice = parseFloat($('#unit_price').val()) || 0;
                 let dateStock = $('#date_stock').val() || '';
                 let detailId = $('#detail_id').val();

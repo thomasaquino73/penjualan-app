@@ -9,6 +9,9 @@
       </div>
 
       <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+          <div class="navbar-nav align-items-center">
+              <span>Welcome, {{ Auth::user()->fullname }}</span>
+          </div>
           <!-- Search -->
           {{-- <div class="navbar-nav align-items-center">
               <div class="nav-item navbar-search-wrapper mb-0">
@@ -293,7 +296,6 @@
 
   <!-- / Navbar -->
   @push('scripts')
-      
       <script>
           document.getElementById('logout-button').addEventListener('click', function(e) {
               e.preventDefault(); // hentikan default link behavior
