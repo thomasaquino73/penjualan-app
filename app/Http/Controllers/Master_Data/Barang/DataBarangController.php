@@ -8,6 +8,7 @@ use App\Models\BasicCodeDetail;
 use App\Models\General\Company;
 use App\Models\Master_Data\Barang;
 use App\Models\Master_Data\DataBarangConversion;
+use App\Models\Master_Data\Supplier;
 use App\Models\Master_Data\Warehouse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -203,6 +204,7 @@ class DataBarangController extends Controller
             'idNumber' => $this->generateProductId(),
             'categories' => BasicCodeDetail::where('master_id', 1)->get(),
             'unit' => BasicCodeDetail::where('master_id', 2)->get(),
+            'supplier' => Supplier::where('status', 1)->get(),
             'warehouses' => Warehouse::where('status', 1)->get(),
             'inventoryTypes' => BasicCodeDetail::where('master_id', 4)->get(),
             'mataUangDefault' => $company?->defaultCurrency->symbol ?? 'Rp', 

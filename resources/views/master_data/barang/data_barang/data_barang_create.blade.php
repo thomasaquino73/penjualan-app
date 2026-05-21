@@ -29,14 +29,8 @@
                                     General Information
                                 </button>
                             </li>
-                            <li class="nav-item">
-                                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
-                                    data-bs-target="#navs-pills-top-contact" aria-controls="navs-pills-top-contact"
-                                    aria-selected="false">
-                                    Contact Information
-                                </button>
-                            </li>
-                            <li class="nav-item">
+
+                            <li class="nav-item" id="stockTab">
                                 <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
                                     data-bs-target="#navs-pills-top-term" aria-controls="navs-pills-top-term"
                                     aria-selected="false">
@@ -58,11 +52,6 @@
 
                                 </div>
                             </div>
-                            <div class="tab-pane fade" id="navs-pills-top-contact" role="tabpanel">
-                                <div class="row">
-
-                                </div>
-                            </div>
                             <div class="tab-pane fade" id="navs-pills-top-term" role="tabpanel">
                                 <div class="row">
                                     @include('master_data.barang.data_barang.part.stock_table')
@@ -70,7 +59,11 @@
                             </div>
                             <div class="tab-pane fade" id="navs-pills-top-tax" role="tabpanel">
                                 <div class="row">
-
+                                    <div class="col-md-12 mb-5">
+                                        <label class="form-label">Description</label>
+                                        <textarea name="keterangan" id="keterangan" cols="30" rows="3" class="form-control"></textarea>
+                                        <span class="error text-danger" id="keteranganError"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -173,6 +166,26 @@
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
+        const radioSupply = document.getElementById('radioSupply');
+        const radioNonSupply = document.getElementById('radioNonSupply');
+        const stockTab = document.getElementById('stockTab');
+
+        function toggleStockTab() {
+            if (radioNonSupply.checked) {
+                stockTab.style.display = 'none';
+            } else {
+                stockTab.style.display = 'block';
+            }
+        }
+
+        // Jalankan saat load
+        toggleStockTab();
+
+        // Event listener
+        radioSupply.addEventListener('change', toggleStockTab);
+        radioNonSupply.addEventListener('change', toggleStockTab);
+    </script>
+    <script>
         function hitungTotal() {
             let qty = parseFloat(document.getElementById('quantity').value) || 0;
             let price = parseFloat(document.getElementById('unit_price').value) || 0;
@@ -187,18 +200,6 @@
         document.getElementById('unit_price').addEventListener('input', hitungTotal);
     </script>
     <script>
-        let prDetailsData = [];
-        $(function() {
-            $('#modalPrDetail').on('shown.bs.modal', function() {
-                flatpickr("#date_stock", {
-                    enableTime: false,
-                    dateFormat: "d-m-Y",
-                    minDate: "today",
-                    defaultDate: new Date()
-                });
-            });
-
-        });
         $('#unit_id').on('change', function() {
             let unitId = $(this).val();
             let unitText = $('#unit_id option:selected').text();
@@ -210,6 +211,18 @@
             // 🔥 AKTIFKAN INPUT
             $('.qty').prop('disabled', false);
             $('.to_unit').prop('disabled', false);
+        });
+        let prDetailsData = [];
+        $(function() {
+            $('#modalPrDetail').on('shown.bs.modal', function() {
+                flatpickr("#date_stock", {
+                    enableTime: false,
+                    dateFormat: "d-m-Y",
+                    minDate: "today",
+                    defaultDate: new Date()
+                });
+            });
+
         });
         $(document).ready(function() {
 

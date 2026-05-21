@@ -29,7 +29,6 @@ class AppServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
 
             $company = Company::first();
-
             $companyName = $company ? $company->nama_perusahaan : 'Default Company Name';
             $logo = $company && $company->logo ? asset($company->logo) : asset('image/no-images.jpg');
             $favicon = $company && $company->favicon ? asset($company->favicon) : asset('image/no-images.jpg');
@@ -52,7 +51,7 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with([
                 'mataUang' => $currency,
-                'currencies' => $currencies, // ✅ FIX DISINI
+                'currencies' => $currencies,
                 'logo' => $logo,
                 'favicon' => $favicon,
                 'aplikasi' => $aplikasi,
