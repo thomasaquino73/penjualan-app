@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master_Data\Barang;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Models\BasicCodeDetail;
+use App\Models\General\Company;
 use App\Models\Master_Data\Barang;
 use App\Models\Master_Data\DataBarangConversion;
 use App\Models\Master_Data\Warehouse;
@@ -192,7 +193,7 @@ class DataBarangController extends Controller
 
     public function create()
     {
-
+        $company = Company::with('defaultCurrency')->first();
         return view('master_data.barang.data_barang.data_barang_create', [
             'title' => 'Add Product',
             'breadcrumb' => [
@@ -204,6 +205,7 @@ class DataBarangController extends Controller
             'unit' => BasicCodeDetail::where('master_id', 2)->get(),
             'warehouses' => Warehouse::where('status', 1)->get(),
             'inventoryTypes' => BasicCodeDetail::where('master_id', 4)->get(),
+            'mataUangDefault' => $company?->defaultCurrency->symbol ?? 'Rp', 
         ]);
     }
 
