@@ -165,7 +165,8 @@
                                     }
                                 });
                             }
-                        }, {
+                        },
+                         {
                             text: '<i class="ti ti-trash me-1"></i> Delete',
                             className: 'btn btn-danger btn-sm me-2',
                             extend: 'selectedSingle', // Tombol otomatis menyala jika ada 1 baris dipilih

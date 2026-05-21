@@ -33,4 +33,6 @@ class ExchangeRate extends Model
     {
         return $this->belongsTo(Currency::class, 'to_currency_id');
     }
+    
+
 }

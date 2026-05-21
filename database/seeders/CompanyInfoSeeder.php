@@ -35,13 +35,13 @@ class CompanyInfoSeeder extends Seeder
             [
                 'code' => 'USD',
                 'name' => 'US Dollar',
-                'symbol' => '$',
+                'symbol' => 'USD',
                 'country' => 'United States',
             ],
             [
                 'code' => 'SGD',
                 'name' => 'Singapore Dollar',
-                'symbol' => '$',
+                'symbol' => 'SGD',
                 'country' => 'Singapore',
             ],
         ]);

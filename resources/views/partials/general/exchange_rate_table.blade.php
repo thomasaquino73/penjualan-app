@@ -236,7 +236,7 @@
                                 if (!selectedData) return;
 
                                 var id = selectedData.id;
-                                var name = selectedData.name;
+                                var name = selectedData.from_currency_id;
                                 let token = $("meta[name='csrf-token']").attr("content");
 
                                 // 2. Jalankan SweetAlert Konfirmasi

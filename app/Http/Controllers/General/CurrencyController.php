@@ -134,20 +134,20 @@ class CurrencyController extends Controller
         $currency = Currency::findOrFail($id);
 
         // 2. Cek apakah currency ini sudah terpakai di tabel Company
-        if ($currency->companies()->exists()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Mata uang tidak dapat dihapus karena sedang digunakan oleh data Perusahaan (Company).',
-            ], 422); // Status 422 Unprocessable Entity
-        }
+        // if ($currency->companies()->exists()) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Mata uang tidak dapat dihapus karena sedang digunakan oleh data Perusahaan (Company).',
+        //     ], 422); // Status 422 Unprocessable Entity
+        // }
 
-        // 3. Cek apakah currency ini sudah terpakai di tabel Cash Bank
-        if ($currency->cashBanks()->exists()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Mata uang tidak dapat dihapus karena sedang digunakan oleh data Kas & Bank.',
-            ], 422);
-        }
+        // // 3. Cek apakah currency ini sudah terpakai di tabel Cash Bank
+        // if ($currency->cashBanks()->exists()) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Mata uang tidak dapat dihapus karena sedang digunakan oleh data Kas & Bank.',
+        //     ], 422);
+        // }
 
         // 4. JIKA LOLOS PENCEKAN DI ATAS, BARU SELEKSI UNTUK DIHAPUS
         $currency->delete();

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\General;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ExchangeRateRequest;
+use App\Models\General\Currency;
 use App\Models\General\ExchangeRate;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -133,11 +134,33 @@ class ExchangeRateController extends Controller
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        // 1. Cari data currency yang ingin dihapus
+        $currency = ExchangeRate::findOrFail($id);
+
+        // // 2. Cek apakah currency ini sudah terpakai di tabel Company
+        // if ($currency->companies()->exists()) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Failed to delete exchange rate.',
+        //     ], 422); // Status 422 Unprocessable Entity
+        // }
+
+        // // 3. Cek apakah currency ini sudah terpakai di tabel Cash Bank
+        // if ($currency->cashBanks()->exists()) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Failed to delete exchange rate.',
+        //     ], 422);
+        // }
+
+        // 4. JIKA LOLOS PENCEKAN DI ATAS, BARU SELEKSI UNTUK DIHAPUS
+        $currency->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Exchange rate successfully deleted.',
+        ], 200);
     }
 }
