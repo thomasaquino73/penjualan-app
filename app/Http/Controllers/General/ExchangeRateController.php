@@ -3,23 +3,19 @@
 namespace App\Http\Controllers\General;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\CashBankRequest;
-use App\Models\General\CashBank;
-use Illuminate\Database\QueryException;
+use App\Http\Requests\ExchangeRateRequest;
+use App\Models\General\ExchangeRate;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
-class CashBankController extends Controller
+class ExchangeRateController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = CashBank::orderBy('created_at', 'desc')->get();
+            $query = ExchangeRate::orderBy('created_at', 'desc')->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -40,7 +36,19 @@ class CashBankController extends Controller
 
                     return 'N/A';
                 })
-                ->rawColumns(['created_at', 'updated_at'])
+                ->addColumn('from_currency_id', function ($row) {
+                    return $row->from_currency_id ? $row->fromCurrency->code : 'N/A';
+                })
+                ->addColumn('to_currency_id', function ($row) {
+                    return $row->to_currency_id ? $row->toCurrency->code : 'N/A';
+                })
+                ->addColumn('rate', function ($row) {
+                    return '1 '.$row->toCurrency->code.' = '.number_format($row->rate, 2, ',', '.').' '.$row->fromCurrency->code;
+                })
+                ->addColumn('rate_date', function ($row) {
+                    return Carbon::parse($row->rate_date)->format('d M Y'); // Format tanggal
+                })
+                ->rawColumns(['created_at', 'updated_at', 'from_currency_id', 'to_currency_id', 'rate', 'rate_date'])
                 ->make(true);
         }
 
@@ -54,10 +62,7 @@ class CashBankController extends Controller
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(CashBankRequest $request)
+    public function store(ExchangeRateRequest $request)
     {
         $id = $request->input('id');
 
@@ -71,8 +76,7 @@ class CashBankController extends Controller
                 $data['updated_at'] = now();
                 $data['updated_by'] = Auth::id();
 
-                DB::table('bank_account')
-                    ->where('id', $id)
+                ExchangeRate::where('id', $id)
                     ->update($data);
 
                 return response()->json([
@@ -86,7 +90,7 @@ class CashBankController extends Controller
                 $data['created_at'] = now();
                 $data['created_by'] = Auth::id();
 
-                DB::table('bank_account')->insert($data);
+                ExchangeRate::create($data);
 
                 return response()->json([
                     'action' => 'create',
@@ -112,10 +116,10 @@ class CashBankController extends Controller
 
     public function edit($id)
     {
-        $data = CashBank::find($id);
+        $data = ExchangeRate::find($id);
 
         if (! $data) {
-            return response()->json(['message' => 'Data tidak ditemukan'], 404);
+            return response()->json(['message' => 'Data Not Found'], 404);
         }
 
         return response()->json($data);
@@ -132,31 +136,8 @@ class CashBankController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(string $id)
     {
-        try {
-            $currency = CashBank::findOrFail($id);
-            $currency->delete();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Data cash & bank deleted successfully.',
-            ], 200);
-
-        } catch (QueryException $e) {
-            // Cek apakah error disebabkan oleh pelanggaran Foreign Key (Error Code 23000 atau 1451)
-            if ($e->getCode() === '23000' || str_contains($e->getMessage(), '1451')) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Cash & bank failed to delete because this data is already used in another table transaction!',
-                ], 422); // Gunakan HTTP status 422 (Unprocessable Entity)
-            }
-
-            // Antisipasi jika ada error database lainnya
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan pada database: '.$e->getMessage(),
-            ], 500);
-        }
+        //
     }
 }

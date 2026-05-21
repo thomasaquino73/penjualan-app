@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cash_bank', function (Blueprint $table) {
+        Schema::create('bank_account', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->unsignedBigInteger('currency_id');
-            $table->foreign('currency_id')->references('id')->on('currency');
+            $table->string('bank_name')->nullable();
+            $table->string('account_name')->nullable();
+            $table->string('account_number')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cash_bank');
+        Schema::dropIfExists('bank');
     }
 };

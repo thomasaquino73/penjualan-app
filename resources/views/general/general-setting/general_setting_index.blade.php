@@ -16,40 +16,42 @@
         </span>
     </h4>
 
-    <div class="row">
-        <div class="col-md-12">
-            @include('partials.pengaturan.navbar_general')
-            <div class="col-xl-12 mb-4">
-                <div class="nav-align-top nav-tabs-shadow mb-4">
-                    <ul class="nav nav-tabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab"
-                                data-bs-target="#navs-top-cash" aria-controls="navs-top-cash" aria-selected="false"
-                                tabindex="-1">
-                                Cash & Bank
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
-                                data-bs-target="#navs-top-currency" aria-controls="navs-top-currency" aria-selected="false"
-                                tabindex="-1">
-                                Currency
-                            </button>
-                        </li>
-
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane fade active show" id="navs-top-cash" role="tabpanel">
-                            @include('partials.general.cash_bank_table')
-
-                        </div>
-                        <div class="tab-pane fade" id="navs-top-currency" role="tabpanel">
-                            @include('partials.general.currency_table')
-                        </div>
-                    </div>
+    @include('partials.pengaturan.navbar_general')
+    <div class="col-xl-12">
+        <div class="nav-align-top mb-4">
+            <ul class="nav nav-pills mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab"
+                        data-bs-target="#navs-pills-top-home" aria-controls="navs-pills-top-home" aria-selected="true">
+                        Cash & Bank
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
+                        data-bs-target="#navs-pills-top-profile" aria-controls="navs-pills-top-profile"
+                        aria-selected="false" tabindex="-1">
+                        Currency
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
+                        data-bs-target="#navs-pills-top-messages" aria-controls="navs-pills-top-messages"
+                        aria-selected="false" tabindex="-1">
+                        Exchange Ratea
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="navs-pills-top-home" role="tabpanel">
+                    @include('partials.general.cash_bank_table')
+                </div>
+                <div class="tab-pane fade" id="navs-pills-top-profile" role="tabpanel">
+                    @include('partials.general.currency_table')
+                </div>
+                <div class="tab-pane fade" id="navs-pills-top-messages" role="tabpanel">
+                    @include('partials.general.exchange_rate_table')
                 </div>
             </div>
-
         </div>
     </div>
 @endsection

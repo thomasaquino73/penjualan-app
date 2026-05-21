@@ -1,64 +1,96 @@
-<table class="table table-bordered " id="table">
+<table class="table table-bordered " id="table_exchange_rate">
     <thead style="background-color: #AEDEFC; ">
         <tr>
             <th>#</th>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Symbol</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Rate</th>
+            <th>Date Rate</th>
             <th>Created</th>
             <th>Updated</th>
         </tr>
     </thead>
 </table>
-<div class="modal fade" id="modals">
+<div class="modal fade" id="modalsExchangeRate">
     <div class="modal-dialog modal-md" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="mb-2" id="modal-title"></h3>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h3 class="mb-2" id="modal-titleExchangeRate">Add Exchange Rate</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <form id="postForm" name="postForm" method="POST" action="{{ route('mata-uang.store') }}">
-                    @csrf
-                    <input type="text" name="id" id="id" hidden>
-                    <div class="row">
-                        <div class="col-12 mb-3">
-                            <label for="code" class="form-label">Code<small>*</small></label>
-                            <input type="text" id="code" name="code" class="form-control"
-                                placeholder="Enter Code">
-                            <span class="error text-danger" id="codeError"></span>
 
-                        </div>
+            <form id="postFormExchangeRate" method="POST" action="{{ route('exchange-rate.store') }}">
+                @csrf
+                <input type="hidden" name="id" id="idExchangeRate">
+
+                <div class="modal-body">
+                    <div class="row">
+
+                        <!-- FROM -->
                         <div class="col-12 mb-3">
-                            <label for="name" class="form-label">Name<small>*</small></label>
-                            <input type="text" id="name" name="name" class="form-control"
-                                placeholder="Enter Name">
-                            <span class="error text-danger" id="nameError"></span>
+                            <label class="form-label">From<small>*</small></label>
+                            <select name="from_currency_id" id="from_currency_id" class="form-control">
+                                <option value="">-- Select Currency --</option>
+                                @foreach ($currencies as $currency)
+                                    <option value="{{ $currency->id }}">
+                                        {{ $currency->code }} - {{ $currency->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span class="text-danger" id="from_currency_idError"></span>
                         </div>
+
+                        <!-- TO -->
                         <div class="col-12 mb-3">
-                            <label for="symbol" class="form-label">Symbol<small>*</small></label>
-                            <input type="text" id="symbol" name="symbol" class="form-control"
-                                placeholder="Enter Symbol">
-                            <span class="error text-danger" id="symbolError"></span>
+                            <label class="form-label">To<small>*</small></label>
+                            <select name="to_currency_id" id="to_currency_id" class="form-control">
+                                <option value="">-- Select Currency --</option>
+                                @foreach ($currencies as $currency)
+                                    <option value="{{ $currency->id }}">
+                                        {{ $currency->code }} - {{ $currency->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span class="text-danger" id="to_currency_idError"></span>
                         </div>
+
+                        <!-- RATE -->
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Rate<small>*</small></label>
+                            <input type="number" step="0.000001" id="rate" name="rate" class="form-control">
+                            <span class="text-danger" id="rateError"></span>
+                        </div>
+
+                        <!-- DATE -->
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Date Rate<small>*</small></label>
+                            <input type="date" id="rate_date" name="rate_date" class="form-control"
+                                value="{{ date('Y-m-d') }}">
+                            <span class="text-danger" id="rate_dateError"></span>
+                        </div>
+
                     </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-label-secondary waves-effect" data-bs-dismiss="modal">
-                    Close
-                </button>
-                <button type="submit" id="savedata" name="savedata" class="btn btn-primary me-sm-3 me-1">
-                    Save
-                </button>
-            </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="submit" id="savedataExchangeRate" class="btn btn-primary">
+                        Save
+                    </button>
+                </div>
+            </form>
+
         </div>
-        </form>
     </div>
 </div>
+
+
 @push('scripts')
     <script>
         $(document).ready(function() {
-            var table = new DataTable('#table', {
+            var table_exchange_rate = new DataTable('#table_exchange_rate', {
                 processing: true,
                 serverSide: true,
                 responsive: true,
@@ -67,7 +99,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('mata-uang.index') }}',
+                ajax: '{{ route('exchange-rate.index') }}',
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -75,13 +107,16 @@
                         searchable: false
                     },
                     {
-                        data: 'code',
+                        data: 'from_currency_id',
                     },
                     {
-                        data: 'name',
+                        data: 'to_currency_id',
                     },
                     {
-                        data: 'symbol',
+                        data: 'rate',
+                    },
+                    {
+                        data: 'rate_date',
                     },
 
                     {
@@ -90,6 +125,7 @@
                     {
                         data: 'updated_at',
                     },
+
                 ],
                 layout: {
                     topStart: {
@@ -97,11 +133,13 @@
                             text: '<i class="ti ti-plus me-1"></i> Add Data',
                             className: 'btn btn-primary btn-sm me-2',
                             action: function(e, dt, node, config) {
-                                $('#modals').modal('show');
-                                $('#modal-title').html('Add Currency');
-                                $('#savedata').html('<i class="fa fa-save me-1"></i> Save');
-                                $('#postForm').trigger('reset');
-                                $('#id').val('');
+                                $('#modalsExchangeRate').modal('show');
+                                // Sesuaikan id element judul modalnya
+                                $('#modal-titleExchangeRate').html('Add Exchange Rate');
+                                $('#savedataExchangeRate').html(
+                                    '<i class="fa fa-save me-1"></i> Save');
+                                $('#postFormExchangeRate').trigger('reset');
+                                $('#idExchangeRate').val('');
                                 resetValidation();
                             }
                         }, {
@@ -109,8 +147,9 @@
                             className: 'btn btn-warning btn-sm me-2',
                             extend: 'selectedSingle',
                             action: function(e, dt, node, config) {
-                                // 1. Ambil data row yang sedang dipilih/dicentang
-                                var selectedData = dt.row({
+
+                                // 1. Ambil data row terpilih
+                                let selectedData = dt.row({
                                     selected: true
                                 }).data();
 
@@ -122,45 +161,65 @@
                                     return;
                                 }
 
-                                // Ambil ID dari row data tersebut
-                                var id = selectedData.id;
+                                let id = selectedData.id;
 
-                                // 2. Reset form modal lama dan persiapkan teks loading
-                                $('#postForm').trigger('reset');
+                                // 2. Reset form
+                                let form = $('#postFormExchangeRate');
+                                form.trigger('reset');
+
                                 if (typeof resetValidation === "function") {
                                     resetValidation();
                                 }
 
-                                $('#modal-title').html('Edit Currency');
-                                $('#savedata').html(
-                                    '<i class="fa fa-spinner fa-spin me-1"></i> Loading...');
-                                $('#modals').modal('show');
+                                // 3. Set modal awal
+                                $('#modal-titleExchangeRate').html('Edit Exchange Rate');
+                                $('#savedataExchangeRate')
+                                    .html(
+                                        '<i class="fa fa-spinner fa-spin me-1"></i> Loading...')
+                                    .prop('disabled', true);
 
-                                // 3. Tembak AJAX ke URL Route Resource (/mata-uang/{id}/edit)
+                                $('#modalsExchangeRate').modal('show');
+
+                                // 4. Ajax ambil data
                                 $.ajax({
                                     type: "GET",
-                                    url: "/mata-uang/" + id +
-                                        "/edit", // Parameter ID masuk ke URL
+                                    url: `/exchange-rate/${id}/edit`,
                                     dataType: 'json',
-                                    success: function(data) {
-                                        $('#savedata').html(
-                                            '<i class="fa fa-save me-1"></i> Update'
-                                        );
 
-                                        // 4. Isi field form modal sesuai dengan property object data dari database
-                                        $('#id').val(data.id);
-                                        $('#code').val(data.code);
-                                        $('#name').val(data.name);
-                                        $('#rate').val(data.rate);
-                                        $('#country').val(data.country);
-                                        $('#symbol').val(data.symbol);
+                                    success: function(data) {
+
+                                        // 5. Aktifkan tombol kembali
+                                        $('#savedataExchangeRate')
+                                            .html(
+                                                '<i class="fa fa-save me-1"></i> Update'
+                                            )
+                                            .prop('disabled', false);
+
+                                        // 6. Isi form (SESUAI FIELD BARU)
+                                        $('#idExchangeRate').val(data.id);
+
+                                        $('select[name="from_currency_id"]')
+                                            .val(data.from_currency_id)
+                                            .trigger('change');
+
+                                        $('select[name="to_currency_id"]')
+                                            .val(data.to_currency_id)
+                                            .trigger('change');
+
+                                        $('#rate').val(parseFloat(data.rate)
+                                            .toFixed(2));
+
+                                        $('#rate_date').val(data.rate_date);
+
                                     },
+
                                     error: function() {
-                                        $('#modals').modal('hide');
+                                        $('#modalsExchangeRate').modal('hide');
+
                                         Swal.fire({
                                             icon: 'error',
-                                            title: 'Gagal',
-                                            text: 'Gagal mengambil data mata uang dari server.'
+                                            title: 'Failed',
+                                            text: 'Gagal mengambil data exchange rate.'
                                         });
                                     }
                                 });
@@ -196,7 +255,7 @@
                                 }).then(function(result) {
                                     if (result.isConfirmed) {
                                         $.ajax({
-                                            url: `/mata-uang/${id}`,
+                                            url: `/exchange-rate/${id}`,
                                             type: "DELETE",
                                             data: {
                                                 _token: token
@@ -244,7 +303,7 @@
                 }
             });
 
-            $('#postForm').on('submit', function(e) {
+            $('#postFormExchangeRate').on('submit', function(e) {
                 e.preventDefault();
                 var form = this;
                 $.ajax({
@@ -255,15 +314,15 @@
                     contentType: false,
                     datatype: 'json',
                     beforeSend: function(e) {
-                        $('#savedata').html(
+                        $('#savedataExchangeRate').html(
                             '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
                     },
                     complete: function(e) {
-                        $('#savedata').html(' <i class="fa fa-save me-1"></i>Save');
+                        $('#savedataExchangeRate').html(' <i class="fa fa-save me-1"></i>Save');
                     },
                     success: function(response) {
-                        $('#modals').modal('hide');
-                        table.draw();
+                        $('#modalsExchangeRate').modal('hide');
+                        table_exchange_rate.draw();
                         Swal.fire({
                             icon: 'success',
                             title: response.title,
@@ -305,7 +364,6 @@
                                 message = errorList;
                             }
                         }
-
                         Swal.fire({
                             icon: 'error',
                             title: 'Failed',
@@ -317,12 +375,7 @@
                         });
                     }
                 });
-
-
             });
-
-
-
         });
     </script>
 @endpush

@@ -54,7 +54,19 @@
                   </ul>
               </li> --}}
               <!--/ Language -->
+              <li class="nav-item d-flex align-items-center">
+                  <select id="currency_id" class="form-select form-select-sm border-0 bg-transparent"
+                      style="width:80px; cursor:pointer;">
 
+                      @foreach ($currencies as $currency)
+                          <option value="{{ $currency->id }}" data-symbol="{{ $currency->symbol }}"
+                              {{ session('currency_id') == $currency->id ? 'selected' : '' }}>
+                              {{ $currency->code }}
+                          </option>
+                      @endforeach
+
+                  </select>
+              </li>
               <a class="nav-link" href="javascript:void(0);" id="wifiIcon">
                   <i class="ti ti-wifi"></i>
               </a>
@@ -281,6 +293,7 @@
 
   <!-- / Navbar -->
   @push('scripts')
+      
       <script>
           document.getElementById('logout-button').addEventListener('click', function(e) {
               e.preventDefault(); // hentikan default link behavior

@@ -54,13 +54,12 @@
                             </div>
                             <div class="col-md-3 mb-3 ">
                                 <label>Default Currency<small>*</small></label>
-                                <select name="mata_uang_id" id="mata_uang_id" class="form-select select2"
-                                    data-placeholder="Select Currency">
-                                    <option></option>
+                                <select name="default_currency_id" id="default_currency_id" class="form-select" required>
+                                    <option value="">-- Select Default Currency --</option>
                                     @foreach ($currencies as $currency)
                                         <option value="{{ $currency->id }}"
-                                            {{ $dataSistem->mata_uang_id == $currency->id ? 'selected' : '' }}>
-                                            {{ $currency->name }}
+                                            {{ ($company->default_currency_id ?? '') == $currency->id ? 'selected' : '' }}>
+                                            {{ $currency->code }} - {{ $currency->name }} ({{ $currency->symbol }})
                                         </option>
                                     @endforeach
                                 </select>

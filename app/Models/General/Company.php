@@ -11,12 +11,12 @@ class Company extends Model
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $table = 'company';
+    protected $table = 'companies';
 
     protected $guarded = [];
 
-    public function currency()
+    public function defaultCurrency()
     {
-        return $this->belongsTo(Currency::class, 'mata_uang_id');
+        return $this->belongsTo(Currency::class, 'default_currency_id');
     }
 }

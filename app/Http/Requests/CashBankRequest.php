@@ -20,11 +20,12 @@ class CashBankRequest extends FormRequest
         $id = $this->input('id');
 
         return [
-            'name' => [
+            'bank_name' => [
                 'required',
-                Rule::unique('cash_bank', 'name')->ignore($id),
+                Rule::unique('bank_account', 'bank_name')->ignore($id),
             ],
-            'currency_id' => 'required',
+            'account_name' => 'required',
+            'account_number' => 'required',
 
         ];
     }
@@ -32,9 +33,11 @@ class CashBankRequest extends FormRequest
     public function message(): array
     {
         return [
-            'name.required' => 'Name is required',
-            'name.unique' => 'Name has already been taken',
-            'currency_id.required' => 'Currency is required',
+            'bank_name.required' => 'Bank Name is required',
+            'bank_name.unique' => 'Bank Name has already been taken',
+            'account_number.required' => 'Account Number is required',
+            'account_number.unique' => 'Account Number has already been taken',
+            'account_name.required' => 'Account Name is required',
         ];
     }
 }

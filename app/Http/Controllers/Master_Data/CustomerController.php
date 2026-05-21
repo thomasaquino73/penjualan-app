@@ -85,7 +85,7 @@ class CustomerController extends Controller
                       <ul class="dropdown-menu" style="">';
 
                     if (auth()->user()->can('customer-edit')) {
-                        $btn .= '<a class="dropdown-item " href="'.route('customer.edit',$row->id).'"
+                        $btn .= '<a class="dropdown-item " href="'.route('customer.edit', $row->id).'"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
                     }
 
@@ -256,7 +256,7 @@ class CustomerController extends Controller
         $kontak = DB::table('customer_kontak')->where('customer_id', $id)->first();
         $pajak = DB::table('customer_pajak')->where('customer_id', $id)->first();
         $pengiriman = DB::table('customer_pengiriman')->where('customer_id', $id)->first();
-      
+
         $x = [
             'title' => 'Customer List New',
             'breadcrumb' => [
@@ -278,7 +278,7 @@ class CustomerController extends Controller
     /**
      * Update the specified resource in storage.
      */
-   public function update(CustomerRequest $request, $id)
+    public function update(CustomerRequest $request, $id)
     {
         DB::beginTransaction();
         try {
@@ -327,8 +327,8 @@ class CustomerController extends Controller
                     ['customer_id' => $customer->id],
                     [
                         'tipe_id_pajak' => $request->tipe_id_pajak,
-                'default_pajak' => $request->default_pajak,
-                'check_address' => $request->check_address,
+                        'default_pajak' => $request->default_pajak,
+                        'check_address' => $request->check_address,
                         'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
                         'nama_wajib_pajak' => $request->nama_wajib_pajak,
                         'id_tku' => $request->id_tku,

@@ -45,7 +45,8 @@
                         <div class="col-md-6 mb-3 ">
                             <label>Default Currency<small>*</small></label>
                             <input type="text" name="mata_uang" id="mata_uang" class="form-control"
-                                value="{{ $dataSistem->currency->name ?? '' }}" disabled>
+                                value="{{ $dataSistem->defaultCurrency->code ?? 'Belum Diatur' }} - {{ $dataSistem->defaultCurrency->name ?? 'Belum Diatur' }}"
+                                disabled>
                             <span class="text-danger error" id="mata_uangError"></span>
                         </div>
                         <div class="col-md-12 mb-3 ">

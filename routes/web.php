@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\General\CashBankController;
 use App\Http\Controllers\General\CompanyInfoController;
 use App\Http\Controllers\General\CurrencyController;
+use App\Http\Controllers\General\ExchangeRateController;
 use App\Http\Controllers\General\GeneralSettingController;
 use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Master_Data\Barang\DataBarangController;
@@ -12,7 +13,6 @@ use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
 use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
 use App\Http\Controllers\Master_Data\CustomerController;
 use App\Http\Controllers\Master_Data\DaftarKendaraanController;
-// use App\Http\Controllers\Master_Data\SalesmanController;
 use App\Http\Controllers\Master_Data\SupplierController;
 use App\Http\Controllers\Master_Data\WarehouseController;
 use App\Http\Controllers\NotificationController;
@@ -60,6 +60,12 @@ Route::get('/verify-email/{id}/{hash}', function (Request $request, $id, $hash) 
     return redirect()->route('login')->with('status', 'Email Anda berhasil diverifikasi.');
 })->middleware('signed')->name('verification.verify');
 Route::middleware('auth')->group(function () {
+
+    Route::post('/set-currency', function (Request $request) {
+        session(['currency_id' => $request->currency_id]);
+
+        return response()->json(['success' => true]);
+    })->name('set.currency');
     Route::group(['middleware' => ['role:Super Admin']], function () {
 
         Route::get('/pengaturan-sistem', [PengaturanSistemController::class, 'index'])->name('pengaturan.sistem');
@@ -79,6 +85,7 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('/mata-uang', CurrencyController::class);
     Route::resource('/cash-bank', CashBankController::class);
+    Route::resource('/exchange-rate', ExchangeRateController::class);
 
     Route::prefix('token')->group(function () {
         Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');

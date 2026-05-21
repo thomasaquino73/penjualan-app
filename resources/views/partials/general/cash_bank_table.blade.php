@@ -2,8 +2,9 @@
     <thead style="background-color: #AEDEFC; ">
         <tr>
             <th>#</th>
-            <th>Name</th>
-            <th>Currency</th>
+            <th>Bank Name</th>
+            <th>Account Name</th>
+            <th>Account Number</th>
             <th>Created</th>
             <th>Updated</th>
         </tr>
@@ -22,22 +23,23 @@
                     <input type="hidden" name="id" id="idBank">
                     <div class="row">
                         <div class="col-12 mb-3">
-                            <label for="name" class="form-label">Name<small>*</small></label>
-                            <input type="text" id="nameBank" name="name" class="form-control"
-                                placeholder="Enter Name">
-                            <span class="error text-danger" id="nameError"></span>
+                            <label for="bank_name" class="form-label">Bank Name<small>*</small></label>
+                            <input type="text" id="bank_name" name="bank_name" class="form-control"
+                                placeholder="Enter Bank Name">
+                            <span class="error text-danger" id="bank_nameError"></span>
 
                         </div>
                         <div class="col-12 mb-3">
-                            <label for="currency_id" class="form-label">Currency<small>*</small></label>
-                            <select name="currency_id" id="currency_idBank" class="form-control">
-                                <option value="" selected hidden>Select Currency</option>
-                                @foreach ($currencies as $c_bank)
-                                    {{-- <--- Ubah $currency menjadi $c_bank --}}
-                                    <option value="{{ $c_bank->id }}">{{ $c_bank->name }}</option>
-                                @endforeach
-                            </select>
-                            <span class="error text-danger" id="currency_idBankError"></span>
+                            <label for="account_name" class="form-label">Account Name<small>*</small></label>
+                            <input type="text" id="account_name" name="account_name" class="form-control"
+                                placeholder="Enter Account Name">
+                            <span class="error text-danger" id="account_nameError"></span>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="account_number" class="form-label">Account Number<small>*</small></label>
+                            <input type="text" id="account_number" name="account_number" class="form-control"
+                                placeholder="Enter Account Number">
+                            <span class="error text-danger" id="account_numberError"></span>
                         </div>
 
                     </div>
@@ -75,10 +77,13 @@
                         searchable: false
                     },
                     {
-                        data: 'name',
+                        data: 'bank_name',
                     },
                     {
-                        data: 'currency',
+                        data: 'account_name',
+                    },
+                    {
+                        data: 'account_number',
                     },
 
                     {
@@ -147,17 +152,19 @@
 
                                         // 4. Isi field form modal sesuai dengan property object data dari database
                                         $('#idBank').val(data.id);
-                                        $('#nameBank').val(data.name);
-                                        $('#currency_idBank').val(data.currency_id)
-                                            .trigger('change');
+                                        $('#bank_name').val(data.bank_name);
+                                        $('#account_name').val(data.account_name);
+                                        $('#account_number').val(data
+                                            .account_number);
+
 
                                     },
                                     error: function() {
                                         $('#modalsBank').modal('hide');
                                         Swal.fire({
                                             icon: 'error',
-                                            title: 'Gagal',
-                                            text: 'Gagal mengambil data mata uang dari server.'
+                                            title: 'Failed',
+                                            text: 'Failed to fetch data kas & bank from the server.'
                                         });
                                     }
                                 });
@@ -305,7 +312,7 @@
 
                         Swal.fire({
                             icon: 'error',
-                            title: 'Gagal',
+                            title: 'Failed',
                             html: message,
                             customClass: {
                                 confirmButton: 'btn btn-danger'

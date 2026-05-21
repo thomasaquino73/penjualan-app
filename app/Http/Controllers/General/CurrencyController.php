@@ -8,7 +8,6 @@ use App\Models\General\Currency;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 class CurrencyController extends Controller
@@ -72,8 +71,7 @@ class CurrencyController extends Controller
                 $data['updated_at'] = now();
                 $data['updated_by'] = Auth::id();
 
-                DB::table('currency')
-                    ->where('id', $id)
+                Currency::where('id', $id)
                     ->update($data);
 
                 return response()->json([
@@ -87,7 +85,7 @@ class CurrencyController extends Controller
                 $data['created_at'] = now();
                 $data['created_by'] = Auth::id();
 
-                DB::table('currency')->insert($data);
+                Currency::create($data);
 
                 return response()->json([
                     'action' => 'create',

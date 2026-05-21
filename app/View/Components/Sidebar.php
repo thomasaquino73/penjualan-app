@@ -27,14 +27,14 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'Inventory',
+                'name' => 'Persediaan',
                 'icon' => 'ti ti-trolley',
                 'roles' => ['Super Admin'],
                 'permissions' => ['role-browse', 'permission-browse'],
                 'children' => [
 
                     [
-                        'name' => 'Products',
+                        'name' => 'Produk',
                         'route' => 'data-barang.index',
                         'pattern' => 'data-barang.*',
                         'roles' => ['Super Admin'],
@@ -42,14 +42,14 @@ class Sidebar extends Component
                     ],
 
                     [
-                        'name' => 'Categories',
+                        'name' => 'Kategori',
                         'route' => 'kategori-barang.index',
                         'pattern' => 'kategori-barang.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['kategori_barang-browse'],
                     ],
                     [
-                        'name' => 'Unit',
+                        'name' => 'Satuan',
                         'route' => 'satuan-barang.index',
                         'pattern' => 'satuan-barang.*',
                         'roles' => ['Super Admin'],
@@ -60,7 +60,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'single',
-                'name' => 'Supplier',
+                'name' => 'Pemasok',
                 'route' => 'supplier.index',
                 'icon' => 'ti ti-users',
                 'pattern' => 'supplier.*',
@@ -70,7 +70,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'single',
-                'name' => 'Customer',
+                'name' => 'Pelanggan',
                 'route' => 'customer.index',
                 'icon' => 'ti ti-users-group',
                 'pattern' => 'customer.*',
@@ -80,7 +80,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'single',
-                'name' => 'Warehouse',
+                'name' => 'Gudang',
                 'route' => 'warehouse.index',
                 'icon' => 'ti ti-building-warehouse',
                 'pattern' => 'warehouse.*',
@@ -90,7 +90,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'single',
-                'name' => 'Vehicle',
+                'name' => 'Kendaraan',
                 'route' => 'daftar-kendaraan.index',
                 'icon' => 'ti-car',
                 'pattern' => 'daftar-kendaraan.*',
@@ -100,12 +100,12 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'section',
-                'label' => 'TRANSACTIONS',
+                'label' => 'TRANSAKSI',
                 'roles' => ['Super Admin'],
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'Manage Purchases',
+                'name' => 'PEMBELIAN',
                 'icon' => 'ti ti-shopping-cart',
                 'roles' => ['Super Admin'],
                 'permissions' => ['role-browse', 'permission-browse'],
@@ -156,7 +156,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'Manage Sales',
+                'name' => 'PENJUALAN',
                 'icon' => 'ti ti-moneybag',
                 'roles' => ['Super Admin'],
                 'permissions' => ['role-browse', 'permission-browse'],
@@ -208,7 +208,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'Manage Delivery',
+                'name' => 'PENGIRIMAN',
                 'icon' => 'ti ti-truck-delivery',
                 'roles' => ['Super Admin'],
                 'permissions' => ['role-browse', 'permission-browse'],

@@ -10,7 +10,7 @@ class CashBank extends Model
 {
     use HasFactory;
 
-    protected $table = 'cash_bank';
+    protected $table = 'bank_account';
 
     protected $guarded = [];
 

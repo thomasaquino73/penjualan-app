@@ -47,7 +47,7 @@ class DataBarangController extends Controller
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = Barang::where('status', '<>', 0)->orderBy('id_barang', 'desc')->get();
+            $query = Barang::where('status', '<>', 0)->orderBy('id_barang', 'desc');
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -104,9 +104,9 @@ class DataBarangController extends Controller
                 ->addColumn('gudang', function ($row) {
                     return $row->warehouseID->nama_gudang;
                 })
-                // ->addColumn('tipePersediaan', function ($row) {
-                //     return $row->typeID->detail;
-                // })
+                ->addColumn('harga', function ($row) {
+                    return format_uang(convert_currency($row->price, $row->currency_id ?? 1));
+                })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -135,7 +135,7 @@ class DataBarangController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'harga', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok'])
                 ->make(true);
         }
 
