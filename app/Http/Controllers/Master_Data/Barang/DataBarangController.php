@@ -281,7 +281,7 @@ class DataBarangController extends Controller
             }
 
             // 3. Decode data array string JSON (`items_detail`) yang dikirim dari DataTables lokal
-           $items = json_decode($request->items_detail, true);
+            $items = json_decode($request->items_detail, true);
 
             foreach ($items as $item) {
 
@@ -289,7 +289,7 @@ class DataBarangController extends Controller
                     ? Carbon::parse($item['date'])->format('Y-m-d')
                     : null;
 
-                $price = floatval($item['price'] ?? 0);
+                $price = floatval($item['unit_price'] ?? 0);
 
                 DataBarangStok::create([
                     'data_barang_id' => $barang->id,
@@ -301,7 +301,7 @@ class DataBarangController extends Controller
                 ]);
             }
 
-                        DB::commit();
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -327,6 +327,7 @@ class DataBarangController extends Controller
      */
     public function show(string $id)
     {
+
         $idDetail = Barang::with('variants')->findOrFail($id);
 
         // Menambahkan filter where qty > 0
@@ -342,6 +343,7 @@ class DataBarangController extends Controller
             ],
             'detail' => $idDetail,
             'unitConversion' => $unitConversion,
+            'stok' => $unitConversion,
         ]);
     }
 
@@ -351,7 +353,7 @@ class DataBarangController extends Controller
     public function edit(string $id)
     {
         // Tambahkan with('variants') di sini
-        $idDetail = Barang::with('variants')->findOrFail($id);
+        $idDetail = Barang::with('variants', 'stockHistories')->findOrFail($id);
 
         $subUnit = DataBarangConversion::where('data_barang_id', $idDetail->id)->get();
         $unit = BasicCodeDetail::where('master_id', 2)->get();
@@ -370,6 +372,7 @@ class DataBarangController extends Controller
             'warehouses' => Warehouse::where('status', 1)->get(),
             'detail' => $idDetail, // Di dalam sini sekarang sudah me-load tabel product_variants
             'subUnit' => $subUnit,
+
         ]);
     }
 
@@ -384,13 +387,12 @@ class DataBarangController extends Controller
             $barang = Barang::findOrFail($id);
 
             // 2. Siapkan data update (kecuali field khusus)
-            $data = $request->except(['_token', '_method', 'save_and_new', 'conversion', 'variants']);
+            $data = $request->except(['_token', '_method', 'save_and_new', 'conversion', 'variants', 'items_detail']);
             $data['updated_by'] = Auth::id();
             $data['status'] = $request->has('status') ? 1 : 2;
 
             // 3. Handle Upload Foto
             if ($request->hasFile('photo_filename')) {
-                // Jika ingin menghapus file lama agar storage tidak penuh
                 if ($barang->photo_filename && file_exists(public_path('uploads/products/'.$barang->photo_filename))) {
                     unlink(public_path('uploads/products/'.$barang->photo_filename));
                 }
@@ -400,63 +402,46 @@ class DataBarangController extends Controller
             // 4. Eksekusi Update Barang Utama
             $barang->update($data);
 
-            if ($request->has('conversion') && is_array($request->conversion)) {
+            $items = json_decode($request->items_detail, true) ?? [];
 
-                // 1. Ambil semua ID konversi yang ada di database saat ini untuk barang ini
-                $currentConversionIds = DataBarangConversion::where('data_barang_id', $barang->id)
-                    ->pluck('id')
-                    ->toArray();
+            // 1. Hapus semua data stok lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
+            DataBarangStok::where('data_barang_id', $barang->id)->delete();
 
-                $processedIds = [];
+            // 2. Masukkan ulang semua data dari form / DataTables lokal
+            if (is_array($items) && count($items) > 0) {
+                foreach ($items as $item) {
+                    $price = $item['unit_price'] ?? $item['price'] ?? 0;
+                    $stokUnitId = (! empty($item['stok_unit_id']) && $item['stok_unit_id'] !== 'Select Unit' && $item['stok_unit_id'] !== '') ? $item['stok_unit_id'] : null;
+                    $warehouseId = (! empty($item['warehouse_id']) && $item['warehouse_id'] !== '') ? $item['warehouse_id'] : null;
 
-                foreach ($request->conversion as $index => $conv) {
-                    $qty = $conv['qty'] ?? 0;
-                    $toUnit = $conv['to_unit'] ?? null;
-
-                    // Cari tahu apakah baris ke-N ini sudah ada di DB
-                    $existingConversion = DataBarangConversion::where('data_barang_id', $barang->id)
-                        ->skip($index)
-                        ->first();
-
-                    if ($existingConversion) {
-                        // Jika ADA, jalankan UPDATE
-                        $existingConversion->update([
-                            'from_unit_id' => $request->unit_id,
-                            'to_unit_id' => $toUnit,
-                            'qty' => $qty,
-                        ]);
-                        $processedIds[] = $existingConversion->id;
-                    } else {
-                        // Jika TIDAK ADA (Baris baru ditambah oleh user), jalankan CREATE
-                        // Pastikan field di model sudah di-set $fillable
-                        $newConversion = DataBarangConversion::create([
-                            'data_barang_id' => $barang->id,
-                            'from_unit_id' => $request->unit_id,
-                            'to_unit_id' => $toUnit,
-                            'qty' => $qty,
-                        ]);
-                        $processedIds[] = $newConversion->id;
+                    // Standarisasi Format Tanggal
+                    $dateRaw = $item['date'] ?? $item['date_stock'] ?? null;
+                    $formattedDate = null;
+                    if (! empty($dateRaw)) {
+                        try {
+                            $formattedDate = Carbon::parse($dateRaw)->format('Y-m-d');
+                        } catch (\Exception $e) {
+                            $formattedDate = null;
+                        }
                     }
-                }
 
-                // 2. OPSIONAL: Hapus data di database jika user menghapus baris konversi di UI form
-                $idsToDelete = array_diff($currentConversionIds, $processedIds);
-                if (! empty($idsToDelete)) {
-                    DataBarangConversion::destroy($idsToDelete);
+                    // Jalankan perintah Create langsung tanpa peduli ID lama
+                    DataBarangStok::create([
+                        'data_barang_id' => $barang->id, // Mengikat relasi ke barang utama
+                        'date' => $formattedDate,
+                        'quantity' => $item['quantity'] ?? $item['qty'] ?? 0,
+                        'stok_unit_id' => $stokUnitId,
+                        'warehouse_id' => $warehouseId,
+                        'price' => $price,
+                    ]);
                 }
-            } else {
-                // Jika request 'conversion' kosong sama sekali, hapus semua konversi barang ini
-                DataBarangConversion::where('data_barang_id', $barang->id)->delete();
             }
 
             // ==================================================
-            // PROSES UPDATE VARIAN (Delete & Re-insert Strategy)
+            // PROSES UPDATE VARIAN
             // ==================================================
-
-            // 1. Hapus semua varian lama yang melekat pada barang ini
             $barang->variants()->delete();
 
-            // 2. Masukkan ulang data varian baru dari form edit (jika ada)
             if ($request->has('variants') && is_array($request->variants)) {
                 foreach ($request->variants as $variantData) {
                     if (empty($variantData['name'])) {
@@ -474,19 +459,45 @@ class DataBarangController extends Controller
 
                     $barang->variants()->create([
                         'variant_name' => $variantData['name'],
-                        'specifications' => $customSpecs, // Otomatis tersimpan sebagai format JSON
+                        'specifications' => $customSpecs,
                     ]);
                 }
             }
+
+            // ==================================================
+            // PROSES UPSERT DATA STOK BARANG (Direct Update / Create New)
+            // ==================================================
+          $items = json_decode($request->items_detail, true);
+
+            // if (is_array($items) && count($items) > 0) {
+
+                // Hapus semua detail lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
+                DataBarangStok::where('data_barang_id', $barang->id)->delete();
+
+                foreach ($items as $item) {
+                    $date = ! empty($item['date'])
+                        ? Carbon::parse($item['date'])->format('Y-m-d')
+                        : null;
+                    DataBarangStok::create([
+                        'data_barang_id' => $barang->id,
+                        'date' => $date ,
+                        'quantity' => $item['quantity'] ?? $item['qty'],
+                        'stok_unit_id' => $item['stok_unit_id'],
+                        'warehouse_id' =>$item['stok_unit_id'],
+                        'price' => $item['unit_price'] ?? null,
+                    ]);
+                }
+            // } else {
+            //     // Gagalkan proses jika ternyata isi array kosong setelah didecode
+            //     throw new \Exception('Minimal harus ada 1 item produk yang dimasukkan.');
+            // }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Product has been successfully updated.',
-                'redirect' => $isSaveAndNew
-                    ? route('data-barang.create')
-                    : route('data-barang.index'),
+                'redirect' => $isSaveAndNew ? route('data-barang.create') : route('data-barang.index'),
             ]);
 
         } catch (\Exception $e) {

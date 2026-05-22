@@ -37,7 +37,7 @@ class ProductRequest extends FormRequest
             'gudang_id' => ['required'],
             'unit_id' => ['required'],
             'product_type' => ['required'],
-            'barcode' => ['unique:data_barang,barcode,' . $id],
+            'barcode' => ['unique:data_barang,barcode,'.$id],
         ];
     }
 

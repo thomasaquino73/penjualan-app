@@ -57,7 +57,7 @@ return new class extends Migration
             $table->unsignedBigInteger('stok_unit_id')->nullable();
             $table->unsignedBigInteger('warehouse_id')->nullable();
             $table->timestamps();
-            $table->index('unit_id');
+            $table->index('stok_unit_id');
             $table->index('warehouse_id');
         });
         Schema::create('data_barang_variants', function (Blueprint $table) {

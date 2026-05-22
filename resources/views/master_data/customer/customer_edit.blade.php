@@ -59,63 +59,95 @@
                                         <div class="row">
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="id_customer" class="form-label">Customer
-                                                    ID
-                                                    <input type="text" id="id_customer" name="id_customer"
-                                                        class="form-control" placeholder="Enter Customer ID"
-                                                        value="{{ $customer->id_customer }}" readonly>
-                                                    <span class="error text-danger" id="id_customerError"></span>
+                                                    ID</label>
+
+                                                <input type="text" id="id_customer" name="id_customer"
+                                                    class="form-control" placeholder="Enter Customer ID"
+                                                    value="{{ $customer->id_customer }}" readonly>
+                                                <span class="error text-danger" id="id_customerError"></span>
 
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="nama_customer" class="form-label">Customer
-                                                    Name
+                                                    Name</label>
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-user"></i></span>
                                                     <input type="text" id="nama_customer" name="nama_customer"
                                                         class="form-control" placeholder="Enter Customer Name"
                                                         value="{{ $customer->nama_customer }}">
-                                                    <span class="error text-danger" id="nama_customerError"></span>
+                                                </div>
+                                                <span class="error text-danger" id="nama_customerError"></span>
 
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="notel_bisnis" class="form-label">Bussines Phone
                                                     Number</label>
-                                                <input type="number" id="notel_bisnis" name="notel_bisnis"
-                                                    class="form-control" placeholder="Enter Business Phone Number"
-                                                    value="{{ $customer->notel_bisnis }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
+                                                    <input type="number" id="notel_bisnis" name="notel_bisnis"
+                                                        class="form-control" placeholder="Enter Business Phone Number"
+                                                        value="{{ $customer->notel_bisnis }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="notel_bisnisError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="no_hp" class="form-label">Handphone<small
                                                         class="text-danger">*</small></label>
-                                                <input type="number" id="no_hp" name="no_hp" class="form-control"
-                                                    placeholder="Enter Handphone Number" value="{{ $customer->no_hp }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
+                                                    <input type="number" id="no_hp" name="no_hp"
+                                                        class="form-control" placeholder="Enter Handphone Number"
+                                                        value="{{ $customer->no_hp }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="no_hpError"></span>
                                             </div>
 
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="no_whatsapp" class="form-label">Whatsapp<small
                                                         class="text-danger">*</small></label>
-                                                <input type="number" id="no_whatsapp" name="no_whatsapp"
-                                                    class="form-control" placeholder="Enter Whatsapp Number"
-                                                    value="{{ $customer->no_whatsapp }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
+                                                    <input type="number" id="no_whatsapp" name="no_whatsapp"
+                                                        class="form-control" placeholder="Enter Whatsapp Number"
+                                                        value="{{ $customer->no_whatsapp }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="no_whatsappError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="email" class="form-label">Email</label>
-                                                <input type="text" id="email" name="email" class="form-control"
-                                                    placeholder="Enter Email" value="{{ $customer->email }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-mail"></i></span>
+                                                    <input type="text" id="email" name="email"
+                                                        class="form-control" placeholder="Enter Email"
+                                                        value="{{ $customer->email }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="emailError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="faximili" class="form-label">Fax Number</label>
-                                                <input type="number" id="faximili" name="faximili"
-                                                    class="form-control" placeholder="Enter Fax Number"
-                                                    value="{{ $customer->faximili }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
+                                                    <input type="number" id="faximili" name="faximili"
+                                                        class="form-control" placeholder="Enter Fax Number"
+                                                        value="{{ $customer->faximili }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="faximiliError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="website" class="form-label">Website</label>
-                                                <input type="text" id="website" name="website" class="form-control"
-                                                    placeholder="Enter Website" value="{{ $customer->website }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-globe"></i></span>
+                                                    <input type="number" id="faximili" name="faximili" <input
+                                                        type="text" id="website" name="website"
+                                                        class="form-control" placeholder="Enter Website"
+                                                        value="{{ $customer->website }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="websiteError"></span>
                                             </div>
 
@@ -130,43 +162,66 @@
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="kota_tagihan" class="form-label">City</label>
-                                                <input type="text" id="kota_tagihan" name="kota_tagihan"
-                                                    class="form-control" placeholder="Enter City"
-                                                    value="{{ $customer->kota_tagihan }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                    <input type="text" id="kota_tagihan" name="kota_tagihan"
+                                                        class="form-control" placeholder="Enter City"
+                                                        value="{{ $customer->kota_tagihan }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="kota_tagihanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="kodepos_tagihan" class="form-label">Postal Code</label>
-                                                <input type="text" id="kodepos_tagihan" name="kodepos_tagihan"
-                                                    class="form-control" placeholder="Enter Postal Code"
-                                                    value="{{ $customer->kodepos_tagihan }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                    <input type="text" id="kodepos_tagihan" name="kodepos_tagihan"
+                                                        class="form-control" placeholder="Enter Postal Code"
+                                                        value="{{ $customer->kodepos_tagihan }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="kodepos_tagihanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="provinsi_tagihan" class="form-label">Province</label>
-                                                <input type="text" id="provinsi_tagihan" name="provinsi_tagihan"
-                                                    class="form-control" placeholder="Enter Province"
-                                                    value="{{ $customer->provinsi_tagihan }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                    <input type="text" id="provinsi_tagihan" name="provinsi_tagihan"
+                                                        class="form-control" placeholder="Enter Province"
+                                                        value="{{ $customer->provinsi_tagihan }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="provinsi_tagihanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="negara_tagihan" class="form-label">Country</label>
-                                                <input type="text" id="negara_tagihan" name="negara_tagihan"
-                                                    class="form-control" placeholder="Enter Country"
-                                                    value="{{ $customer->negara_tagihan }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                    <input type="text" id="negara_tagihan" name="negara_tagihan"
+                                                        class="form-control" placeholder="Enter Country"
+                                                        value="{{ $customer->negara_tagihan }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="negara_tagihanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label class="form-label">Status<small>*</small></label>
-                                                <select name="status" id="status" class="form-control">
-                                                    <option value="" selected hidden>Select Status</option>
-                                                    <option value="1"{{ $customer->status == 1 ? 'selected' : '' }}>
-                                                        Active
-                                                    </option>
-                                                    <option value="2"{{ $customer->status == 2 ? 'selected' : '' }}>
-                                                        Not
-                                                        Active</option>
-                                                </select>
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i
+                                                            class="ti ti-creative-commons-nd"></i></span>
+                                                    <select name="status" id="status" class="form-control">
+                                                        <option value="" selected hidden>Select Status</option>
+                                                        <option
+                                                            value="1"{{ $customer->status == 1 ? 'selected' : '' }}>
+                                                            Active
+                                                        </option>
+                                                        <option
+                                                            value="2"{{ $customer->status == 2 ? 'selected' : '' }}>
+                                                            Not
+                                                            Active</option>
+                                                    </select>
+                                                </div>
+
                                                 <span class="error text-danger" id="statusError"></span>
                                             </div>
                                         </div>
@@ -181,85 +236,129 @@
                                                 <label for="contact_person" class="form-label">Fullname</label>
                                                 <div class="row">
                                                     <div class="col-lg-4">
-                                                        <select name="sapaan" id="sapaan" class="form-select">
-                                                            <option value="" selected hidden>Select Salutation
-                                                            </option>
-                                                            <option value="Mr."
-                                                                {{ $kontak->sapaan === 'Mr.' ? 'selected' : '' }}>Mr.
-                                                            </option>
-                                                            <option value="Mrs."
-                                                                {{ $kontak->sapaan === 'Mrs.' ? 'selected' : '' }}>Mrs.
-                                                            </option>
-                                                            <option value="Ms."
-                                                                {{ $kontak->sapaan === 'Ms.' ? 'selected' : '' }}>Ms.
-                                                            </option>
-                                                        </select>
+                                                        <div class="input-group input-group-merge">
+                                                            <span class="input-group-text"><i
+                                                                    class="ti ti-layout-dashboard"></i></span>
+                                                            <select name="sapaan" id="sapaan" class="form-select">
+                                                                <option value="" selected hidden>Select Salutation
+                                                                </option>
+                                                                <option value="Mr."
+                                                                    {{ $kontak->sapaan === 'Mr.' ? 'selected' : '' }}>Mr.
+                                                                </option>
+                                                                <option value="Mrs."
+                                                                    {{ $kontak->sapaan === 'Mrs.' ? 'selected' : '' }}>Mrs.
+                                                                </option>
+                                                                <option value="Ms."
+                                                                    {{ $kontak->sapaan === 'Ms.' ? 'selected' : '' }}>Ms.
+                                                                </option>
+                                                            </select>
+                                                        </div>
+
                                                     </div>
                                                     <div class="col-lg-8">
-                                                        <input type="text" id="contact_person" name="contact_person"
-                                                            class="form-control" placeholder="Enter Contact Person"
-                                                            value="{{ $kontak->contact_person }}">
+                                                        <div class="input-group input-group-merge">
+                                                            <span class="input-group-text"><i
+                                                                    class="ti ti-user"></i></span>
+                                                            <input type="text" id="contact_person"
+                                                                name="contact_person" class="form-control"
+                                                                placeholder="Enter Contact Person"
+                                                                value="{{ $kontak->contact_person }}">
+                                                        </div>
+
                                                     </div>
                                                 </div>
                                                 <span class="error text-danger" id="contact_personError"></span>
                                             </div>
                                             <div class="col-md-12 col-sm-12 mb-3">
                                                 <label for="posisi_jabatan" class="form-label">Position</label>
-                                                <input type="text" id="posisi_jabatan" name="posisi_jabatan"
-                                                    class="form-control" placeholder="Enter Position"
-                                                    value="{{ $kontak->posisi_jabatan }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-sitemap"></i></span>
+                                                    <input type="text" id="posisi_jabatan" name="posisi_jabatan"
+                                                        class="form-control" placeholder="Enter Position"
+                                                        value="{{ $kontak->posisi_jabatan }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="posisi_jabatanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="email_kontak" class="form-label">Email</label>
-                                                <input type="text" id="email_kontak" name="email_kontak"
-                                                    class="form-control" placeholder="Enter Email"
-                                                    value="{{ $kontak->email_kontak }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-mail"></i></span>
+                                                    <input type="text" id="email_kontak" name="email_kontak"
+                                                        class="form-control" placeholder="Enter Email"
+                                                        value="{{ $kontak->email_kontak }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="email_kontakError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="handphone_kontak" class="form-label">Phone Number</label>
-                                                <input type="text" id="handphone_kontak" name="handphone_kontak"
-                                                    class="form-control" placeholder="Enter Phone Number"
-                                                    value="{{ $kontak->handphone_kontak }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
+                                                    <input type="text" id="handphone_kontak" name="handphone_kontak"
+                                                        class="form-control" placeholder="Enter Phone Number"
+                                                        value="{{ $kontak->handphone_kontak }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="handphone_kontakError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="notel_bisnis_kontak" class="form-label">Bussines Phone
                                                     Number</label>
-                                                <input type="text" id="notel_bisnis_kontak" name="notel_bisnis_kontak"
-                                                    class="form-control" placeholder="Enter Business Phone Number"
-                                                    value="{{ $kontak->notel_bisnis_kontak }}">
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
+                                                    <input type="text" id="notel_bisnis_kontak"
+                                                        name="notel_bisnis_kontak" class="form-control"
+                                                        placeholder="Enter Business Phone Number"
+                                                        value="{{ $kontak->notel_bisnis_kontak }}">
+                                                </div>
+
                                                 <span class="error text-danger" id="notel_bisnis_kontakError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="faximili_kontak" class="form-label">Fax Number
                                                 </label>
-                                                <input type="number" id="faximili_kontak" name="faximili_kontak"
+                                                 <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
+                                                   <input type="number" id="faximili_kontak" name="faximili_kontak"
                                                     class="form-control" placeholder="Enter Business Phone Number"
                                                     value="{{ $kontak->faximili_kontak }}">
+                                                </div>
+                                                
                                                 <span class="error text-danger" id="faximili_kontakError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="no_whatsapp_kontak" class="form-label">Whatsapp
                                                     Number</label>
-                                                <input type="number" id="no_whatsapp_kontak" name="no_whatsapp_kontak"
+                                                     <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
+                                                    <input type="number" id="no_whatsapp_kontak" name="no_whatsapp_kontak"
                                                     class="form-control" placeholder="Enter Business Phone Number"
                                                     value="{{ $kontak->no_whatsapp_kontak }}">
+                                                </div>
+                                               
                                                 <span class="error text-danger" id="no_whatsapp_kontakError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="website_kontak" class="form-label">Website
                                                 </label>
-                                                <input type="text" id="website_kontak" name="website_kontak"
+                                                   <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-globe"></i></span>
+                                                   <input type="text" id="website_kontak" name="website_kontak"
                                                     class="form-control" placeholder="Enter Business Phone Number"
                                                     value="{{ $kontak->website_kontak }}">
+                                                </div>
+                                               
                                                 <span class="error text-danger" id="website_kontakError"></span>
                                             </div>
                                             <div class="col-md-12 col-sm-12 mb-3">
                                                 <label for="catatan" class="form-label">Notes</label>
-                                                <input type="text" id="catatan" name="catatan" class="form-control"
+                                                 <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-notes"></i></span>
+                                                   <input type="text" id="catatan" name="catatan" class="form-control"
                                                     placeholder="Enter Notes" value="{{ $kontak->catatan }}">
+                                                </div>
+                                               
                                                 <span class="error text-danger" id="catatanError"></span>
                                             </div>
                                         </div>
@@ -283,36 +382,53 @@
                                             </div>
                                             <div class="col-md-12 col-sm-12 mb-3">
                                                 <label for="kota_pengiriman" class="form-label">Delivery Address</label>
+                                                
                                                 <textarea id="alamat_pengiriman" name="alamat_pengiriman" class="form-control" placeholder="Enter Main Address">{{ $pengiriman->alamat_pengiriman }}</textarea>
                                                 <span class="error text-danger" id="alamat_pengirimanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="kota_pengiriman" class="form-label">City</label>
-                                                <input type="text" id="kota_pengiriman" name="kota_pengiriman"
+                                                 <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                   <input type="text" id="kota_pengiriman" name="kota_pengiriman"
                                                     class="form-control" placeholder="Enter City"
                                                     value="{{ $pengiriman->kota_pengiriman }}">
+                                                </div>
+                                               
                                                 <span class="error text-danger" id="kota_pengirimanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="kodepos_pengiriman" class="form-label">Postal
                                                     Code</label>
-                                                <input type="text" id="kodepos_pengiriman" name="kodepos_pengiriman"
+                                                    <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                   <input type="text" id="kodepos_pengiriman" name="kodepos_pengiriman"
                                                     class="form-control" placeholder="Enter Postal Code"
                                                     value="{{ $pengiriman->kodepos_pengiriman }}">
+                                                </div>
+                                               
                                                 <span class="error text-danger" id="kodepos_pengirimanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="provinsi_pengiriman" class="form-label">Province</label>
-                                                <input type="text" id="provinsi_pengiriman" name="provinsi_pengiriman"
+                                                 <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                  <input type="text" id="provinsi_pengiriman" name="provinsi_pengiriman"
                                                     class="form-control" placeholder="Enter Province"
                                                     value="{{ $pengiriman->provinsi_pengiriman }}">
+                                                </div>
+                                               
                                                 <span class="error text-danger" id="provinsi_pengirimanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="negara_pengiriman" class="form-label">Country</label>
-                                                <input type="text" id="negara_pengiriman" name="negara_pengiriman"
+                                                 <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                    <input type="text" id="negara_pengiriman" name="negara_pengiriman"
                                                     class="form-control" placeholder="Enter Country"
                                                     value="{{ $pengiriman->negara_pengiriman }}">
+                                                </div>
+                                             
                                                 <span class="error text-danger" id="negara_pengirimanError"></span>
                                             </div>
 
@@ -339,7 +455,9 @@
                                             <label class="col-sm-3 col-form-label" for="basic-default-name">Type ID
                                                 Tax</label>
                                             <div class="col-sm-9">
-                                                <select name="tipe_id_pajak" id="tipe_id_pajak" class="form-select">
+                                                 <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-category"></i></span>
+                                                     <select name="tipe_id_pajak" id="tipe_id_pajak" class="form-select">
                                                     <option value="" selected hidden>Select Type ID Tax</option>
                                                     <option value="NIK"
                                                         {{ $pajak->tipe_id_pajak == 'NIK' ? 'selected' : '' }}>NIK</option>
@@ -353,32 +471,46 @@
                                                         {{ $pajak->tipe_id_pajak == 'Lainnya' ? 'selected' : '' }}>Lainnya
                                                     </option>
                                                 </select>
+                                                </div>
+                                               
                                             </div>
                                         </div>
                                         <div class="row mb-3">
                                             <label class="col-sm-3 col-form-label" for="basic-default-name">NPWP
                                                 Number</label>
                                             <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="nomor_wajib_pajak"
+                                                  <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-barcode"></i></span>
+                                                      <input type="text" class="form-control" id="nomor_wajib_pajak"
                                                     name="nomor_wajib_pajak" placeholder="Enter NPWP number"
                                                     value="{{ $pajak->nomor_wajib_pajak }}">
+                                                </div>
+                                              
                                             </div>
                                         </div>
                                         <div class="row mb-3">
                                             <label class="col-sm-3 col-form-label" for="basic-default-name">Taxpayer
                                                 Name</label>
                                             <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="nama_wajib_pajak"
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-user"></i></span>
+                                                     <input type="text" class="form-control" id="nama_wajib_pajak"
                                                     name="nama_wajib_pajak" placeholder="Enter Taxpayer Name"
                                                     value="{{ $pajak->nama_wajib_pajak }}">
+                                                </div>
+                                             
                                             </div>
                                         </div>
 
                                         <div class="row mb-3">
                                             <label class="col-sm-3 col-form-label" for="basic-default-name">ID TKU</label>
                                             <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="id_tku" name="id_tku"
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-id-badge-2"></i></span>
+                                                     <input type="text" class="form-control" id="id_tku" name="id_tku"
                                                     placeholder="Enter ID TKU" value="{{ $pajak->id_tku }}">
+                                                </div>
+                                             
                                             </div>
                                         </div>
                                     </div>
@@ -406,36 +538,52 @@
                                         <div class="row mb-3">
                                             <label class="col-sm-3 col-form-label" for="basic-default-name">City</label>
                                             <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="kota_pajak"
+                                                 <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                      <input type="text" class="form-control" id="kota_pajak"
                                                     name="kota_pajak" placeholder="Enter City"
                                                     value="{{ $pajak->kota_pajak }}">
+                                                </div>
+                                             
                                             </div>
                                         </div>
                                         <div class="row mb-3">
                                             <label class="col-sm-3 col-form-label" for="basic-default-name">Postal
                                                 Code</label>
                                             <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="kodepos_pajak"
+                                                  <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                   <input type="text" class="form-control" id="kodepos_pajak"
                                                     name="kodepos_pajak" placeholder="Enter Postal Code"
                                                     value="{{ $pajak->kodepos_pajak }}">
+                                                </div>
+                                                
                                             </div>
                                         </div>
                                         <div class="row mb-3">
                                             <label class="col-sm-3 col-form-label"
                                                 for="basic-default-name">Province</label>
                                             <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="provinsi_pajak"
+                                                 <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                      <input type="text" class="form-control" id="provinsi_pajak"
                                                     name="provinsi_pajak" placeholder="Enter Province"
                                                     value="{{ $pajak->provinsi_pajak }}">
+                                                </div>
+                                             
                                             </div>
                                         </div>
                                         <div class="row mb-3">
                                             <label class="col-sm-3 col-form-label"
                                                 for="basic-default-name">Country</label>
                                             <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="negara_pajak"
+                                                 <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                   <input type="text" class="form-control" id="negara_pajak"
                                                     name="negara_pajak" placeholder="Enter Country"
                                                     value="{{ $pajak->negara_pajak }}">
+                                                </div>
+                                               
                                             </div>
                                         </div>
                                     </div>

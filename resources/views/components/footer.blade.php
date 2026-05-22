@@ -154,18 +154,3 @@
         })
     }
 </script>
-<script>
-    // window.addEventListener("load", function() {
-    //     const preloader = document.getElementById("preloader");
-
-    //     setTimeout(() => {
-    //         preloader.classList.add("hidden");
-
-    //         // benar-benar remove dari DOM (optional)
-    //         setTimeout(() => {
-    //             preloader.remove();
-    //         }, 600);
-
-    //     }, 800); // delay biar smooth
-    // });
-</script>

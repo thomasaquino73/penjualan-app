@@ -230,32 +230,6 @@
 
 
 @push('style')
-    <style>
-        .select2-container .select2-selection--single {
-            height: 38px !important;
-            /* samain dengan bootstrap */
-            display: flex;
-            align-items: center;
-        }
-
-        .select2-selection__rendered {
-            line-height: normal !important;
-        }
-
-        .select2-selection__arrow {
-            height: 100% !important;
-        }
-
-        .input-group .select2-container {
-            flex: 1 1 auto;
-            width: 1% !important;
-        }
-
-        .input-group .select2-selection {
-            border-top-left-radius: 0 !important;
-            border-bottom-left-radius: 0 !important;
-        }
-    </style>
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
 @endpush

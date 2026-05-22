@@ -19,7 +19,8 @@
         <form id="postForm" name="postForm" method="POST" action="{{ route('data-barang.update', $detail->id) }}">
             @csrf
             @method('PUT')
-
+            <input type="hidden" name="items_detail" id="items_detail">
+            <input type="hidden" name="save_and_new" id="save_and_new" value="0">
             <div class="card-body table-responsive p-3">
                 <div class="col-xl-12">
                     <div class="nav-align-top mb-4">
@@ -55,7 +56,9 @@
                             </div>
                             <div class="tab-pane fade" id="navs-pills-top-term" role="tabpanel">
                                 <div class="row">
-                                    @include('master_data.barang.data_barang.part.stock_table')
+                                    <div class="row mt-3">
+                                        @include('master_data.barang.data_barang.part.stock_table')
+                                    </div>
                                 </div>
                             </div>
                             <div class="tab-pane fade" id="navs-pills-top-tax" role="tabpanel">
@@ -85,7 +88,7 @@
                                                         <input type="text" name="variants[{{ $vIndex }}][name]"
                                                             class="form-control variant-name"
                                                             placeholder="Contoh: Merah Ukuran L"
-                                                            value="{{ $variant->variant_name }}" required>
+                                                            value="{{ $variant->variant_name }}">
                                                     </div>
                                                 </div>
 
@@ -107,7 +110,7 @@
                                                                             name="variants[{{ $vIndex }}][specs][{{ $sIndex }}][label]"
                                                                             class="form-control spec-label"
                                                                             placeholder="Nama Label (cth: Panjang)"
-                                                                            value="{{ $label }}" required>
+                                                                            value="{{ $label }}">
                                                                     </div>
                                                                 </div>
                                                                 <div class="col-md-6">
@@ -118,7 +121,7 @@
                                                                             name="variants[{{ $vIndex }}][specs][{{ $sIndex }}][value]"
                                                                             class="form-control spec-value"
                                                                             placeholder="Nilai (cth: 120 cm atau 500 gr)"
-                                                                            value="{{ $value }}" required>
+                                                                            value="{{ $value }}">
                                                                     </div>
                                                                 </div>
                                                                 <div class="col-md-1 text-end">
@@ -278,7 +281,7 @@
 
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
-     <script>
+    {{-- <script>
         const radioSupply = document.getElementById('radioSupply');
         const radioNonSupply = document.getElementById('radioNonSupply');
         const stockTab = document.getElementById('stockTab');
@@ -312,67 +315,85 @@
         // listener
         radioSupply.addEventListener('change', toggleStockTab);
         radioNonSupply.addEventListener('change', toggleStockTab);
-    </script>
-    <script >
-    $(document).ready(function() {
-    // 1. Simpan cetakan awal Blade PHP ke memori browser
-    const originalConversionHTML = $('#conversion-container').clone(true, true);
+    </script> --}}
+    <script>
+        let prDetailsData = [
+            @if (isset($detail) && $detail->stockHistories)
+                @foreach ($detail->stockHistories as $stock)
+                    {
+                        // Ambil ID Gudang langsung dari property atau dari relasi
+                        'date': '{{ $stock->date }}',
+                        'warehouse_id': '{{ $stock->warehouse_id }}',
 
-    // ==========================================
-    // PERBAIKAN UTAMA: Event Delegation untuk Tombol Sampah
-    // ==========================================
-    // Dengan menggunakan $(document).on, browser akan memantau tombol sampah
-    // bahkan jika elemennya baru saja ditempel ulang oleh fungsi reset.
-    $(document).on('click', '.btn-remove-conversion', function(e) {
-        e.preventDefault();
+                        // Mengambil nama gudang dari relasi warehouseID yang ada di model DataBarangStok
+                        'warehouse_name': '{{ $stock->warehouseID ? $stock->warehouseID->nama_gudang : 'Gudang Tidak Ditemukan' }}',
 
-        // Hitung berapa jumlah baris konversi yang ada saat ini
-        const totalItems = $('.conversion-item').length;
+                        'date': '{{ $stock->date }}',
+                        'quantity': '{{ $stock->quantity }}',
 
-        if (totalItems > 1) {
-            // Jika baris lebih dari 1, hapus baris tempat tombol sampah ini berada
-            $(this).closest('.conversion-item').remove();
-            
-            // Opsional: Jalankan fungsi untuk merapikan ulang nomor urut (Unit #1, Unit #2, dst)
-            reorderConversionNumbers();
-        } else {
-            // Jika sisa 1 baris terakhir, jangan dihapus, melainkan kosongkan saja isinya
-            const $lastItem = $(this).closest('.conversion-item');
-            $lastItem.find('.qty').val('');
-            $lastItem.find('.to_unit').val('').trigger('change');
-        }
-    });
+                        'stok_unit_id': '{{ $stock->stok_unit_id }}',
 
-    // 2. Logika ketika tombol reset diklik
-    $(document).on('click', '#btn-reset-conversion', function(e) {
-        e.preventDefault();
-        
-        const $form = $(this).closest('form'); 
+                        // Mengambil nama satuan/unit (misal: 'Pcs', 'Box') menggunakan relasi unitID ke BasicCodeDetail
+                        'stok_unit_name': '{{ $stock->unitID ? $stock->unitID->detail : 'Unit Tidak Ditemukan' }}',
 
-        if ($form.length > 0) {
-            // Buang container lama, ganti dengan struktur asli hasil kloning
-            $('#conversion-container').remove();
-            $('#conversion-wrapper').append(originalConversionHTML.clone(true, true));
+                        'unit_price': '{{ $stock->price }}',
+                    }
+                    {{ !$loop->last ? ',' : '' }}
+                @endforeach
+            @endif
+        ];
+        const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
+        $(document).ready(function() {
+            const originalConversionHTML = $('#conversion-container').clone(true, true);
+            $(document).on('click', '.btn-remove-conversion', function(e) {
+                e.preventDefault();
 
-            // Kembalikan semua nilai input (Dimensi, Berat, dll) ke isi asli database secara instan
-            $form[0].reset();
+                // Hitung berapa jumlah baris konversi yang ada saat ini
+                const totalItems = $('.conversion-item').length;
 
-            // Pemicu refresh visual jika Anda menggunakan library Select2
-            if ($.fn.select2) {
-                $form.find('.to_unit').trigger('change');
+                if (totalItems > 1) {
+                    // Jika baris lebih dari 1, hapus baris tempat tombol sampah ini berada
+                    $(this).closest('.conversion-item').remove();
+
+                    // Opsional: Jalankan fungsi untuk merapikan ulang nomor urut (Unit #1, Unit #2, dst)
+                    reorderConversionNumbers();
+                } else {
+                    // Jika sisa 1 baris terakhir, jangan dihapus, melainkan kosongkan saja isinya
+                    const $lastItem = $(this).closest('.conversion-item');
+                    $lastItem.find('.qty').val('');
+                    $lastItem.find('.to_unit').val('').trigger('change');
+                }
+            });
+
+            // 2. Logika ketika tombol reset diklik
+            $(document).on('click', '#btn-reset-conversion', function(e) {
+                e.preventDefault();
+
+                const $form = $(this).closest('form');
+
+                if ($form.length > 0) {
+                    // Buang container lama, ganti dengan struktur asli hasil kloning
+                    $('#conversion-container').remove();
+                    $('#conversion-wrapper').append(originalConversionHTML.clone(true, true));
+
+                    // Kembalikan semua nilai input (Dimensi, Berat, dll) ke isi asli database secara instan
+                    $form[0].reset();
+
+                    // Pemicu refresh visual jika Anda menggunakan library Select2
+                    if ($.fn.select2) {
+                        $form.find('.to_unit').trigger('change');
+                    }
+                }
+            });
+
+            // Fungsi pembantu untuk mengurutkan kembali nomor Unit #1, Unit #2 setelah ada yang dihapus
+            function reorderConversionNumbers() {
+                $('.conversion-item').each(function(index) {
+                    $(this).find('.conversion-number').text('Unit #' + (index + 1));
+                });
             }
-        }
-    });
-
-    // Fungsi pembantu untuk mengurutkan kembali nomor Unit #1, Unit #2 setelah ada yang dihapus
-    function reorderConversionNumbers() {
-        $('.conversion-item').each(function(index) {
-            $(this).find('.conversion-number').text('Unit #' + (index + 1));
         });
-    }
-});
-</script>
-   
+    </script>
     <script>
         $(document).ready(function() {
             // 1. Aksi Tambah Baris Konversi
@@ -382,39 +403,39 @@
 
                 // Buat element html baru secara dinamis
                 let html = `
-        <div class="conversion-item border p-3 mb-2 rounded position-relative">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="badge bg-label-secondary conversion-number">Unit #${index + 1}</span>
-                <button type="button" class="btn btn-sm btn-text-danger btn-remove-conversion p-1">
-                    <i class="ti ti-trash fs-5"></i>
-                </button>
-            </div>
-            <div class="row g-2">
-                <div class="col-md-4">
-                    <input type="text" class="form-control from_unit_text" disabled value="${$('.from_unit_text').first().val() || ''}">
-                    <input type="hidden" name="conversion[${index}][from_unit]" class="from_unit_id" value="${$('.from_unit_id').first().val() || ''}">
-                </div>
-                <div class="col-md-2 text-center">
-                    <div class="fw-bold mt-2">=</div>
-                </div>
-                <div class="col-md-3">
-                    <input type="number" name="conversion[${index}][qty]" class="form-control qty" placeholder="Qty" ${$('.qty').first().is(':disabled') ? 'disabled' : ''}>
-                </div>
-                <div class="col-md-3">
-                    <select name="conversion[${index}][to_unit]" class="form-select to_unit" ${$('.to_unit').first().is(':disabled') ? 'disabled' : ''}>
-                        <option value="">Select</option>
-                        ${$('.to_unit').first().html().split('</option>').slice(1).join('</option>')}
-                    </select>
-                </div>
-            </div>
-        </div>`;
+                <div class="conversion-item border p-3 mb-2 rounded position-relative">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-label-secondary conversion-number">Unit #${index + 1}</span>
+                        <button type="button" class="btn btn-sm btn-text-danger btn-remove-conversion p-1">
+                            <i class="ti ti-trash fs-5"></i>
+                        </button>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control from_unit_text" disabled value="${$('.from_unit_text').first().val() || ''}">
+                            <input type="hidden" name="conversion[${index}][from_unit]" class="from_unit_id" value="${$('.from_unit_id').first().val() || ''}">
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <div class="fw-bold mt-2">=</div>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" name="conversion[${index}][qty]" class="form-control qty" placeholder="Qty" ${$('.qty').first().is(':disabled') ? 'disabled' : ''}>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="conversion[${index}][to_unit]" class="form-select to_unit" ${$('.to_unit').first().is(':disabled') ? 'disabled' : ''}>
+                                <option value="">Select</option>
+                                ${$('.to_unit').first().html().split('</option>').slice(1).join('</option>')}
+                            </select>
+                        </div>
+                    </div>
+                </div>`;
 
                 // Masukkan ke dalam container
                 $('#conversion-container').append(html);
             });
 
             // 2. Aksi Hapus Baris Konversi (Menggunakan event delegation)
-           $('#conversion-container').on('click', '.btn-remove-conversion', function() {
+            $('#conversion-container').on('click', '.btn-remove-conversion', function() {
                 if ($('.conversion-item').length > 1) {
                     $(this).closest('.conversion-item').remove();
                     reorderConversionIndices();
@@ -423,7 +444,7 @@
                         icon: 'error',
                         title: 'Oops...',
                         text: 'There must be at least 1 unit conversion line.',
-                         customClass: {
+                        customClass: {
                             confirmButton: 'btn btn-danger'
                         },
                         buttonsStyling: false
@@ -460,114 +481,156 @@
             e.preventDefault();
             let form = this;
             let btn = saveAndNew ? $('#savedatamore') : $('#savedata');
-            let formData = new FormData(form);
-            formData.append('save_and_new', saveAndNew ? 1 : 0);
+
+            // Pindahkan inisialisasi FormData ke bawah agar menangkap data paling update
             let isValid = true;
             let errorMessage = '';
 
-            $('.conversion-item').each(function() {
-                let qty = $(this).find('.qty').val();
-                let toUnit = $(this).find('.to_unit').val();
-                let fromUnit = $(this).find('.from_unit_id').val();
+            // 1. LANGSUNG UBAH BUTTON JADI SPINNING DULUAN
+            btn.html('<i class="fa fa-spin fa-spinner me-1"></i> Checking data...');
+            btn.prop('disabled', true);
 
-                // 1. qty ada tapi to_unit kosong
-                if (qty && !toUnit) {
-                    isValid = false;
-                    errorMessage = 'Please select a destination unit for the entered quantity.';
-                    return false;
+            // 2. BERI JEDA SEDIKIT (misal: 600ms) AGAR ANIMASI SPINNING KELIHATAN
+            setTimeout(function() {
+
+                // Ambil data terbaru dari instansiasi DataTables Anda
+                // Pastikan variabel 'prDetailsData' atau selector tabel di bawah ini sudah sesuai nama tabel Anda
+                let currentTableData = [];
+                if ($.fn.DataTable.isDataTable('#tableStok')) {
+                    currentTableData = $('#tableStok').DataTable().rows().data().toArray();
+                } else if (typeof prDetailsData !== 'undefined') {
+                    currentTableData = prDetailsData;
                 }
 
-                // 2. to_unit ada tapi qty kosong
-                if (!qty && toUnit) {
-                    isValid = false;
-                    errorMessage = 'Please enter a quantity for the selected unit.';
-                    return false;
-                }
+                // Simpan string JSON ke input element fisik
+                $('#items_detail').val(JSON.stringify(currentTableData));
 
-                // 3. to_unit tidak boleh sama dengan from_unit
-                if (toUnit && fromUnit && toUnit == fromUnit) {
-                    isValid = false;
-                    errorMessage = 'The destination unit must be different from the source unit.';
-                    return false;
-                }
-            });
+                $('.conversion-item').each(function(index) {
+                    let qtyRaw = $(this).find('.qty').val() ? $(this).find('.qty').val().trim() :
+                        '';
+                    let qty = parseFloat(qtyRaw) || 0;
+                    let toUnit = $(this).find('.to_unit').val();
+                    let fromUnit = $(this).find('.from_unit_id').val();
 
-            if (!isValid) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Invalid Input',
-                    text: errorMessage,
-                    confirmButtonText: 'OK',
-                    showClass: {
-                        popup: 'animate__animated animate__bounceIn'
-                    },
-                    customClass: {
-                        confirmButton: 'btn btn-primary waves-effect waves-light'
-                    },
-                    buttonsStyling: false
+                    let hasQty = qtyRaw !== '' && qtyRaw !== '0';
+                    let hasUnit = toUnit !== '' && toUnit !== null;
+
+                    // 1. JIKA KEDUANYA KOSONG: LANJUT / ABAIKAN
+                    if (!hasQty && !hasUnit) {
+                        return true;
+                    }
+
+                    // 2. QTY DIISI TAPI UNIT KOSONG
+                    if (hasQty && !hasUnit) {
+                        isValid = false;
+                        errorMessage = 'Please select a destination unit for Unit #' + (index + 1) +
+                            '.';
+                        return false;
+                    }
+
+                    // 3. UNIT DIPILIH TAPI QTY KOSONG ATAU 0
+                    if (!hasQty && hasUnit) {
+                        isValid = false;
+                        errorMessage = 'Please enter a valid quantity (greater than 0) for Unit #' +
+                            (index + 1) + '.';
+                        return false;
+                    }
+
+                    // 4. UNIT SAMA DENGAN UNIT UTAMA
+                    if (hasUnit && fromUnit && toUnit == fromUnit) {
+                        isValid = false;
+                        errorMessage = 'The destination unit for Unit #' + (index + 1) +
+                            ' must be different from the source unit.';
+                        return false;
+                    }
                 });
-                return; // ❌ STOP submit
-            }
-            $.ajax({
-                url: $(form).attr('action'),
-                method: $(form).attr('method'),
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-                beforeSend: function() {
-                    btn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
-                    btn.prop('disabled', true);
-                },
-                complete: function() {
+
+                // 3. JIKA VALIDASI JAVASCRIPT GAGAL
+                if (!isValid) {
                     if (saveAndNew) {
                         btn.html('<i class="fa fa-plus-circle me-1"></i> Save and Create New');
                     } else {
                         btn.html('<i class="fa fa-upload me-1"></i> Save and Close');
                     }
                     btn.prop('disabled', false);
-                },
-                success: function(response) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Updated Data Successfully',
-                        text: response.message,
-                        showClass: {
-                            popup: 'animate__animated animate__bounceIn'
-                        },
-                        customClass: {
-                            confirmButton: 'btn btn-primary waves-effect waves-light'
-                        },
-                        buttonsStyling: false
-                    }).then(() => {
-                        window.location.href = response.redirect;
-                    });
-                },
-                error: function(xhr) {
-                    // reset validation messages (buat kamu implement sendiri)
-                    resetValidation();
 
                     Swal.fire({
-                        icon: 'error',
-                        title: 'Failed to Create Data',
-                        text: 'Please check your data again.',
-                        showClass: {
-                            popup: 'animate__animated animate__bounceIn'
-                        },
+                        icon: 'warning',
+                        title: 'Invalid Input',
+                        text: errorMessage,
+                        confirmButtonText: 'OK',
                         customClass: {
                             confirmButton: 'btn btn-primary waves-effect waves-light'
                         },
                         buttonsStyling: false
                     });
-
-                    let errors = xhr.responseJSON.errors || {};
-
-                    $.each(errors, function(key, value) {
-                        displayFieldError(key, value[
-                            0]); // fungsi buat nampilin error per field
-                    });
+                    return;
                 }
-            });
+
+                // =========================================================================
+                // 🛠️ BENTUK FORMDATA DI SINI (Tepat Sebelum Kirim, Setelah Input Terisi)
+                // =========================================================================
+                let formData = new FormData(form);
+                formData.append('save_and_new', saveAndNew ? 1 : 0);
+
+                // Solusi cadangan: Paksa tumpuk isian data agar diserialisasikan dengan sempurna ke controller
+                formData.set('items_detail', JSON.stringify(currentTableData));
+
+                // 4. JIKA LOLOS VALIDASI, LANJUTKAN KE AJAX
+                $.ajax({
+                    url: $(form).attr('action'),
+                    method: $(form).attr('method'),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    beforeSend: function() {
+                        btn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
+                    },
+                    complete: function() {
+                        if (saveAndNew) {
+                            btn.html(
+                                '<i class="fa fa-plus-circle me-1"></i> Save and Create New'
+                            );
+                        } else {
+                            btn.html('<i class="fa fa-upload me-1"></i> Save and Close');
+                        }
+                        btn.prop('disabled', false);
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Updated Data Successfully',
+                            text: response.message,
+                            customClass: {
+                                confirmButton: 'btn btn-primary waves-effect waves-light'
+                            },
+                            buttonsStyling: false
+                        }).then(() => {
+                            window.location.href = response.redirect;
+                        });
+                    },
+                    error: function(xhr) {
+                        resetValidation();
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Failed to Save Data',
+                            text: 'Please check your data again.',
+                            customClass: {
+                                confirmButton: 'btn btn-primary waves-effect waves-light'
+                            },
+                            buttonsStyling: false
+                        });
+
+                        let errors = xhr.responseJSON.errors || {};
+                        $.each(errors, function(key, value) {
+                            displayFieldError(key, value[0]);
+                        });
+                    }
+                });
+
+            }, 600);
         });
     </script>
     <script>
@@ -641,20 +704,20 @@
                 <div class="col-md-5">
                     <div class="input-group input-group-merge">
                         <span class="input-group-text"><i class="ti ti-tag"></i></span>
-                        <input type="text" name="variants[${variantCount}][specs][0][label]" class="form-control" placeholder="Nama Label (cth: Panjang)" required>
+                        <input type="text" name="variants[${variantCount}][specs][0][label]" class="form-control" placeholder="Nama Label (cth: Panjang)" >
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="input-group input-group-merge">
                         <span class="input-group-text"><i class="ti ti-edit"></i></span>
-                        <input type="text" name="variants[${variantCount}][specs][0][value]" class="form-control" placeholder="Nilai (cth: 120 cm atau 500 gr)" required>
+                        <input type="text" name="variants[${variantCount}][specs][0][value]" class="form-control" placeholder="Nilai (cth: 120 cm atau 500 gr)" >
                     </div>
                 </div>
                 <div class="col-md-1 text-end">
                     <button type="button" class="btn btn-sm btn-danger btn-remove-spec d-none">&times;</button>
                 </div>
             </div>
-        `;
+         `;
 
                 // Tampilkan dan aktifkan tombol "Hapus Varian" untuk blok kartu baru ini
                 const btnRemoveVariant = newCard.querySelector('.btn-remove-variant');
@@ -734,7 +797,6 @@
             $('.qty').prop('disabled', false);
             $('.to_unit').prop('disabled', false);
         });
-        let prDetailsData = [];
         $(function() {
             $('#modalPrDetail').on('shown.bs.modal', function() {
                 flatpickr("#date_stock", {
@@ -784,20 +846,20 @@
                         }
                     },
                     {
-                        data: 'date_stock',
+                        data: 'date',
                     },
 
                     {
                         data: 'quantity'
                     },
                     {
-                        data: 'unit'
+                        data: 'stok_unit_name',
                     },
                     {
                         data: 'unit_price'
                     },
                     {
-                        data: 'data_warehouse'
+                        data: 'warehouse_name'
                     },
 
                 ],
@@ -827,23 +889,36 @@
                                         selected: true
                                     }).index();
 
-                                    // 1. Set penanda bahwa ini adalah mode EDIT
                                     window.isEditingMode = true;
 
+                                    // 1. Set index baris ke input hidden
                                     $('#detail_id').val(rowIndex);
+
+                                    // 2. Set nilai text & number (Quantity, Unit Price, Date)
                                     $('#quantity').val(data.quantity);
-                                    $('#unit_id').data('pending-val', data.unit_id);
-
-                                    // 2. Set value produk dan trigger change
-                                    $('#product_id').val(data.product_id).trigger('change');
-
-                                    // 3. Set harga unit price asli dari tabel data
                                     $('#unit_price').val(data.unit_price);
-                                    $('#discount').val(data.discount || 0); // Jika ada diskon
-                                    $('#tax').val(data.tax || 0); // Jika ada tax
+                                    $('#date_stock').val(data
+                                        .date); // Menyesuaikan id="date_stock" di modal kamu
 
+                                    // 3. Picu fungsi hitung total price agar langsung kalkulasi saat modal buka
+                                    hitungTotal();
+
+                                    // 4. Set Dropdown Warehouse
+                                    if ($('#warehouse_id').length) {
+                                        $('#warehouse_id').val(data.warehouse_id).trigger('change');
+                                    }
+
+                                    // 5. Set Dropdown Unit (Menyesuaikan id="unit_id_modals" di modal kamu)
+                                    if ($('#unit_id_modals').length) {
+                                        $('#unit_id_modals').val(data.stok_unit_id).trigger(
+                                            'change');
+                                    }
+
+                                    // 6. Atur teks modal tombol & title
                                     $('#modalTitle').text('Edit entry');
                                     $('#btnSubmitModal').text('Update');
+
+                                    // 7. Tampilkan modal
                                     $('#modalPrDetail').modal('show');
                                 }
                             },
@@ -911,7 +986,7 @@
                 let unitId = $('#unit_id_modals').val();
                 let unitName = $('#unit_id_modals option:selected').text();
                 let unitPrice = parseFloat($('#unit_price').val()) || 0;
-                let dateStock = $('#date_stock').val() || '';
+                let date = $('#date_stock').val() || '';
                 let detailId = $('#detail_id').val();
                 if (!warehouseID) {
                     Swal.fire({
@@ -954,13 +1029,13 @@
                     return;
                 }
                 let itemData = {
+                    'date': date,
+                    'warehouse_name': warehouseName,
                     'warehouse_id': warehouseID,
-                    'data_warehouse': warehouseName,
                     'quantity': quantity,
-                    'unit_id': unitId,
-                    'unit': unitName,
+                    'stok_unit_id': unitId,
+                    'stok_unit_name': unitName,
                     'unit_price': unitPrice,
-                    'date_stock': dateStock,
                 };
 
                 if (detailId === '') {

@@ -84,6 +84,33 @@
     </div>
     </div>
     </div>
+    {{-- STYLE UNTUK SELECTBOX SELECT2 --}}
+    <style>
+        .select2-container .select2-selection--single {
+            height: 38px !important;
+            /* samain dengan bootstrap */
+            display: flex;
+            align-items: center;
+        }
 
+        .select2-selection__rendered {
+            line-height: normal !important;
+        }
+
+        .select2-selection__arrow {
+            height: 100% !important;
+        }
+
+        .input-group .select2-container {
+            flex: 1 1 auto;
+            width: 1% !important;
+        }
+
+        .input-group .select2-selection {
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+        }
+    </style>
+    {{-- END STYLE UNTUK SELECTBOX SELECT2 --}}
 
     @stack('style')

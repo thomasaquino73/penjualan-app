@@ -163,8 +163,8 @@
                     </div>
                 </div>
 
-                {{-- TAMBAHAN BARU: Product Variants Section --}}
-                <div class="card border-0 shadow-sm mb-3">
+                {{-- Product Variants Section --}}
+                <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white py-3 border-bottom border-light">
                         <h5 class="card-title mb-0 fw-bold">
                             <i class="ti ti-box me-2 text-primary"></i>Product Variants & Custom Specs
@@ -210,6 +210,59 @@
                                             <td colspan="3" class="text-center py-4 text-muted italic">
                                                 <i class="ti ti-info-circle d-block mb-2 fs-3"></i>
                                                 No variant data available for this product.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- TAMBAHAN BARU: Stock History Section (data_barang_stok) --}}
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white py-3 border-bottom border-light">
+                        <h5 class="card-title mb-0 fw-bold">
+                            <i class="ti ti-history me-2 text-primary"></i>Stock History Details
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive text-nowrap">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr class="bg-light">
+                                        <th class="ps-4 py-3 text-muted fw-bold" width="10%">No</th>
+                                        <th class="py-3 text-muted fw-bold">Date</th>
+                                        <th class="py-3 text-muted fw-bold">Warehouse</th>
+                                        <th class="py-3 text-muted fw-bold text-end">Quantity</th>
+                                        <th class="py-3 text-muted fw-bold text-end">Price / Unit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($detail->stockHistories as $index => $stock)
+                                        <tr class="align-middle">
+                                            <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
+                                            <td class="py-3 text-dark">
+                                                {{ $stock->date ? \Carbon\Carbon::parse($stock->date)->translatedFormat('d M Y') : '-' }}
+                                            </td>
+                                            <td class="py-3 text-secondary fw-medium">
+                                                {{ $stock->warehouseID->nama_gudang ?? '-' }}
+                                            </td>
+                                            <td class="py-3 text-end">
+                                                <span class="fw-bold text-dark">
+                                                    {{ number_format($stock->quantity ?? 0, 0, ',', '.') }}
+                                                </span>
+                                                <small class="text-muted ms-1">{{ $stock->unitID->detail ?? '' }}</small>
+                                            </td>
+                                            <td class="py-3 text-end fw-bold text-primary">
+                                                {{ format_uang(convert_currency($stock->price, $row->currency_id ?? 1)) }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted italic">
+                                                <i class="ti ti-clipboard-list d-block mb-2 fs-3"></i>
+                                                No stock movement history data found.
                                             </td>
                                         </tr>
                                     @endforelse

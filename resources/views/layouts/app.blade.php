@@ -96,11 +96,44 @@
             </div>
         </div>
     </div>
+
     @include('components.footer')
 </body>
 
 </html>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof $ !== 'undefined') {
 
+            // 1. MATIKAN ALERT BAWAAN BROWSER (Agar pop-up putih dan invalid JSON hilang total)
+            if ($.fn.dataTable) {
+                $.fn.dataTable.ext.errMode = 'none';
+            }
+
+            // 2. TANGKAP ERROR AJAX & TAMPILKAN TOASTR
+            $(document).ajaxError(function(event, xhr, settings, thrownError) {
+                let errorMessage = 'Something went wrong on the server.';
+
+                // Mengambil pesan asli Exception dari helper PHP
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                } else if (xhr.responseText) {
+                    let cleanText = xhr.responseText.split(' - ')[1] || xhr.responseText;
+                    errorMessage = cleanText;
+                }
+
+                // Tampilkan Toastr Error menggunakan format instan yang Anda inginkan
+                if (typeof toastr !== 'undefined') {
+                    toastr.error(errorMessage, 'Process Failed', {
+                        timeOut: 3000,
+                        progressBar: true,
+                        positionClass: 'toast-top-right'
+                    });
+                }
+            });
+        }
+    });
+</script>
 <script>
     let idleTime = 0;
     let idleInterval;
@@ -270,36 +303,37 @@
             });
         });
 
-    });
-</script>
+    }); <
+    />
 
-<script>
-    function lockBrowser() {
-        // Disable refresh (F5 & Ctrl+R)
-        document.onkeydown = function(e) {
-            if (e.key === "F5" || (e.ctrlKey && e.key === "r")) {
+    <
+    script >
+        function lockBrowser() {
+            // Disable refresh (F5 & Ctrl+R)
+            document.onkeydown = function(e) {
+                if (e.key === "F5" || (e.ctrlKey && e.key === "r")) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Cegah back (Alt+ArrowLeft / Backspace)
+                if (e.key === "Backspace" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+                    e.preventDefault();
+                    return false;
+                }
+            };
+
+            // Disable klik kanan
+            document.oncontextmenu = function(e) {
                 e.preventDefault();
                 return false;
-            }
-            // Cegah back (Alt+ArrowLeft / Backspace)
-            if (e.key === "Backspace" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
-                e.preventDefault();
-                return false;
-            }
-        };
+            };
 
-        // Disable klik kanan
-        document.oncontextmenu = function(e) {
-            e.preventDefault();
-            return false;
-        };
-
-        // Disable tombol back browser
-        history.pushState(null, null, location.href);
-        window.onpopstate = function() {
-            history.go(1);
-        };
-    }
+            // Disable tombol back browser
+            history.pushState(null, null, location.href);
+            window.onpopstate = function() {
+                history.go(1);
+            };
+        }
 
     function unlockBrowser() {
         // Balikin normal
@@ -316,26 +350,27 @@
     // Lepaskan lock ketika modal hilang (misal setelah login ulang)
     $('#idleLockModal').on('hidden.bs.modal', function() {
         unlockBrowser();
-    });
-</script>
+    }); <
+    />
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Saat modal ditampilkan
-        $('#idleLockModal').on('shown.bs.modal', function() {
-            // Fokus otomatis ke input password
-            $('#idlePassword').trigger('focus');
+    <
+    script >
+        document.addEventListener("DOMContentLoaded", function() {
+            // Saat modal ditampilkan
+            $('#idleLockModal').on('shown.bs.modal', function() {
+                // Fokus otomatis ke input password
+                $('#idlePassword').trigger('focus');
 
-            // Reset value agar kosong lagi
-            $('#idlePassword').val('');
-        });
+                // Reset value agar kosong lagi
+                $('#idlePassword').val('');
+            });
 
-        // Enter otomatis klik btnUnlock
-        $('#idlePassword').on('keypress', function(e) {
-            if (e.which === 13) { // 13 = Enter
-                e.preventDefault(); // cegah form submit default
-                $('#btnUnlock').click(); // trigger klik tombol Unlock
-            }
-        });
-    });
-</script>
+            // Enter otomatis klik btnUnlock
+            $('#idlePassword').on('keypress', function(e) {
+                if (e.which === 13) { // 13 = Enter
+                    e.preventDefault(); // cegah form submit default
+                    $('#btnUnlock').click(); // trigger klik tombol Unlock
+                }
+            });
+        }); <
+    />
