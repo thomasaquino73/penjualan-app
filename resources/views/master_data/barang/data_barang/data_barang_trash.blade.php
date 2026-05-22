@@ -55,12 +55,13 @@
                                 <input class="form-check-input" type="checkbox" value="" id="checkAll">
                             </div>
                         </th>
-                        <th>#</th>
+                       <th>#</th>
                         <th>Picture</th>
+                        <th>Barcode</th>
                         <th>Product Code</th>
                         <th>Product Name</th>
-                        <th>Price</th>
                         <th>Product Type</th>
+                        {{-- <th>Stock</th> --}}
                         <th>Created</th>
                         <th>Updated</th>
                         <th>Action</th>
@@ -103,8 +104,11 @@
                         orderable: false,
                         searchable: false
                     },
-                    {
+                   {
                         data: 'fotoProduk',
+                    },
+                    {
+                        data: 'barcode',
                     },
                     {
                         data: 'id_barang',
@@ -112,13 +116,12 @@
                     {
                         data: 'nama_barang',
                     },
-                    {
-                        data: 'price',
-                    },
-
-                    {
+                     {
                         data: 'productType',
                     },
+                    // {
+                    //     data: 'harga',
+                    // },
 
                     {
                         data: 'created_at',

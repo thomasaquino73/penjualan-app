@@ -28,5 +28,4 @@ class Currency extends Model
     {
         return $this->hasMany(ExchangeRate::class, 'from_currency_id');
     }
-   
 }

@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Models\General;
+namespace App\Models\Master_Data;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ExchangeRate extends Model
+class DataBarangStok extends Model
 {
     use HasFactory;
 
-    protected $table = 'exchange_rates';
+    protected $table = 'data_barang_stok';
 
     protected $guarded = [];
 
@@ -22,15 +22,5 @@ class ExchangeRate extends Model
     public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    public function fromCurrency()
-    {
-        return $this->belongsTo(Currency::class, 'from_currency_id');
-    }
-
-    public function toCurrency()
-    {
-        return $this->belongsTo(Currency::class, 'to_currency_id');
     }
 }

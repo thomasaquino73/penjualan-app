@@ -49,4 +49,9 @@ class Barang extends Model
     {
         return $this->hasMany(DataBarangConversion::class, 'data_barang_id');
     }
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class, 'data_barang_id');
+    }
 }

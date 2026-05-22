@@ -69,8 +69,7 @@
 
             {{-- unit Details Section --}}
             <div class="col-lg-8">
-                {{-- Product Specifications --}}
-                <div class="card border-0 shadow-sm mb-4">
+                <div class="card border-0 shadow-sm mb-3">
                     <div class="card-header bg-white py-3 border-bottom border-light">
                         <h5 class="card-title mb-0 fw-bold">
                             <i class="ti ti-info-circle me-2 text-primary"></i>Product Specifications
@@ -117,109 +116,51 @@
                         </div>
                     </div>
                 </div>
-
-                {{-- Unit Conversion --}}
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3 border-bottom border-light">
-                        <h5 class="card-title mb-0 fw-bold">
-                            <i class="ti ti-arrows-exchange me-2 text-primary"></i>Unit Conversion
-                        </h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr class="bg-light">
-                                        <th class="ps-4 py-3 text-muted fw-bold" width="10%">No</th>
-                                        <th class="py-3 text-muted fw-bold">From Unit</th>
-                                        <th class="py-3 text-muted fw-bold text-center" width="10%">=</th>
-                                        <th class="py-3 text-muted fw-bold">Conversion Result</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($unitConversion as $index => $conv)
-                                        <tr class="align-middle">
-                                            <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
-                                            <td class="py-3 text-dark">
-                                                1 {{ $conv->fromUnitID->detail ?? 'N/A' }}
-                                            </td>
-                                            <td class="py-3 text-center fw-bold text-primary">=</td>
-                                            <td class="py-3 text-dark fw-bold">
-                                                {{ number_format($conv->qty, 0) }}
-                                                {{ $conv->toUnitID->detail ?? 'Sub-unit' }}
-                                            </td>
+                <div class="card border-0 shadow-sm ">
+                    <div class="card border-0 shadow-sm ">
+                        <div class="card-header bg-white py-3 border-bottom border-light">
+                            <h5 class="card-title mb-0 fw-bold">
+                                <i class="ti ti-arrows-exchange me-2 text-primary"></i>Unit Conversion
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr class="bg-light">
+                                            <th class="ps-4 py-3 text-muted fw-bold" width="10%">No</th>
+                                            <th class="py-3 text-muted fw-bold">From Unit</th>
+                                            <th class="py-3 text-muted fw-bold text-center" width="10%">=</th>
+                                            <th class="py-3 text-muted fw-bold">Conversion Result</th>
                                         </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center py-4 text-muted italic">
-                                                <i class="ti ti-alert-circle d-block mb-2 fs-3"></i>
-                                                No conversion data available for this product.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($unitConversion as $index => $conv)
+                                            <tr class="align-middle">
+                                                <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
+                                                <td class="py-3 text-dark">
+                                                    1 {{ $conv->fromUnitID->detail ?? 'N/A' }}
+                                                </td>
+                                                <td class="py-3 text-center fw-bold text-primary">=</td>
+                                                <td class="py-3 text-dark fw-bold">
+                                                    {{ number_format($conv->qty, 0) }}
+                                                    {{ $conv->toUnitID->detail ?? 'Sub-unit' }}
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center py-4 text-muted italic">
+                                                    <i class="ti ti-alert-circle d-block mb-2 fs-3"></i>
+                                                    No conversion data available for this product.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                {{-- TAMBAHAN BARU: Product Variants Section --}}
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-white py-3 border-bottom border-light">
-                        <h5 class="card-title mb-0 fw-bold">
-                            <i class="ti ti-box me-2 text-primary"></i>Product Variants & Custom Specs
-                        </h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive text-nowrap">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr class="bg-light">
-                                        <th class="ps-4 py-3 text-muted fw-bold" width="10%">No</th>
-                                        <th class="py-3 text-muted fw-bold" width="30%">Variant Name</th>
-                                        <th class="py-3 text-muted fw-bold">Custom Specifications</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($detail->variants as $index => $variant)
-                                        <tr class="align-middle">
-                                            <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
-                                            <td class="py-3">
-                                                <span class="fw-bold text-dark">{{ $variant->variant_name }}</span>
-                                            </td>
-                                            <td class="py-3">
-                                                @if (!empty($variant->specifications) && count($variant->specifications) > 0)
-                                                    <div class="d-flex flex-wrap gap-2">
-                                                        @foreach ($variant->specifications as $label => $value)
-                                                            <span
-                                                                class="badge bg-label-secondary border border-gray-200 px-3 py-2 rounded-pill shadow-sm text-dark">
-                                                                <strong
-                                                                    class="text-secondary">{{ $label }}:</strong>
-                                                                {{ $value }}
-                                                            </span>
-                                                        @endforeach
-                                                    </div>
-                                                @else
-                                                    <span class="text-muted small italic">- No specific fields added
-                                                        -</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="3" class="text-center py-4 text-muted italic">
-                                                <i class="ti ti-info-circle d-block mb-2 fs-3"></i>
-                                                No variant data available for this product.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                {{-- END TAMBAHAN BARU --}}
-
             </div>
         </div>
     </div>
@@ -254,13 +195,6 @@
 
         .img-fluid:hover {
             transform: scale(1.02);
-        }
-
-        /* Styling untuk custom badges di bagian spesifikasi kustom */
-        .bg-label-secondary {
-            background-color: #f1f2f4 !important;
-            color: #4b4b4b !important;
-            font-size: 0.825rem;
         }
     </style>
 @endsection

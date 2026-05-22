@@ -219,7 +219,6 @@ Route::middleware('auth')->group(function () {
 
 });
 
-
 Route::fallback(function () {
     Log::warning('Fallback route triggered', [
         'url' => request()->fullUrl(),

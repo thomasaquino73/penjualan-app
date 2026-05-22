@@ -16,7 +16,7 @@
     </h4>
 
     <div class="card">
-        <form id="postForm" name="postForm" method="POST" action="{{ route('customer.store') }}">
+        <form id="postForm" name="postForm" method="POST" action="{{ route('data-barang.store') }}">
             @csrf
             <div class="card-body table-responsive p-3">
                 <div class="col-xl-12">
@@ -65,18 +65,90 @@
                                         <span class="error text-danger" id="keteranganError"></span>
                                     </div>
                                 </div>
+                                <div class="divider my-7 ">
+                                    <div class="divider-text">Varian.</div>
+                                </div>
+                                <div class="space-y-6">
+                                    <div id="variant-wrapper" class="space-y-6">
+
+                                        <div class="variant-card border border-gray-300 rounded-xl p-5 bg-white shadow-sm relative mb-4"
+                                            data-variant-index="0">
+
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label">Nama Varian <small
+                                                        class="text-danger">*</small></label>
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text">
+                                                        <i class="ti ti-barcode"></i>
+                                                    </span>
+                                                    <input type="text" name="variants[0][name]" class="form-control"
+                                                        placeholder="Contoh: Merah Ukuran L">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12 mb-2">
+                                                <label class="form-label font-weight-bold">Spesifikasi / Dimensi Kustom
+                                                    <small class="text-danger">*</small></label>
+                                            </div>
+
+                                            <div class="spec-container space-y-3 mb-3">
+                                                <div class="row align-items-center spec-row mb-2">
+                                                    <div class="col-md-5">
+                                                        <div class="input-group input-group-merge">
+                                                            <span class="input-group-text"><i class="ti ti-tag"></i></span>
+                                                            <input type="text" name="variants[0][specs][0][label]"
+                                                                class="form-control"
+                                                                placeholder="Nama Label (cth: Panjang)">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="input-group input-group-merge">
+                                                            <span class="input-group-text"><i class="ti ti-edit"></i></span>
+                                                            <input type="text" name="variants[0][specs][0][value]"
+                                                                class="form-control"
+                                                                placeholder="Nilai (cth: 120 cm atau 500 gr)">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-1 text-end">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-danger btn-remove-spec d-none">&times;</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                <button type="button" class="btn btn-success btn-sm btn-add-spec">
+                                                    + Tambah Atribut/Dimensi
+                                                </button>
+                                                <button type="button"
+                                                    class="btn btn-danger btn-sm btn-remove-variant d-none">
+                                                    Hapus Varian
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="flex justify-start mt-3">
+                                        <button type="button" id="btn-add-variant"
+                                            class="btn btn-sm btn-info text-white">
+                                            + Tambah Varian Baru
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <a href="{{ route('customer.index') }}" type="button" class="btn btn-label-secondary waves-effect">
-                        <i class="ti ti-chevron-left me-1"></i>
-                        Back
-                    </a>
-                    <button type="submit" id="savedata" name="savedata" class="btn btn-primary me-sm-3 me-1">
-                        <i class="fa fa-save me-1"></i>Save
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
+                        <i class="fa fa-upload me-1"></i> Save and Close
                     </button>
+
+                    <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
+                        <i class="fa fa-plus-circle me-1"></i> Save and Create New
+                    </button>
+                    <a href="{{ route('data-barang.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
         </form>
     </div>
@@ -105,9 +177,9 @@
                                 <span class="error text-danger" id="warehouse_idError"></span>
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label" for="date_stock">Date</label>
-                                <input type="text" id="date_stock" name="date_stock" class="form-control ">
-                                <span class="error text-danger" id="date_stockError"></span>
+                                <label class="form-label" for="date">Date</label>
+                                <input type="text" id="date" name="date" class="form-control ">
+                                <span class="error text-danger" id="dateError"></span>
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="form-label" for="quantity">Quantity</label>
@@ -155,7 +227,35 @@
         </div>
     </div>
 @endsection
+
+
 @push('style')
+    <style>
+        .select2-container .select2-selection--single {
+            height: 38px !important;
+            /* samain dengan bootstrap */
+            display: flex;
+            align-items: center;
+        }
+
+        .select2-selection__rendered {
+            line-height: normal !important;
+        }
+
+        .select2-selection__arrow {
+            height: 100% !important;
+        }
+
+        .input-group .select2-container {
+            flex: 1 1 auto;
+            width: 1% !important;
+        }
+
+        .input-group .select2-selection {
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+        }
+    </style>
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
 @endpush
@@ -166,25 +266,337 @@
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
+        $(document).ready(function() {
+            // 1. Aksi Tambah Baris Konversi
+            $('#btn-add-conversion').on('click', function() {
+                // Hitung baris yang sudah ada untuk menentukan index baru
+                let index = $('.conversion-item').length;
+
+                // Buat element html baru secara dinamis
+                let html = `
+                    <div class="conversion-item border p-3 mb-2 rounded position-relative">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-label-secondary conversion-number">Unit #${index + 1}</span>
+                        <button type="button" class="btn btn-sm btn-text-danger btn-remove-conversion p-1">
+                            <i class="ti ti-trash fs-5"></i>
+                        </button>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control from_unit_text" disabled value="${$('.from_unit_text').first().val() || ''}">
+                            <input type="hidden" name="conversion[${index}][from_unit]" class="from_unit_id" value="${$('.from_unit_id').first().val() || ''}">
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <div class="fw-bold mt-2">=</div>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" name="conversion[${index}][qty]" class="form-control qty" placeholder="Qty" ${$('.qty').first().is(':disabled') ? 'disabled' : ''}>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="conversion[${index}][to_unit]" class="form-select to_unit" ${$('.to_unit').first().is(':disabled') ? 'disabled' : ''}>
+                                <option value="">Select</option>
+                                ${$('.to_unit').first().html().split('</option>').slice(1).join('</option>')}
+                            </select>
+                        </div>
+                    </div>
+                </div>`;
+
+                // Masukkan ke dalam container
+                $('#conversion-container').append(html);
+            });
+
+            // 2. Aksi Hapus Baris Konversi (Menggunakan event delegation)
+            $('#conversion-container').on('click', '.btn-remove-conversion', function() {
+                // Cegah penghapusan jika hanya tersisa 1 baris (Opsional)
+                if ($('.conversion-item').length > 1) {
+                    $(this).closest('.conversion-item').remove();
+                    reorderConversionIndices();
+                } else {
+                    alert('Minimal harus ada 1 baris konversi unit.');
+                }
+            });
+
+            // 3. Fungsi Reset Indexing agar data request berurutan (0, 1, 2, dst..)
+            function reorderConversionIndices() {
+                $('.conversion-item').each(function(index) {
+                    // Update Text Badge Nomor urut
+                    $(this).find('.conversion-number').text(`Unit #${index + 1}`);
+
+                    // Update Atribut Name Input HTML
+                    $(this).find('.from_unit_id').attr('name', `conversion[${index}][from_unit]`);
+                    $(this).find('.qty').attr('name', `conversion[${index}][qty]`);
+                    $(this).find('.to_unit').attr('name', `conversion[${index}][to_unit]`);
+                });
+            }
+        });
+    </script>
+    <script>
+        let saveAndNew = false;
+
+        $('#savedata').click(function(e) {
+            saveAndNew = false;
+        });
+
+        $('#savedatamore').click(function(e) {
+            saveAndNew = true;
+        });
+
+        $('#postForm').on('submit', function(e) {
+            e.preventDefault();
+            let form = this;
+            let btn = saveAndNew ? $('#savedatamore') : $('#savedata');
+            let formData = new FormData(form);
+            formData.append('save_and_new', saveAndNew ? 1 : 0);
+            let isValid = true;
+            let errorMessage = '';
+            formData.append('items_detail', JSON.stringify(prDetailsData));
+
+            $('.conversion-item').each(function() {
+                let qty = $(this).find('.qty').val();
+                let toUnit = $(this).find('.to_unit').val();
+                let fromUnit = $(this).find('.from_unit_id').val();
+
+                // 1. qty ada tapi to_unit kosong
+                if (qty && !toUnit) {
+                    isValid = false;
+                    errorMessage = 'Please select a destination unit for the entered quantity.';
+                    return false;
+                }
+
+                // 2. to_unit ada tapi qty kosong
+                if (!qty && toUnit) {
+                    isValid = false;
+                    errorMessage = 'Please enter a quantity for the selected unit.';
+                    return false;
+                }
+
+                // 3. to_unit tidak boleh sama dengan from_unit
+                if (toUnit && fromUnit && toUnit == fromUnit) {
+                    isValid = false;
+                    errorMessage = 'The destination unit must be different from the source unit.';
+                    return false;
+                }
+            });
+
+            if (!isValid) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Input',
+                    text: errorMessage,
+                    confirmButtonText: 'OK',
+                    showClass: {
+                        popup: 'animate__animated animate__bounceIn'
+                    },
+                    customClass: {
+                        confirmButton: 'btn btn-primary waves-effect waves-light'
+                    },
+                    buttonsStyling: false
+                });
+                return; // ❌ STOP submit
+            }
+
+
+            $.ajax({
+                url: $(form).attr('action'),
+                method: $(form).attr('method'),
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                beforeSend: function() {
+                    btn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
+                    btn.prop('disabled', true);
+                },
+                complete: function() {
+                    if (saveAndNew) {
+                        btn.html('<i class="fa fa-plus-circle me-1"></i> Save and Create New');
+                    } else {
+                        btn.html('<i class="fa fa-upload me-1"></i> Save and Close');
+                    }
+                    btn.prop('disabled', false);
+                },
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Created Successfully',
+                        text: response.message,
+                        showClass: {
+                            popup: 'animate__animated animate__bounceIn'
+                        },
+                        customClass: {
+                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    }).then(() => {
+                        window.location.href = response.redirect;
+                    });
+                },
+                error: function(xhr) {
+                    // reset validation messages (buat kamu implement sendiri)
+                    resetValidation();
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed to Create Data',
+                        text: 'Please check your data again.',
+                        showClass: {
+                            popup: 'animate__animated animate__bounceIn'
+                        },
+                        customClass: {
+                            confirmButton: 'btn btn-primary waves-effect waves-light'
+                        },
+                        buttonsStyling: false
+                    });
+
+                    let errors = xhr.responseJSON.errors || {};
+
+                    $.each(errors, function(key, value) {
+                        displayFieldError(key, value[
+                            0]); // fungsi buat nampilin error per field
+                    });
+                }
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let variantCount = 1; // Counter untuk index variant-card baru
+
+            // Fungsi untuk mengaktifkan event listener di setiap variant-card (baik lama maupun hasil clone)
+            function bindVariantEvents(card) {
+                const specContainer = card.querySelector('.spec-container');
+                const btnAddSpec = card.querySelector('.btn-add-spec');
+                const vIndex = card.getAttribute('data-variant-index');
+
+                // Menggunakan closure/counter khusus internal card untuk melacak jumlah spesifikasinya
+                let specCount = specContainer.querySelectorAll('.spec-row').length;
+
+                // Event Klik Tombol "+ Tambah Atribut/Dimensi"
+                btnAddSpec.onclick = function() {
+                    const firstRow = specContainer.querySelector('.spec-row');
+                    const newRow = firstRow.cloneNode(true);
+
+                    // Ambil element input di baris baru
+                    const inputLabel = newRow.querySelector('input[name*="[label]"]');
+                    const inputValue = newRow.querySelector('input[name*="[value]"]');
+
+                    // Reset nilai value agar kosong
+                    inputLabel.value = '';
+                    inputValue.value = '';
+
+                    // Perbarui name attribute agar unik mengikuti pola array Laravel: variants[vIndex][specs][specCount][...]
+                    inputLabel.setAttribute('name', `variants[${vIndex}][specs][${specCount}][label]`);
+                    inputValue.setAttribute('name', `variants[${vIndex}][specs][${specCount}][value]`);
+
+                    // Tampilkan tombol hapus spesifikasi (&times;) di baris baru ini
+                    const btnRemoveSpec = newRow.querySelector('.btn-remove-spec');
+                    btnRemoveSpec.classList.remove('d-none');
+
+                    // Pasang fungsi hapus baris spesifikasi
+                    btnRemoveSpec.onclick = function() {
+                        newRow.remove();
+                    };
+
+                    // Masukkan ke dalam kontainer spesifikasi kartu ini
+                    specContainer.appendChild(newRow);
+                    specCount++;
+                };
+            }
+
+            // Inisialisasi kartu varian pertama (Index 0) yang sudah ada semenjak halaman dimuat
+            bindVariantEvents(document.querySelector('.variant-card'));
+
+            // Event Klik Tombol Utama "+ Tambah Varian Baru"
+            document.getElementById('btn-add-variant').addEventListener('click', function() {
+                const wrapper = document.getElementById('variant-wrapper');
+                const firstCard = wrapper.querySelector('.variant-card');
+
+                // Clone struktur kartu varian pertama
+                const newCard = firstCard.cloneNode(true);
+
+                // Update index data attribute pada kartu baru
+                newCard.setAttribute('data-variant-index', variantCount);
+
+                // Reset & Update input Nama Varian Utama
+                const mainInput = newCard.querySelector('input[name^="variants[0][name]"]');
+                mainInput.value = '';
+                mainInput.setAttribute('name', `variants[${variantCount}][name]`);
+
+                // Bersihkan area spesifikasi, sisakan 1 baris bersih sebagai default
+                const specContainer = newCard.querySelector('.spec-container');
+                specContainer.innerHTML = `
+                <div class="row align-items-center spec-row mb-2">
+                    <div class="col-md-5">
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="ti ti-tag"></i></span>
+                            <input type="text" name="variants[${variantCount}][specs][0][label]" class="form-control" placeholder="Nama Label (cth: Panjang)" >
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="ti ti-edit"></i></span>
+                            <input type="text" name="variants[${variantCount}][specs][0][value]" class="form-control" placeholder="Nilai (cth: 120 cm atau 500 gr)" >
+                        </div>
+                    </div>
+                    <div class="col-md-1 text-end">
+                        <button type="button" class="btn btn-sm btn-danger btn-remove-spec d-none">&times;</button>
+                    </div>
+                </div>
+             `;
+
+                // Tampilkan dan aktifkan tombol "Hapus Varian" untuk blok kartu baru ini
+                const btnRemoveVariant = newCard.querySelector('.btn-remove-variant');
+                btnRemoveVariant.classList.remove('d-none');
+                btnRemoveVariant.onclick = function() {
+                    newCard.remove();
+                };
+
+                // Daftarkan event internal (+ Atribut) untuk kartu baru ini
+                bindVariantEvents(newCard);
+
+                // Masukkan blok kartu baru ke dalam wrapper utama
+                wrapper.appendChild(newCard);
+                variantCount++;
+            });
+        });
+    </script>
+    {{-- RADIO BUTTON --}}
+    <script>
         const radioSupply = document.getElementById('radioSupply');
         const radioNonSupply = document.getElementById('radioNonSupply');
         const stockTab = document.getElementById('stockTab');
+        const barcodeField = document.getElementById('barcodeField');
 
         function toggleStockTab() {
             if (radioNonSupply.checked) {
+                // sembunyikan
                 stockTab.style.display = 'none';
+                barcodeField.style.display = 'none';
+
+                // optional: clear value barcode biar aman
+                document.getElementById('barcode').value = '';
+
+                // pindah tab biar ga blank
+                const firstTab = document.querySelector('.nav-link');
+                if (firstTab) {
+                    new bootstrap.Tab(firstTab).show();
+                }
+
             } else {
+                // tampilkan
                 stockTab.style.display = 'block';
+                barcodeField.style.display = 'block';
             }
         }
 
-        // Jalankan saat load
+        // run awal
         toggleStockTab();
 
-        // Event listener
+        // listener
         radioSupply.addEventListener('change', toggleStockTab);
         radioNonSupply.addEventListener('change', toggleStockTab);
     </script>
+    {{-- HITUNG TOTAL --}}
     <script>
         function hitungTotal() {
             let qty = parseFloat(document.getElementById('quantity').value) || 0;
@@ -199,6 +611,7 @@
         document.getElementById('quantity').addEventListener('input', hitungTotal);
         document.getElementById('unit_price').addEventListener('input', hitungTotal);
     </script>
+    {{-- UNIT CHANGE --}}
     <script>
         $('#unit_id').on('change', function() {
             let unitId = $(this).val();
@@ -262,20 +675,20 @@
                         }
                     },
                     {
-                        data: 'date_stock',
+                        data: 'date',
                     },
 
                     {
                         data: 'quantity'
                     },
                     {
-                        data: 'unit'
+                        data: 'stok_unit_name',
                     },
                     {
                         data: 'unit_price'
                     },
                     {
-                        data: 'data_warehouse'
+                        data: 'warehouse_name'
                     },
 
                 ],
@@ -310,7 +723,7 @@
 
                                     $('#detail_id').val(rowIndex);
                                     $('#quantity').val(data.quantity);
-                                    $('#unit_id').data('pending-val', data.unit_id);
+                                    $('#stok_unit_id').data('pending-val', data.stok_unit_id);
 
                                     // 2. Set value produk dan trigger change
                                     $('#product_id').val(data.product_id).trigger('change');
@@ -354,8 +767,6 @@
                                         if (result.isConfirmed) {
                                             prDetailsData.splice(rowIndex, 1);
                                             dt.clear().rows.add(prDetailsData).draw();
-                                            calculateGrandTotal();
-                                            calculateTotalOrder()
                                             toastr.success('Deleted Data Successfully',
                                                 '', {
                                                     timeOut: 1500,
@@ -371,8 +782,6 @@
                                 action: function(e, dt, node, config) {
                                     prDetailsData = [];
                                     dt.clear().draw();
-                                    calculateGrandTotal();
-                                    calculateTotalOrder()
                                     $('#percent').val(0); // Jika ada tax
 
                                 }
@@ -389,7 +798,7 @@
                 let unitId = $('#unit_id_modals').val();
                 let unitName = $('#unit_id_modals option:selected').text();
                 let unitPrice = parseFloat($('#unit_price').val()) || 0;
-                let dateStock = $('#date_stock').val() || '';
+                let date = $('#date').val() || '';
                 let detailId = $('#detail_id').val();
                 if (!warehouseID) {
                     Swal.fire({
@@ -431,14 +840,15 @@
                     });
                     return;
                 }
+
                 let itemData = {
+                    'date': date,
+                    'warehouse_name': warehouseName,
                     'warehouse_id': warehouseID,
-                    'data_warehouse': warehouseName,
                     'quantity': quantity,
-                    'unit_id': unitId,
-                    'unit': unitName,
+                    'stok_unit_id': unitId,
+                    'stok_unit_name': unitName,
                     'unit_price': unitPrice,
-                    'date_stock': dateStock,
                 };
 
                 if (detailId === '') {

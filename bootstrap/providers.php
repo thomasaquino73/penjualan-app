@@ -1,8 +1,9 @@
 <?php
 
 use App\Providers\AppServiceProvider;
+use Laravel\Socialite\SocialiteServiceProvider;
 
 return [
     AppServiceProvider::class,
-    Laravel\Socialite\SocialiteServiceProvider::class,
+    SocialiteServiceProvider::class,
 ];

@@ -63,10 +63,11 @@
                         </th>
                         <th>#</th>
                         <th>Picture</th>
+                        <th>Barcode</th>
                         <th>Product Code</th>
                         <th>Product Name</th>
-                        <th>Price</th>
-                        <th>Stock</th>
+                        <th>Product Type</th>
+                        {{-- <th>Stock</th> --}}
                         <th>Status</th>
                         <th>Created</th>
                         <th>Updated</th>
@@ -116,18 +117,20 @@
                         data: 'fotoProduk',
                     },
                     {
+                        data: 'barcode',
+                    },
+                    {
                         data: 'id_barang',
                     },
                     {
                         data: 'nama_barang',
                     },
-                    {
-                        data: 'harga',
+                     {
+                        data: 'productType',
                     },
-
-                    {
-                        data: 'price',
-                    },
+                    // {
+                    //     data: 'harga',
+                    // },
                     {
                         data: 'status',
                     },

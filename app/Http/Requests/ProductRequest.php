@@ -37,6 +37,7 @@ class ProductRequest extends FormRequest
             'gudang_id' => ['required'],
             'unit_id' => ['required'],
             'product_type' => ['required'],
+            'barcode' => ['unique:data_barang,barcode,' . $id],
         ];
     }
 
@@ -52,6 +53,7 @@ class ProductRequest extends FormRequest
             'gudang_id.required' => 'Warehouse is required',
             'unit_id.required' => 'Unit is required',
             'product_type.required' => 'Product type is required',
+            'barcode.unique' => 'Barcode has already been taken',
         ];
     }
 }

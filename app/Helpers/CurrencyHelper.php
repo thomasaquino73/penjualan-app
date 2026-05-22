@@ -53,7 +53,7 @@ if (! function_exists('convert_currency')) {
             ->value('rate');
 
         if ($rate) {
-            return $amount / $rate; 
+            return $amount / $rate;
         }
 
         // 5. Cek kebalikannya (Reverse Rate)
