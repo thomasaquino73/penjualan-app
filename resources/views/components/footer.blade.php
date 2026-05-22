@@ -154,3 +154,42 @@
         })
     }
 </script>
+<script>
+    $('#currency_id').on('change', function() {
+        let $select = $(this);
+        let currencyId = $select.val();
+
+        $.ajax({
+            url: "{{ route('set.currency') }}",
+            method: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                currency_id: currencyId
+            },
+            success: function(response) {
+
+                if (response.success) {
+
+                    toastr.success('Mata uang berhasil diubah');
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 800);
+
+                } else {
+
+                    let defaultId = response.default_currency_id ?? 1;
+
+                    // balik ke default
+                    $select.val(defaultId);
+
+                    if ($select.hasClass('select2-hidden-accessible')) {
+                        $select.trigger('change.select2');
+                    }
+
+                    toastr.error('Rate mata uang belum tersedia!');
+                }
+            },
+        });
+    });
+</script>

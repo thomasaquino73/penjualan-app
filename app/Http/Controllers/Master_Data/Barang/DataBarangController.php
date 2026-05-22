@@ -328,7 +328,11 @@ class DataBarangController extends Controller
     public function show(string $id)
     {
 
-        $idDetail = Barang::with('variants')->findOrFail($id);
+        $idDetail = Barang::with([
+        'variants', 
+        'stockHistories.warehouseID', 
+        'stockHistories.unitID'
+    ])->findOrFail($id);
 
         // Menambahkan filter where qty > 0
         $unitConversion = DataBarangConversion::where('data_barang_id', $idDetail->id)
@@ -353,7 +357,11 @@ class DataBarangController extends Controller
     public function edit(string $id)
     {
         // Tambahkan with('variants') di sini
-        $idDetail = Barang::with('variants', 'stockHistories')->findOrFail($id);
+          $idDetail = Barang::with([
+        'variants', 
+        'stockHistories.warehouseID', 
+        'stockHistories.unitID'
+    ])->findOrFail($id);
 
         $subUnit = DataBarangConversion::where('data_barang_id', $idDetail->id)->get();
         $unit = BasicCodeDetail::where('master_id', 2)->get();
@@ -483,7 +491,7 @@ class DataBarangController extends Controller
                         'date' => $date ,
                         'quantity' => $item['quantity'] ?? $item['qty'],
                         'stok_unit_id' => $item['stok_unit_id'],
-                        'warehouse_id' =>$item['stok_unit_id'],
+                        'warehouse_id' =>$item['warehouse_id'],
                         'price' => $item['unit_price'] ?? null,
                     ]);
                 }
