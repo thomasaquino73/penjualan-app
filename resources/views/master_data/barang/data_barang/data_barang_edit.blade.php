@@ -635,91 +635,188 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            let variantCount = 1; // Counter untuk index variant-card baru
+            // Ambil semua kartu varian yang sudah dirender oleh Blade (jika ada)
+            const existingCards = document.querySelectorAll('.variant-card');
+
+            // Counter diatur dinamis: jika ada data pakai jumlah yang ada, jika kosong mulai dari 0
+            let variantCount = existingCards.length;
 
             // Fungsi untuk mengaktifkan event listener di setiap variant-card (baik lama maupun hasil clone)
             function bindVariantEvents(card) {
+                if (!card) return; // Pengaman jika card yang dimasukkan null
+
                 const specContainer = card.querySelector('.spec-container');
                 const btnAddSpec = card.querySelector('.btn-add-spec');
                 const vIndex = card.getAttribute('data-variant-index');
 
-                // Menggunakan closure/counter khusus internal card untuk melacak jumlah spesifikasinya
+                // Hitung jumlah spesifikasi awal secara dinamis
                 let specCount = specContainer.querySelectorAll('.spec-row').length;
 
                 // Event Klik Tombol "+ Tambah Atribut/Dimensi"
                 btnAddSpec.onclick = function() {
                     const firstRow = specContainer.querySelector('.spec-row');
-                    const newRow = firstRow.cloneNode(true);
+                    let newRow;
 
-                    // Ambil element input di baris baru
-                    const inputLabel = newRow.querySelector('input[name*="[label]"]');
-                    const inputValue = newRow.querySelector('input[name*="[value]"]');
+                    if (firstRow) {
+                        // Jika sudah ada baris spesifikasi, kloning dari yang pertama
+                        newRow = firstRow.cloneNode(true);
+                    } else {
+                        // Jika kosong (clear area), buat struktur baris baru dari nol
+                        newRow = document.createElement('div');
+                        newRow.className = 'row align-items-center spec-row mb-2';
+                        newRow.innerHTML = `
+                    <div class="col-md-5">
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="ti ti-tag"></i></span>
+                            <input type="text" class="form-control spec-label" placeholder="Nama Label (cth: Panjang)">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="ti ti-edit"></i></span>
+                            <input type="text" class="form-control spec-value" placeholder="Nilai (cth: 120 cm atau 500 gr)">
+                        </div>
+                    </div>
+                    <div class="col-md-1 text-end">
+                        <button type="button" class="btn btn-sm btn-danger btn-remove-spec">&times;</button>
+                    </div>
+                `;
+                    }
+
+                    // Ambil element input di baris baru untuk diatur namanya
+                    const inputLabel = newRow.querySelector('input, .spec-label');
+                    const inputValue = newRow.querySelectorAll('input')[1] || newRow.querySelector(
+                        '.spec-value');
 
                     // Reset nilai value agar kosong
                     inputLabel.value = '';
                     inputValue.value = '';
 
-                    // Perbarui name attribute agar unik mengikuti pola array Laravel: variants[vIndex][specs][specCount][...]
+                    // Perbarui name attribute agar unik mengikuti pola array Laravel
                     inputLabel.setAttribute('name', `variants[${vIndex}][specs][${specCount}][label]`);
                     inputValue.setAttribute('name', `variants[${vIndex}][specs][${specCount}][value]`);
 
-                    // Tampilkan tombol hapus spesifikasi (&times;) di baris baru ini
+                    // Pastikan tombol hapus spesifikasi terlihat
                     const btnRemoveSpec = newRow.querySelector('.btn-remove-spec');
-                    btnRemoveSpec.classList.remove('d-none');
-
-                    // Pasang fungsi hapus baris spesifikasi
-                    btnRemoveSpec.onclick = function() {
-                        newRow.remove();
-                    };
+                    if (btnRemoveSpec) {
+                        btnRemoveSpec.classList.remove('d-none');
+                        btnRemoveSpec.onclick = function() {
+                            newRow.remove();
+                        };
+                    }
 
                     // Masukkan ke dalam kontainer spesifikasi kartu ini
                     specContainer.appendChild(newRow);
                     specCount++;
                 };
+
+                // Pasang listener hapus untuk baris spesifikasi bawaan database yang sudah ada di layar
+                card.querySelectorAll('.btn-remove-spec').forEach(function(btn) {
+                    btn.onclick = function() {
+                        btn.closest('.spec-row').remove();
+                    };
+                });
             }
 
-            // Inisialisasi kartu varian pertama (Index 0) yang sudah ada semenjak halaman dimuat
-            bindVariantEvents(document.querySelector('.variant-card'));
+            // Inisialisasi semua kartu varian yang lama (jika ada data dari DB)
+            if (existingCards.length > 0) {
+                existingCards.forEach(function(card) {
+                    bindVariantEvents(card);
+
+                    // Pasang fungsi hapus untuk kartu bawaan lama
+                    const btnRemoveVariant = card.querySelector('.btn-remove-variant');
+                    if (btnRemoveVariant) {
+                        btnRemoveVariant.onclick = function() {
+                            card.remove();
+                        };
+                    }
+                });
+            }
 
             // Event Klik Tombol Utama "+ Tambah Varian Baru"
             document.getElementById('btn-add-variant').addEventListener('click', function() {
                 const wrapper = document.getElementById('variant-wrapper');
                 const firstCard = wrapper.querySelector('.variant-card');
+                let newCard;
 
-                // Clone struktur kartu varian pertama
-                const newCard = firstCard.cloneNode(true);
+                if (firstCard) {
+                    // A. JIKA DATA ADA: Clone struktur kartu varian pertama
+                    newCard = firstCard.cloneNode(true);
+                    newCard.setAttribute('data-variant-index', variantCount);
 
-                // Update index data attribute pada kartu baru
-                newCard.setAttribute('data-variant-index', variantCount);
+                    // Reset & Update input Nama Varian Utama
+                    const mainInput = newCard.querySelector('input[name*="[name]"]');
+                    mainInput.value = '';
+                    mainInput.setAttribute('name', `variants[${variantCount}][name]`);
 
-                // Reset & Update input Nama Varian Utama
-                const mainInput = newCard.querySelector('input[name^="variants[0][name]"]');
-                mainInput.value = '';
-                mainInput.setAttribute('name', `variants[${variantCount}][name]`);
-
-                // Bersihkan area spesifikasi, sisakan 1 baris bersih sebagai default
-                const specContainer = newCard.querySelector('.spec-container');
-                specContainer.innerHTML = `
-            <div class="row align-items-center spec-row mb-2">
-                <div class="col-md-5">
-                    <div class="input-group input-group-merge">
-                        <span class="input-group-text"><i class="ti ti-tag"></i></span>
-                        <input type="text" name="variants[${variantCount}][specs][0][label]" class="form-control" placeholder="Nama Label (cth: Panjang)" >
+                    // Bersihkan area spesifikasi, sisakan 1 baris bersih sebagai default
+                    const specContainer = newCard.querySelector('.spec-container');
+                    specContainer.innerHTML = `
+                <div class="row align-items-center spec-row mb-2">
+                    <div class="col-md-5">
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="ti ti-tag"></i></span>
+                            <input type="text" name="variants[${variantCount}][specs][0][label]" class="form-control spec-label" placeholder="Nama Label (cth: Panjang)" >
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="ti ti-edit"></i></span>
+                            <input type="text" name="variants[${variantCount}][specs][0][value]" class="form-control spec-value" placeholder="Nilai (cth: 120 cm atau 500 gr)" >
+                        </div>
+                    </div>
+                    <div class="col-md-1 text-end">
+                        <button type="button" class="btn btn-sm btn-danger btn-remove-spec d-none">&times;</button>
                     </div>
                 </div>
-                <div class="col-md-6">
+            `;
+                } else {
+                    // B. JIKA DATA KOSONG TOTAL: Buat struktur baru utuh dari string HTML
+                    newCard = document.createElement('div');
+                    newCard.className =
+                        'variant-card border border-gray-300 rounded-xl p-5 bg-white shadow-sm relative mb-4';
+                    newCard.setAttribute('data-variant-index', variantCount);
+                    newCard.innerHTML = `
+                <div class="col-12 mb-3">
+                    <label class="form-label">Nama Varian <small class="text-danger">*</small></label>
                     <div class="input-group input-group-merge">
-                        <span class="input-group-text"><i class="ti ti-edit"></i></span>
-                        <input type="text" name="variants[${variantCount}][specs][0][value]" class="form-control" placeholder="Nilai (cth: 120 cm atau 500 gr)" >
+                        <span class="input-group-text"><i class="ti ti-barcode"></i></span>
+                        <input type="text" name="variants[${variantCount}][name]" class="form-control variant-name" placeholder="Contoh: Merah Ukuran L">
                     </div>
                 </div>
-                <div class="col-md-1 text-end">
-                    <button type="button" class="btn btn-sm btn-danger btn-remove-spec d-none">&times;</button>
-                </div>
-            </div>
-         `;
 
-                // Tampilkan dan aktifkan tombol "Hapus Varian" untuk blok kartu baru ini
+                <div class="col-12 mb-2">
+                    <label class="form-label font-weight-bold">Spesifikasi / Dimensi Kustom <small class="text-danger">*</small></label>
+                </div>
+
+                <div class="spec-container space-y-3 mb-3">
+                    <div class="row align-items-center spec-row mb-2">
+                        <div class="col-md-5">
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text"><i class="ti ti-tag"></i></span>
+                                <input type="text" name="variants[${variantCount}][specs][0][label]" class="form-control spec-label" placeholder="Nama Label (cth: Panjang)">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text"><i class="ti ti-edit"></i></span>
+                                <input type="text" name="variants[${variantCount}][specs][0][value]" class="form-control spec-value" placeholder="Nilai (cth: 120 cm atau 500 gr)">
+                            </div>
+                        </div>
+                        <div class="col-md-1 text-end">
+                            <button type="button" class="btn btn-sm btn-danger btn-remove-spec d-none">&times;</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <button type="button" class="btn btn-success btn-sm btn-add-spec">+ Tambah Atribut/Dimensi</button>
+                    <button type="button" class="btn btn-danger btn-sm btn-remove-variant">Hapus Varian</button>
+                </div>
+            `;
+                }
+
+                // Aktifkan tombol "Hapus Varian" untuk kartu baru ini
                 const btnRemoveVariant = newCard.querySelector('.btn-remove-variant');
                 btnRemoveVariant.classList.remove('d-none');
                 btnRemoveVariant.onclick = function() {

@@ -73,32 +73,32 @@ Route::middleware('auth')->group(function () {
     // })->name('set.currency');
 
     Route::post('/set-currency', function (Request $request) {
-    try {
-        $targetCurrencyId = $request->currency_id;
-        $oldSession = session('currency_id');
-        
-        // Tetapkan session pilihan user sementara
-        session(['currency_id' => $targetCurrencyId]);
+        try {
+            $targetCurrencyId = $request->currency_id;
+            $oldSession = session('currency_id');
 
-        // Tes pemicu konversi helper. Jika rate kosong, ini akan melempar Exception
-        convert_currency(1, $targetCurrencyId);
+            // Tetapkan session pilihan user sementara
+            session(['currency_id' => $targetCurrencyId]);
 
-        return response()->json(['success' => true]);
+            // Tes pemicu konversi helper. Jika rate kosong, ini akan melempar Exception
+            convert_currency(1, $targetCurrencyId);
 
-    } catch (\Exception $e) {
-        // Ambil ID mata uang default perusahaan (IDR)
-        $defaultCompanyCurrencyId = Company::first()->default_currency_id ?? 1;
+            return response()->json(['success' => true]);
 
-        // Paksa kembalikan session ke IDR
-        session(['currency_id' => $defaultCompanyCurrencyId]);
+        } catch (Exception $e) {
+            // Ambil ID mata uang default perusahaan (IDR)
+            $defaultCompanyCurrencyId = Company::first()->default_currency_id ?? 1;
 
-        // Kirim status false ke JavaScript, namun biarkan HTTP Status tetap 200
-        return response()->json([
-            'success' => false,
-            'default_currency_id' => $defaultCompanyCurrencyId
-        ]);
-    }
-})->name('set.currency');
+            // Paksa kembalikan session ke IDR
+            session(['currency_id' => $defaultCompanyCurrencyId]);
+
+            // Kirim status false ke JavaScript, namun biarkan HTTP Status tetap 200
+            return response()->json([
+                'success' => false,
+                'default_currency_id' => $defaultCompanyCurrencyId,
+            ]);
+        }
+    })->name('set.currency');
     Route::group(['middleware' => ['role:Super Admin']], function () {
 
         Route::get('/pengaturan-sistem', [PengaturanSistemController::class, 'index'])->name('pengaturan.sistem');

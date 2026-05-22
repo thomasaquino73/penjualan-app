@@ -329,10 +329,10 @@ class DataBarangController extends Controller
     {
 
         $idDetail = Barang::with([
-        'variants', 
-        'stockHistories.warehouseID', 
-        'stockHistories.unitID'
-    ])->findOrFail($id);
+            'variants',
+            'stockHistories.warehouseID',
+            'stockHistories.unitID',
+        ])->findOrFail($id);
 
         // Menambahkan filter where qty > 0
         $unitConversion = DataBarangConversion::where('data_barang_id', $idDetail->id)
@@ -357,11 +357,11 @@ class DataBarangController extends Controller
     public function edit(string $id)
     {
         // Tambahkan with('variants') di sini
-          $idDetail = Barang::with([
-        'variants', 
-        'stockHistories.warehouseID', 
-        'stockHistories.unitID'
-    ])->findOrFail($id);
+        $idDetail = Barang::with([
+            'variants',
+            'stockHistories.warehouseID',
+            'stockHistories.unitID',
+        ])->findOrFail($id);
 
         $subUnit = DataBarangConversion::where('data_barang_id', $idDetail->id)->get();
         $unit = BasicCodeDetail::where('master_id', 2)->get();
@@ -410,39 +410,64 @@ class DataBarangController extends Controller
             // 4. Eksekusi Update Barang Utama
             $barang->update($data);
 
-            $items = json_decode($request->items_detail, true) ?? [];
+            // $items = json_decode($request->items_detail, true) ?? [];
 
-            // 1. Hapus semua data stok lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
-            DataBarangStok::where('data_barang_id', $barang->id)->delete();
+            // // 1. Hapus semua data stok lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
+            // DataBarangStok::where('data_barang_id', $barang->id)->delete();
 
-            // 2. Masukkan ulang semua data dari form / DataTables lokal
-            if (is_array($items) && count($items) > 0) {
-                foreach ($items as $item) {
-                    $price = $item['unit_price'] ?? $item['price'] ?? 0;
-                    $stokUnitId = (! empty($item['stok_unit_id']) && $item['stok_unit_id'] !== 'Select Unit' && $item['stok_unit_id'] !== '') ? $item['stok_unit_id'] : null;
-                    $warehouseId = (! empty($item['warehouse_id']) && $item['warehouse_id'] !== '') ? $item['warehouse_id'] : null;
+            // // 2. Masukkan ulang semua data dari form / DataTables lokal
+            // if (is_array($items) && count($items) > 0) {
+            //     foreach ($items as $item) {
+            //         $price = $item['unit_price'] ?? $item['price'] ?? 0;
+            //         $stokUnitId = (! empty($item['stok_unit_id']) && $item['stok_unit_id'] !== 'Select Unit' && $item['stok_unit_id'] !== '') ? $item['stok_unit_id'] : null;
+            //         $warehouseId = (! empty($item['warehouse_id']) && $item['warehouse_id'] !== '') ? $item['warehouse_id'] : null;
 
-                    // Standarisasi Format Tanggal
-                    $dateRaw = $item['date'] ?? $item['date_stock'] ?? null;
-                    $formattedDate = null;
-                    if (! empty($dateRaw)) {
-                        try {
-                            $formattedDate = Carbon::parse($dateRaw)->format('Y-m-d');
-                        } catch (\Exception $e) {
-                            $formattedDate = null;
-                        }
-                    }
+            //         // Standarisasi Format Tanggal
+            //         $dateRaw = $item['date'] ?? $item['date_stock'] ?? null;
+            //         $formattedDate = null;
+            //         if (! empty($dateRaw)) {
+            //             try {
+            //                 $formattedDate = Carbon::parse($dateRaw)->format('Y-m-d');
+            //             } catch (\Exception $e) {
+            //                 $formattedDate = null;
+            //             }
+            //         }
 
-                    // Jalankan perintah Create langsung tanpa peduli ID lama
-                    DataBarangStok::create([
-                        'data_barang_id' => $barang->id, // Mengikat relasi ke barang utama
-                        'date' => $formattedDate,
-                        'quantity' => $item['quantity'] ?? $item['qty'] ?? 0,
-                        'stok_unit_id' => $stokUnitId,
-                        'warehouse_id' => $warehouseId,
-                        'price' => $price,
-                    ]);
+            //         // Jalankan perintah Create langsung tanpa peduli ID lama
+            //         DataBarangStok::create([
+            //             'data_barang_id' => $barang->id, // Mengikat relasi ke barang utama
+            //             'date' => $formattedDate,
+            //             'quantity' => $item['quantity'] ?? $item['qty'] ?? 0,
+            //             'stok_unit_id' => $stokUnitId,
+            //             'warehouse_id' => $warehouseId,
+            //             'price' => $price,
+            //         ]);
+            //     }
+            // }
+
+            // ==================================================
+            // PROSES UPDATE KONVERSI BARANG (Delete old, then create new)
+            // ==================================================
+            $conversions = $request->conversion ?? [];
+
+            // 1. Lenyapkan semua data konversi lama milik barang ini agar tidak menumpuk/duplikat
+            DataBarangConversion::where('data_barang_id', $barang->id)->delete();
+
+            // 2. Loop dan masukkan ulang data konversi baru (maksimal 2 index sesuai form kamu)
+            for ($i = 0; $i < 2; $i++) {
+                $conv = $conversions[$i] ?? [];
+
+                // Validasi: Jika user tidak memilih unit tujuan ('to_unit'), lewati (jangan di-insert)
+                if (empty($conv['to_unit']) || $conv['to_unit'] === 'Select Unit') {
+                    continue;
                 }
+
+                DataBarangConversion::create([
+                    'data_barang_id' => $barang->id,
+                    'from_unit_id' => $request->unit_id, // selalu mengikuti unit utama yang baru di-update
+                    'to_unit_id' => $conv['to_unit'],
+                    'qty' => $conv['qty'] ?? 0,
+                ]);
             }
 
             // ==================================================
@@ -475,26 +500,26 @@ class DataBarangController extends Controller
             // ==================================================
             // PROSES UPSERT DATA STOK BARANG (Direct Update / Create New)
             // ==================================================
-          $items = json_decode($request->items_detail, true);
+            $items = json_decode($request->items_detail, true);
 
             // if (is_array($items) && count($items) > 0) {
 
-                // Hapus semua detail lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
-                DataBarangStok::where('data_barang_id', $barang->id)->delete();
+            // Hapus semua detail lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
+            DataBarangStok::where('data_barang_id', $barang->id)->delete();
 
-                foreach ($items as $item) {
-                    $date = ! empty($item['date'])
-                        ? Carbon::parse($item['date'])->format('Y-m-d')
-                        : null;
-                    DataBarangStok::create([
-                        'data_barang_id' => $barang->id,
-                        'date' => $date ,
-                        'quantity' => $item['quantity'] ?? $item['qty'],
-                        'stok_unit_id' => $item['stok_unit_id'],
-                        'warehouse_id' =>$item['warehouse_id'],
-                        'price' => $item['unit_price'] ?? null,
-                    ]);
-                }
+            foreach ($items as $item) {
+                $date = ! empty($item['date'])
+                    ? Carbon::parse($item['date'])->format('Y-m-d')
+                    : null;
+                DataBarangStok::create([
+                    'data_barang_id' => $barang->id,
+                    'date' => $date,
+                    'quantity' => $item['quantity'] ?? $item['qty'],
+                    'stok_unit_id' => $item['stok_unit_id'],
+                    'warehouse_id' => $item['warehouse_id'],
+                    'price' => $item['unit_price'] ?? null,
+                ]);
+            }
             // } else {
             //     // Gagalkan proses jika ternyata isi array kosong setelah didecode
             //     throw new \Exception('Minimal harus ada 1 item produk yang dimasukkan.');

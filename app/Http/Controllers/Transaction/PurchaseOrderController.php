@@ -11,6 +11,7 @@ use App\Models\Master_Data\Kendaraan;
 use App\Models\Master_Data\Supplier;
 use App\Models\Transaction\PurchaseOrder;
 use App\Models\Transaction\PurchaseOrderDetail;
+use App\Models\Transaction\PurchaseRequisition;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Dotenv\Exception\ValidationException;
@@ -271,7 +272,7 @@ class PurchaseOrderController extends Controller
 
     public function getProcessingData()
     {
-        $orders = PurchaseOrder::where('status', 'processing')->get();
+        $orders = PurchaseRequisition::where('status', 'processing')->get();
 
         return response()->json($orders);
     }

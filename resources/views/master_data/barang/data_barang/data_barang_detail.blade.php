@@ -69,212 +69,215 @@
 
             {{-- unit Details Section --}}
             <div class="col-lg-8">
-                {{-- Product Specifications --}}
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3 border-bottom border-light">
-                        <h5 class="card-title mb-0 fw-bold">
-                            <i class="ti ti-info-circle me-2 text-primary"></i>Product Specifications
-                        </h5>
+                <div class="row">
+                    {{-- Product Specifications --}}
+                    <div class="col-md-12">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-white py-3 border-bottom border-light">
+                                <h5 class="card-title mb-0 fw-bold">
+                                    <i class="ti ti-info-circle me-2 text-primary"></i>Product Specifications
+                                </h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <tbody>
+                                            <tr class="align-middle">
+                                                <th class="ps-4 py-3 text-muted fw-normal" width="35%">Category</th>
+                                                <td class="fw-medium text-dark ps-2">
+                                                    {{ $detail->kategoriID->detail ?? '-' }}
+                                                </td>
+                                            </tr>
+                                            <tr class="align-middle">
+                                                <th class="ps-4 py-3 text-muted fw-normal">Warehouse Location</th>
+                                                <td class="fw-medium text-dark ps-2">
+                                                    {{ $detail->warehouseID->nama_gudang ?? '-' }}
+                                                </td>
+                                            </tr>
+                                            <tr class="align-middle">
+                                                <th class="ps-4 py-3 text-muted fw-normal">Primary Unit</th>
+                                                <td class="fw-medium text-dark ps-2">{{ $detail->unitID->detail ?? '-' }}
+                                                </td>
+                                            </tr>
+                                            <tr class="align-middle">
+                                                <th class="ps-4 py-3 text-muted fw-normal">Inventory Type</th>
+                                                <td class="fw-medium text-dark ps-2">{{ $detail->typeID->detail ?? '-' }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th class="ps-4 py-3 text-muted fw-normal">Description</th>
+                                                <td class="text-dark lh-base py-3 ps-2">
+                                                    {{ $detail->keterangan ? $detail->keterangan : 'No description available for this product.' }}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <tbody>
-                                    <tr class="align-middle">
-                                        <th class="ps-4 py-3 text-muted fw-normal" width="35%">Category</th>
-                                        <td class="fw-medium text-dark ps-2">{{ $detail->kategoriID->detail ?? '-' }}</td>
-                                    </tr>
-                                    <tr class="align-middle">
-                                        <th class="ps-4 py-3 text-muted fw-normal">Warehouse Location</th>
-                                        <td class="fw-medium text-dark ps-2">{{ $detail->warehouseID->nama_gudang ?? '-' }}
-                                        </td>
-                                    </tr>
-                                    <tr class="align-middle">
-                                        <th class="ps-4 py-3 text-muted fw-normal">Primary Unit</th>
-                                        <td class="fw-medium text-dark ps-2">{{ $detail->unitID->detail ?? '-' }}</td>
-                                    </tr>
-                                    <tr class="align-middle">
-                                        <th class="ps-4 py-3 text-muted fw-normal">Inventory Type</th>
-                                        <td class="fw-medium text-dark ps-2">{{ $detail->typeID->detail ?? '-' }}</td>
-                                    </tr>
-                                    <tr class="align-middle">
-                                        <th class="ps-4 py-3 text-muted fw-normal">Stock Availability</th>
-                                        <td class="ps-2">
-                                            <span
-                                                class="badge bg-{{ $detail->quantity > 0 ? 'info' : 'danger' }} px-3 py-2">
-                                                {{ $detail->quantity ?? '0' }} {{ $detail->unitID->detail ?? '0' }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th class="ps-4 py-3 text-muted fw-normal">Description</th>
-                                        <td class="text-dark lh-base py-3 ps-2">
-                                            {{ $detail->keterangan ? $detail->keterangan : 'No description available for this product.' }}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <div class="col-md-5">
+
+                        {{-- Unit Conversion --}}
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-white py-3 border-bottom border-light">
+                                <h5 class="card-title mb-0 fw-bold">
+                                    <i class="ti ti-arrows-exchange me-2 text-primary"></i>Unit Conversion
+                                </h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr class="bg-light">
+                                                <th class="ps-4 py-3 text-muted fw-bold" width="10%">No</th>
+                                                <th class="py-3 text-muted fw-bold">From Unit</th>
+                                                <th class="py-3 text-muted fw-bold text-center" width="10%">=</th>
+                                                <th class="py-3 text-muted fw-bold">Conversion Result</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($unitConversion as $index => $conv)
+                                                <tr class="align-middle">
+                                                    <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
+                                                    <td class="py-3 text-dark">
+                                                        1 {{ $conv->fromUnitID->detail ?? 'N/A' }}
+                                                    </td>
+                                                    <td class="py-3 text-center fw-bold text-primary">=</td>
+                                                    <td class="py-3 text-dark fw-bold">
+                                                        {{ number_format($conv->qty, 0) }}
+                                                        {{ $conv->toUnitID->detail ?? 'Sub-unit' }}
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-4 text-muted italic">
+                                                        <i class="ti ti-alert-circle d-block mb-2 fs-3"></i>
+                                                        No conversion data available for this product.
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        {{-- Product Variants Section --}}
+                        <div class="card  border-0 shadow-sm mb-4">
+                            <div class="card-header bg-white py-3 border-bottom border-light">
+                                <h5 class="card-title mb-0 fw-bold">
+                                    <i class="ti ti-box me-2 text-primary"></i>Product Variants & Custom Specs
+                                </h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive text-nowrap">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr class="bg-light">
+                                                <th class="ps-4 py-3 text-muted fw-bold" width="10%">No</th>
+                                                <th class="py-3 text-muted fw-bold" width="30%">Variant Name</th>
+                                                <th class="py-3 text-muted fw-bold">Custom Specifications</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($detail->variants as $index => $variant)
+                                                <tr class="align-middle">
+                                                    <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
+                                                    <td class="py-3">
+                                                        <span class="fw-bold text-dark">{{ $variant->variant_name }}</span>
+                                                    </td>
+                                                    <td class="py-3">
+                                                        @if (!empty($variant->specifications) && count($variant->specifications) > 0)
+                                                            <div class="d-flex flex-wrap gap-2">
+                                                                @foreach ($variant->specifications as $label => $value)
+                                                                    <span
+                                                                        class="badge bg-label-secondary border border-gray-200 px-3 py-2 rounded-pill shadow-sm text-dark">
+                                                                        <strong
+                                                                            class="text-secondary">{{ $label }}:</strong>
+                                                                        {{ $value }}
+                                                                    </span>
+                                                                @endforeach
+                                                            </div>
+                                                        @else
+                                                            <span class="text-muted small italic">- No specific fields
+                                                                added
+                                                                -</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="3" class="text-center py-4 text-muted italic">
+                                                        <i class="ti ti-info-circle d-block mb-2 fs-3"></i>
+                                                        No variant data available for this product.
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                {{-- Unit Conversion --}}
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3 border-bottom border-light">
-                        <h5 class="card-title mb-0 fw-bold">
-                            <i class="ti ti-arrows-exchange me-2 text-primary"></i>Unit Conversion
-                        </h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr class="bg-light">
-                                        <th class="ps-4 py-3 text-muted fw-bold" width="10%">No</th>
-                                        <th class="py-3 text-muted fw-bold">From Unit</th>
-                                        <th class="py-3 text-muted fw-bold text-center" width="10%">=</th>
-                                        <th class="py-3 text-muted fw-bold">Conversion Result</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($unitConversion as $index => $conv)
-                                        <tr class="align-middle">
-                                            <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
-                                            <td class="py-3 text-dark">
-                                                1 {{ $conv->fromUnitID->detail ?? 'N/A' }}
-                                            </td>
-                                            <td class="py-3 text-center fw-bold text-primary">=</td>
-                                            <td class="py-3 text-dark fw-bold">
-                                                {{ number_format($conv->qty, 0) }}
-                                                {{ $conv->toUnitID->detail ?? 'Sub-unit' }}
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center py-4 text-muted italic">
-                                                <i class="ti ti-alert-circle d-block mb-2 fs-3"></i>
-                                                No conversion data available for this product.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Product Variants Section --}}
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3 border-bottom border-light">
-                        <h5 class="card-title mb-0 fw-bold">
-                            <i class="ti ti-box me-2 text-primary"></i>Product Variants & Custom Specs
-                        </h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive text-nowrap">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr class="bg-light">
-                                        <th class="ps-4 py-3 text-muted fw-bold" width="10%">No</th>
-                                        <th class="py-3 text-muted fw-bold" width="30%">Variant Name</th>
-                                        <th class="py-3 text-muted fw-bold">Custom Specifications</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($detail->variants as $index => $variant)
-                                        <tr class="align-middle">
-                                            <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
-                                            <td class="py-3">
-                                                <span class="fw-bold text-dark">{{ $variant->variant_name }}</span>
-                                            </td>
-                                            <td class="py-3">
-                                                @if (!empty($variant->specifications) && count($variant->specifications) > 0)
-                                                    <div class="d-flex flex-wrap gap-2">
-                                                        @foreach ($variant->specifications as $label => $value)
-                                                            <span
-                                                                class="badge bg-label-secondary border border-gray-200 px-3 py-2 rounded-pill shadow-sm text-dark">
-                                                                <strong
-                                                                    class="text-secondary">{{ $label }}:</strong>
-                                                                {{ $value }}
-                                                            </span>
-                                                        @endforeach
-                                                    </div>
-                                                @else
-                                                    <span class="text-muted small italic">- No specific fields added
-                                                        -</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="3" class="text-center py-4 text-muted italic">
-                                                <i class="ti ti-info-circle d-block mb-2 fs-3"></i>
-                                                No variant data available for this product.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- TAMBAHAN BARU: Stock History Section (data_barang_stok) --}}
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-white py-3 border-bottom border-light">
-                        <h5 class="card-title mb-0 fw-bold">
-                            <i class="ti ti-history me-2 text-primary"></i>Stock History Details
-                        </h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive text-nowrap">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr class="bg-light">
-                                        <th class="ps-4 py-3 text-muted fw-bold" width="10%">No</th>
-                                        <th class="py-3 text-muted fw-bold">Date</th>
-                                        <th class="py-3 text-muted fw-bold">Warehouse</th>
-                                        <th class="py-3 text-muted fw-bold text-end">Quantity</th>
-                                        <th class="py-3 text-muted fw-bold text-end">Price / Unit</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($detail->stockHistories as $index => $stock)
-                                        <tr class="align-middle">
-                                            <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
-                                            <td class="py-3 text-dark">
-                                                {{ $stock->date ? \Carbon\Carbon::parse($stock->date)->translatedFormat('d M Y') : '-' }}
-                                            </td>
-                                            <td class="py-3 text-secondary fw-medium">
-                                                {{ $stock->warehouseID->nama_gudang ?? '-' }}
-                                            </td>
-                                            <td class="py-3 text-end">
-                                                <span class="fw-bold text-dark">
-                                                    {{ number_format($stock->quantity ?? 0, 0, ',', '.') }}
-                                                </span>
-                                                <small class="text-muted ms-1">{{ $stock->unitID->detail ?? '' }}</small>
-                                            </td>
-                                            <td class="py-3 text-end fw-bold text-primary">
-                                                {{ format_uang(convert_currency($stock->price, $row->currency_id ?? 1)) }}
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="text-center py-4 text-muted italic">
-                                                <i class="ti ti-clipboard-list d-block mb-2 fs-3"></i>
-                                                No stock movement history data found.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                {{-- END TAMBAHAN BARU --}}
-
             </div>
         </div>
+
+        {{-- TAMBAHAN BARU: Stock History Section (data_barang_stok) --}}
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white py-3 border-bottom border-light">
+                <h5 class="card-title mb-0 fw-bold">
+                    <i class="ti ti-history me-2 text-primary"></i>Stock History Details
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive text-nowrap">
+                    <table class="table table-hover mb-0" id='table_history'>
+                        <thead>
+                            <tr class="bg-light">
+                                <th class="ps-4 py-3 text-muted fw-bold" width="10%">No</th>
+                                <th class="py-3 text-muted fw-bold">Date</th>
+                                <th class="py-3 text-muted fw-bold">Warehouse</th>
+                                <th class="py-3 text-muted fw-bold text-end">Quantity</th>
+                                <th class="py-3 text-muted fw-bold text-end">Price / Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($detail->stockHistories as $index => $stock)
+                                <tr class="align-middle">
+                                    <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
+                                    <td class="py-3 text-dark">
+                                        {{ $stock->date ? \Carbon\Carbon::parse($stock->date)->translatedFormat('d M Y') : '-' }}
+                                    </td>
+                                    <td class="py-3 text-secondary fw-medium">
+                                        {{ $stock->warehouseID->nama_gudang ?? '-' }}
+                                    </td>
+                                    <td class="py-3 text-end">
+                                        <span class="fw-bold text-dark">
+                                            {{ number_format($stock->quantity ?? 0, 0, ',', '.') }}
+                                        </span>
+                                        <small class="text-muted ms-1">{{ $stock->unitID->detail ?? '' }}</small>
+                                    </td>
+                                    <td class="py-3 text-end fw-bold text-primary">
+                                        {{ format_uang(convert_currency($stock->price, $row->currency_id ?? 1)) }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted italic">
+                                        <i class="ti ti-clipboard-list d-block mb-2 fs-3"></i>
+                                        No stock movement history data found.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {{-- END TAMBAHAN BARU --}}
     </div>
 
     <style>
@@ -317,3 +320,8 @@
         }
     </style>
 @endsection
+@push('scripts')
+    <script>
+        let table = new DataTable('#table_history');
+    </script>
+@endpush
