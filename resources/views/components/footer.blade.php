@@ -31,36 +31,7 @@
 <script src="https://cdn.datatables.net/responsive/3.0.8/js/dataTables.responsive.js"></script>
 <script src="https://cdn.datatables.net/responsive/3.0.8/js/responsive.dataTables.js"></script>
 
-<script>
-    document.getElementById('currency_id').addEventListener('change', function() {
-        const currencyId = this.value;
 
-        // Fetch menembak ke name route 'set.currency' yang ada di web.php kamu
-        fetch("{{ route('set.currency') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}" // Wajib untuk mengamankan request di Laravel
-                },
-                body: JSON.stringify({
-                    currency_id: currencyId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Refresh halaman agar helper function langsung memproses angka dengan session baru
-                    window.location.reload();
-                } else {
-                    alert('Gagal mengubah mata uang.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan koneksi.');
-            });
-    });
-</script>
 <script>
     function resetValidation() {
         $('.error').text('');
@@ -155,41 +126,48 @@
     }
 </script>
 <script>
-    $('#currency_id').on('change', function() {
+    $('#currency_id').off('change').on('change', function(e) {
+        e.preventDefault();
+
         let $select = $(this);
         let currencyId = $select.val();
 
         $.ajax({
             url: "{{ route('set.currency') }}",
             method: "POST",
+            dataType: "json",
             data: {
                 _token: "{{ csrf_token() }}",
                 currency_id: currencyId
             },
             success: function(response) {
 
+                console.log(response); // debug
+
                 if (response.success) {
 
-                    toastr.success('Mata uang berhasil diubah');
+                    toastr.success('Currency has been successfully changed');
 
                     setTimeout(() => {
                         window.location.reload();
                     }, 800);
 
                 } else {
-
                     let defaultId = response.default_currency_id ?? 1;
-
-                    // balik ke default
                     $select.val(defaultId);
 
                     if ($select.hasClass('select2-hidden-accessible')) {
                         $select.trigger('change.select2');
                     }
 
-                    toastr.error('Rate mata uang belum tersedia!');
+                    toastr.error('Exchange rate is not available!');
                 }
             },
+            error: function(xhr) {
+                toastr.error('A server error occurred');
+            }
         });
+
+        return false;
     });
 </script>
