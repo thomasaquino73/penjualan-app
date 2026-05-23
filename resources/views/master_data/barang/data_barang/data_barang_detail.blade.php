@@ -58,9 +58,9 @@
                         </div>
 
                         <div class="d-grid mt-4">
-                            <a href="{{ route('data-barang.edit', $detail->id) }}"
-                                class="btn btn-warning fw-bold py-2 shadow-sm text-white border-0">
-                                <i class="ti ti-edit me-1"></i> Edit Product Information
+                            <a href="{{ route('data-barang.index', $detail->id) }}"
+                                class="btn btn-secondary fw-bold py-2 shadow-sm text-white border-0">
+                                <i class="ti ti-chevron-left me-1"></i> Back
                             </a>
                         </div>
                     </div>

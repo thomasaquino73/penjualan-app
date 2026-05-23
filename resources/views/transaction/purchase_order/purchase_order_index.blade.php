@@ -266,13 +266,14 @@
                 });
 
             });
-            $(document).on('click', '.btn-submit-pr', function() {
+            $(document).on('click', '.btn-submit-po', function() {
                 let id = $(this).data('id');
                 let url = "{{ route('purchase-order.submit', ':id') }}".replace(':id', id);
 
                 Swal.fire({
                     title: 'Are you sure?',
-                    text: "This Purchase Requisition will be submitted for approval!",
+                    // PERBAIKAN: Mengubah kata "Purchase Requisition" menjadi "Purchase Order"
+                    text: "This Purchase Order will be submitted for approval!",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, submit it!',
@@ -292,7 +293,7 @@
                             },
                             success: function(response) {
                                 if (response.success) {
-                                    // Menggunakan toastr untuk sukses sesuai style Anda
+                                    // Menggunakan toastr untuk notifikasi sukses yang sleek
                                     toastr.success(response.message ||
                                         'Submitted Data Successfully', '', {
                                             timeOut: 1500,
@@ -301,8 +302,12 @@
                                             positionClass: 'toast-top-right',
                                         });
 
-                                    // Ganti #table dengan ID DataTable Anda jika berbeda
-                                    $('#table').DataTable().ajax.reload();
+                                    // Reload data server-side tanpa merusak pagination halaman
+                                    // NOTE: Pastikan ID tabel Anda cocok (misal '#po-table' atau '#table')
+                                    if ($.fn.DataTable.isDataTable('#table')) {
+                                        $('#table').DataTable().ajax.reload(null,
+                                            false);
+                                    }
                                 } else {
                                     Swal.fire({
                                         title: 'Warning!',
@@ -337,35 +342,38 @@
                 });
             });
 
-            $(document).on('click', '.btn-approval-pr', function() {
+            $(document).on('click', '.btn-approval-po', function() {
                 let id = $(this).data('id');
-                let statusTarget = $(this).data('status'); // Expected: 'processing' or 'rejected'
+                let statusTarget = $(this).data('status'); // Nilai dari HTML: 'approved' atau 'rejected'
 
-                // Konfigurasi teks berdasarkan statusTarget
-                let textKeterangan = statusTarget === 'processing' ? 'approve' : 'reject';
-                let confirmBtnColor = statusTarget === 'processing' ? '#28a745' : '#dc3545';
-                let confirmBtnText = statusTarget === 'processing' ? 'Yes, Approve!' : 'Yes, Reject!';
-                let confirmBtnClass = statusTarget === 'processing' ?
+                // =========================================================================
+                // PERBAIKAN: Mengubah acuan kata 'processing' menjadi 'approved'
+                // =========================================================================
+                let isApprove = statusTarget === 'approved';
+                let textKeterangan = isApprove ? 'approve' : 'reject';
+                let confirmBtnColor = isApprove ? '#28a745' : '#dc3545';
+                let confirmBtnText = isApprove ? 'Yes, Approve!' : 'Yes, Reject!';
+                let confirmBtnClass = isApprove ?
                     'btn btn-success me-3 waves-effect waves-light' :
                     'btn btn-danger me-3 waves-effect waves-light';
 
                 Swal.fire({
                     title: 'Are you sure?',
-                    text: `You are about to ${textKeterangan} this Purchase Requisition document.`,
+                    // PERBAIKAN: Mengubah teks berkas menjadi Purchase Order
+                    text: `You are about to ${textKeterangan} this Purchase Order document.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: confirmBtnColor,
                     confirmButtonText: confirmBtnText,
                     customClass: {
                         confirmButton: confirmBtnClass,
-                        cancelButton: 'btn btn-secondary'
+                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
                     },
                     buttonsStyling: false
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: '/purchase-order/change-status/' +
-                                id, // Match with your status update route
+                            url: '/purchase-order/change-status/' + id,
                             type: "POST",
                             data: {
                                 _token: "{{ csrf_token() }}",
@@ -387,9 +395,9 @@
                                     buttonsStyling: false
                                 });
 
-                                // Reload table data (Pastikan ID table sesuai, contoh: #table atau #datatable)
+                                // Reload table tanpa melompat ke page 1 lagi
                                 if ($.fn.DataTable.isDataTable('#table')) {
-                                    $('#table').DataTable().ajax.reload();
+                                    $('#table').DataTable().ajax.reload(null, false);
                                 }
                             },
                             error: function(err) {

@@ -662,7 +662,7 @@
                     processData: false,
                     contentType: false,
                     dataType: 'json', // ✅ FIX typo
-
+                    global: false,
                     beforeSend: function() {
                         $('#savedata').html(
                             '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');

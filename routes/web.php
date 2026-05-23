@@ -240,12 +240,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/submit', [PurchaseOrderController::class, 'submitToPending'])->name('submit');
         Route::post('/change-status/{id}', [PurchaseOrderController::class, 'changeStatus']);
         Route::get('/print/{id}', [PurchaseOrderController::class, 'print'])->name('print');
+        Route::get('/po/price-history', [PurchaseOrderController::class, 'getPriceHistory']);
         Route::resource('', PurchaseOrderController::class)->parameters(['' => 'purchase_order']);
     });
 
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
     Route::resource('sales-order', SalesOrderController::class);
-
 });
 
 Route::fallback(function () {

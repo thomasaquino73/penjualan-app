@@ -318,47 +318,49 @@
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="faximili_kontak" class="form-label">Fax Number
                                                 </label>
-                                                 <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-phone"></i></span>
-                                                   <input type="number" id="faximili_kontak" name="faximili_kontak"
-                                                    class="form-control" placeholder="Enter Business Phone Number"
-                                                    value="{{ $kontak->faximili_kontak }}">
+                                                    <input type="number" id="faximili_kontak" name="faximili_kontak"
+                                                        class="form-control" placeholder="Enter Business Phone Number"
+                                                        value="{{ $kontak->faximili_kontak }}">
                                                 </div>
-                                                
+
                                                 <span class="error text-danger" id="faximili_kontakError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="no_whatsapp_kontak" class="form-label">Whatsapp
                                                     Number</label>
-                                                     <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-phone"></i></span>
-                                                    <input type="number" id="no_whatsapp_kontak" name="no_whatsapp_kontak"
-                                                    class="form-control" placeholder="Enter Business Phone Number"
-                                                    value="{{ $kontak->no_whatsapp_kontak }}">
+                                                    <input type="number" id="no_whatsapp_kontak"
+                                                        name="no_whatsapp_kontak" class="form-control"
+                                                        placeholder="Enter Business Phone Number"
+                                                        value="{{ $kontak->no_whatsapp_kontak }}">
                                                 </div>
-                                               
+
                                                 <span class="error text-danger" id="no_whatsapp_kontakError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="website_kontak" class="form-label">Website
                                                 </label>
-                                                   <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-globe"></i></span>
-                                                   <input type="text" id="website_kontak" name="website_kontak"
-                                                    class="form-control" placeholder="Enter Business Phone Number"
-                                                    value="{{ $kontak->website_kontak }}">
+                                                    <input type="text" id="website_kontak" name="website_kontak"
+                                                        class="form-control" placeholder="Enter Business Phone Number"
+                                                        value="{{ $kontak->website_kontak }}">
                                                 </div>
-                                               
+
                                                 <span class="error text-danger" id="website_kontakError"></span>
                                             </div>
                                             <div class="col-md-12 col-sm-12 mb-3">
                                                 <label for="catatan" class="form-label">Notes</label>
-                                                 <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-notes"></i></span>
-                                                   <input type="text" id="catatan" name="catatan" class="form-control"
-                                                    placeholder="Enter Notes" value="{{ $kontak->catatan }}">
+                                                    <input type="text" id="catatan" name="catatan"
+                                                        class="form-control" placeholder="Enter Notes"
+                                                        value="{{ $kontak->catatan }}">
                                                 </div>
-                                               
+
                                                 <span class="error text-danger" id="catatanError"></span>
                                             </div>
                                         </div>
@@ -382,53 +384,55 @@
                                             </div>
                                             <div class="col-md-12 col-sm-12 mb-3">
                                                 <label for="kota_pengiriman" class="form-label">Delivery Address</label>
-                                                
+
                                                 <textarea id="alamat_pengiriman" name="alamat_pengiriman" class="form-control" placeholder="Enter Main Address">{{ $pengiriman->alamat_pengiriman }}</textarea>
                                                 <span class="error text-danger" id="alamat_pengirimanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="kota_pengiriman" class="form-label">City</label>
-                                                 <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
-                                                   <input type="text" id="kota_pengiriman" name="kota_pengiriman"
-                                                    class="form-control" placeholder="Enter City"
-                                                    value="{{ $pengiriman->kota_pengiriman }}">
+                                                    <input type="text" id="kota_pengiriman" name="kota_pengiriman"
+                                                        class="form-control" placeholder="Enter City"
+                                                        value="{{ $pengiriman->kota_pengiriman }}">
                                                 </div>
-                                               
+
                                                 <span class="error text-danger" id="kota_pengirimanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="kodepos_pengiriman" class="form-label">Postal
                                                     Code</label>
-                                                    <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
-                                                   <input type="text" id="kodepos_pengiriman" name="kodepos_pengiriman"
-                                                    class="form-control" placeholder="Enter Postal Code"
-                                                    value="{{ $pengiriman->kodepos_pengiriman }}">
+                                                    <input type="text" id="kodepos_pengiriman"
+                                                        name="kodepos_pengiriman" class="form-control"
+                                                        placeholder="Enter Postal Code"
+                                                        value="{{ $pengiriman->kodepos_pengiriman }}">
                                                 </div>
-                                               
+
                                                 <span class="error text-danger" id="kodepos_pengirimanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="provinsi_pengiriman" class="form-label">Province</label>
-                                                 <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
-                                                  <input type="text" id="provinsi_pengiriman" name="provinsi_pengiriman"
-                                                    class="form-control" placeholder="Enter Province"
-                                                    value="{{ $pengiriman->provinsi_pengiriman }}">
+                                                    <input type="text" id="provinsi_pengiriman"
+                                                        name="provinsi_pengiriman" class="form-control"
+                                                        placeholder="Enter Province"
+                                                        value="{{ $pengiriman->provinsi_pengiriman }}">
                                                 </div>
-                                               
+
                                                 <span class="error text-danger" id="provinsi_pengirimanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="negara_pengiriman" class="form-label">Country</label>
-                                                 <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
                                                     <input type="text" id="negara_pengiriman" name="negara_pengiriman"
-                                                    class="form-control" placeholder="Enter Country"
-                                                    value="{{ $pengiriman->negara_pengiriman }}">
+                                                        class="form-control" placeholder="Enter Country"
+                                                        value="{{ $pengiriman->negara_pengiriman }}">
                                                 </div>
-                                             
+
                                                 <span class="error text-danger" id="negara_pengirimanError"></span>
                                             </div>
 
@@ -455,37 +459,40 @@
                                             <label class="col-sm-3 col-form-label" for="basic-default-name">Type ID
                                                 Tax</label>
                                             <div class="col-sm-9">
-                                                 <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-category"></i></span>
-                                                     <select name="tipe_id_pajak" id="tipe_id_pajak" class="form-select">
-                                                    <option value="" selected hidden>Select Type ID Tax</option>
-                                                    <option value="NIK"
-                                                        {{ $pajak->tipe_id_pajak == 'NIK' ? 'selected' : '' }}>NIK</option>
-                                                    <option value="NPWP"
-                                                        {{ $pajak->tipe_id_pajak == 'NPWP' ? 'selected' : '' }}>NPWP
-                                                    </option>
-                                                    <option value="Paspor"
-                                                        {{ $pajak->tipe_id_pajak == 'Paspor' ? 'selected' : '' }}>Paspor
-                                                    </option>
-                                                    <option value="Lainnya"
-                                                        {{ $pajak->tipe_id_pajak == 'Lainnya' ? 'selected' : '' }}>Lainnya
-                                                    </option>
-                                                </select>
+                                                    <select name="tipe_id_pajak" id="tipe_id_pajak" class="form-select">
+                                                        <option value="" selected hidden>Select Type ID Tax</option>
+                                                        <option value="NIK"
+                                                            {{ $pajak->tipe_id_pajak == 'NIK' ? 'selected' : '' }}>NIK
+                                                        </option>
+                                                        <option value="NPWP"
+                                                            {{ $pajak->tipe_id_pajak == 'NPWP' ? 'selected' : '' }}>NPWP
+                                                        </option>
+                                                        <option value="Paspor"
+                                                            {{ $pajak->tipe_id_pajak == 'Paspor' ? 'selected' : '' }}>
+                                                            Paspor
+                                                        </option>
+                                                        <option value="Lainnya"
+                                                            {{ $pajak->tipe_id_pajak == 'Lainnya' ? 'selected' : '' }}>
+                                                            Lainnya
+                                                        </option>
+                                                    </select>
                                                 </div>
-                                               
+
                                             </div>
                                         </div>
                                         <div class="row mb-3">
                                             <label class="col-sm-3 col-form-label" for="basic-default-name">NPWP
                                                 Number</label>
                                             <div class="col-sm-9">
-                                                  <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
-                                                      <input type="text" class="form-control" id="nomor_wajib_pajak"
-                                                    name="nomor_wajib_pajak" placeholder="Enter NPWP number"
-                                                    value="{{ $pajak->nomor_wajib_pajak }}">
+                                                    <input type="text" class="form-control" id="nomor_wajib_pajak"
+                                                        name="nomor_wajib_pajak" placeholder="Enter NPWP number"
+                                                        value="{{ $pajak->nomor_wajib_pajak }}">
                                                 </div>
-                                              
+
                                             </div>
                                         </div>
                                         <div class="row mb-3">
@@ -494,11 +501,11 @@
                                             <div class="col-sm-9">
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-user"></i></span>
-                                                     <input type="text" class="form-control" id="nama_wajib_pajak"
-                                                    name="nama_wajib_pajak" placeholder="Enter Taxpayer Name"
-                                                    value="{{ $pajak->nama_wajib_pajak }}">
+                                                    <input type="text" class="form-control" id="nama_wajib_pajak"
+                                                        name="nama_wajib_pajak" placeholder="Enter Taxpayer Name"
+                                                        value="{{ $pajak->nama_wajib_pajak }}">
                                                 </div>
-                                             
+
                                             </div>
                                         </div>
 
@@ -507,10 +514,11 @@
                                             <div class="col-sm-9">
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-id-badge-2"></i></span>
-                                                     <input type="text" class="form-control" id="id_tku" name="id_tku"
-                                                    placeholder="Enter ID TKU" value="{{ $pajak->id_tku }}">
+                                                    <input type="text" class="form-control" id="id_tku"
+                                                        name="id_tku" placeholder="Enter ID TKU"
+                                                        value="{{ $pajak->id_tku }}">
                                                 </div>
-                                             
+
                                             </div>
                                         </div>
                                     </div>
@@ -538,52 +546,52 @@
                                         <div class="row mb-3">
                                             <label class="col-sm-3 col-form-label" for="basic-default-name">City</label>
                                             <div class="col-sm-9">
-                                                 <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
-                                                      <input type="text" class="form-control" id="kota_pajak"
-                                                    name="kota_pajak" placeholder="Enter City"
-                                                    value="{{ $pajak->kota_pajak }}">
+                                                    <input type="text" class="form-control" id="kota_pajak"
+                                                        name="kota_pajak" placeholder="Enter City"
+                                                        value="{{ $pajak->kota_pajak }}">
                                                 </div>
-                                             
+
                                             </div>
                                         </div>
                                         <div class="row mb-3">
                                             <label class="col-sm-3 col-form-label" for="basic-default-name">Postal
                                                 Code</label>
                                             <div class="col-sm-9">
-                                                  <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
-                                                   <input type="text" class="form-control" id="kodepos_pajak"
-                                                    name="kodepos_pajak" placeholder="Enter Postal Code"
-                                                    value="{{ $pajak->kodepos_pajak }}">
+                                                    <input type="text" class="form-control" id="kodepos_pajak"
+                                                        name="kodepos_pajak" placeholder="Enter Postal Code"
+                                                        value="{{ $pajak->kodepos_pajak }}">
                                                 </div>
-                                                
+
                                             </div>
                                         </div>
                                         <div class="row mb-3">
                                             <label class="col-sm-3 col-form-label"
                                                 for="basic-default-name">Province</label>
                                             <div class="col-sm-9">
-                                                 <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
-                                                      <input type="text" class="form-control" id="provinsi_pajak"
-                                                    name="provinsi_pajak" placeholder="Enter Province"
-                                                    value="{{ $pajak->provinsi_pajak }}">
+                                                    <input type="text" class="form-control" id="provinsi_pajak"
+                                                        name="provinsi_pajak" placeholder="Enter Province"
+                                                        value="{{ $pajak->provinsi_pajak }}">
                                                 </div>
-                                             
+
                                             </div>
                                         </div>
                                         <div class="row mb-3">
                                             <label class="col-sm-3 col-form-label"
                                                 for="basic-default-name">Country</label>
                                             <div class="col-sm-9">
-                                                 <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
-                                                   <input type="text" class="form-control" id="negara_pajak"
-                                                    name="negara_pajak" placeholder="Enter Country"
-                                                    value="{{ $pajak->negara_pajak }}">
+                                                    <input type="text" class="form-control" id="negara_pajak"
+                                                        name="negara_pajak" placeholder="Enter Country"
+                                                        value="{{ $pajak->negara_pajak }}">
                                                 </div>
-                                               
+
                                             </div>
                                         </div>
                                     </div>
@@ -730,7 +738,7 @@
                     processData: false,
                     contentType: false,
                     dataType: 'json', // ✅ FIX typo
-
+                    global: false,
                     beforeSend: function() {
                         $('#savedata').html(
                             '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');

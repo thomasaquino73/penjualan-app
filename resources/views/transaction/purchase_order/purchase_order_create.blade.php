@@ -250,15 +250,13 @@
                                 </select>
                                 <span class="error text-danger" id="product_idError"></span>
                             </div>
-
-
-                            <div class="col-3 mb-3">
+                            <div class="col-6 mb-3">
                                 <label class="form-label" for="quantity">Quantity</label>
                                 <input type="number" id="quantity" name="quantity" class="form-control"
                                     placeholder="0" min="0">
                                 <span class="error text-danger" id="quantityError"></span>
                             </div>
-                            <div class="col-3 mb-3">
+                            <div class="col-6 mb-3">
                                 <label class="form-label" for="unit_id">Unit</label>
                                 <select name="unit_id" id="unit_id" class="form-select select2-modal "
                                     data-placeholder="Select Unit">
@@ -270,11 +268,29 @@
                                 <label class="form-label" for="unit_price">Unit Price</label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
+
+                                    <!-- Input Box Utama -->
                                     <input type="number" id="unit_price" name="unit_price" class="form-control"
                                         placeholder="0" min="0">
+
+                                    <!-- Tombol Dropdown History Terintegrasi -->
+
+                                    <button class="btn btn-outline-secondary dropdown-toggle no-caret" type="button"
+                                        id="btn-history-po" data-bs-toggle="dropdown" data-bs-placement="top"
+                                        data-bs-original-title="History" disabled>
+                                        <i class="ti ti-history"></i> <!-- Menggunakan icon history biar lebih pas -->
+                                    </button>
+
+                                    <!-- Wadah List History Harga -->
+                                    <ul class="dropdown-menu dropdown-menu-end" id="po-price-dropdown-menu"
+                                        style="max-width: 250px;">
+                                        <!-- Diisi via JavaScript -->
+                                    </ul>
                                 </div>
 
                                 <span class="error text-danger" id="unit_priceError"></span>
+                                <small id="po-history-helper" class="form-text text-muted" style="font-size: 11px;">Pilih
+                                    produk untuk melacak riwayat harga beli.</small>
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="form-label" for="discount">Discount</label>
@@ -336,6 +352,16 @@
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
 
     <script>
+        $(document).ready(function() {
+            // Mengaktifkan tooltip di dalam modal dengan aman
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl, {
+                    container: 'body', // Memaksa tooltip menempel ke body agar tidak tertutup modal
+                    trigger: 'hover' // Muncul hanya saat mouse diarahkan ke tombol
+                });
+            });
+        });
         $(function() {
 
             const datePicker = flatpickr("#date", {
@@ -658,18 +684,190 @@
             });
 
             // 4. Event Handler: Mengubah Produk (AJAX List Unit & Harga)
+            // $(document).on('change', '#product_id', function() {
+            //     let productId = $(this).val();
+            //     let unitSelect = $('#unit_id');
+            //     let priceInput = $('#unit_price');
+
+            //     if (!productId) {
+            //         unitSelect.empty().append('<option></option>').trigger('change');
+            //         priceInput.val('');
+            //         return;
+            //     }
+
+            //     // AJAX List Unit
+            //     $.ajax({
+            //         url: `/get-units-by-product/${productId}`,
+            //         type: 'GET',
+            //         dataType: 'json',
+            //         beforeSend: function() {
+            //             unitSelect.html('<option>Loading units...</option>').prop('disabled',
+            //                 true);
+            //         },
+            //         success: function(response) {
+            //             unitSelect.empty().append('<option></option>').prop('disabled', false);
+
+            //             if (response && response.length > 0) {
+            //                 $.each(response, function(key, item) {
+            //                     unitSelect.append(
+            //                         `<option value="${item.id}">${item.name}</option>`
+            //                     );
+            //                 });
+            //             } else {
+            //                 unitSelect.append('<option value="">No unit available</option>');
+            //             }
+
+            //             unitSelect.trigger('change');
+
+            //             let pendingUnitId = unitSelect.data('pending-val');
+            //             if (pendingUnitId) {
+            //                 unitSelect.val(pendingUnitId).trigger('change');
+            //                 unitSelect.removeData('pending-val');
+            //             }
+            //         },
+            //         error: function() {
+            //             console.error('Gagal memuat list unit dari Controller.');
+            //             unitSelect.empty().append('<option></option>').prop('disabled', false)
+            //                 .trigger('change');
+            //         }
+            //     });
+
+            //     // AJAX Harga Produk
+            //     $.ajax({
+            //         url: `/purchase-order/get-product-price/${productId}`,
+            //         type: 'GET',
+            //         dataType: 'json',
+            //         beforeSend: function() {
+            //             priceInput.val('').attr('placeholder', 'Loading...');
+            //         },
+            //         success: function(response) {
+            //             if (response.success && response.price !== null && response.price !==
+            //                 '') {
+            //                 priceInput.val(response.price);
+            //             } else {
+            //                 priceInput.val('').attr('placeholder', '0');
+            //             }
+            //         },
+            //         error: function(xhr) {
+            //             console.error("Gagal mengambil data harga produk:", xhr);
+            //             priceInput.val('').attr('placeholder', '0');
+            //         }
+            //     });
+
+            //     // ==========================================
+            //     // 2. AJAX Harga Produk & History PO (URL diubah sesuai Route kamu)
+            //     // ==========================================
+            //     $.ajax({
+            //         url: `/po/price-history?product_id=${productId}&supplier_id=${supplierId}`, // <-- URL Sesuai Route Kamu
+            //         type: 'GET',
+            //         dataType: 'json',
+            //         beforeSend: function() {
+            //             priceInput.val('').attr('placeholder', 'Loading...');
+            //             dropdownBtn.prop('disabled', true);
+            //             dropdownMenu.empty();
+            //             helperText.text("Mencari riwayat harga...");
+            //         },
+            //         success: function(response) {
+            //             // JIKA RIWAYAT HARGA TRANSAKSI DITEMUKAN DI DETAIL PO
+            //             if (response.success && response.history.length > 0) {
+
+            //                 // Aktifkan tombol history dropdown
+            //                 dropdownBtn.prop('disabled', false);
+            //                 helperText.attr('class', 'form-text text-success').text(
+            //                     "Riwayat ditemukan. Klik icon untuk ganti harga lama.");
+
+            //                 // Autofill otomatis menggunakan Harga Transaksi Terakhir
+            //                 priceInput.val(response.history[0]);
+
+            //                 // Render list harga lama ke dalam dropdown menu
+            //                 $.each(response.history, function(index, harga) {
+            //                     let formattedPrice =
+            //                         `Rp ${Number(harga).toLocaleString('id-ID')}`;
+            //                     let itemContent = index === 0 ?
+            //                         `<strong>${formattedPrice}</strong> <span class="badge bg-label-success text-xs">Terakhir</span>` :
+            //                         formattedPrice;
+
+            //                     let li = $('<li></li>');
+            //                     let a = $(
+            //                         `<a class="dropdown-item d-flex justify-content-between align-items-center" href="#">${itemContent}</a>`
+            //                         );
+
+            //                     // Inject event klik pada item dropdown
+            //                     a.on('click', function(e) {
+            //                         e.preventDefault();
+            //                         priceInput.val(harga);
+            //                     });
+
+            //                     li.append(a);
+            //                     dropdownMenu.append(li);
+            //                 });
+
+            //             } else {
+            //                 // JIKA TIDAK ADA RIWAYAT TRANSAKSI, FALLBACK KE HARGA MASTER (Ajax Asli Kamu)
+            //                 helperText.attr('class', 'form-text text-muted').text(
+            //                     "Belum ada riwayat PO. Mengambil harga master...");
+
+            //                 $.ajax({
+            //                     url: `/purchase-order/get-product-price/${productId}`,
+            //                     type: 'GET',
+            //                     dataType: 'json',
+            //                     success: function(masterResponse) {
+            //                         if (masterResponse.success && masterResponse
+            //                             .price !== null && masterResponse.price !==
+            //                             '') {
+            //                             priceInput.val(masterResponse.price);
+            //                         } else {
+            //                             priceInput.val('').attr('placeholder', '0');
+            //                         }
+            //                     },
+            //                     error: function(xhr) {
+            //                         console.error(
+            //                             "Gagal mengambil data harga produk:",
+            //                             xhr);
+            //                         priceInput.val('').attr('placeholder', '0');
+            //                     }
+            //                 });
+            //             }
+            //         },
+            //         error: function(xhr) {
+            //             console.error("Gagal mengambil data riwayat harga:", xhr);
+            //             priceInput.val('').attr('placeholder', '0');
+            //             helperText.attr('class', 'form-text text-danger').text(
+            //                 "Gagal memuat riwayat harga.");
+            //         }
+            //     });
+            // });
+
             $(document).on('change', '#product_id', function() {
                 let productId = $(this).val();
                 let unitSelect = $('#unit_id');
                 let priceInput = $('#unit_price');
+                let dropdownBtn = $('#btn-history-po');
+                let dropdownMenu = $('#po-price-dropdown-menu');
+                let helperText = $('#po-history-helper');
+
+                // Pastikan ID selector ini sesuai dengan ID Select Supplier di form utama kamu
+                let supplierId = $('#supplier_id').val();
 
                 if (!productId) {
                     unitSelect.empty().append('<option></option>').trigger('change');
                     priceInput.val('');
+                    dropdownBtn.prop('disabled', true);
+                    dropdownMenu.empty();
+                    helperText.text("Pilih produk untuk melacak riwayat harga beli.");
                     return;
                 }
 
-                // AJAX List Unit
+                // Tambahan Validasi: Ingatkan user jika supplier belum dipilih
+                if (!supplierId) {
+                    alert('Silahkan pilih Supplier terlebih dahulu pada form utama PO!');
+                    $(this).val('').trigger('change'); // Reset pilihan produk
+                    return;
+                }
+
+                // ==========================================
+                // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
+                // ==========================================
                 $.ajax({
                     url: `/get-units-by-product/${productId}`,
                     type: 'GET',
@@ -706,134 +904,107 @@
                     }
                 });
 
-                // AJAX Harga Produk
+                // ==========================================
+                // 2. AJAX History PO + Fallback Harga Master
+                // ==========================================
                 $.ajax({
-                    url: `/purchase-order/get-product-price/${productId}`,
+                    url: `/purchase-order/po/price-history?product_id=${productId}&supplier_id=${supplierId}`,
                     type: 'GET',
                     dataType: 'json',
                     beforeSend: function() {
-                        priceInput.val('').attr('placeholder', 'Loading...');
+                        // Jangan hapus isi textbox jika sudah ada nilainya (misal saat mode EDIT)
+                        if (priceInput.val() === '' || priceInput.val() == '0') {
+                            priceInput.val('0');
+                        }
+                        dropdownBtn.prop('disabled', true);
+                        dropdownMenu.empty();
+                        helperText.text("Mencari riwayat harga...");
                     },
                     success: function(response) {
-                        if (response.success && response.price !== null && response.price !==
-                            '') {
-                            priceInput.val(response.price);
+                        if (response.success && response.history.length > 0) {
+
+                            dropdownBtn.prop('disabled', false);
+                            helperText.attr('class', 'form-text text-success').text(
+                                "Riwayat ditemukan. Klik icon untuk ganti harga lama."
+                            );
+
+                            // Render ulang list dropdown menu
+                            $.each(response.history, function(index, item) {
+                                // 1. Ambil nilai harga dan tanggal dari objek item
+                                let harga = item.harga;
+                                let tanggalMentah = item.tanggal;
+
+                                // 2. Format Tanggal (Contoh Hasil: 23-05-2026 14:30)
+                                let formattedDate = '-';
+                                if (tanggalMentah) {
+                                    let d = new Date(tanggalMentah);
+                                    let tgl = String(d.getDate()).padStart(2, '0');
+                                    let bln = String(d.getMonth() + 1).padStart(2,
+                                        '0'); // Bulan dimulai dari 0
+                                    let thn = d.getFullYear();
+                                    let jam = String(d.getHours()).padStart(2, '0');
+                                    let mnt = String(d.getMinutes()).padStart(2, '0');
+
+                                    formattedDate =
+                                        `${tgl}-${bln}-${thn} ${jam}:${mnt}`;
+                                }
+
+                                // 3. Format Tampilan Harga Ke Rupiah
+                                let formattedPrice =
+                                    `Rp ${Number(harga).toLocaleString('id-ID')}`;
+
+                                // 4. Susun konten teks menu dropdown (Harga di kiri, Tanggal & Badge di kanan)
+                                let badgeTerakhir = index === 0 ?
+                                    `<span class="badge bg-label-success text-xs ms-1">Terakhir</span>` :
+                                    '';
+
+                                let itemContent = `
+                <div class="d-flex flex-column w-100">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span><strong>${formattedPrice}</strong></span>
+                        ${badgeTerakhir}
+                    </div>
+                    <small class="text-muted" style="font-size: 11px;">
+                        <i class="ti ti-calendar text-xs me-1"></i>${formattedDate}
+                    </small>
+                </div>
+              `;
+
+                                let li = $('<li></li>');
+                                let a = $(
+                                    `<a class="dropdown-item d-flex align-items-center py-2" href="#" style="min-width: 220px;">${itemContent}</a>`
+                                );
+
+                                // Ketika item di klik, harga dimasukkan ke textbox
+                                a.on('click', function(e) {
+                                    e.preventDefault();
+                                    priceInput.val(harga);
+                                });
+
+                                li.append(a);
+                                dropdownMenu.append(li);
+                            });
+
                         } else {
-                            priceInput.val('').attr('placeholder', '0');
+                            helperText.attr('class', 'form-text text-muted').text(
+                                "Belum ada riwayat PO dengan supplier ini. Silahkan isi harga manual."
+                            );
+                            dropdownBtn.prop('disabled', true);
+                            if (priceInput.val() === '') {
+                                priceInput.val('0');
+                            }
                         }
                     },
                     error: function(xhr) {
-                        console.error("Gagal mengambil data harga produk:", xhr);
-                        priceInput.val('').attr('placeholder', '0');
+                        console.error("Gagal mengambil data riwayat harga:", xhr);
+                        helperText.attr('class', 'form-text text-danger').text(
+                            "Gagal memuat riwayat harga."
+                        );
                     }
                 });
             });
 
             // 5. Event Handler: Submit Form Modal Detail (Sekarang baris prDetailsData PASTI terbaca)
-            $('#formPrDetail').on('submit', function(e) {
-                e.preventDefault();
-
-                let productId = $('#product_id').val();
-                let productName = $('#product_id option:selected').text();
-                let quantity = parseFloat($('#quantity').val()) || 0;
-                let unitId = $('#unit_id').val();
-                let unitName = $('#unit_id option:selected').text();
-                let detailId = $('#detail_id').val();
-
-                let unitPrice = parseFloat($('#unit_price').val()) || 0;
-                let discount = parseFloat($('#discount').val()) || 0;
-                let tax = parseFloat($('#tax').val()) || 0;
-
-                let requiredDate = $('#required_date').val() || '';
-
-                if (!productId || quantity <= 0 || !unitId) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: 'Please fill all required fields! (Product, Valid Quantity, and Unit)',
-                        customClass: {
-                            confirmButton: 'btn btn-danger'
-                        },
-                        buttonsStyling: false
-                    });
-                    return false;
-                }
-
-                // Validasi Duplikasi
-                let isDuplicate = false;
-                if (prDetailsData && prDetailsData.length > 0) {
-                    for (let i = 0; i < prDetailsData.length; i++) {
-                        if (prDetailsData[i].product_id == productId) {
-                            if (detailId === '') {
-                                isDuplicate = true;
-                                break;
-                            } else if (detailId !== '' && i != detailId) {
-                                isDuplicate = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (isDuplicate) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Product Already Exists!',
-                        html: `The product <b>"${productName}"</b> is already registered.<br>Please edit the item if you want to change it.`,
-                        customClass: {
-                            confirmButton: 'btn btn-danger'
-                        },
-                        buttonsStyling: false
-                    });
-                    return false;
-                }
-
-                // Kalkulasi Amount
-                // ==========================================
-                // MATEMATIKA KALKULASI AMOUNT (TAX DALAM PERSEN)
-                // ==========================================
-                // 1. Hitung Subtotal Kotor (Qty * Harga)
-                let subTotal = quantity * unitPrice;
-
-                // 2. Potong Diskon Nilai Tetap (jika diskon Anda inputnya nominal, misal: 50000)
-                // Jika diskon Anda juga persen, gunakan: let totalDiscount = subTotal * (discount / 100);
-                let totalDiscount = discount;
-
-                // 3. Hitung DPP (Dasar Pengenaan Pajak) setelah diskon
-                let setelahDiskon = subTotal - totalDiscount;
-
-                // 4. Hitung Nilai Pajak Rupiah dari Persen (Misal input tax = 11, maka 11 / 100)
-                let totalTax = setelahDiskon * (tax / 100);
-
-                // 5. Grand Total Akhir
-                let amount = setelahDiskon + totalTax;
-
-                let itemData = {
-                    'product_id': productId,
-                    'data_produk': productName,
-                    'quantity': quantity,
-                    'unit_id': unitId,
-                    'unit': unitName,
-                    'unit_price': unitPrice,
-                    'discount': discount,
-                    'tax': tax,
-                    'amount': amount,
-                    'required_date': requiredDate,
-                };
-
-                if (detailId === '') {
-                    prDetailsData.push(itemData);
-                } else {
-                    prDetailsData[detailId] = itemData;
-                }
-
-                // Render ulang ke DataTable visual
-                table.clear().rows.add(prDetailsData).draw();
-                calculateGrandTotal();
-                calculateTotalOrder();
-                $('#modalPrDetail').modal('hide');
-            });
-
             let saveAndNew = false;
             let activeBtn = null;
 
@@ -842,7 +1013,8 @@
                 activeBtn = $(this);
             });
 
-            $('#postForm').on('submit', function(e) {
+            // CUKUP TAMBAHKAN .off('submit') DI SINI
+            $('#postForm').off('submit').on('submit', function(e) {
                 e.preventDefault();
 
                 let form = this;

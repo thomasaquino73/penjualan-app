@@ -568,7 +568,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                               <span class="error text-danger" id="nama_bankError"></span>
+                                <span class="error text-danger" id="nama_bankError"></span>
                             </div>
                             <div class="col-12 mb-3">
                                 <label class="form-label" for="nama_rekening">Account Name</label>
@@ -661,13 +661,10 @@
 
         });
         $(document).ready(function() {
-
-
             $('#postForm').on('submit', function(e) {
                 e.preventDefault();
                 var form = this;
                 let formData = new FormData(form);
-
                 formData.append('items_detail', JSON.stringify(prDetailsData));
 
                 let rekeningData = [];
@@ -680,27 +677,22 @@
                 });
 
                 formData.append('rekening_data', JSON.stringify(rekeningData));
-
                 $.ajax({
                     url: $(form).attr('action'),
                     method: $(form).attr('method'),
-                    data: formData, // ✅ pakai ini
+                    data: new FormData(form),
                     processData: false,
                     contentType: false,
-                    dataType: 'json', // ✅ FIX typo
-
-                    beforeSend: function() {
+                    datatype: 'json',
+                    global: false,
+                    beforeSend: function(e) {
                         $('#savedata').html(
                             '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
                     },
-
-                    complete: function() {
-                        $('#savedata').html('<i class="fa fa-save me-1"></i> Save');
+                    complete: function(e) {
+                        $('#savedata').html(' <i class="fa fa-save me-1"></i>Save');
                     },
-
                     success: function(response) {
-                        $('#modals').modal('hide');
-
                         Swal.fire({
                             icon: 'success',
                             title: response.title,
@@ -735,7 +727,11 @@
                         });
                     }
                 });
+
+
             });
+
+
 
 
             let prDetailsData = [];

@@ -3,6 +3,7 @@
 namespace App\Models\Master_Data;
 
 use App\Models\BasicCodeDetail;
+use App\Models\Transaction\PurchaseOrderDetail;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -58,5 +59,21 @@ class Barang extends Model
     public function stockHistories()
     {
         return $this->hasMany(DataBarangStok::class, 'data_barang_id');
+    }
+
+    public function poDetails()
+    {
+        // Parameter: NamaModelDetail, foreign_key_di_tabel_detail
+        return $this->hasMany(PurchaseOrderDetail::class, 'product_id');
+    }
+
+    public function getPriceHistory()
+    {
+        return $this->poDetails()
+            ->select('unit_price') // Ambil kolom harga dari tabel detail
+            ->distinct()           // Berfungsi agar harga yang sama tidak duplikat
+            ->latest('created_at') // Urutkan berdasarkan transaksi terbaru di tabel detail
+            ->limit(5)             // Ambil 5 harga unik terakhir saja
+            ->pluck('unit_price'); // Mengubah hasil query langsung menjadi array [50000, 48000, ...]
     }
 }

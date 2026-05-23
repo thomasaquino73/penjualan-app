@@ -98,72 +98,73 @@ class PurchaseOrderController extends Controller
                             </div>';
                 })
                 ->addColumn('action', function ($row) {
-                    // 1. Definisikan variabel ID user yang login
                     $currentUserId = auth()->id();
                     $user = auth()->user(); // Ambil data user login untuk cek permission
 
-                    // 2. Buat pembuka komponen Dropdown Button
+                    // Pembuka komponen Dropdown Button
                     $btn = '<div class="btn-group">
-                                <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="ti ti-menu-2 ti-xs me-1"></i>
-                                </button>
-                                <ul class="dropdown-menu">';
+                <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-menu-2 ti-xs me-1"></i>
+                </button>
+                <ul class="dropdown-menu">';
 
-                    // ─── AKSI UNTUK PEMBUAT DOKUMEN (OWNER) ──────────────────────────────────
+                    // ─── 1. AKSI UNTUK PEMBUAT DOKUMEN (OWNER / PURCHASING STAFF) ───────────────────────────
                     if ($row->created_by == $currentUserId) {
-                        // ✅ TOMBOL SUBMIT (Hanya jika status draft)
+
+                        // ✅ TOMBOL SUBMIT (Kirim ke Atasan / Manajer untuk di-approve)
                         if ($row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Submit to Approval</a>';
+                            $btn .= '<a class="dropdown-item btn-submit-po" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Send to Approval</a>';
                             $btn .= '<hr class="dropdown-divider">';
                         }
-                        // ✅ TOMBOL EDIT (Hanya jika status draft)
-                        if ($user->can('permintaan_pembelian-edit') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item" href="'.route('purchase-order.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
+
+                        // ✅ TOMBOL EDIT (Hanya jika berstatus draft atau rejected)
+                        if ($user->can('purchase_order-edit') && ($row->status == 'draft' || $row->status == 'rejected')) {
+                            $btn .= '<a class="dropdown-item" href="'.route('purchase-order.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit PO</a>';
                         }
 
-                        // ✅ TOMBOL DELETE (Hanya jika status draft)
-                        if ($user->can('permintaan_pembelian-delete') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete" data-id="'.$row->id.'" data-name="'.$row->code.'"><i class="ti ti-trash me-1"></i> Delete</a>';
-                        }
-
-                        // 🕒 TEKS JIKA STATUS PENDING (Untuk Pembuat Dokumen)
-                        if ($row->status == 'pending') {
-                            $btn .= '<a class="dropdown-item" href="'.route('purchase-order.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit</a>';
-                            // $btn .= '<span class="dropdown-item-text text-warning small"><i class="ti ti-clock me-1"></i> Awaiting approval</span>';
+                        // ✅ TOMBOL DELETE / VOID (Hanya jika masih draft)
+                        if ($user->can('purchase_order-delete') && $row->status == 'draft') {
+                            $btn .= '<a class="dropdown-item text-danger" href="javascript:void(0)" id="delete" data-id="'.$row->id.'" data-name="'.$row->code.'"><i class="ti ti-trash me-1"></i> Delete</a>';
                         }
                     }
 
-                    // ─── AKSI UNTUK USER LAIN (APPROVER) ──────────────────────────────────────
+                    // ─── 2. AKSI UNTUK USER LAIN (APPROVER / MANAGER / DIREKTUR) ─────────────────────────────
                     // Syarat: Bukan pembuat dokumen AND Punya permission approval AND Status pending
-                    if ($row->created_by !== $currentUserId && $user->can('permintaan_pembelian-approval')) {
+                    if ($row->created_by !== $currentUserId && $user->can('purchase_order-approval')) {
                         if ($row->status == 'pending') {
-                            $btn .= '<a class="dropdown-item text-success btn-approval-pr" href="javascript:void(0)" data-status="processing" data-id="'.$row->id.'">
-                                <i class="ti ti-check me-1"></i> Approve & Process
-                            </a>';
+                            $btn .= '<a class="dropdown-item text-success btn-approval-po" href="javascript:void(0)" data-status="approved" data-id="'.$row->id.'">
+                        <i class="ti ti-check me-1"></i> Approve PO
+                    </a>';
 
-                            $btn .= '<a class="dropdown-item text-danger btn-approval-pr" href="javascript:void(0)" data-status="rejected" data-id="'.$row->id.'">
-                                <i class="ti ti-x me-1"></i> Reject PR
-                            </a>';
+                            $btn .= '<a class="dropdown-item text-danger btn-approval-po" href="javascript:void(0)" data-status="rejected" data-id="'.$row->id.'">
+                        <i class="ti ti-x me-1"></i> Reject PO
+                    </a>';
+                            $btn .= '<hr class="dropdown-divider">';
                         }
                     }
 
-                    // ─── KONDISI KHUSUS: JIKA DIA APPROVER TAPI DATA PUNYA DIA SENDIRI ─────────
-                    if ($row->created_by == $currentUserId && $row->status == 'pending' && $user->can('permintaan_pembelian-approval')) {
-                        // Baris ini opsional, untuk memperjelas kenapa dia tidak bisa approve dokumennya sendiri
-                        // $btn .= '<span class="dropdown-item-text text-muted small"><i class="ti ti-alert-circle me-1"></i> Cannot approve your own PR</span>';
+                    // ─── 3. AKSI PASCA APPROVAL (SETELAH PO APPROVED) ───────────────────────────────────────
+                    // Jika PO sudah disetujui, staff bisa mengirimkan PO ini secara resmi ke Supplier
+                    if ($row->status == 'approved' && $user->can('purchase_order-send-supplier')) {
+                        $btn .= '<a class="dropdown-item text-info btn-sent-supplier" href="javascript:void(0)" data-id="'.$row->id.'">
+                    <i class="ti ti-mail-fast me-1"></i> Mark as Sent to Supplier
+                </a>';
                     }
 
-                    // ─── KONDISI GLOBAL: JIKA DATA SUDAH DI-PROCESS LANJUT ───────────────────
-                    if ($row->status !== 'draft' && $row->status !== 'pending') {
-                        $btn .= '<span class="dropdown-item-text text-muted small"><i class="ti ti-info-circle me-1"></i> Data processed successfully</span>';
+                    // ─── 4. TOMBOL UMUM / GLOBAL (KAPANPUN BISA DIAKSES) ─────────────────────────────────────
+                    // Detail View
+                    if ($user->can('purchase_order-read')) {
+                        $btn .= '<a class="dropdown-item" href="'.route('purchase-order.show', $row->id).'" data-id="'.$row->id.'"> 
+                    <i class="ti ti-list-details me-1"></i> View Detail
+                </a>';
                     }
-                    if (auth()->user()->can('permintaan_pembelian-read')) {
-                        $btn .= '<a class="dropdown-item " href="'.route('purchase-order.show', $row->id).'"
-                            data-id="'.$row->id.'"> <i class="ti ti-list-details"></i> Detail</a>';
-                    }
-                    $btn .= '<a class="dropdown-item " target="_blank" href="'.route('purchase-order.print', $row->id).'"
-                            data-id="'.$row->id.'"> <i class="ti ti-printer"></i> Print</a>';
-                    // 3. Tutup komponen tag HTML dropdown
+
+                    // Cetak PDF / Print PO
+                    $btn .= '<a class="dropdown-item" target="_blank" href="'.route('purchase-order.print', $row->id).'" data-id="'.$row->id.'"> 
+                <i class="ti ti-printer me-1"></i> Print / PDF
+            </a>';
+
+                    // Tutup komponen tag HTML dropdown
                     $btn .= '</ul></div>';
 
                     return $btn;
@@ -345,11 +346,10 @@ class PurchaseOrderController extends Controller
                         $qty = floatval($item['quantity']) || 0;
                         $unitPrice = floatval($item['unit_price']) || 0;
                         $discount = floatval($item['discount']) || 0;
-                        $taxPercent = floatval($item['tax']) || 0;
 
                         $subTotal = $qty * $unitPrice;
                         $setelahDiskon = $subTotal - $discount;
-                        $totalTax = $setelahDiskon * ($taxPercent / 100);
+                        $totalTax = $setelahDiskon;
                         $amount = $setelahDiskon + $totalTax;
 
                         // Insert data baris barang menggunakan Query Builder (Lebih cepat untuk batch insert)
@@ -360,7 +360,6 @@ class PurchaseOrderController extends Controller
                             'unit_id' => $item['unit_id'],
                             'unit_price' => $item['unit_price'] ?? 0,
                             'discount' => $item['discount'] ?? 0,
-                            'tax' => $item['tax'] ?? 0,
                             'amount' => $item['amount'] ?? $amount, // Menyimpan total bersih per baris item
                             'active' => 1,
                             'created_by' => Auth::id(),
@@ -643,35 +642,93 @@ class PurchaseOrderController extends Controller
 
     public function submitToPending($id)
     {
-        $pr = PurchaseOrder::findOrFail($id);
+        // 1. Ambil tahun berjalan secara dinamis
+        $year = date('Y');
+        $tableName = "purchase_order_{$year}";
 
-        // Validasi keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
-        if ($pr->status !== 'draft' || $pr->created_by !== auth()->id()) {
+        // 2. Gunakan Query Builder dengan nama tabel dinamis agar pencarian ID aman
+        $poData = DB::table($tableName)->where('id', $id)->first();
+
+        // Jika data memang benar-benar tidak ditemukan di database
+        if (! $poData) {
+            return response()->json(['success' => false, 'message' => 'Data Purchase Order tidak ditemukan.'], 404);
+        }
+
+        // 3. Validasi Keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
+        if ($poData->status !== 'draft' || $poData->created_by !== auth()->id()) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'], 403);
         }
 
-        // Ubah status menjadi pending
-        $pr->status = 'pending';
-        $pr->updated_by = auth()->id(); // Jika Anda mencatat siapa yang melakukan update terakhir
-        $pr->save();
+        // 4. Lakukan pembaruan status menggunakan Query Builder demi stabilitas tabel dinamis
+        DB::table($tableName)->where('id', $id)->update([
+            'status' => 'pending',
+            'updated_by' => auth()->id(),
+            'updated_at' => now(), // Mengisi timestamp bawaan laravel secara manual karena menggunakan Query Builder
+        ]);
 
         return response()->json(['success' => true, 'message' => 'Purchase Order berhasil diajukan!']);
     }
 
     public function changeStatus(Request $request, $id)
     {
-        $pr = PurchaseOrder::findOrFail($id);
+        // 1. Ambil tahun berjalan secara dinamis untuk dynamic table
+        $year = date('Y');
+        $tableName = "purchase_order_{$year}";
 
-        // Validasi: Pastikan yang mengubah status BUKAN orang yang membuat dokumen
-        if ($pr->created_by === auth()->id()) {
+        // 2. Cari data PO berdasarkan ID menggunakan Query Builder
+        $poData = DB::table($tableName)->where('id', $id)->first();
+
+        // Validasi jika data tidak ditemukan
+        if (! $poData) {
+            return response()->json(['error' => 'Data Purchase Order tidak ditemukan.'], 404);
+        }
+
+        // 3. Validasi Keamanan: Pastikan yang mengubah status BUKAN orang yang membuat dokumen (Anti Self-Approval)
+        if ($poData->created_by === auth()->id()) {
             return response()->json(['error' => 'You may not approve/reject documents you create yourself!'], 403);
         }
 
-        $pr->status = $request->status; // Menangkap 'processing' atau 'rejected' dari data AJAX
-        $pr->updated_by = Auth::id(); // Menangkap 'processing' atau 'rejected' dari data AJAX
-        $pr->save();
+        // 4. Validasi Input Status (Memastikan hanya menerima 'approved' atau 'rejected')
+        $statusTarget = $request->input('status');
+        if (! in_array($statusTarget, ['approved', 'rejected'])) {
+            return response()->json(['error' => 'Status target tidak valid.'], 400);
+        }
 
-        return response()->json(['message' => 'Purchase Requisition status successfully updated!']);
+        // 5. Eksekusi Update ke Database
+        DB::table($tableName)->where('id', $id)->update([
+            'status' => $statusTarget,
+            'updated_by' => Auth::id(),
+            'updated_at' => now(), // Isi timestamp manual karena menggunakan Query Builder
+        ]);
+
+        // ==========================================
+        // 5b. OTOMATISASI: Kirim dokumen hanya jika statusnya 'approved'
+        // ==========================================
+        if ($statusTarget === 'approved') {
+            try {
+                // Panggil fungsi atau service pengiriman dokumen Anda di sini.
+                // Contoh jika menggunakan Mail Laravel:
+                // Mail::to($poData->vendor_email)->send(new PurchaseOrderMail($poData));
+                
+                // Atau jika menggunakan job queue (Sangat disarankan agar performa aplikasi tetap cepat):
+                // SendPurchaseOrderJob::dispatch($poData);
+                
+            } catch (\Exception $e) {
+                // Log error jika pengiriman gagal agar sistem tidak crash total
+                Log::error("Gagal mengirim dokumen PO ID {$id}: " . $e->getMessage());
+                
+                // Catatan: Anda bisa memilih apakah ingin mengembalikan response sukses/gagal 
+                // jika pengirimannya error, tergantung kebutuhan bisnis.
+            }
+        }
+
+        // 6. Return response dengan pesan dinamis sesuai aksi (Approve / Reject)
+        $messageText = $statusTarget === 'approved' ? 'approved' : 'rejected';
+
+        return response()->json([
+            'success' => true,
+            'message' => "Purchase Order status successfully {$messageText}!",
+        ], 200);
     }
 
     public function show(string $id)
@@ -716,5 +773,36 @@ class PurchaseOrderController extends Controller
 
         // kalau mau download:
         // return $pdf->download('purchase-order.pdf');
+    }
+
+    public function getPriceHistory(Request $request)
+    {
+        $productId = $request->get('product_id');
+        $supplierId = $request->get('supplier_id');
+
+        $year = date('Y');
+        $tableDetail = "purchase_order_detail_{$year}";
+        $tableMaster = "purchase_order_{$year}";
+
+        // Mengambil harga sekaligus tanggal transaksi
+        $history = DB::table($tableDetail)
+            ->join($tableMaster, "{$tableDetail}.purchase_order_id", '=', "{$tableMaster}.id")
+            ->where("{$tableDetail}.product_id", $productId)
+            ->where("{$tableMaster}.supplier_id", $supplierId)
+            ->orderBy("{$tableDetail}.id", 'desc') // Tetap urutkan dari yang terbaru
+            ->select(
+                "{$tableDetail}.unit_price as harga",
+                "{$tableMaster}.date as tanggal" // Ambil field tanggal transaksi
+            )
+            ->get()
+            // Lakukan unique berdasarkan harga agar list tidak penuh dengan harga yang sama
+            ->unique('harga')
+            ->values()
+            ->take(5);
+
+        return response()->json([
+            'success' => true,
+            'history' => $history,
+        ]);
     }
 }

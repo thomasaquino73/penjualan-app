@@ -57,21 +57,9 @@ class PermissionsController extends Controller
                     return 'N/A';
                 })
                 ->addColumn('action', function ($row) {
-                    $btn = '<div class="btn-group">';
-                    $btn .= '<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-menu-2 ti-xs me-1"></i> </button>';
-                    $btn .= '<div class="dropdown-menu">';
-                    if (auth()->user()->can('permission-edit')) {
 
-                        $btn .= '<a class="dropdown-item" href="'.route('permissions.edit', $row->id).'"><i class="fa fa-edit me-1"></i>Edit</a>';
-                    }
-                    if (auth()->user()->can('permission-delete')) {
-                        $btn .= '<a class="dropdown-item " id="delete" href="javascript:void(0)" data-id="'.$row->id.'"  data-name="'.$row->name.'">';
-                        $btn .= '<i class="fa fa-trash me-1"></i> Delete</a>';
-                    }
+                    return '<a class="btn btn-sm btn-success" href="'.route('permissions.edit', $row->id).'"><i class="fa fa-edit me-1"></i>Edit</a>';
 
-                    $btn .= '</div></div>';
-
-                    return $btn;
                 })
                 ->rawColumns(['action', 'status', 'created_at', 'updated_at'])
                 ->make(true);
@@ -145,15 +133,14 @@ class PermissionsController extends Controller
     public function edit(string $id)
     {
         $role = Role::findOrFail($id);
-        $permissions = Permission::orderBy('name', 'asc')->get();
+        $permissions = Permission::orderBy('group_name', 'asc')->orderBy('name', 'asc')->get();
         $rolePermissions = $role->permissions->pluck('id')->toArray();
 
-        // Group permissions berdasarkan role_group_id
         $groupedPermissions = [];
         foreach ($permissions as $perm) {
-            $groupId = $perm->role_group_id ?? 0;
+            // 🔥 UBAH DI SINI: Kelompokkan langsung pakai field 'group_name'
+            $groupName = $perm->group_name ?? 'General';
 
-            // Ambil module dan action dari nama permission (seperti di kode kamu sebelumnya)
             if (str_contains($perm->name, '.')) {
                 [$module, $action] = explode('.', $perm->name, 2);
             } elseif (str_contains($perm->name, '-')) {
@@ -163,10 +150,10 @@ class PermissionsController extends Controller
                 $action = 'custom';
             }
 
-            $groupedPermissions[$groupId][$module][$action] = $perm;
+            // Simpan berdasarkan nama grup langsung
+            $groupedPermissions[$groupName][$module][$action] = $perm;
         }
 
-        // Ambil semua action unik
         $actions = collect($permissions)
             ->map(function ($p) {
                 if (str_contains($p->name, '.')) {
@@ -180,20 +167,16 @@ class PermissionsController extends Controller
             ->unique()
             ->values()
             ->toArray();
+
         $roles = Role::orderBy('name', 'asc')->get();
 
         return view('pengaturan.permissions.permissions_edit', [
             'title' => 'Edit Permissions',
-            'breadcrumb' => [
-                ['label' => 'Permissions', 'url' => route('permissions.index')],
-                ['label' => 'Edit Permissions', 'url' => ''],
-            ],
             'role' => $role,
-            'groupedPermissions' => $groupedPermissions,
+            'groupedPermissions' => $groupedPermissions, // Isinya sekarang sudah terpisah grup asli
             'actions' => $actions,
             'rolePermissions' => $rolePermissions,
             'roles' => $roles,
-
         ]);
     }
 

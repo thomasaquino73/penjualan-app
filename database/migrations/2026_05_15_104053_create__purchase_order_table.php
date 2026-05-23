@@ -31,14 +31,14 @@ return new class extends Migration
             $table->bigInteger('grand_total')->nullable();
             $table->bigInteger('tax')->nullable();
             $table->enum('status', [
-                'draft',        // Data baru dibuat, masih bisa diedit oleh staff
-                'pending',      // Menunggu persetujuan (approval) dari Manager/Direktur
-                'processing',   // Disetujui, sedang dipersiapkan / dipacking di gudang
-                'deliver',      // Barang sedang dalam perjalanan (dikirim)
-                'received',     // Barang sudah sampai dan diterima oleh pemesan
-                'completed',    // Selesai (Semua dokumen & pembayaran sudah klop)
-                'rejected',     // Ditolak saat pengajuan approval
-                'cancelled',     // Dibatalkan oleh user
+                'draft',                 // Data baru dibuat, masih bisa diedit oleh staff purchasing
+                'pending',               // Menunggu persetujuan (approval) dari Manager/Direktur
+                'approved',              // Disetujui oleh atasan, siap dikirim ke supplier
+                'rejected',              // Ditolak oleh atasan saat pengajuan approval
+                'sent',                  // Dokumen PO sudah resmi dikirimkan ke pihak supplier
+                'partially_received',    // Barang dari supplier baru datang sebagian di gudang
+                'completed',             // Selesai (Semua barang telah diterima dengan lengkap)
+                'cancelled',             // Dibatalkan (baik oleh internal maupun supplier)
             ])->default('draft');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();

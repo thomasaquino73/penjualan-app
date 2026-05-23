@@ -60,11 +60,11 @@
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="id_supplier" class="form-label">Supplier
                                                     ID</label>
-                                                      <div class="input-group input-group-merge">
+                                                <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
-                                                   <input type="text" id="id_supplier" name="id_supplier"
-                                                    class="form-control" placeholder="Enter Supplier ID"
-                                                    value="{{ $supplier->id_supplier }}">
+                                                    <input type="text" id="id_supplier" name="id_supplier"
+                                                        class="form-control" placeholder="Enter Supplier ID"
+                                                        value="{{ $supplier->id_supplier }}">
                                                 </div>
                                                 <span class="error text-danger" id="id_supplierError"></span>
 
@@ -97,8 +97,8 @@
                                                 <label for="no_hp" class="form-label">Phonecell</label>
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-phone"></i></span>
-                                                    <input type="number" id="no_hp" name="no_hp" class="form-control"
-                                                        placeholder="Enter Phonecell Number"
+                                                    <input type="number" id="no_hp" name="no_hp"
+                                                        class="form-control" placeholder="Enter Phonecell Number"
                                                         value="{{ $supplier->no_hp }}">
                                                 </div>
                                                 <span class="error text-danger" id="no_hpError"></span>
@@ -204,7 +204,8 @@
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-category"></i></span>
                                                     <select name="tipe_pemasok_id" id="tipe_pemasok_id"
-                                                        class="form-select select2" data-placeholder="Select Supplier Type">
+                                                        class="form-select select2"
+                                                        data-placeholder="Select Supplier Type">
                                                         <option>
                                                         </option>
                                                         <option value="Perorangan"
@@ -226,7 +227,8 @@
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i
                                                             class="ti ti-creative-commons-nd"></i></span>
-                                                    <select name="status" id="status" class="form-select select2" data-placeholder="Select Status">
+                                                    <select name="status" id="status" class="form-select select2"
+                                                        data-placeholder="Select Status">
                                                         <option></option>
                                                         <option value="1"
                                                             {{ $supplier->status == '1' ? 'selected' : '' }}>
@@ -767,7 +769,7 @@
                     processData: false,
                     contentType: false,
                     dataType: 'json', // ✅ FIX typo
-
+                    global: false,
                     beforeSend: function() {
                         $('#savedata').html(
                             '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');

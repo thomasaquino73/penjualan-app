@@ -44,4 +44,9 @@ class PurchaseOrderDetail extends Model
         // Sesuaikan nama class Unit dengan model master unit Anda
         return $this->belongsTo(BasicCodeDetail::class, 'unit_id', 'id');
     }
+
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
+    }
 }
