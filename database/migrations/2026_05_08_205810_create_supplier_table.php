@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('id_supplier')->unique();
             $table->string('nama_supplier');
+            $table->unsignedBigInteger('kategori_supplier_id');
             $table->string('notel_bisnis')->nullable();
             $table->string('no_hp')->nullable();
             $table->string('no_whatsapp')->nullable();

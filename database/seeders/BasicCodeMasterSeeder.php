@@ -47,6 +47,11 @@ class BasicCodeMasterSeeder extends Seeder
                 'detail' => 'FOB',
                 'description' => 'Daftar FOB',
             ],
+            [
+                'id' => '8',
+                'detail' => 'Kategori Supplier',
+                'description' => 'Daftar Kategori Supplier',
+            ],
 
         ]);
 

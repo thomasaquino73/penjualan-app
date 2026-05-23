@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('detail', 50)->nullable();
             $table->string('description', 50)->nullable();
-            $table->uuid('created_by')->nullable();
-            $table->uuid('updated_by')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
         });
         Schema::create('basic_code_detail', function (Blueprint $table) {
@@ -24,11 +24,10 @@ return new class extends Migration
             $table->unsignedBigInteger('master_id')->nullable();
             $table->string('detail', 50)->nullable();
             $table->string('description', 50)->nullable();
-            $table->uuid('created_by', 100)->nullable();
-            $table->uuid('updated_by', 100)->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
 
-            $table->foreign('master_id')->references('id')->on('basic_code_master');
         });
     }
 

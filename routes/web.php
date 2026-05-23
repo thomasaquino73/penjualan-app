@@ -14,7 +14,8 @@ use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
 use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
 use App\Http\Controllers\Master_Data\CustomerController;
 use App\Http\Controllers\Master_Data\DaftarKendaraanController;
-use App\Http\Controllers\Master_Data\SupplierController;
+use App\Http\Controllers\Master_Data\Supplier\KategoriSupplierController;
+use App\Http\Controllers\Master_Data\Supplier\SupplierController;
 use App\Http\Controllers\Master_Data\WarehouseController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengaturan\PengaturanSistemController;
@@ -172,6 +173,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/supplier/trash', [SupplierController::class, 'trash'])->name('supplier.trash');
     Route::put('/supplier/restore/{id}', [SupplierController::class, 'restore'])->name('supplier.restore');
     Route::resource('supplier', SupplierController::class);
+    Route::resource('kategori-supplier', KategoriSupplierController::class);
 
     // Route::post('/salesman/delete-multiple', [SalesmanController::class, 'deleteMultiple']);
     // Route::post('/salesman/restore-multiple', [SalesmanController::class, 'restoreMultiple']);

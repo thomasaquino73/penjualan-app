@@ -20,13 +20,14 @@ class PermissionSeeder extends Seeder
 
             'customer' => ['alias' => 'Customer', 'group' => 'Master Data'],
             'supplier' => ['alias' => 'Supplier', 'group' => 'Master Data'],
+            'kategori_supplier' => ['alias' => 'Supplier Category', 'group' => 'Master Data'],
             'salesman' => ['alias' => 'Salesman', 'group' => 'Master Data'],
 
             'kendaraan' => ['alias' => 'Vehicle', 'group' => 'Master Data'],
             'warehouse' => ['alias' => 'Warehouse', 'group' => 'Master Data'],
 
             'barang' => ['alias' => 'Product', 'group' => 'Master Data'],
-            'kategori_barang' => ['alias' => 'Category', 'group' => 'Master Data'],
+            'kategori_barang' => ['alias' => 'Product Category', 'group' => 'Master Data'],
             'satuan_barang' => ['alias' => 'Unit', 'group' => 'Master Data'],
             'company' => ['alias' => 'Company', 'group' => 'General'],
             'general' => ['alias' => 'General', 'group' => 'General'],

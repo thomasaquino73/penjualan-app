@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Master_Data;
+namespace App\Http\Controllers\Master_Data\Supplier;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SupplierRequest;
@@ -164,6 +164,8 @@ class SupplierController extends Controller
             'idNumber' => $this->generateNumberId(),
             'paymentTerm' => BasicCodeDetail::where('master_id', 4)->get(),
             'databank' => BasicCodeDetail::where('master_id', 5)->get(),
+            'tipePemasok' => BasicCodeDetail::where('master_id', 3)->get(),
+            'kategoriPemasok' => BasicCodeDetail::where('master_id', 8)->get(),
 
         ];
 
@@ -294,6 +296,7 @@ class SupplierController extends Controller
 
             'paymentTerm' => BasicCodeDetail::where('master_id', 4)->get(),
             'databank' => BasicCodeDetail::where('master_id', 5)->get(),
+            'kategoriPemasok' => BasicCodeDetail::where('master_id', 8)->get(),
 
             // kirim data
             'supplier' => $supplier,

@@ -83,6 +83,24 @@
 
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
+                                                <label for="nama_supplier" class="form-label">Category</label>
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-category"></i></span>
+                                                    <select name="kategori_supplier_id" id="kategori_supplier_id"
+                                                        class="form-select select2"
+                                                        data-placeholder="Select Supplier Category">
+                                                        <option></option>
+                                                        @foreach ($kategoriPemasok as $kat)
+                                                            <option value="{{ $kat->id }}"
+                                                                {{ $supplier->kategori_supplier_id == $kat->id ? 'selected' : '' }}>
+                                                                {{ $kat->detail }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <span class="error text-danger" id="kategori_supplier_idError"></span>
+                                            </div>
+                                            <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="notel_bisnis" class="form-label">Bussines Phone
                                                     Number</label>
                                                 <div class="input-group input-group-merge">

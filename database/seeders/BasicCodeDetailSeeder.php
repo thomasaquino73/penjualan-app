@@ -54,7 +54,7 @@ class BasicCodeDetailSeeder extends Seeder
                 'id' => $i++,
                 'master_id' => '3',
                 'detail' => 'Umum',
-                'description' => '',
+                'description' => 'Tipe Pemasok',
             ],
             [
                 'id' => $i++,
@@ -103,6 +103,12 @@ class BasicCodeDetailSeeder extends Seeder
                 'master_id' => '7',
                 'detail' => 'Shipping Point',
                 'description' => '008',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '8',
+                'detail' => 'Umum',
+                'description' => 'Kategori Supplier',
             ],
 
         ]);
