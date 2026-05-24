@@ -26,7 +26,7 @@ class PurchaseOrderController extends Controller
     public function index(Request $r)
     {
         if ($r->ajax()) {
-                  $userId = auth()->id();
+            $userId = auth()->id();
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
             $query = PurchaseOrder::where('active', '<>', 0)
@@ -66,7 +66,7 @@ class PurchaseOrderController extends Controller
                         case 'pending': $badge = 'bg-label-warning';
                             $text = 'Pending Approval';
                             break;
-                             case 'processing': $badge = 'bg-label-info';
+                        case 'processing': $badge = 'bg-label-info';
                             $text = 'Processing';
                             break;
                         case 'approved': $badge = 'bg-label-success';
@@ -97,11 +97,21 @@ class PurchaseOrderController extends Controller
                 ->addColumn('date', function ($row) {
                     return Carbon::parse($row->date)->format('d-m-Y');
                 })
-                ->addColumn('expected_date', function ($row) {
-                    return Carbon::parse($row->expected_date)->format('d-m-Y');
+                ->addColumn('tanggal_kirim', function ($row) {
+                    return Carbon::parse($row->tanggal_kirim)->format('d-m-Y');
                 })
                 ->addColumn('amount', function ($row) {
-                    return $row->amount;
+                    // 1. Hitung total kotor (sum amount) dari detail item PO
+                    $subTotal = PurchaseOrderDetail::where('purchase_order_id', $row->id)
+                        ->where('active', 1)
+                        ->sum('amount');
+
+                    // 2. Hitung grand total: Subtotal dikurangi diskon nominal yang ada di tabel induk ($row)
+                    // Gunakan ?? 0 jika kolom disc_nominal di database bisa bernilai null
+                    $grandTotal = $subTotal - ($row->disc_nominal ?? 0);
+
+                    // 3. Kembalikan nilai yang sudah dikonversi dan diformat
+                    return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
                 })
                 ->addColumn('supplier', function ($row) {
                     return $row->supplier->nama;
@@ -333,7 +343,7 @@ class PurchaseOrderController extends Controller
             $data['disc_nominal'] = $request->discount_all;
             $data['grand_total'] = $request->total_order;
             $data['date'] = Carbon::parse($request->date)->format('Y-m-d');
-            $data['expected_date'] = $request->expected_date ? Carbon::parse($request->expected_date)->format('Y-m-d') : null;
+            $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
 
             // 4. Generate nomor/kode Purchase Order secara unik (Anti-Duplikat beruntun)
             do {
@@ -444,7 +454,7 @@ class PurchaseOrderController extends Controller
                 'supplier_id' => $request->supplier_id,
                 'code' => $request->code,
                 'date' => Carbon::parse($request->date)->format('Y-m-d'),
-                'expected_date' => Carbon::parse($request->expected_date)->format('Y-m-d'),
+                'tanggal_kirim' => Carbon::parse($request->tanggal_kirim)->format('Y-m-d'),
                 'fob_id' => $request->fob_id,
                 'term' => $request->term,
                 'vehicle_id' => $request->vehicle_id,
@@ -550,8 +560,8 @@ class PurchaseOrderController extends Controller
                 ->addColumn('date', function ($row) {
                     return Carbon::parse($row->date)->format('d-m-Y');
                 })
-                ->addColumn('expected_date', function ($row) {
-                    return Carbon::parse($row->expected_date)->format('d-m-Y');
+                ->addColumn('tanggal_kirim', function ($row) {
+                    return Carbon::parse($row->tanggal_kirim)->format('d-m-Y');
                 })
                 ->addColumn('amount', function ($row) {
                     return $row->amount;
@@ -724,15 +734,15 @@ class PurchaseOrderController extends Controller
                 // Panggil fungsi atau service pengiriman dokumen Anda di sini.
                 // Contoh jika menggunakan Mail Laravel:
                 // Mail::to($poData->vendor_email)->send(new PurchaseOrderMail($poData));
-                
+
                 // Atau jika menggunakan job queue (Sangat disarankan agar performa aplikasi tetap cepat):
                 // SendPurchaseOrderJob::dispatch($poData);
-                
+
             } catch (\Exception $e) {
                 // Log error jika pengiriman gagal agar sistem tidak crash total
-                Log::error("Gagal mengirim dokumen PO ID {$id}: " . $e->getMessage());
-                
-                // Catatan: Anda bisa memilih apakah ingin mengembalikan response sukses/gagal 
+                Log::error("Gagal mengirim dokumen PO ID {$id}: ".$e->getMessage());
+
+                // Catatan: Anda bisa memilih apakah ingin mengembalikan response sukses/gagal
                 // jika pengirimannya error, tergantung kebutuhan bisnis.
             }
         }
@@ -790,45 +800,45 @@ class PurchaseOrderController extends Controller
         // return $pdf->download('purchase-order.pdf');
     }
 
-    public function getPriceHistory(Request $request)
-    {
-        $productId = $request->get('product_id');
-        $supplierId = $request->get('supplier_id');
+public function getPriceHistory(Request $request)
+{
+    $productId = $request->get('product_id');
+    $supplierId = $request->get('supplier_id');
 
-        $year = date('Y');
-        $tableDetail = "purchase_order_detail_{$year}";
-        $tableMaster = "purchase_order_{$year}";
+    $year = date('Y');
+    $tableDetail = "purchase_order_detail_{$year}";
+    $tableMaster = "purchase_order_{$year}";
 
-        // Mengambil harga sekaligus tanggal transaksi
-        $history = DB::table($tableDetail)
-            ->join($tableMaster, "{$tableDetail}.purchase_order_id", '=', "{$tableMaster}.id")
-            ->where("{$tableDetail}.product_id", $productId)
-            ->where("{$tableMaster}.supplier_id", $supplierId)
-            ->orderBy("{$tableDetail}.id", 'desc') // Tetap urutkan dari yang terbaru
-            ->select(
-                "{$tableDetail}.unit_price as harga",
-                "{$tableMaster}.date as tanggal" // Ambil field tanggal transaksi
-            )
-            ->get()
-            // Lakukan unique berdasarkan harga agar list tidak penuh dengan harga yang sama
-            ->unique('harga')
-            ->values()
-            ->take(5);
+    // Mengambil harga unik langsung dari database
+    $history = DB::table($tableDetail)
+        ->join($tableMaster, "{$tableDetail}.purchase_order_id", '=', "{$tableMaster}.id")
+        ->where("{$tableDetail}.product_id", $productId)
+        ->where("{$tableMaster}.supplier_id", $supplierId)
+        // Kuncinya di sini: kelompokkan berdasarkan harga, lalu ambil tanggal terbaru dengan MAX()
+        ->select(
+            "{$tableDetail}.unit_price as harga",
+            DB::raw("MAX({$tableMaster}.date) as tanggal") 
+        )
+        ->groupBy("{$tableDetail}.unit_price")
+        // Urutkan berdasarkan tanggal terbaru (hasil dari MAX tanggal di atas)
+        ->orderBy('tanggal', 'desc') 
+        ->limit(5)
+        ->get();
 
-        return response()->json([
-            'success' => true,
-            'history' => $history,
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'history' => $history,
+    ]);
+}
 
     public function getCompanyAddresses($companyId)
     {
 
-        $addresses = CompanyDelivery::where('company_id',1)->where('active', 1) ->get();
+        $addresses = CompanyDelivery::where('company_id', 1)->where('active', 1)->get();
 
         return response()->json([
             'success' => true,
-            'data' => $addresses
+            'data' => $addresses,
         ]);
     }
 }

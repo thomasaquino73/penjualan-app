@@ -2,13 +2,13 @@
     <div class="col-md-6">
         <h6><strong>Delivery Information</strong></h6>
         <div class="mb-3 row">
-            <label class="col-md-4 col-form-label">Date</label>
+            <label class="col-md-4 col-form-label">Shipment Date</label>
             <div class="col-md-8">
                 <div class="input-group input-group-merge">
                     <span class="input-group-text"><i class="ti ti-calendar"></i> </span>
-                    <input type="text" name="expected_date" id="expected_date" class="form-control"
-                        placeholder="Select Date">
-                    <span class="error text-danger" id="expected_dateError"></span>
+                    <input type="text" name="tanggal_kirim" id="tanggal_kirim" class="form-control"
+                        placeholder="DD/MM/YYYY">
+                    <span class="error text-danger" id="tanggal_kirimError"></span>
                 </div>
 
             </div>
@@ -66,9 +66,9 @@
             <div class="col-md-8">
                 <div class="input-group input-group-merge">
                     <span class="input-group-text"><i class="ti ti-map"></i></span>
-                    <textarea name="address" id="address" rows="3" class="form-control"></textarea>
+                    <textarea name="shipping_address" id="shipping_address" rows="3" class="form-control"></textarea>
                 </div>
-                <span class="error text-danger" id="addressError"></span>
+                <span class="error text-danger" id="shipping_addressError"></span>
             </div>
         </div>
         <div class="mb-3 row">
@@ -87,17 +87,17 @@
                 <div class="row">
                     <div class="col-6">
                         <div class="form-check form-check-primary">
-                            <input class="form-check-input" type="checkbox" value="1" name="default_pajak"
-                                id="default_pajak">
-                            <label class="form-check-label" for="default_pajak">Including Tax</label>
+                            <input class="form-check-input" type="checkbox" value="1" name="kena_pajak"
+                                id="kena_pajak">
+                            <label class="form-check-label" for="kena_pajak">Including Tax</label>
                         </div>
                     </div>
 
                     <div class="col-6">
                         <div class="form-check form-check-primary">
-                            <input class="form-check-input" type="checkbox" value="1" name="default_pajak_total"
-                                id="default_pajak_total">
-                            <label class="form-check-label" for="default_pajak_total">Total Including Tax</label>
+                            <input class="form-check-input" type="checkbox" value="1" name="total_termasuk_pajak"
+                                id="total_termasuk_pajak">
+                            <label class="form-check-label" for="total_termasuk_pajak">Total Including Tax</label>
                         </div>
                     </div>
                 </div>

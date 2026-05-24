@@ -13,7 +13,7 @@ use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Master_Data\Barang\DataBarangController;
 use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
 use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
-use App\Http\Controllers\Master_Data\CustomerController;
+use App\Http\Controllers\Master_Data\Customer\CustomerController;
 use App\Http\Controllers\Master_Data\DaftarKendaraanController;
 use App\Http\Controllers\Master_Data\Supplier\KategoriSupplierController;
 use App\Http\Controllers\Master_Data\Supplier\SupplierController;
@@ -168,6 +168,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/customer/trash', [CustomerController::class, 'trash'])->name('customer.trash');
     Route::put('/customer/restore/{id}', [CustomerController::class, 'restore'])->name('customer.restore');
     Route::resource('customer', CustomerController::class);
+    Route::resource('kategori-customer', KategoriCustomerController::class);
 
     Route::post('/supplier/delete-multiple', [SupplierController::class, 'deleteMultiple']);
     Route::post('/supplier/restore-multiple', [SupplierController::class, 'restoreMultiple']);

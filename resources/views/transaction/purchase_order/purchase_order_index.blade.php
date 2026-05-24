@@ -62,7 +62,7 @@
                         <th>Supplier</th>
                         <th>Status</th>
                         <th>Expected Date</th>
-                        <th>Amount</th>
+                        <th>Grand Total</th>
                         <th>Description</th>
                         <th>Created</th>
                         <th>Updated</th>
@@ -121,7 +121,7 @@
                         data: 'status',
                     },
                     {
-                        data: 'expected_date',
+                        data: 'tanggal_kirim',
                     },
                     {
                         data: 'amount',

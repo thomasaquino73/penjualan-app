@@ -11,7 +11,7 @@ use Yajra\DataTables\DataTables;
 
 class CompanyDeliveryController extends Controller
 {
-     public function index(Request $r)
+    public function index(Request $r)
     {
         if ($r->ajax()) {
             $query = CompanyDelivery::orderBy('address_name', 'asc')->get();
@@ -50,7 +50,6 @@ class CompanyDeliveryController extends Controller
         //
     }
 
-  
     public function store(CompanyDeliveryRequest $request)
     {
         $id = $request->input('id');
@@ -58,7 +57,7 @@ class CompanyDeliveryController extends Controller
         try {
 
             $data = $request->validated();
-                $data['company_id'] = 1;
+            $data['company_id'] = 1;
 
             if (! empty($id)) {
 
@@ -96,7 +95,6 @@ class CompanyDeliveryController extends Controller
         }
     }
 
-  
     public function show(string $id)
     {
         //

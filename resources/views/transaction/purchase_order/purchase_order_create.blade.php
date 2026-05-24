@@ -324,7 +324,7 @@
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}"
             });
 
-            const expectedPicker = flatpickr("#expected_date", {
+            const expectedPicker = flatpickr("#tanggal_kirim", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
                 minDate: "today",

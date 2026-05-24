@@ -30,7 +30,7 @@ class Sidebar extends Component
                 'name' => 'Inventory',
                 'icon' => 'ti ti-trolley',
                 'roles' => ['Super Admin'],
-                'permissions' => ['role-browse', 'permission-browse'],
+                'permissions' => ['barang-browse', 'kategori_barang-browse','satuan_barang-browse'],
                 'children' => [
 
                     [
@@ -63,11 +63,11 @@ class Sidebar extends Component
                 'name' => 'Supplier',
                 'icon' => 'ti ti-trolley',
                 'roles' => ['Super Admin'],
-                'permissions' => ['role-browse', 'permission-browse'],
+                'permissions' => ['supplier-browse', 'kategori_supplier-browse'],
                 'children' => [
 
                     [
-                        'name' => 'Supplier',
+                        'name' => 'Supplier List',
                         'route' => 'supplier.index',
                         'pattern' => 'supplier.*',
                         'roles' => ['Super Admin'],
@@ -83,16 +83,30 @@ class Sidebar extends Component
                     ],
                 ],
             ],
-            
             [
-                'type' => 'single',
+                'type' => 'dropdown',
                 'name' => 'Customer',
-                'route' => 'customer.index',
                 'icon' => 'ti ti-users-group',
-                'pattern' => 'customer.*',
-                'active' => true,
                 'roles' => ['Super Admin'],
-                'permissions' => ['customer-browse'],
+                'permissions' => ['customer-browse', 'kategori_customer-browse'],
+                'children' => [
+
+                    [
+                        'name' => 'Customer List',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['customer-browse'],
+                    ],
+
+                    [
+                        'name' => 'Customer Category',
+                        'route' => 'kategori-customer.index',
+                        'pattern' => 'kategori-customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['kategori_customer-browse'],
+                    ],
+                ],
             ],
             [
                 'type' => 'single',

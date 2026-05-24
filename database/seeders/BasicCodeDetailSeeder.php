@@ -110,6 +110,12 @@ class BasicCodeDetailSeeder extends Seeder
                 'detail' => 'Umum',
                 'description' => 'Kategori Supplier',
             ],
+            [
+                'id' => $i++,
+                'master_id' => '9',
+                'detail' => 'Umum',
+                'description' => 'Kategori Customer',
+            ],
 
         ]);
 

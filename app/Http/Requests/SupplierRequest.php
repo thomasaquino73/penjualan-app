@@ -62,7 +62,7 @@ class SupplierRequest extends FormRequest
             'website.url' => 'The website URL format is incorrect (must start with http:// or https://).',
             'status.in' => 'The selected status is invalid (must be Active, Inactive, or Deleted).',
             'status.required' => 'The status field is required.',
-               'alamat_pembayaran.required' => 'Billing address is required.',
+            'alamat_pembayaran.required' => 'Billing address is required.',
             'alamat_pembayaran.string' => 'Billing address must be a valid string.',
             'alamat_pembayaran.max' => 'Billing address may not be greater than 255 characters.',
 

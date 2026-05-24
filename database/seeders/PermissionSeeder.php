@@ -19,6 +19,7 @@ class PermissionSeeder extends Seeder
             'permission' => ['alias' => 'Permission', 'group' => 'Access Management'],
 
             'customer' => ['alias' => 'Customer', 'group' => 'Master Data'],
+            'kategori_customer' => ['alias' => 'Customer Category', 'group' => 'Master Data'],
             'supplier' => ['alias' => 'Supplier', 'group' => 'Master Data'],
             'kategori_supplier' => ['alias' => 'Supplier Category', 'group' => 'Master Data'],
             'salesman' => ['alias' => 'Salesman', 'group' => 'Master Data'],
