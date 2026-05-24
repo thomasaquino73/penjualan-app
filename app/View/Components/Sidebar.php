@@ -30,7 +30,7 @@ class Sidebar extends Component
                 'name' => 'Inventory',
                 'icon' => 'ti ti-trolley',
                 'roles' => ['Super Admin'],
-                'permissions' => ['barang-browse', 'kategori_barang-browse','satuan_barang-browse'],
+                'permissions' => ['barang-browse', 'kategori_barang-browse', 'satuan_barang-browse'],
                 'children' => [
 
                     [
@@ -262,6 +262,45 @@ class Sidebar extends Component
                 'type' => 'section',
                 'label' => 'SETTING',
                 'roles' => ['Super Admin'],
+            ],
+            [
+                'type' => 'dropdown',
+                'name' => 'Company',
+                'icon' => 'ti ti-building',
+                'roles' => ['Super Admin'],
+                'permissions' => ['customer-browse', 'kategori_customer-browse'],
+                'children' => [
+
+                    [
+                        'name' => 'Tax',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['customer-browse'],
+                    ],
+
+                    [
+                        'name' => 'Payment Term',
+                        'route' => 'kategori-customer.index',
+                        'pattern' => 'kategori-customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['kategori_customer-browse'],
+                    ],
+                    [
+                        'name' => 'Shipping',
+                        'route' => 'company-delivery.index',
+                        'pattern' => 'company-delivery.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['kategori_customer-browse'],
+                    ],
+                    [
+                        'name' => 'FOB',
+                        'route' => 'kategori-customer.index',
+                        'pattern' => 'kategori-customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['kategori_customer-browse'],
+                    ],
+                ],
             ],
             [
                 'type' => 'dropdown',

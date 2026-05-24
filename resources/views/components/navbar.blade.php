@@ -59,11 +59,11 @@
               <!--/ Language -->
               <li class="nav-item d-flex align-items-center">
                   <select id="currency_id" class="form-select form-select-sm border-0 bg-transparent"
-                      style="width:80px; cursor:pointer;">
+                      style="width:80px; cursor:pointer;" onchange="changeNavbarCurrency(this.value)">
 
                       @foreach ($currencies as $currency)
                           <option value="{{ $currency->id }}" data-symbol="{{ $currency->symbol }}"
-                              {{ session('currency_id') == $currency->id ? 'selected' : '' }}>
+                              {{ isset($mataUang) && $mataUang->id == $currency->id ? 'selected' : '' }}>
                               {{ $currency->code }}
                           </option>
                       @endforeach

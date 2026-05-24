@@ -41,7 +41,7 @@ class KategoriCustomerController extends Controller
 
     public function index(Request $r)
     {
-        $data = BasicCodeDetail::where('master_id', 8)->get();
+        $data = BasicCodeDetail::where('master_id', 9)->get();
 
         if ($r->ajax()) {
             return DataTables::of($data)

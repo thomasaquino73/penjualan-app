@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\General;
+namespace App\Models\Pengaturan;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class CompanyDelivery extends Model
+class Shipping extends Model
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $table = 'companydeliveryaddress';
+    protected $table = 'shipping';
 
     protected $guarded = [];
 

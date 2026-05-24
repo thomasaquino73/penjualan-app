@@ -32,6 +32,7 @@ class PermissionSeeder extends Seeder
             'satuan_barang' => ['alias' => 'Unit', 'group' => 'Master Data'],
             'company' => ['alias' => 'Company', 'group' => 'General'],
             'general' => ['alias' => 'General', 'group' => 'General'],
+            'shipping' => ['alias' => 'Shipping', 'group' => 'Pengaturan'],
 
             // 🔥 Modul transaksi ditambah action 'approval' khusus
             'permintaan_pembelian' => [

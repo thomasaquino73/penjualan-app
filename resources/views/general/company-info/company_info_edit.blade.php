@@ -58,7 +58,7 @@
                                     <option value="">-- Select Default Currency --</option>
                                     @foreach ($currencies as $currency)
                                         <option value="{{ $currency->id }}"
-                                            {{ ($company->default_currency_id ?? '') == $currency->id ? 'selected' : '' }}>
+                                            {{ ($dataSistem->default_currency_id ?? '') == $currency->id ? 'selected' : '' }}>
                                             {{ $currency->code }} - {{ $currency->name }} ({{ $currency->symbol }})
                                         </option>
                                     @endforeach

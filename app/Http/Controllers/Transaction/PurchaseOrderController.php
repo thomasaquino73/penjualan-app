@@ -800,36 +800,36 @@ class PurchaseOrderController extends Controller
         // return $pdf->download('purchase-order.pdf');
     }
 
-public function getPriceHistory(Request $request)
-{
-    $productId = $request->get('product_id');
-    $supplierId = $request->get('supplier_id');
+    public function getPriceHistory(Request $request)
+    {
+        $productId = $request->get('product_id');
+        $supplierId = $request->get('supplier_id');
 
-    $year = date('Y');
-    $tableDetail = "purchase_order_detail_{$year}";
-    $tableMaster = "purchase_order_{$year}";
+        $year = date('Y');
+        $tableDetail = "purchase_order_detail_{$year}";
+        $tableMaster = "purchase_order_{$year}";
 
-    // Mengambil harga unik langsung dari database
-    $history = DB::table($tableDetail)
-        ->join($tableMaster, "{$tableDetail}.purchase_order_id", '=', "{$tableMaster}.id")
-        ->where("{$tableDetail}.product_id", $productId)
-        ->where("{$tableMaster}.supplier_id", $supplierId)
-        // Kuncinya di sini: kelompokkan berdasarkan harga, lalu ambil tanggal terbaru dengan MAX()
-        ->select(
-            "{$tableDetail}.unit_price as harga",
-            DB::raw("MAX({$tableMaster}.date) as tanggal") 
-        )
-        ->groupBy("{$tableDetail}.unit_price")
-        // Urutkan berdasarkan tanggal terbaru (hasil dari MAX tanggal di atas)
-        ->orderBy('tanggal', 'desc') 
-        ->limit(5)
-        ->get();
+        // Mengambil harga unik langsung dari database
+        $history = DB::table($tableDetail)
+            ->join($tableMaster, "{$tableDetail}.purchase_order_id", '=', "{$tableMaster}.id")
+            ->where("{$tableDetail}.product_id", $productId)
+            ->where("{$tableMaster}.supplier_id", $supplierId)
+            // Kuncinya di sini: kelompokkan berdasarkan harga, lalu ambil tanggal terbaru dengan MAX()
+            ->select(
+                "{$tableDetail}.unit_price as harga",
+                DB::raw("MAX({$tableMaster}.date) as tanggal")
+            )
+            ->groupBy("{$tableDetail}.unit_price")
+            // Urutkan berdasarkan tanggal terbaru (hasil dari MAX tanggal di atas)
+            ->orderBy('tanggal', 'desc')
+            ->limit(5)
+            ->get();
 
-    return response()->json([
-        'success' => true,
-        'history' => $history,
-    ]);
-}
+        return response()->json([
+            'success' => true,
+            'history' => $history,
+        ]);
+    }
 
     public function getCompanyAddresses($companyId)
     {

@@ -4,16 +4,17 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\General\CashBankController;
-use App\Http\Controllers\General\CompanyDeliveryController;
 use App\Http\Controllers\General\CompanyInfoController;
 use App\Http\Controllers\General\CurrencyController;
 use App\Http\Controllers\General\ExchangeRateController;
 use App\Http\Controllers\General\GeneralSettingController;
+use App\Http\Controllers\Pengaturan\Company\ShippingController;
 use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Master_Data\Barang\DataBarangController;
 use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
 use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
 use App\Http\Controllers\Master_Data\Customer\CustomerController;
+use App\Http\Controllers\Master_Data\Customer\KategoriCustomerController;
 use App\Http\Controllers\Master_Data\DaftarKendaraanController;
 use App\Http\Controllers\Master_Data\Supplier\KategoriSupplierController;
 use App\Http\Controllers\Master_Data\Supplier\SupplierController;
@@ -121,7 +122,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('/mata-uang', CurrencyController::class);
     Route::resource('/cash-bank', CashBankController::class);
     Route::resource('/exchange-rate', ExchangeRateController::class);
-    Route::resource('/company-delivery', CompanyDeliveryController::class);
+       Route::post('/company-delivery/delete-multiple', [ShippingController::class, 'deleteMultiple']);
+    Route::post('/company-delivery/restore-multiple', [ShippingController::class, 'restoreMultiple']);
+    Route::get('/company-delivery/trash', [ShippingController::class, 'trash'])->name('company-delivery.trash');
+    Route::put('/company-delivery/restore/{id}', [ShippingController::class, 'restore'])->name('company-delivery.restore');
+    Route::resource('/company-delivery', ShippingController::class);
 
     Route::prefix('token')->group(function () {
         Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');
@@ -170,9 +175,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('customer', CustomerController::class);
     Route::resource('kategori-customer', KategoriCustomerController::class);
 
+    Route::get('/supplier/generate-id', [SupplierController::class, 'generateId']);
     Route::post('/supplier/delete-multiple', [SupplierController::class, 'deleteMultiple']);
     Route::post('/supplier/restore-multiple', [SupplierController::class, 'restoreMultiple']);
-    Route::get('/supplier/generate-id', [SupplierController::class, 'generateId']);
     Route::get('/supplier/trash', [SupplierController::class, 'trash'])->name('supplier.trash');
     Route::put('/supplier/restore/{id}', [SupplierController::class, 'restore'])->name('supplier.restore');
     Route::resource('supplier', SupplierController::class);

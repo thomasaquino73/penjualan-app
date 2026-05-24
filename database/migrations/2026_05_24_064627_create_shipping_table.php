@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('companydeliveryaddress', function (Blueprint $table) {
+        Schema::create('shipping', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('company_id');
-            $table->string('address_name')->unique();
-            $table->string('address');
-            $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
+            $table->string('nama')->unique();
+            $table->string('pic')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('address')->nullable();
+            $table->tinyInteger('status')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
@@ -28,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('companydeliveryaddress');
+        Schema::dropIfExists('shipping');
     }
 };

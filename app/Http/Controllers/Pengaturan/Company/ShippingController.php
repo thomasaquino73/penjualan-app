@@ -1,49 +1,21 @@
 <?php
 
-namespace App\Http\Controllers\Master_Data;
+namespace App\Http\Controllers\Pengaturan\Company;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\WarehouseRequest;
-use App\Models\Master_Data\Warehouse;
-use Dotenv\Exception\ValidationException;
+use App\Http\Requests\ShippingRequest;
+use App\Models\Pengaturan\Shipping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
-class WarehouseController extends Controller
+class ShippingController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            $routeName = $request->route()->getName();
-
-            $permissionMap = [
-                'warehouse.index' => 'warehouse-browse',
-                'warehouse.show' => 'warehouse-read',
-                'warehouse.create' => 'warehouse-create',
-                'warehouse.store' => 'warehouse-create',
-                'warehouse.edit' => 'warehouse-edit',
-                'warehouse.update' => 'warehouse-edit',
-                'warehouse.destroy' => 'warehouse-delete',
-                'warehouse.trash' => 'warehouse-trash',
-                'warehouse.restore' => 'warehouse-restore',
-            ];
-
-            if (isset($permissionMap[$routeName])) {
-                if (! $request->user()->can($permissionMap[$routeName])) {
-                    abort(403, 'Unauthorized action');
-                }
-            }
-
-            return $next($request);
-        });
-    }
-
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = Warehouse::where('status', '<>', 0)->get();
+            $query = Shipping::where('status','<>',0)->orderBy('nama', 'asc')->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -64,6 +36,12 @@ class WarehouseController extends Controller
 
                     return 'N/A';
                 })
+                ->addColumn('cekbok', function ($row) {
+                    return '   <div class="form-check form-check-primary mt-3">
+                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
+                                    >
+                            </div>';
+                })
                 ->addColumn('status', function ($row) {
                     if ($row->status == 1) {
                         return '<span class="badge bg-info">Active</span>';
@@ -71,101 +49,67 @@ class WarehouseController extends Controller
                         return '<span class="badge bg-danger">Not Active</span>';
                     }
                 })
-                ->addColumn('cekbok', function ($row) {
-                    return '   <div class="form-check form-check-primary mt-3">
-                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
-                                    >
-                            </div>';
-                })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                       <i class="ti ti-menu-2 ti-xs me-1"></i>
+                        <i class="ti ti-menu-2 ti-xs me-1"></i>
+
                       </button>
                       <ul class="dropdown-menu" style="">';
+                    if (auth()->user()->can('shipping-edit')) {
 
-                    if (auth()->user()->can('warehouse-edit')) {
                         $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
                     }
+                    if (auth()->user()->can('shipping-delete')) {
 
-                    if (auth()->user()->can('warehouse-delete')) {
                         $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
-                                data-name="'.$row->nama_gudang.'"
+                                data-name="'.$row->nama.'"
                                 ><i class="ti ti-trash"></i> Delete</a>';
                     }
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok'])
+                ->rawColumns(['created_at', 'updated_at', 'status', 'cekbok','action'])
                 ->make(true);
         }
 
         $x = [
-            'title' => 'Warehouse List',
+            'title' => 'Shipping',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Warehouse', 'url' => ''],
+                ['label' => 'Shipping', 'url' => ''],
             ],
         ];
 
-        return view('master_data.warehouse.warehouse_index', $x);
+        return view('pengaturan.shipping.shipping_index', $x);
+
     }
 
-    private function generateWarehouseId()
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
     {
-        $last = Warehouse::whereNotNull('id_gudang')
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if (! $last) {
-            return 'WH-001';
-        }
-
-        $lastId = $last->id_gudang;
-
-        // 🔥 ambil angka terakhir
-        preg_match('/(\d+)$/', $lastId, $matches);
-
-        if (! $matches) {
-            // kalau tidak ada angka → tambahin default
-            return $lastId.'01';
-        }
-
-        $number = (int) $matches[1];
-        $number++;
-
-        // 🔥 ambil prefix tanpa angka
-        $prefix = substr($lastId, 0, -strlen($matches[1]));
-
-        // 🔥 padding mengikuti panjang angka sebelumnya
-        $length = strlen($matches[1]);
-
-        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+        //
     }
 
-    public function generateId()
+    public function store(ShippingRequest $request)
     {
-        return response()->json([
-            'id_gudang' => $this->generateWarehouseId(),
-        ]);
-    }
+        $id = $request->input('id');
 
-    public function store(WarehouseRequest $request)
-    {
         try {
-            $id = $request->input('id');
-            $data = $request->validated();
 
+            $data = $request->except('_token');
             if (! empty($id)) {
 
-                // ==========================================
-                // PROCESS: UPDATE DATA
-                // ==========================================
+                // ✅ UPDATE
+                $data['updated_at'] = now();
                 $data['updated_by'] = Auth::id();
 
-                Warehouse::where('id', $id)->update($data);
+                Shipping::where('id', $id)
+                    ->update($data);
 
                 return response()->json([
                     'action' => 'update',
@@ -174,80 +118,38 @@ class WarehouseController extends Controller
 
             } else {
 
-                // ==========================================
-                // PROCESS: CREATE DATA (Safe from Race Condition)
-                // ==========================================
+                // ✅ CREATE
+                $data['created_at'] = now();
                 $data['created_by'] = Auth::id();
-                $data['status'] = 1;
 
-                // Mulai database transaction sebelum pengecekan ID
-                DB::beginTransaction();
+                Shipping::create($data);
 
-                try {
-                    // Menggunakan kolom 'id_gudang' sesuai DB kamu
-                    if (empty($data['id_gudang'])) {
-
-                        // Looping otomatis jika ID keduluan diambil user lain
-                        do {
-                            $data['id_gudang'] = $this->generateWarehouseId();
-
-                            // Kunci baris dengan lockForUpdate agar request lain mengantre
-                            $exists = Warehouse::where('id_gudang', $data['id_gudang'])->lockForUpdate()->exists();
-                        } while ($exists);
-
-                    } else {
-                        // Validasi jika input manual: pastikan belum terdaftar
-                        $exists = Warehouse::where('id_gudang', $data['id_gudang'])->lockForUpdate()->exists();
-
-                        if ($exists) {
-                            DB::rollBack();
-
-                            return response()->json([
-                                'error' => 'ID Warehouse sudah digunakan',
-                            ], 422);
-                        }
-                    }
-
-                    // Simpan data ke database
-                    Warehouse::create($data);
-
-                    // Commit semua transaksi jika berhasil tanpa error
-                    DB::commit();
-
-                    return response()->json([
-                        'action' => 'create',
-                        'message' => 'Data created successfully',
-                    ], 201);
-
-                } catch (\Exception $e) {
-                    // Batalkan transaksi jika terjadi error di dalam blok DB
-                    DB::rollBack();
-                    throw $e; // Lempar ke catch paling luar untuk response error 500
-                }
+                return response()->json([
+                    'action' => 'create',
+                    'message' => 'Data created successfully',
+                ], 201);
             }
 
         } catch (\Exception $e) {
-            // Menangkap semua error (termasuk dari throw $e di atas)
+
             return response()->json([
-                'error' => $e->getMessage(),
+                'error' => 'Error: '.$e->getMessage(),
             ], 500);
         }
     }
-
-    public function create() {}
 
     public function show(string $id)
     {
         //
     }
 
-    public function edit(Request $request)
+    public function edit($id)
     {
+        $data = Shipping::find($id);
 
-        $where = [
-            'id' => $request->id,
-        ];
-        $data = Warehouse::where($where)->first();
+        if (! $data) {
+            return response()->json(['message' => 'Data tidak ditemukan'], 404);
+        }
 
         return response()->json($data);
     }
@@ -260,22 +162,22 @@ class WarehouseController extends Controller
         //
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
+        // 1. Cari data delivery yang ingin dihapus
 
-        try {
-            $table = Warehouse::findOrFail($id);
+          $table = Shipping::findOrFail($id);
             $table->status = '0';
             $table->updated_by = Auth::user()->id;
             $table->save();
-        } catch (ValidationException $e) {
-            return response()->json([
-                'errors' => $e->errors(),
-            ], 422);
-        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Company Delivery '.$table->nama.' berhasil dihapus.',
+        ], 200);
     }
 
-    public function deleteMultiple(Request $request)
+     public function deleteMultiple(Request $request)
     {
         $ids = $request->ids;
 
@@ -283,7 +185,7 @@ class WarehouseController extends Controller
             return response()->json(['success' => false]);
         }
 
-        Warehouse::whereIn('id', $ids)->update([
+        Shipping::whereIn('id', $ids)->update([
             'status' => '0',
             'updated_by' => Auth::id(),
         ]);
@@ -294,7 +196,7 @@ class WarehouseController extends Controller
     public function trash(Request $r)
     {
         if ($r->ajax()) {
-            $query = Warehouse::where('status', 0)->get();
+            $query = Shipping::where('status', 0)->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -347,14 +249,14 @@ class WarehouseController extends Controller
         }
 
         $x = [
-            'title' => 'Deleted Warehouse List',
+            'title' => 'Deleted Shipping List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Deleted Warehouse', 'url' => ''],
+                ['label' => 'Deleted Shipping', 'url' => ''],
             ],
         ];
 
-        return view('master_data.warehouse.warehouse_trash', $x);
+        return view('pengaturan.shipping.shipping_trash', $x);
     }
 
     public function restore($id)
@@ -362,7 +264,7 @@ class WarehouseController extends Controller
         DB::beginTransaction();
 
         try {
-            $album = Warehouse::find($id);
+            $album = Shipping::find($id);
             $album->status = 1;
             $album->updated_by = Auth::id();
             $album->save();
@@ -372,7 +274,7 @@ class WarehouseController extends Controller
             return response()->json([
                 'success' => true,
                 'redirect' => true,
-                'message' => 'Warehouse successfully restored.',
+                'message' => 'Shipping successfully restored.',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -380,7 +282,7 @@ class WarehouseController extends Controller
             return response()->json([
                 'success' => true,
                 'redirect' => true,
-                'message' => 'Warehouse successfully restored.',
+                'message' => 'Shipping successfully restored.',
             ]);
         }
     }
@@ -393,7 +295,7 @@ class WarehouseController extends Controller
             return response()->json(['success' => false]);
         }
 
-        Warehouse::whereIn('id', $ids)->update([
+        Shipping::whereIn('id', $ids)->update([
             'status' => '1',
             'updated_by' => Auth::id(),
         ]);
