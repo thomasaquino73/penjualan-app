@@ -27,9 +27,8 @@ class SupplierRequest extends FormRequest
             ],
             'nama_supplier' => 'required|string|max:255',
             'kategori_supplier_id' => 'required|string|max:255',
-            'notel_bisnis' => 'required|string|max:50',
-            'no_hp' => 'nullable|string|max:50',
-            'no_whatsapp' => 'required|string|max:50',
+            'phone_1' => 'required|string|max:50',
+            'phone_2' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
             'faximili' => 'nullable|string|max:50',
             'website' => 'nullable|url|max:255', // Validasi format URL (http/https)
@@ -46,41 +45,73 @@ class SupplierRequest extends FormRequest
         ];
     }
 
-    /**
-     * Kustomisasi pesan error (Opsional)
-     */
     public function messages(): array
     {
         return [
-            'id_supplier.required' => 'The supplier ID field is required.',
-            'id_supplier.unique' => 'This supplier ID has already been registered in the system.',
-            'nama_supplier.required' => 'The supplier name field cannot be empty.',
-            'kategori_supplier_id.required' => 'The supplier category field cannot be empty.',
-            'notel_bisnis.required' => 'The business phone number field is required.',
-            'no_whatsapp.required' => 'The whatsapp number field is required.',
-            'email.email' => 'The email address entered is invalid.',
-            'website.url' => 'The website URL format is incorrect (must start with http:// or https://).',
-            'status.in' => 'The selected status is invalid (must be Active, Inactive, or Deleted).',
-            'status.required' => 'The status field is required.',
+            'id_supplier.required' => 'Supplier ID is required.',
+            'id_supplier.string' => 'Supplier ID must be a string.',
+            'id_supplier.max' => 'Supplier ID may not be greater than 255 characters.',
+            'id_supplier.unique' => 'Supplier ID has already been taken.',
+
+            'nama_supplier.required' => 'Supplier name is required.',
+            'nama_supplier.string' => 'Supplier name must be a string.',
+            'nama_supplier.max' => 'Supplier name may not be greater than 255 characters.',
+
+            'kategori_supplier_id.required' => 'Supplier category is required.',
+            'kategori_supplier_id.string' => 'Supplier category must be a string.',
+            'kategori_supplier_id.max' => 'Supplier category may not be greater than 255 characters.',
+
+            'phone_1.required' => 'Primary phone number is required.',
+            'phone_1.string' => 'Primary phone number must be a string.',
+            'phone_1.max' => 'Primary phone number may not be greater than 50 characters.',
+
+            'phone_2.string' => 'Secondary phone number must be a string.',
+            'phone_2.max' => 'Secondary phone number may not be greater than 50 characters.',
+
+            'email.email' => 'Email must be a valid email address.',
+            'email.max' => 'Email may not be greater than 255 characters.',
+
+            'faximili.string' => 'Fax number must be a string.',
+            'faximili.max' => 'Fax number may not be greater than 50 characters.',
+
+            'website.url' => 'Website must be a valid URL.',
+            'website.max' => 'Website may not be greater than 255 characters.',
+
             'alamat_pembayaran.required' => 'Billing address is required.',
-            'alamat_pembayaran.string' => 'Billing address must be a valid string.',
-            'alamat_pembayaran.max' => 'Billing address may not be greater than 255 characters.',
+            'alamat_pembayaran.string' => 'Billing address must be a string.',
+            'alamat_pembayaran.max' => 'Billing address may not be greater than 500 characters.',
 
-            'kota.required' => 'Billing city is required.',
-            'kota.string' => 'Billing city must be a valid string.',
-            'kota.max' => 'Billing city may not be greater than 100 characters.',
+            'kota.required' => 'City is required.',
+            'kota.string' => 'City must be a string.',
+            'kota.max' => 'City may not be greater than 100 characters.',
 
-            'kodepos.required' => 'Billing postal code is required.',
-            'kodepos.string' => 'Billing postal code must be a valid string.',
-            'kodepos.max' => 'Billing postal code may not be greater than 10 characters.',
+            'kodepos.required' => 'Postal code is required.',
+            'kodepos.string' => 'Postal code must be a string.',
+            'kodepos.max' => 'Postal code may not be greater than 10 characters.',
 
-            'provinsi.required' => 'Billing province is required.',
-            'provinsi.string' => 'Billing province must be a valid string.',
-            'provinsi.max' => 'Billing province may not be greater than 100 characters.',
+            'provinsi.required' => 'Province is required.',
+            'provinsi.string' => 'Province must be a string.',
+            'provinsi.max' => 'Province may not be greater than 100 characters.',
 
-            'negara.required' => 'Billing country is required.',
-            'negara.string' => 'Billing country must be a valid string.',
-            'negara.max' => 'Billing country may not be greater than 100 characters.',
+            'negara.required' => 'Country is required.',
+            'negara.string' => 'Country must be a string.',
+            'negara.max' => 'Country may not be greater than 100 characters.',
+
+            'tipe_pemasok_id.string' => 'Supplier type must be a string.',
+            'tipe_pemasok_id.max' => 'Supplier type may not be greater than 255 characters.',
+
+            'syarat_pembelian.string' => 'Purchase terms must be a string.',
+            'syarat_pembelian.max' => 'Purchase terms may not be greater than 255 characters.',
+
+            'default_diskon.numeric' => 'Default discount must be a number.',
+            'default_diskon.min' => 'Default discount must be at least 0.',
+            'default_diskon.max' => 'Default discount may not be greater than 100.',
+
+            'default_deskripsi.string' => 'Default description must be a string.',
+            'default_deskripsi.max' => 'Default description may not be greater than 500 characters.',
+
+            'status.required' => 'Status is required.',
+            'status.in' => 'Status must be one of the following values: 0, 1, or 2.',
         ];
     }
 }

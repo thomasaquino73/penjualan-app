@@ -116,7 +116,7 @@
                         data: 'email',
                     },
                     {
-                        data: 'notel_bisnis',
+                        data: 'phone_1',
                     },
                     {
                         data: 'alamat_pembayaran',

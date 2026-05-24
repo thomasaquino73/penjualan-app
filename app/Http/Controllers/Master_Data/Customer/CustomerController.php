@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Master_Data\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CustomerRequest;
+use App\Models\BasicCodeDetail;
 use App\Models\Master_Data\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -180,17 +181,16 @@ class CustomerController extends Controller
                 'sapaan' => $request->sapaan,
                 'contact_person' => $request->contact_person,
                 'posisi_jabatan' => $request->posisi_jabatan,
-                'email_kontak' => $request->email_kontak,
-                'handphone_kontak' => $request->handphone_kontak,
-                'notel_bisnis_kontak' => $request->notel_bisnis_kontak,
+                 'email_kontak' => $request->email_kontak,
+                'phone1_kontak' => $request->phone1_kontak,
+                'phone2_kontak' => $request->phone1_kontak,
                 'faximili_kontak' => $request->faximili_kontak,
-                'no_whatsapp_kontak' => $request->no_whatsapp_kontak,
                 'website_kontak' => $request->website_kontak,
                 'catatan' => $request->catatan,
             ]);
             DB::table('customer_pengiriman')->insert([
                 'customer_id' => $customer->id,
-                'default_pengiriman' => $request->default_pengiriman,
+                         'default_pengiriman' => $request->has('default_pengiriman') ? 1 : 0,
                 'nama_penerima' => $request->nama_penerima,
                 'handphone_penerima' => $request->handphone_penerima,
                 'alamat_pengiriman' => $request->alamat_pengiriman,
@@ -201,8 +201,8 @@ class CustomerController extends Controller
             ]);
             DB::table('customer_pajak')->insert([
                 'customer_id' => $customer->id,
-                'default_pajak' => $request->default_pajak,
-                'check_address' => $request->check_address,
+                      'default_pajak' => $request->has('default_pajak') ? 1 : 0,
+                'check_address' => $request->has('check_address') ? 1 : 0,
                 'tipe_id_pajak' => $request->tipe_id_pajak,
                 'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
                 'nama_wajib_pajak' => $request->nama_wajib_pajak,
@@ -238,6 +238,7 @@ class CustomerController extends Controller
                 ['label' => 'Customer New', 'url' => ''],
             ],
             'idNumber' => $this->generateNumberId(),
+            'kategoriCustomer' => BasicCodeDetail::where('master_id', 9)->get(),
 
         ];
 
@@ -270,6 +271,7 @@ class CustomerController extends Controller
             'kontak' => $kontak,
             'pajak' => $pajak,
             'pengiriman' => $pengiriman,
+            'kategoriCustomer' => BasicCodeDetail::where('master_id', 9)->get(),
         ];
 
         return view('master_data.customer.customer_edit', $x);
@@ -292,14 +294,13 @@ class CustomerController extends Controller
                 ->updateOrInsert(
                     ['customer_id' => $customer->id],
                     [
-                        'sapaan' => $request->sapaan,
+                       'sapaan' => $request->sapaan,
                         'contact_person' => $request->contact_person,
                         'posisi_jabatan' => $request->posisi_jabatan,
                         'email_kontak' => $request->email_kontak,
-                        'handphone_kontak' => $request->handphone_kontak,
-                        'notel_bisnis_kontak' => $request->notel_bisnis_kontak,
+                        'phone1_kontak' => $request->phone1_kontak,
+                        'phone2_kontak' => $request->phone1_kontak,
                         'faximili_kontak' => $request->faximili_kontak,
-                        'no_whatsapp_kontak' => $request->no_whatsapp_kontak,
                         'website_kontak' => $request->website_kontak,
                         'catatan' => $request->catatan,
                         'updated_at' => now(),
@@ -325,10 +326,9 @@ class CustomerController extends Controller
             DB::table('customer_pajak')
                 ->updateOrInsert(
                     ['customer_id' => $customer->id],
-                    [
+                    ['default_pajak' => $request->has('default_pajak') ? 1 : 0,
+                'check_address' => $request->has('check_address') ? 1 : 0,
                         'tipe_id_pajak' => $request->tipe_id_pajak,
-                        'default_pajak' => $request->default_pajak,
-                        'check_address' => $request->check_address,
                         'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
                         'nama_wajib_pajak' => $request->nama_wajib_pajak,
                         'id_tku' => $request->id_tku,

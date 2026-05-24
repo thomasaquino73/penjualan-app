@@ -202,10 +202,9 @@ class SupplierController extends Controller
                 'contact_person' => $request->contact_person,
                 'posisi_jabatan' => $request->posisi_jabatan,
                 'email_kontak' => $request->email_kontak,
-                'handphone_kontak' => $request->handphone_kontak,
-                'notel_bisnis_kontak' => $request->notel_bisnis_kontak,
+                'phone1_kontak' => $request->phone1_kontak,
+                'phone2_kontak' => $request->phone1_kontak,
                 'faximili_kontak' => $request->faximili_kontak,
-                'no_whatsapp_kontak' => $request->no_whatsapp_kontak,
                 'website_kontak' => $request->website_kontak,
                 'catatan' => $request->catatan,
             ]);
@@ -216,6 +215,8 @@ class SupplierController extends Controller
                 'default_deskripsi' => $request->default_deskripsi,
             ]);
             DB::table('supplier_pajak')->insert([
+                'default_pajak' => $request->has('default_pajak') ? 1 : 0,
+                'check_address' => $request->has('check_address') ? 1 : 0,
                 'supplier_id' => $supplier->id,
                 'tipe_id_pajak' => $request->tipe_id_pajak,
                 'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
@@ -321,6 +322,7 @@ class SupplierController extends Controller
             unset($data['items_detail']);
 
             $data['updated_by'] = Auth::id();
+            $data['updated_at'] = now();
 
             // ❌ Jangan ubah id_supplier saat update
             unset($data['id_supplier']);
@@ -340,10 +342,9 @@ class SupplierController extends Controller
                         'contact_person' => $request->contact_person,
                         'posisi_jabatan' => $request->posisi_jabatan,
                         'email_kontak' => $request->email_kontak,
-                        'handphone_kontak' => $request->handphone_kontak,
-                        'notel_bisnis_kontak' => $request->notel_bisnis_kontak,
+                        'phone1_kontak' => $request->phone1_kontak,
+                        'phone2_kontak' => $request->phone1_kontak,
                         'faximili_kontak' => $request->faximili_kontak,
-                        'no_whatsapp_kontak' => $request->no_whatsapp_kontak,
                         'website_kontak' => $request->website_kontak,
                         'catatan' => $request->catatan,
                         'updated_at' => now(),
@@ -365,6 +366,8 @@ class SupplierController extends Controller
                 ->updateOrInsert(
                     ['supplier_id' => $supplier->id],
                     [
+                        'default_pajak' => $request->has('default_pajak') ? 1 : 0,
+                        'check_address' => $request->has('check_address') ? 1 : 0,
                         'tipe_id_pajak' => $request->tipe_id_pajak,
                         'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
                         'nama_wajib_pajak' => $request->nama_wajib_pajak,

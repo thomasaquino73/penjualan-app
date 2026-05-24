@@ -120,7 +120,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/company-info/{id}/update', [CompanyInfoController::class, 'update'])->name('company.update');
     Route::get('/general-setting', [GeneralSettingController::class, 'index'])->name('general-setting.index');
 
-        Route::prefix('token')->group(function () {
+    Route::prefix('token')->group(function () {
         Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');
         Route::post('/expire', [IdleController::class, 'expireToken'])->name('token.expire');
         Route::get('/check', [IdleController::class, 'checkToken'])->name('token.check');
@@ -138,7 +138,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::put('/profile', [ProfileController::class, 'ganti_password'])->name('ganti.password');
     Route::get('/cetak-kartu/{id}', [ProfileController::class, 'cetak'])->name('cetak.kartu');
-
 
     // MASTER DATA
     Route::post('/customer/delete-multiple', [CustomerController::class, 'deleteMultiple']);
@@ -181,10 +180,6 @@ Route::middleware('auth')->group(function () {
 
     // TRANSAKSI
 
-
-
-
-
     // PENGATURAN
     Route::resource('roles', RolesController::class);
     Route::get('edit-roles', [RolesController::class, 'edit']);
@@ -207,7 +202,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('/mata-uang', CurrencyController::class);
     Route::resource('/cash-bank', CashBankController::class);
     Route::resource('/exchange-rate', ExchangeRateController::class);
-       Route::post('/company-delivery/delete-multiple', [ShippingController::class, 'deleteMultiple']);
+    Route::post('/company-delivery/delete-multiple', [ShippingController::class, 'deleteMultiple']);
     Route::post('/company-delivery/restore-multiple', [ShippingController::class, 'restoreMultiple']);
     Route::get('/company-delivery/trash', [ShippingController::class, 'trash'])->name('company-delivery.trash');
     Route::put('/company-delivery/restore/{id}', [ShippingController::class, 'restore'])->name('company-delivery.restore');
@@ -217,11 +212,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('/fob', FobController::class);
     Route::resource('/syarat-pembayaran', SyaratPembayaranController::class);
 
-
-
-
     // Master Data
-
 
     // Route::post('/salesman/delete-multiple', [SalesmanController::class, 'deleteMultiple']);
     // Route::post('/salesman/restore-multiple', [SalesmanController::class, 'restoreMultiple']);
@@ -229,8 +220,6 @@ Route::middleware('auth')->group(function () {
     // Route::get('/salesman/trash', [SalesmanController::class, 'trash'])->name('salesman.trash');
     // Route::put('/salesman/restore/{id}', [SalesmanController::class, 'restore'])->name('salesman.restore');
     // Route::resource('salesman', SalesmanController::class);
-
-
 
     // Route::prefix('daftar-kendaraan')->name('daftar-kendaraan.')->group(function () {
     //     Route::get('/', [DaftarKendaraanController::class, 'index'])->name('index');
@@ -244,9 +233,6 @@ Route::middleware('auth')->group(function () {
     //     Route::post('/delete-multiple', [DaftarKendaraanController::class, 'deleteMultiple']);
     //     Route::post('/restore-multiple', [DaftarKendaraanController::class, 'restoreMultiple']);
     // });
-
-
-
 
     Route::get('/permintaan-pembelian/trash', [PurchaseRequisitionController::class, 'trash'])->name('permintaan-pembelian.trash');
     Route::get('/permintaan-pembelian/table-pr', [PurchaseRequisitionController::class, 'table_pr'])->name('permintaan-pembelian.table_pr');

@@ -12,9 +12,10 @@ use Yajra\DataTables\DataTables;
 
 class SyaratPembayaranController extends Controller
 {
-    public function index(Request $r){
+    public function index(Request $r)
+    {
 
-    if ($r->ajax()) {
+        if ($r->ajax()) {
             $query = SyaratPembayaran::orderBy('created_at', 'desc')->get();
 
             return DataTables::of($query)
@@ -36,14 +37,14 @@ class SyaratPembayaranController extends Controller
 
                     return 'N/A';
                 })
-                 ->addColumn('status', function ($row) {
+                ->addColumn('status', function ($row) {
                     if ($row->status == 1) {
                         return '<span class="badge bg-info">Active</span>';
                     } else {
                         return '<span class="badge bg-danger">Not Active</span>';
                     }
                 })
-                ->rawColumns(['created_at', 'updated_at','status'])
+                ->rawColumns(['created_at', 'updated_at', 'status'])
                 ->make(true);
         }
         $x = [
@@ -57,7 +58,7 @@ class SyaratPembayaranController extends Controller
         return view('pengaturan.syarat_pembayaran.syarat_pembayaran_index', $x);
     }
 
-     public function store(SyaratPembayaranRequest $request)
+    public function store(SyaratPembayaranRequest $request)
     {
         try {
             $id = $request->input('id');
@@ -97,7 +98,8 @@ class SyaratPembayaranController extends Controller
             ], 500);
         }
     }
-     public function edit($id)
+
+    public function edit($id)
     {
         $data = SyaratPembayaran::find($id);
 
@@ -108,11 +110,10 @@ class SyaratPembayaranController extends Controller
         return response()->json($data);
     }
 
-     public function destroy(Request $request, $id)
+    public function destroy(Request $request, $id)
     {
         try {
             $detail = SyaratPembayaran::findOrFail($id);
-
 
             $detail->delete();
 

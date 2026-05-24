@@ -15,7 +15,7 @@ class ShippingController extends Controller
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = Shipping::where('status','<>',0)->orderBy('nama', 'asc')->get();
+            $query = Shipping::where('status', '<>', 0)->orderBy('nama', 'asc')->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -71,7 +71,7 @@ class ShippingController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['created_at', 'updated_at', 'status', 'cekbok','action'])
+                ->rawColumns(['created_at', 'updated_at', 'status', 'cekbok', 'action'])
                 ->make(true);
         }
 
@@ -166,10 +166,10 @@ class ShippingController extends Controller
     {
         // 1. Cari data delivery yang ingin dihapus
 
-          $table = Shipping::findOrFail($id);
-            $table->status = '0';
-            $table->updated_by = Auth::user()->id;
-            $table->save();
+        $table = Shipping::findOrFail($id);
+        $table->status = '0';
+        $table->updated_by = Auth::user()->id;
+        $table->save();
 
         return response()->json([
             'status' => 'success',
@@ -177,7 +177,7 @@ class ShippingController extends Controller
         ], 200);
     }
 
-     public function deleteMultiple(Request $request)
+    public function deleteMultiple(Request $request)
     {
         $ids = $request->ids;
 

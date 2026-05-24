@@ -16,10 +16,10 @@ return new class extends Migration
             $table->string('id_supplier')->unique();
             $table->string('nama_supplier');
             $table->unsignedBigInteger('kategori_supplier_id');
-            $table->string('notel_bisnis')->nullable();
-            $table->string('no_hp')->nullable();
-            $table->string('no_whatsapp')->nullable();
             $table->string('email')->nullable();
+            $table->string('phone_1')->nullable();
+            $table->string('phone_2')->nullable();
+            $table->string('no_whatsapp')->nullable();
             $table->string('faximili')->nullable();
             $table->string('website')->nullable();
             $table->string('alamat_pembayaran')->nullable();
@@ -43,10 +43,9 @@ return new class extends Migration
             $table->string('contact_person')->nullable();
             $table->string('posisi_jabatan')->nullable();
             $table->string('email_kontak')->nullable();
-            $table->string('handphone_kontak')->nullable();
-            $table->string('notel_bisnis_kontak')->nullable();
+            $table->string('phone1_kontak')->nullable();
+            $table->string('phone2_kontak')->nullable();
             $table->string('faximili_kontak')->nullable();
-            $table->string('no_whatsapp_kontak')->nullable();
             $table->string('website_kontak')->nullable();
             $table->string('catatan')->nullable();
             $table->timestamps();

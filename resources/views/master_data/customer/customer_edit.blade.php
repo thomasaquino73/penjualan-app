@@ -80,52 +80,53 @@
 
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
-                                                <label for="notel_bisnis" class="form-label">Bussines Phone
-                                                    Number</label>
+                                                <label for="kategori_customer_id" class="form-label">Category</label>
                                                 <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
-                                                    <input type="number" id="notel_bisnis" name="notel_bisnis"
-                                                        class="form-control" placeholder="Enter Business Phone Number"
-                                                        value="{{ $customer->notel_bisnis }}">
+                                                    <span class="input-group-text"><i class="ti ti-category"></i></span>
+                                                    <select name="kategori_customer_id" id="kategori_customer_id"
+                                                        class="form-select select2"
+                                                        data-placeholder="Select Supplier Category">
+                                                        <option></option>
+                                                        @foreach ($kategoriCustomer as $kat)
+                                                            <option value="{{ $kat->id }}"
+                                                                {{ $customer->kategori_customer_id == $kat->id ? 'selected' : '' }}>
+                                                                {{ $kat->detail }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
-
-                                                <span class="error text-danger" id="notel_bisnisError"></span>
-                                            </div>
-                                            <div class="col-md-6 col-sm-12 mb-3">
-                                                <label for="no_hp" class="form-label">Handphone<small
-                                                        class="text-danger">*</small></label>
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
-                                                    <input type="number" id="no_hp" name="no_hp"
-                                                        class="form-control" placeholder="Enter Handphone Number"
-                                                        value="{{ $customer->no_hp }}">
-                                                </div>
-
-                                                <span class="error text-danger" id="no_hpError"></span>
-                                            </div>
-
-                                            <div class="col-md-6 col-sm-12 mb-3">
-                                                <label for="no_whatsapp" class="form-label">Whatsapp<small
-                                                        class="text-danger">*</small></label>
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
-                                                    <input type="number" id="no_whatsapp" name="no_whatsapp"
-                                                        class="form-control" placeholder="Enter Whatsapp Number"
-                                                        value="{{ $customer->no_whatsapp }}">
-                                                </div>
-
-                                                <span class="error text-danger" id="no_whatsappError"></span>
+                                                <span class="error text-danger" id="kategori_customer_idError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="email" class="form-label">Email</label>
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-mail"></i></span>
-                                                    <input type="text" id="email" name="email"
-                                                        class="form-control" placeholder="Enter Email"
-                                                        value="{{ $customer->email }}">
+                                                    <input type="email" id="email" name="email" class="form-control"
+                                                        placeholder="Enter Email" value=" {{ $customer->email }}">
+                                                </div>
+                                                <span class="error text-danger" id="emailError"></span>
+                                            </div>
+                                            <div class="col-md-6 col-sm-12 mb-3">
+                                                <label for="notel_bisnis" class="form-label">Phone #1
+                                                    Number</label>
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
+                                                    <input type="number" id="phone_1" name="phone_1"
+                                                        class="form-control" placeholder="Enter Phone Number"
+                                                        value="{{ $customer->phone_1 }}">
                                                 </div>
 
-                                                <span class="error text-danger" id="emailError"></span>
+                                                <span class="error text-danger" id="phone_1Error"></span>
+                                            </div>
+                                            <div class="col-md-6 col-sm-12 mb-3">
+                                                <label for="no_hp" class="form-label">Phone #2</label>
+                                                <div class="input-group input-group-merge">
+                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
+                                                    <input type="number" id="phone_2" name="phone_2"
+                                                        class="form-control" placeholder="Enter Phone Number"
+                                                        value="{{ $customer->phone_2 }}">
+                                                </div>
+                                                <span class="error text-danger" id="phone_2Error"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="faximili" class="form-label">Fax Number</label>
@@ -134,20 +135,17 @@
                                                     <input type="number" id="faximili" name="faximili"
                                                         class="form-control" placeholder="Enter Fax Number"
                                                         value="{{ $customer->faximili }}">
+                                                    <span class="error text-danger" id="faximiliError"></span>
                                                 </div>
-
-                                                <span class="error text-danger" id="faximiliError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="website" class="form-label">Website</label>
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-globe"></i></span>
-                                                    <input type="number" id="faximili" name="faximili" <input
-                                                        type="text" id="website" name="website"
+                                                    <input type="text" id="website" name="website"
                                                         class="form-control" placeholder="Enter Website"
                                                         value="{{ $customer->website }}">
                                                 </div>
-
                                                 <span class="error text-danger" id="websiteError"></span>
                                             </div>
 
@@ -286,34 +284,30 @@
                                                     <span class="input-group-text"><i class="ti ti-mail"></i></span>
                                                     <input type="text" id="email_kontak" name="email_kontak"
                                                         class="form-control" placeholder="Enter Email"
-                                                        value="{{ $kontak->email_kontak }}">
+                                                        value="{{ $kontak->email_kontak }}">>
                                                 </div>
-
                                                 <span class="error text-danger" id="email_kontakError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
-                                                <label for="handphone_kontak" class="form-label">Phone Number</label>
+                                                <label for="phone1_kontak" class="form-label">Phone #1</label>
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-phone"></i></span>
-                                                    <input type="text" id="handphone_kontak" name="handphone_kontak"
+                                                    <input type="text" id="phone1_kontak" name="phone1_kontak"
                                                         class="form-control" placeholder="Enter Phone Number"
-                                                        value="{{ $kontak->handphone_kontak }}">
+                                                        value="{{ $kontak->phone1_kontak }}">>
                                                 </div>
-
-                                                <span class="error text-danger" id="handphone_kontakError"></span>
+                                                <span class="error text-danger" id="phone1_kontakError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
-                                                <label for="notel_bisnis_kontak" class="form-label">Bussines Phone
+                                                <label for="phone2_kontak" class="form-label">Phone #2
                                                     Number</label>
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-phone"></i></span>
-                                                    <input type="text" id="notel_bisnis_kontak"
-                                                        name="notel_bisnis_kontak" class="form-control"
-                                                        placeholder="Enter Business Phone Number"
-                                                        value="{{ $kontak->notel_bisnis_kontak }}">
+                                                    <input type="text" id="phone2_kontak" name="phone2_kontak"
+                                                        class="form-control" placeholder="Enter Phone Number"
+                                                        value="{{ $kontak->phone2_kontak }}">>
                                                 </div>
-
-                                                <span class="error text-danger" id="notel_bisnis_kontakError"></span>
+                                                <span class="error text-danger" id="phone2_kontakError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="faximili_kontak" class="form-label">Fax Number
@@ -321,24 +315,10 @@
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-phone"></i></span>
                                                     <input type="number" id="faximili_kontak" name="faximili_kontak"
-                                                        class="form-control" placeholder="Enter Business Phone Number"
-                                                        value="{{ $kontak->faximili_kontak }}">
+                                                        class="form-control" placeholder="Enter Fax Number">
                                                 </div>
-
-                                                <span class="error text-danger" id="faximili_kontakError"></span>
-                                            </div>
-                                            <div class="col-md-6 col-sm-12 mb-3">
-                                                <label for="no_whatsapp_kontak" class="form-label">Whatsapp
-                                                    Number</label>
-                                                <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="ti ti-phone"></i></span>
-                                                    <input type="number" id="no_whatsapp_kontak"
-                                                        name="no_whatsapp_kontak" class="form-control"
-                                                        placeholder="Enter Business Phone Number"
-                                                        value="{{ $kontak->no_whatsapp_kontak }}">
-                                                </div>
-
-                                                <span class="error text-danger" id="no_whatsapp_kontakError"></span>
+                                                <span class="error text-danger" id="faximili_kontakError"
+                                                    value="{{ $kontak->faximili_kontak }}"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="website_kontak" class="form-label">Website
@@ -346,10 +326,9 @@
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-globe"></i></span>
                                                     <input type="text" id="website_kontak" name="website_kontak"
-                                                        class="form-control" placeholder="Enter Business Phone Number"
+                                                        class="form-control" placeholder="Enter Website URL"
                                                         value="{{ $kontak->website_kontak }}">
                                                 </div>
-
                                                 <span class="error text-danger" id="website_kontakError"></span>
                                             </div>
                                             <div class="col-md-12 col-sm-12 mb-3">
@@ -360,7 +339,6 @@
                                                         class="form-control" placeholder="Enter Notes"
                                                         value="{{ $kontak->catatan }}">
                                                 </div>
-
                                                 <span class="error text-danger" id="catatanError"></span>
                                             </div>
                                         </div>

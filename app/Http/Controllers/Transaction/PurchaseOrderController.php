@@ -335,7 +335,7 @@ class PurchaseOrderController extends Controller
             // 2. Pisahkan data 'items_detail' dari array utama agar tidak masuk ke tabel purchase_order
             $itemsDetailRaw = $request->input('items_detail');
             unset($data['items_detail']); // Menghapus key dari antrean field insert tabel master
-           $syaratPembayaran = SyaratPembayaran::find($request->payment_term);
+            $syaratPembayaran = SyaratPembayaran::find($request->payment_term);
             // 3. Lengkapi data audit log untuk tabel master
             $data['created_by'] = Auth::id();
             $data['updated_by'] = null;

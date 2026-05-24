@@ -268,7 +268,7 @@ class Sidebar extends Component
                 'name' => 'Company',
                 'icon' => 'ti ti-building',
                 'roles' => ['Super Admin'],
-                'permissions' => ['fob-browse','shipping-browse'],
+                'permissions' => ['fob-browse', 'shipping-browse'],
                 'children' => [
 
                     [
