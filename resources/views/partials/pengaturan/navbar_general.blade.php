@@ -8,11 +8,5 @@
             </a>
         </li>
     @endif
-    @if (auth()->user()->can('company-browse'))
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('company.*') ? 'active' : '' }}" href="{{ route('company.info') }}">
-                <i class="ti ti-building ti-xs me-1"></i>Company Information
-            </a>
-        </li>
-    @endif
+
 </ul>

@@ -10,6 +10,7 @@ use App\Models\General\CompanyDelivery;
 use App\Models\Master_Data\Barang;
 use App\Models\Master_Data\Kendaraan;
 use App\Models\Master_Data\Supplier;
+use App\Models\Pengaturan\Shipping;
 use App\Models\Transaction\PurchaseOrder;
 use App\Models\Transaction\PurchaseOrderDetail;
 use App\Models\Transaction\PurchaseRequisition;
@@ -179,13 +180,13 @@ class PurchaseOrderController extends Controller
                     // ─── 4. TOMBOL UMUM / GLOBAL (KAPANPUN BISA DIAKSES) ─────────────────────────────────────
                     // Detail View
                     if ($user->can('purchase_order-read')) {
-                        $btn .= '<a class="dropdown-item" href="'.route('purchase-order.show', $row->id).'" data-id="'.$row->id.'"> 
+                        $btn .= '<a class="dropdown-item" href="'.route('purchase-order.show', $row->id).'" data-id="'.$row->id.'">
                     <i class="ti ti-list-details me-1"></i> View Detail
                 </a>';
                     }
 
                     // Cetak PDF / Print PO
-                    $btn .= '<a class="dropdown-item" target="_blank" href="'.route('purchase-order.print', $row->id).'" data-id="'.$row->id.'"> 
+                    $btn .= '<a class="dropdown-item" target="_blank" href="'.route('purchase-order.print', $row->id).'" data-id="'.$row->id.'">
                 <i class="ti ti-printer me-1"></i> Print / PDF
             </a>';
 
@@ -285,7 +286,7 @@ class PurchaseOrderController extends Controller
             'supplier' => Supplier::where('status', 1)->get(),
             'company' => Company::first(),
             'idNumber' => $this->generateNumberId(),
-            'kendaraan' => Kendaraan::where('status', 1)->get(),
+            'shipping' => Shipping::where('status', 1)->get(),
             'paymentTerm' => BasicCodeDetail::where('master_id', 4)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),

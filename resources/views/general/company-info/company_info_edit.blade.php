@@ -18,7 +18,6 @@
 
     <div class="row">
         <div class="col-md-12">
-            @include('partials.pengaturan.navbar_general')
 
             <div class="card mb-4">
 

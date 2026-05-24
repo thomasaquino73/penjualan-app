@@ -19,11 +19,10 @@
                 <div class="input-group input-group-merge">
                     <span class="input-group-text"><i class="ti ti-truck"></i> </span>
                     <select name="vehicle_id" id="vehicle_id" class="form-select select2"
-                        data-placeholder="Select Vehicle">
+                        data-placeholder="Select Shipping">
                         <option></option>
-                        @foreach ($kendaraan as $kendaraan)
-                            <option value="{{ $kendaraan->id }}"> {{ $kendaraan->merk }} -
-                                {{ $kendaraan->plat_nomor }}</option>
+                        @foreach ($shipping as $shipping)
+                            <option value="{{ $shipping->id }}">{{ $shipping->nama }}</option>
                         @endforeach
                     </select>
                     <span class="error text-danger" id="fob_idError"></span>

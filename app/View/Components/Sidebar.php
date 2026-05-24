@@ -118,16 +118,16 @@ class Sidebar extends Component
                 'roles' => ['Super Admin'],
                 'permissions' => ['warehouse-browse'],
             ],
-            [
-                'type' => 'single',
-                'name' => 'Vehicle',
-                'route' => 'daftar-kendaraan.index',
-                'icon' => 'ti-car',
-                'pattern' => 'daftar-kendaraan.*',
-                'active' => true,
-                'roles' => ['SuperAdmin'],
-                'permissions' => ['kendaraan-browse'],
-            ],
+            // [
+            //     'type' => 'single',
+            //     'name' => 'Vehicle',
+            //     'route' => 'daftar-kendaraan.index',
+            //     'icon' => 'ti-car',
+            //     'pattern' => 'daftar-kendaraan.*',
+            //     'active' => true,
+            //     'roles' => ['SuperAdmin'],
+            //     'permissions' => ['kendaraan-browse'],
+            // ],
             [
                 'type' => 'section',
                 'label' => 'TRANSAKSI',
@@ -268,9 +268,16 @@ class Sidebar extends Component
                 'name' => 'Company',
                 'icon' => 'ti ti-building',
                 'roles' => ['Super Admin'],
-                'permissions' => ['customer-browse', 'kategori_customer-browse'],
+                'permissions' => ['fob-browse','shipping-browse'],
                 'children' => [
 
+                    [
+                        'name' => 'Company Information',
+                        'route' => 'company.info',
+                        'pattern' => 'company.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['company-browse'],
+                    ],
                     [
                         'name' => 'Tax',
                         'route' => 'customer.index',
@@ -291,14 +298,14 @@ class Sidebar extends Component
                         'route' => 'company-delivery.index',
                         'pattern' => 'company-delivery.*',
                         'roles' => ['Super Admin'],
-                        'permissions' => ['kategori_customer-browse'],
+                        'permissions' => ['shipping-browse'],
                     ],
                     [
                         'name' => 'FOB',
-                        'route' => 'kategori-customer.index',
-                        'pattern' => 'kategori-customer.*',
+                        'route' => 'fob.index',
+                        'pattern' => 'fob.*',
                         'roles' => ['Super Admin'],
-                        'permissions' => ['kategori_customer-browse'],
+                        'permissions' => ['fob-browse'],
                     ],
                 ],
             ],
@@ -317,14 +324,6 @@ class Sidebar extends Component
                         'roles' => ['Super Admin'],
                         'permissions' => ['general-browse'],
                     ],
-                    [
-                        'name' => 'Company Information',
-                        'route' => 'company.info',
-                        'pattern' => 'company.*',
-                        'roles' => ['Super Admin'],
-                        'permissions' => ['company-browse'],
-                    ],
-
                     [
                         'name' => 'Currency',
                         'route' => 'mata-uang.index',

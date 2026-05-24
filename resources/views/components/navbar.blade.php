@@ -57,19 +57,21 @@
                   </ul>
               </li> --}}
               <!--/ Language -->
-              <li class="nav-item d-flex align-items-center">
-                  <select id="currency_id" class="form-select form-select-sm border-0 bg-transparent"
-                      style="width:80px; cursor:pointer;" onchange="changeNavbarCurrency(this.value)">
+              @if (\App\Models\General\Company::first()?->default_currency_id)
+                  <li class="nav-item d-flex align-items-center">
+                      <select id="currency_id" class="form-select form-select-sm border-0 bg-transparent"
+                          style="width:80px; cursor:pointer;" onchange="changeNavbarCurrency(this.value)">
 
-                      @foreach ($currencies as $currency)
-                          <option value="{{ $currency->id }}" data-symbol="{{ $currency->symbol }}"
-                              {{ isset($mataUang) && $mataUang->id == $currency->id ? 'selected' : '' }}>
-                              {{ $currency->code }}
-                          </option>
-                      @endforeach
+                          @foreach ($currencies as $currency)
+                              <option value="{{ $currency->id }}" data-symbol="{{ $currency->symbol }}"
+                                  {{ isset($mataUang) && $mataUang->id == $currency->id ? 'selected' : '' }}>
+                                  {{ $currency->code }}
+                              </option>
+                          @endforeach
 
-                  </select>
-              </li>
+                      </select>
+                  </li>
+              @endif
               <a class="nav-link" href="javascript:void(0);" id="wifiIcon">
                   <i class="ti ti-wifi"></i>
               </a>
