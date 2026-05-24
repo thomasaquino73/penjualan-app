@@ -20,6 +20,7 @@ use App\Http\Controllers\Master_Data\WarehouseController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengaturan\Company\FobController;
 use App\Http\Controllers\Pengaturan\Company\ShippingController;
+use App\Http\Controllers\Pengaturan\Company\SyaratPembayaranController;
 use App\Http\Controllers\Pengaturan\PengaturanSistemController;
 use App\Http\Controllers\Pengaturan\PermissionsController;
 use App\Http\Controllers\Pengaturan\RolesController;
@@ -214,6 +215,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/fob/delete-multiple', [FobController::class, 'deleteMultiple']);
     Route::resource('/fob', FobController::class);
+    Route::resource('/syarat-pembayaran', SyaratPembayaranController::class);
 
 
 

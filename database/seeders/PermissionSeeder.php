@@ -34,6 +34,7 @@ class PermissionSeeder extends Seeder
             'general' => ['alias' => 'General', 'group' => 'General'],
             'shipping' => ['alias' => 'Shipping', 'group' => 'Pengaturan'],
             'fob' => ['alias' => 'FOB', 'group' => 'Pengaturan'],
+            'syarat_pembayaran' => ['alias' => 'Payment Term', 'group' => 'Pengaturan'],
 
             // 🔥 Modul transaksi ditambah action 'approval' khusus
             'permintaan_pembelian' => [

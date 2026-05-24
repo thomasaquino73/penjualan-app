@@ -288,10 +288,10 @@ class Sidebar extends Component
 
                     [
                         'name' => 'Payment Term',
-                        'route' => 'kategori-customer.index',
-                        'pattern' => 'kategori-customer.*',
+                        'route' => 'syarat-pembayaran.index',
+                        'pattern' => 'syarat-pembayaran.*',
                         'roles' => ['Super Admin'],
-                        'permissions' => ['kategori_customer-browse'],
+                        'permissions' => ['syarat_pembayaran-browse'],
                     ],
                     [
                         'name' => 'Shipping',
