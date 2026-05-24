@@ -25,9 +25,6 @@
                 <div
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
-
-
-
                 </div>
             </div>
 

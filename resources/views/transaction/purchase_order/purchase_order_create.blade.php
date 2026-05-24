@@ -43,22 +43,20 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Supplier</label>
-                                    <select name="supplier_id" id="supplier_id" class="form-select select2"
-                                        data-placeholder="Select Supplier">
-                                        <option></option>
-                                        @foreach ($supplier as $supp)
-                                            <option value="{{ $supp->id }}" data-alamat="{{ $supp->alamat }}">
-                                                {{ $supp->nama_supplier }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <span class="error text-danger" id="supplier_idError"></span>
+                                    <div class="input-group input-group-merge">
+                                        <span class="input-group-text"><i class="ti ti-user"></i></span>
+                                        <select name="supplier_id" id="supplier_id" class="form-select select2"
+                                            data-placeholder="Select Supplier">
+                                            <option></option>
+                                            @foreach ($supplier as $supp)
+                                                <option value="{{ $supp->id }}" data-alamat="{{ $supp->alamat }}">
+                                                    [{{ $supp->id_supplier }}] {{ $supp->nama_supplier }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <span class="error text-danger" id="supplier_idError"></span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label">Address</label>
-                                <textarea name="alamat" id="alamat" cols="" rows="5" class="form-control" disabled
-                                    placeholder="Address"></textarea>
                             </div>
                         </div>
                     </div>
@@ -67,58 +65,25 @@
                         <div class="row">
                             <div class="col-6 mb-3">
                                 <label class="form-label">PO Number <small class="text-danger">*</small> </label>
-                                <input type="text" name="code" id="code" class="form-control"
-                                    value="{{ $idNumber }}">
-                                <span class="error text-danger" id="codeError"></span>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text"><i class="ti ti-barcode"></i></span>
+                                    <input type="text" name="code" id="code" class="form-control"
+                                        value="{{ $idNumber }}">
+                                    <span class="error text-danger" id="codeError"></span>
+                                </div>
+
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="form-label">PO Date<small class="text-danger">*</small> </label>
-                                <input type="text" name="date" id="date" class="form-control" value="">
-                                <span class="error text-danger" id="dateError"></span>
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Expected Date<small class="text-danger">*</small> </label>
-                                <input type="text" name="expected_date" id="expected_date" class="form-control"
-                                    placeholder="Select Date">
-                                <span class="error text-danger" id="expected_dateError"></span>
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label">FOB<small class="text-danger">*</small> </label>
-                                <select name="fob_id" id="fob_id" class="form-select select2"
-                                    data-placeholder="Select FOB">
-                                    <option></option>
-                                    @foreach ($fob as $f)
-                                        <option value="{{ $f->detail }}"> {{ $f->detail }}</option>
-                                    @endforeach
-                                </select>
-                                <span class="error text-danger" id="fob_idError"></span>
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Term<small class="text-danger">*</small> </label>
-                                <select name="term" id="term" class="form-select select2"
-                                    data-placeholder="Select Term">
-                                    <option></option>
-                                    @foreach ($term as $term)
-                                        <option value="{{ $term->id }}">{{ $term->detail }}</option>
-                                    @endforeach
-                                </select>
-                                <span class="error text-danger" id="termError"></span>
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Ship via<small class="text-danger">*</small> </label>
-                                <select name="vehicle_id" id="vehicle_id" class="form-select select2"
-                                    data-placeholder="Select Vehicle">
-                                    <option></option>
-                                    @foreach ($kendaraan as $kendaraan)
-                                        <option value="{{ $kendaraan->id }}"> {{ $kendaraan->merk }} -
-                                            {{ $kendaraan->plat_nomor }}</option>
-                                    @endforeach
-                                </select>
-                                <span class="error text-danger" id="vehicle_idError"></span>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text"><i class="ti ti-calendar"></i></span>
+                                    <input type="text" name="date" id="date" class="form-control" value="">
+                                    <span class="error text-danger" id="dateError"></span>
+                                </div>
+
                             </div>
                         </div>
                     </div>
-
                 </div>
 
                 <div class="col-xl-12">
@@ -142,20 +107,11 @@
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane fade active show" id="navs-pills-left-home" role="tabpanel">
-                                @include('transaction.purchase_order.part.tabel_pesanan.tabel_pesanan')
+                                @include('transaction.purchase_order.part.isi_tab.tabel_pesanan')
                             </div>
                             <div class="tab-pane fade" id="navs-pills-left-profile" role="tabpanel">
-                                <p>
-                                    Donut dragée jelly pie halvah. Danish gingerbread bonbon cookie wafer candy oat cake ice
-                                    cream. Gummies halvah tootsie roll muffin biscuit icing dessert gingerbread. Pastry ice
-                                    cream
-                                    cheesecake fruitcake.
-                                </p>
-                                <p class="mb-0">
-                                    Jelly-o jelly beans icing pastry cake cake lemon drops. Muffin muffin pie tiramisu
-                                    halvah
-                                    cotton candy liquorice caramels.
-                                </p>
+                                @include('transaction.purchase_order.part.isi_tab.info_pesanan')
+
                             </div>
 
                         </div>
@@ -163,15 +119,8 @@
                 </div>
 
                 <div class="row mb-5">
-                    <div class="col-lg-6 ">
-                        <label class="form-label" for="description">Description</label>
-                        <textarea name="description" id="description" class="form-control" rows="8" placeholder="Enter description"></textarea>
-                        <span class="error text-danger" id="descriptionError"></span>
-                    </div>
-                    <div class="col-lg-2 mb-3 ">
-
-                    </div>
-                    <div class="col-lg-4">
+                    <div class="col-md-3"></div>
+                    <div class="col-md-3">
                         <div class="col-12 mb-3 ">
                             <label class="form-label" for="sub_total">Sub Total</label>
                             <div class="input-group input-group-merge">
@@ -181,6 +130,8 @@
                             </div>
 
                         </div>
+                    </div>
+                    <div class="col-md-3">
                         <div class="col-12 mb-3">
                             <label class="form-label" for="discount_all">Discount</label>
                             <div class="row">
@@ -199,9 +150,10 @@
                                     </div>
                                 </div>
                             </div>
-
-
                         </div>
+                    </div>
+
+                    <div class="col-lg-3">
                         <div class="col-12 mb-3">
                             <label class="form-label" for="total_order"> <strong>Total Order</strong></label>
                             <div class="input-group input-group-merge">
@@ -227,7 +179,9 @@
             </form>
         </div>
     </div>
-    <div class="modal fade" id="modalPrDetail">
+    @include('transaction.purchase_order.part.modals.modalPrDetail')
+    @include('transaction.purchase_order.part.modals.modalRequisitionDetail')
+    {{-- <div class="modal fade" id="modalPrDetail">
         <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header">
@@ -307,9 +261,9 @@
                 </form>
             </div>
         </div>
-    </div>
+    </div> --}}
 
-    <div class="modal fade" id="modalRequisitionDetail">
+    {{-- <div class="modal fade" id="modalRequisitionDetail">
         <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header">
@@ -341,7 +295,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
 @endsection
 
 @push('scripts')
@@ -957,16 +911,16 @@
                                     '';
 
                                 let itemContent = `
-                <div class="d-flex flex-column w-100">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span><strong>${formattedPrice}</strong></span>
-                        ${badgeTerakhir}
-                    </div>
-                    <small class="text-muted" style="font-size: 11px;">
-                        <i class="ti ti-calendar text-xs me-1"></i>${formattedDate}
-                    </small>
-                </div>
-              `;
+                                        <div class="d-flex flex-column w-100">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span><strong>${formattedPrice}</strong></span>
+                                                ${badgeTerakhir}
+                                            </div>
+                                            <small class="text-muted" style="font-size: 11px;">
+                                                <i class="ti ti-calendar text-xs me-1"></i>${formattedDate}
+                                            </small>
+                                        </div>
+                                    `;
 
                                 let li = $('<li></li>');
                                 let a = $(
@@ -1003,104 +957,104 @@
             });
 
             // 5. Event Handler: Submit Form Modal Detail (Sekarang baris prDetailsData PASTI terbaca)
-            let saveAndNew = false;
-            let activeBtn = null;
+            // let saveAndNew = false;
+            // let activeBtn = null;
 
-            $(document).on('click', '.card-footer button[type="submit"]', function() {
-                saveAndNew = $(this).data('save-and-new');
-                activeBtn = $(this);
-            });
+            // $(document).on('click', '.card-footer button[type="submit"]', function() {
+            //     saveAndNew = $(this).data('save-and-new');
+            //     activeBtn = $(this);
+            // });
 
             // CUKUP TAMBAHKAN .off('submit') DI SINI
-            $('#postForm').off('submit').on('submit', function(e) {
-                e.preventDefault();
+            // $('#postForm').off('submit').on('submit', function(e) {
+            //     e.preventDefault();
 
-                let form = this;
-                let formData = new FormData(form);
+            //     let form = this;
+            //     let formData = new FormData(form);
 
-                if (!activeBtn) {
-                    activeBtn = $('#postForm').find('button[data-save-and-new="false"]');
-                    saveAndNew = false;
-                }
+            //     if (!activeBtn) {
+            //         activeBtn = $('#postForm').find('button[data-save-and-new="false"]');
+            //         saveAndNew = false;
+            //     }
 
-                if (typeof prDetailsData === 'undefined' || prDetailsData.length === 0) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Empty Items',
-                        text: 'Please add at least one item detail to the table before saving.',
-                        confirmButtonText: 'OK',
-                        customClass: {
-                            confirmButton: 'btn btn-primary waves-effect waves-light'
-                        },
-                        buttonsStyling: false
-                    });
-                    return false;
-                }
+            //     if (typeof prDetailsData === 'undefined' || prDetailsData.length === 0) {
+            //         Swal.fire({
+            //             icon: 'warning',
+            //             title: 'Empty Items',
+            //             text: 'Please add at least one item detail to the table before saving.',
+            //             confirmButtonText: 'OK',
+            //             customClass: {
+            //                 confirmButton: 'btn btn-primary waves-effect waves-light'
+            //             },
+            //             buttonsStyling: false
+            //         });
+            //         return false;
+            //     }
 
-                formData.append('save_and_new', saveAndNew ? 1 : 0);
-                formData.append('items_detail', JSON.stringify(prDetailsData));
+            //     formData.append('save_and_new', saveAndNew ? 1 : 0);
+            //     formData.append('items_detail', JSON.stringify(prDetailsData));
 
-                $.ajax({
-                    url: $(form).attr('action'),
-                    method: $(form).attr('method'),
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: 'json',
-                    beforeSend: function() {
-                        activeBtn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
-                        $('.card-footer button').prop('disabled', true);
-                    },
-                    complete: function() {
-                        let closeBtn = $('#postForm').find('button[data-save-and-new="false"]');
-                        let newBtn = $('#postForm').find('button[data-save-and-new="true"]');
-                        closeBtn.html('<i class="fa fa-upload me-1"></i> Save and Close');
-                        newBtn.html(
-                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New');
-                        $('.card-footer button').prop('disabled', false);
-                    },
-                    success: function(response) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Data Created Successfully',
-                            text: response.message,
-                            customClass: {
-                                confirmButton: 'btn btn-primary waves-effect waves-light'
-                            },
-                            buttonsStyling: false
-                        }).then(() => {
-                            window.location.href = response.redirect;
-                        });
-                    },
-                    error: function(xhr) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Failed to Create Data',
-                            text: xhr.responseJSON.message ||
-                                'Please check your data again.',
-                            customClass: {
-                                confirmButton: 'btn btn-primary waves-effect waves-light'
-                            },
-                            buttonsStyling: false
-                        });
+            //     $.ajax({
+            //         url: $(form).attr('action'),
+            //         method: $(form).attr('method'),
+            //         data: formData,
+            //         processData: false,
+            //         contentType: false,
+            //         dataType: 'json',
+            //         beforeSend: function() {
+            //             activeBtn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
+            //             $('.card-footer button').prop('disabled', true);
+            //         },
+            //         complete: function() {
+            //             let closeBtn = $('#postForm').find('button[data-save-and-new="false"]');
+            //             let newBtn = $('#postForm').find('button[data-save-and-new="true"]');
+            //             closeBtn.html('<i class="fa fa-upload me-1"></i> Save and Close');
+            //             newBtn.html(
+            //                 '<i class="fa fa-plus-circle me-1"></i> Save and Create New');
+            //             $('.card-footer button').prop('disabled', false);
+            //         },
+            //         success: function(response) {
+            //             Swal.fire({
+            //                 icon: 'success',
+            //                 title: 'Data Created Successfully',
+            //                 text: response.message,
+            //                 customClass: {
+            //                     confirmButton: 'btn btn-primary waves-effect waves-light'
+            //                 },
+            //                 buttonsStyling: false
+            //             }).then(() => {
+            //                 window.location.href = response.redirect;
+            //             });
+            //         },
+            //         error: function(xhr) {
+            //             Swal.fire({
+            //                 icon: 'error',
+            //                 title: 'Failed to Create Data',
+            //                 text: xhr.responseJSON.message ||
+            //                     'Please check your data again.',
+            //                 customClass: {
+            //                     confirmButton: 'btn btn-primary waves-effect waves-light'
+            //                 },
+            //                 buttonsStyling: false
+            //             });
 
-                        let errors = xhr.responseJSON.errors || {};
-                        $.each(errors, function(key, value) {
-                            $(`#${key}Error`).text(value[0]);
-                        });
-                    }
-                });
-            });
+            //             let errors = xhr.responseJSON.errors || {};
+            //             $.each(errors, function(key, value) {
+            //                 $(`#${key}Error`).text(value[0]);
+            //             });
+            //         }
+            //     });
+            // });
 
             // 6. Event Handler: Ganti Supplier Otomatis Isi Alamat
-            $('#supplier_id').on('change', function() {
-                var alamatTerpilih = $(this).find(':selected').data('alamat');
-                if (alamatTerpilih) {
-                    $('#alamat').val(alamatTerpilih);
-                } else {
-                    $('#alamat').val('');
-                }
-            });
+            // $('#supplier_id').on('change', function() {
+            //     var alamatTerpilih = $(this).find(':selected').data('alamat');
+            //     if (alamatTerpilih) {
+            //         $('#alamat').val(alamatTerpilih);
+            //     } else {
+            //         $('#alamat').val('');
+            //     }
+            // });
 
 
             // Jalankan fungsi setiap kali user mengetik sesuatu di Sub Total atau Discount
@@ -1219,5 +1173,57 @@
 
 
         });
+    </script>
+
+    <script>
+        // Ketika tombol map/history alamat diklik
+        $(document).on('click', '#btn-history-address', function() {
+            // Ambil nilai company_id yang sedang terpilih saat ini
+            let companyId = $('#company_id').val('1');
+            // Jalankan fungsi AJAX bawaanmu
+            loadAddressHistory(companyId);
+        });
+
+        // Event ketika salah satu list alamat di dalam dropdown diklik
+        $(document).on('click', '.select-address', function() {
+            let chosenAddress = $(this).data('address');
+            $('#address').val(chosenAddress); // Isi teks ke textarea #address
+        });
+
+        function loadAddressHistory(companyId) {
+            if (!companyId) return;
+
+            $.ajax({
+                url: `/purchase-order/get-company-addresses/${companyId}`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    let dropdownMenu = $('#address-dropdown-menu');
+                    dropdownMenu.empty();
+
+                    if (response.success && response.data.length > 0) {
+                        response.data.forEach(function(item) {
+                            // Ditambahkan class p-2, text-dark, dan w-100 agar warna tulisan muncul dan areanya lebar
+                            let listItem = `
+                        <li class="w-100">
+                            <a class="dropdown-item select-address p-2 d-block text-dark" href="javascript:void(0);" data-address="${item.address}" style="white-space: normal;">
+                                <strong class="text-dark d-block mb-1">${item.address_name}</strong>
+                                <span class="text-muted small d-block">${item.address}</span>
+                            </a>
+                        </li>
+                    `;
+                            dropdownMenu.append(listItem);
+                        });
+                    } else {
+                        dropdownMenu.append(
+                            '<li><span class="dropdown-item text-muted p-2">No address history found</span></li>'
+                        );
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Gagal memuat alamat:', xhr.responseText);
+                }
+            });
+        }
     </script>
 @endpush

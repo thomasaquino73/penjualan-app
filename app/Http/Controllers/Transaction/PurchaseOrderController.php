@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseOrderRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\General\Company;
+use App\Models\General\CompanyDelivery;
 use App\Models\Master_Data\Barang;
 use App\Models\Master_Data\Kendaraan;
 use App\Models\Master_Data\Supplier;
@@ -25,7 +26,18 @@ class PurchaseOrderController extends Controller
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = PurchaseOrder::where('active', '<>', 0)->orderBy('code', 'desc')->get();
+                  $userId = auth()->id();
+
+            // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
+            $query = PurchaseOrder::where('active', '<>', 0)
+                ->where(function ($q) use ($userId) {
+                    $q->where('status', '<>', 'draft')
+                        ->orWhere(function ($subQ) use ($userId) {
+                            $subQ->where('status', 'draft')
+                                ->where('created_by', $userId);
+                        });
+                })
+                ->orderby('code', 'desc');
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -54,7 +66,10 @@ class PurchaseOrderController extends Controller
                         case 'pending': $badge = 'bg-label-warning';
                             $text = 'Pending Approval';
                             break;
-                        case 'processing': $badge = 'bg-label-info';
+                             case 'processing': $badge = 'bg-label-info';
+                            $text = 'Processing';
+                            break;
+                        case 'approved': $badge = 'bg-label-success';
                             $text = 'Processing';
                             break;
                         case 'deliver': $badge = 'bg-label-primary';
@@ -261,7 +276,7 @@ class PurchaseOrderController extends Controller
             'company' => Company::first(),
             'idNumber' => $this->generateNumberId(),
             'kendaraan' => Kendaraan::where('status', 1)->get(),
-            'term' => BasicCodeDetail::where('master_id', 5)->get(),
+            'paymentTerm' => BasicCodeDetail::where('master_id', 4)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
             'taxes' => BasicCodeDetail::where('master_id', 6)->get(),
@@ -803,6 +818,17 @@ class PurchaseOrderController extends Controller
         return response()->json([
             'success' => true,
             'history' => $history,
+        ]);
+    }
+
+    public function getCompanyAddresses($companyId)
+    {
+
+        $addresses = CompanyDelivery::where('company_id',1)->where('active', 1) ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $addresses
         ]);
     }
 }

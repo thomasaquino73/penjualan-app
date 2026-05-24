@@ -245,6 +245,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/change-status/{id}', [PurchaseOrderController::class, 'changeStatus']);
         Route::get('/print/{id}', [PurchaseOrderController::class, 'print'])->name('print');
         Route::get('/po/price-history', [PurchaseOrderController::class, 'getPriceHistory']);
+        Route::get('/get-company-addresses/{companyId}', [PurchaseOrderController::class, 'getCompanyAddresses']);
         Route::resource('', PurchaseOrderController::class)->parameters(['' => 'purchase_order']);
     });
 

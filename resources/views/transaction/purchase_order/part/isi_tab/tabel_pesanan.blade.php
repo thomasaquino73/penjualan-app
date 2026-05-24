@@ -344,76 +344,76 @@
              });
 
              // 4. Event Handler: Mengubah Produk (AJAX List Unit & Harga)
-             $(document).on('change', '#product_id', function() {
-                 let productId = $(this).val();
-                 let unitSelect = $('#unit_id');
-                 //  let priceInput = $('#unit_price');
+             //  $(document).on('change', '#product_id', function() {
+             //      let productId = $(this).val();
+             //      let unitSelect = $('#unit_id');
+             //      //  let priceInput = $('#unit_price');
 
-                 if (!productId) {
-                     unitSelect.empty().append('<option></option>').trigger('change');
-                     //  priceInput.val('');
-                     return;
-                 }
+             //      if (!productId) {
+             //          unitSelect.empty().append('<option></option>').trigger('change');
+             //          //  priceInput.val('');
+             //          return;
+             //      }
 
-                 // AJAX List Unit
-                 $.ajax({
-                     url: `/get-units-by-product/${productId}`,
-                     type: 'GET',
-                     dataType: 'json',
-                     beforeSend: function() {
-                         unitSelect.html('<option>Loading units...</option>').prop('disabled',
-                             true);
-                     },
-                     success: function(response) {
-                         unitSelect.empty().append('<option></option>').prop('disabled', false);
+             //      // AJAX List Unit
+             //      $.ajax({
+             //          url: `/get-units-by-product/${productId}`,
+             //          type: 'GET',
+             //          dataType: 'json',
+             //          beforeSend: function() {
+             //              unitSelect.html('<option>Loading units...</option>').prop('disabled',
+             //                  true);
+             //          },
+             //          success: function(response) {
+             //              unitSelect.empty().append('<option></option>').prop('disabled', false);
 
-                         if (response && response.length > 0) {
-                             $.each(response, function(key, item) {
-                                 unitSelect.append(
-                                     `<option value="${item.id}">${item.name}</option>`
-                                 );
-                             });
-                         } else {
-                             unitSelect.append('<option value="">No unit available</option>');
-                         }
+             //              if (response && response.length > 0) {
+             //                  $.each(response, function(key, item) {
+             //                      unitSelect.append(
+             //                          `<option value="${item.id}">${item.name}</option>`
+             //                      );
+             //                  });
+             //              } else {
+             //                  unitSelect.append('<option value="">No unit available</option>');
+             //              }
 
-                         unitSelect.trigger('change');
+             //              unitSelect.trigger('change');
 
-                         let pendingUnitId = unitSelect.data('pending-val');
-                         if (pendingUnitId) {
-                             unitSelect.val(pendingUnitId).trigger('change');
-                             unitSelect.removeData('pending-val');
-                         }
-                     },
-                     error: function() {
-                         console.error('Gagal memuat list unit dari Controller.');
-                         unitSelect.empty().append('<option></option>').prop('disabled', false)
-                             .trigger('change');
-                     }
-                 });
+             //              let pendingUnitId = unitSelect.data('pending-val');
+             //              if (pendingUnitId) {
+             //                  unitSelect.val(pendingUnitId).trigger('change');
+             //                  unitSelect.removeData('pending-val');
+             //              }
+             //          },
+             //          error: function() {
+             //              console.error('Gagal memuat list unit dari Controller.');
+             //              unitSelect.empty().append('<option></option>').prop('disabled', false)
+             //                  .trigger('change');
+             //          }
+             //      });
 
-                 // AJAX Harga Produk
-                 //  $.ajax({
-                 //      url: `/purchase-order/get-product-price/${productId}`,
-                 //      type: 'GET',
-                 //      dataType: 'json',
-                 //      beforeSend: function() {
-                 //          priceInput.val('').attr('placeholder', 'Loading...');
-                 //      },
-                 //      success: function(response) {
-                 //          if (response.success && response.price !== null && response.price !==
-                 //              '') {
-                 //              priceInput.val(response.price);
-                 //          } else {
-                 //              priceInput.val('').attr('placeholder', '0');
-                 //          }
-                 //      },
-                 //      error: function(xhr) {
-                 //          console.error("Gagal mengambil data harga produk:", xhr);
-                 //          priceInput.val('').attr('placeholder', '0');
-                 //      }
-                 //  });
-             });
+             //      // AJAX Harga Produk
+             //      //  $.ajax({
+             //      //      url: `/purchase-order/get-product-price/${productId}`,
+             //      //      type: 'GET',
+             //      //      dataType: 'json',
+             //      //      beforeSend: function() {
+             //      //          priceInput.val('').attr('placeholder', 'Loading...');
+             //      //      },
+             //      //      success: function(response) {
+             //      //          if (response.success && response.price !== null && response.price !==
+             //      //              '') {
+             //      //              priceInput.val(response.price);
+             //      //          } else {
+             //      //              priceInput.val('').attr('placeholder', '0');
+             //      //          }
+             //      //      },
+             //      //      error: function(xhr) {
+             //      //          console.error("Gagal mengambil data harga produk:", xhr);
+             //      //          priceInput.val('').attr('placeholder', '0');
+             //      //      }
+             //      //  });
+             //  });
 
              // 5. Event Handler: Submit Form Modal Detail (Sekarang baris prDetailsData PASTI terbaca)
              $('#formPrDetail').on('submit', function(e) {
