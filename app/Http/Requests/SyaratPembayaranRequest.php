@@ -24,9 +24,8 @@ class SyaratPembayaranRequest extends FormRequest
                 'required',
                 Rule::unique('syarat_pembayaran', 'nama')->ignore($id, 'id'),
             ],
-            'diskon' => [
-                'nullable',
-            ],
+            'diskon' =>  'nullable',
+            'status' =>  'required',
 
         ];
     }
@@ -36,6 +35,7 @@ class SyaratPembayaranRequest extends FormRequest
         return [
             'nama.required' => ' Name is required',
             'nama.unique' => ' Name already exists',
+            'status.required' => ' status is required',
         ];
     }
 }

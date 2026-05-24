@@ -32,6 +32,9 @@ return new class extends Migration
             $table->integer('disc_percent')->nullable();
             $table->bigInteger('disc_nominal')->nullable();
             $table->bigInteger('grand_total')->nullable();
+            $table->bigInteger('total_hari')->nullable();
+            $table->bigInteger('total_diskon')->nullable();
+            $table->bigInteger('masa_jatuh_tempo')->nullable();
             $table->enum('status', [
                 'draft',                 // Data baru dibuat, masih bisa diedit oleh staff purchasing
                 'pending',               // Menunggu persetujuan (approval) dari Manager/Direktur

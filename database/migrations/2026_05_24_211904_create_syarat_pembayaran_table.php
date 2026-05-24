@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('syarat_pembayaran', function (Blueprint $table) {
             $table->id();
             $table->string('nama');
-            $table->integer('diskon');
-            $table->integer('masa_diskon');
-            $table->integer('masa_jatuh_tempo');
-            $table->string('keterangan');
+            $table->bigInteger('total_hari')->nullable();
+            $table->bigInteger('total_diskon')->nullable();
+            $table->bigInteger('masa_jatuh_tempo')->nullable();
+            $table->string('keterangan')->nullable();
             $table->integer('status')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

@@ -69,25 +69,25 @@
 
                             </div>
                             <div class="col-md-12 col-sm-12 mb-3">
-                                <label for="masa_diskon" class="form-label">If paying within (day)</label>
+                                <label for="total_hari" class="form-label">If paying within (day)</label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
-                                    <input type="number" id="masa_diskon" name="masa_diskon" class="form-control"
+                                    <input type="number" id="total_hari" name="total_hari" class="form-control"
                                         placeholder="" min="0">
                                     <span class="input-group-text">Day</span>
                                 </div>
-                                <span class="error text-danger" id="masa_diskonError"></span>
+                                <span class="error text-danger" id="total_hariError"></span>
 
                             </div>
                             <div class="col-md-12 col-sm-12 mb-3">
-                                <label for="diskon" class="form-label">Eligible for a discount</label>
+                                <label for="total_diskon" class="form-label">Eligible for a discount</label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-moneybag"></i></span>
-                                    <input type="number" id="diskon" name="diskon" class="form-control" placeholder=""
-                                        min="0">
+                                    <input type="number" id="total_diskon" name="total_diskon" class="form-control"
+                                        placeholder="" min="0">
                                     <span class="input-group-text"><i class="ti ti-percentage"></i></span>
                                 </div>
-                                <span class="error text-danger" id="diskonError"></span>
+                                <span class="error text-danger" id="total_diskonError"></span>
 
                             </div>
                             <div class="col-md-12 col-sm-12 mb-3">
@@ -112,7 +112,7 @@
                                 <select name="status" id="status" class="form-control">
                                     <option value="" selected hidden>Select Status</option>
                                     <option value="1">Active</option>
-                                    <option value="2">Inactive</option>
+                                    <option value="2">Not Active</option>
                                 </select>
                                 <span class="error text-danger" id="statusError"></span>
                             </div>
@@ -166,10 +166,10 @@
                         data: 'nama',
                     },
                     {
-                        data: 'diskon',
+                        data: 'total_diskon',
                     },
                     {
-                        data: 'masa_diskon',
+                        data: 'total_hari',
                     },
                     {
                         data: 'masa_jatuh_tempo',
@@ -249,8 +249,8 @@
                                         // 4. Isi field form modal sesuai dengan property object data dari database
                                         $('#id').val(data.id);
                                         $('#nama').val(data.nama);
-                                        $('#diskon').val(data.diskon);
-                                        $('#masa_diskon').val(data.masa_diskon);
+                                        $('#total_hari').val(data.total_hari);
+                                        $('#total_diskon').val(data.total_diskon);
                                         $('#masa_jatuh_tempo').val(data
                                             .masa_jatuh_tempo);
                                         $('#keterangan').val(data.keterangan);

@@ -11,6 +11,7 @@ use App\Models\Master_Data\Barang;
 use App\Models\Master_Data\Kendaraan;
 use App\Models\Master_Data\Supplier;
 use App\Models\Pengaturan\Shipping;
+use App\Models\Pengaturan\SyaratPembayaran;
 use App\Models\Transaction\PurchaseOrder;
 use App\Models\Transaction\PurchaseOrderDetail;
 use App\Models\Transaction\PurchaseRequisition;
@@ -287,7 +288,7 @@ class PurchaseOrderController extends Controller
             'company' => Company::first(),
             'idNumber' => $this->generateNumberId(),
             'shipping' => Shipping::where('status', 1)->get(),
-            'paymentTerm' => BasicCodeDetail::where('master_id', 4)->get(),
+            'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
             'taxes' => BasicCodeDetail::where('master_id', 6)->get(),
@@ -334,7 +335,7 @@ class PurchaseOrderController extends Controller
             // 2. Pisahkan data 'items_detail' dari array utama agar tidak masuk ke tabel purchase_order
             $itemsDetailRaw = $request->input('items_detail');
             unset($data['items_detail']); // Menghapus key dari antrean field insert tabel master
-
+           $syaratPembayaran = SyaratPembayaran::find($request->payment_term);
             // 3. Lengkapi data audit log untuk tabel master
             $data['created_by'] = Auth::id();
             $data['updated_by'] = null;
@@ -345,6 +346,9 @@ class PurchaseOrderController extends Controller
             $data['grand_total'] = $request->total_order;
             $data['date'] = Carbon::parse($request->date)->format('Y-m-d');
             $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
+            $data['total_hari'] = $syaratPembayaran->total_hari;
+            $data['total_diskon'] = $syaratPembayaran->total_diskon;
+            $data['masa_jatuh_tempo'] = $syaratPembayaran->masa_jatuh_tempo;
 
             // 4. Generate nomor/kode Purchase Order secara unik (Anti-Duplikat beruntun)
             do {
