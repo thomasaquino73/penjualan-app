@@ -83,7 +83,7 @@ class DataBarangController extends Controller
                                 data-alias="'.$row->nama_barang.'">';
                 })
                 ->addColumn('status', function ($row) {
-                    if ($row->status == 2) {
+                    if ($row->status == 1) {
                         return '<span class="badge bg-info">Active</span>';
                     } else {
                         return '<span class="badge bg-danger">Not Active</span>';

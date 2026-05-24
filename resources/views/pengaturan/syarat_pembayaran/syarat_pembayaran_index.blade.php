@@ -39,7 +39,6 @@
                         <th>Due Date(day)</th>
                         <th>Description</th>
                         <th>status</th>
-                        <th>default</th>
                         <th>Created</th>
                         <th>Updated</th>
                     </tr>
@@ -55,10 +54,10 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="postForm" name="postForm" method="POST" action="{{ route('company-delivery.store') }}"
+                    <form id="postForm" name="postForm" method="POST" action="{{ route('syarat-pembayaran.store') }}"
                         enctype="multipart/form-data">
                         @csrf
-                        <input type="text" name="id" id="id" hidden>
+                        <input type="hidden" name="id" id="id">
                         <div class="row">
                             <div class="col-md-12 col-sm-12 mb-3">
                                 <label for="nama" class="form-label">Name<small>*</small></label>
@@ -73,30 +72,30 @@
                                 <label for="masa_diskon" class="form-label">If paying within (day)</label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
-                                    <input type="text" id="masa_diskon" name="masa_diskon" class="form-control"
-                                        placeholder="">
+                                    <input type="number" id="masa_diskon" name="masa_diskon" class="form-control"
+                                        placeholder="" min="0">
                                     <span class="input-group-text">Day</span>
                                 </div>
                                 <span class="error text-danger" id="masa_diskonError"></span>
 
                             </div>
                             <div class="col-md-12 col-sm-12 mb-3">
-                                <label for="discount" class="form-label">Eligible for a discount</label>
+                                <label for="diskon" class="form-label">Eligible for a discount</label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-moneybag"></i></span>
-                                    <input type="text" id="discount" name="discount" class="form-control"
-                                        placeholder="">
+                                    <input type="number" id="diskon" name="diskon" class="form-control" placeholder=""
+                                        min="0">
                                     <span class="input-group-text"><i class="ti ti-percentage"></i></span>
                                 </div>
-                                <span class="error text-danger" id="discountError"></span>
+                                <span class="error text-danger" id="diskonError"></span>
 
                             </div>
                             <div class="col-md-12 col-sm-12 mb-3">
                                 <label for="masa_jatuh_tempo" class="form-label">Due Date</label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
-                                    <input type="text" id="masa_jatuh_tempo" name="masa_jatuh_tempo" class="form-control"
-                                        placeholder="">
+                                    <input type="number" id="masa_jatuh_tempo" name="masa_jatuh_tempo" class="form-control"
+                                        placeholder="" min="0">
                                     <span class="input-group-text">Day</span>
                                 </div>
                                 <span class="error text-danger" id="masa_jatuh_tempoError"></span>
@@ -178,9 +177,7 @@
                     {
                         data: 'keterangan',
                     },
-                    {
-                        data: 'default',
-                    },
+
                     {
                         data: 'status',
                     },
@@ -234,14 +231,14 @@
                                     resetValidation();
                                 }
 
-                                $('#modal-title').html('Edit Cash & Bank');
+                                $('#modal-title').html('Edit Payment Term');
                                 $('#savedata').html(
                                     '<i class="fa fa-spinner fa-spin me-1"></i> Loading...');
                                 $('#modals').modal('show');
 
                                 $.ajax({
                                     type: "GET",
-                                    url: "/cash-bank/" + id +
+                                    url: "/syarat-pembayaran/" + id +
                                         "/edit", // Parameter ID masuk ke URL
                                     dataType: 'json',
                                     success: function(data) {
@@ -251,11 +248,14 @@
 
                                         // 4. Isi field form modal sesuai dengan property object data dari database
                                         $('#id').val(data.id);
-                                        $('#bank_name').val(data.bank_name);
-                                        $('#account_name').val(data.account_name);
-                                        $('#account_number').val(data
-                                            .account_number);
-
+                                        $('#nama').val(data.nama);
+                                        $('#diskon').val(data.diskon);
+                                        $('#masa_diskon').val(data.masa_diskon);
+                                        $('#masa_jatuh_tempo').val(data
+                                            .masa_jatuh_tempo);
+                                        $('#keterangan').val(data.keterangan);
+                                        $('#status').val(data.status).trigger(
+                                            'change');
 
                                     },
                                     error: function() {
@@ -280,7 +280,7 @@
                                 if (!selectedData) return;
 
                                 var id = selectedData.id;
-                                var name = selectedData.name;
+                                var name = selectedData.nama;
                                 let token = $("meta[name='csrf-token']").attr("content");
 
                                 // 2. Jalankan SweetAlert Konfirmasi
@@ -299,7 +299,7 @@
                                 }).then(function(result) {
                                     if (result.isConfirmed) {
                                         $.ajax({
-                                            url: `/cash-bank/${id}`,
+                                            url: `/syarat-pembayaran/${id}`,
                                             type: "DELETE",
                                             data: {
                                                 _token: token
@@ -366,7 +366,7 @@
                     },
                     success: function(response) {
                         $('#modals').modal('hide');
-                        table_bank.draw();
+                        table.draw();
                         Swal.fire({
                             icon: 'success',
                             title: response.title,

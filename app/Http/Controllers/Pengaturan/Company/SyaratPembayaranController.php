@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Pengaturan\Company;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SyaratPembayaranRequest;
 use App\Models\Pengaturan\SyaratPembayaran;
+use Dotenv\Exception\ValidationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
 
 class SyaratPembayaranController extends Controller
@@ -33,7 +36,14 @@ class SyaratPembayaranController extends Controller
 
                     return 'N/A';
                 })
-                ->rawColumns(['created_at', 'updated_at'])
+                 ->addColumn('status', function ($row) {
+                    if ($row->status == 1) {
+                        return '<span class="badge bg-info">Active</span>';
+                    } else {
+                        return '<span class="badge bg-danger">Not Active</span>';
+                    }
+                })
+                ->rawColumns(['created_at', 'updated_at','status'])
                 ->make(true);
         }
         $x = [
@@ -45,5 +55,78 @@ class SyaratPembayaranController extends Controller
         ];
 
         return view('pengaturan.syarat_pembayaran.syarat_pembayaran_index', $x);
+    }
+
+     public function store(SyaratPembayaranRequest $request)
+    {
+        try {
+            $id = $request->input('id');
+            $data = $request->all();
+
+            if (! empty($id)) {
+                $data['updated_at'] = now();
+                $data['updated_by'] = Auth::id();
+
+                SyaratPembayaran::updateOrCreate(['id' => $id], $data);
+
+                return response()->json([
+                    'action' => 'update',
+                    'message' => 'Data updated successfully',
+                ], 200);
+
+            } else {
+                $data['created_at'] = now();
+                $data['created_by'] = Auth::id();
+
+                SyaratPembayaran::create($data);
+
+                return response()->json([
+                    'action' => 'create',
+                    'message' => 'Data created successfully',
+                ], 201);
+            }
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Terjadi kesalahan: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+     public function edit($id)
+    {
+        $data = SyaratPembayaran::find($id);
+
+        if (! $data) {
+            return response()->json(['message' => 'Data tidak ditemukan'], 404);
+        }
+
+        return response()->json($data);
+    }
+
+     public function destroy(Request $request, $id)
+    {
+        try {
+            $detail = SyaratPembayaran::findOrFail($id);
+
+
+            $detail->delete();
+
+            return response()->json([
+                'action' => 'delete',
+                'status' => 'success',
+                'message' => 'Data deleted successfully',
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred: '.$e->getMessage(),
+            ], 500);
+        }
     }
 }
