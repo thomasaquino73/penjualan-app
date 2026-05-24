@@ -363,7 +363,6 @@
             });
         });
         $(function() {
-
             const datePicker = flatpickr("#date", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
@@ -396,7 +395,6 @@
 
         // HANYA GUNAKAN SATU DOCUMENT READY DI SINI
         $(document).ready(function() {
-
             // 1. Inisialisasi Select2 Modal
             $('.select2-modal').each(function() {
                 var $this = $(this);
@@ -517,171 +515,171 @@
             });
 
             // 3. Inisialisasi DataTable
-            let table = new DataTable('#table', {
-                processing: true,
-                serverSide: false,
-                responsive: true,
-                select: true,
-                searching: false,
-                lengthMenu: [
-                    [10, 25, 50, -1],
-                    [10, 25, 50, 'All']
-                ],
-                data: prDetailsData, // Mengarah ke array di atas
-                columns: [{
-                        data: null,
-                        orderable: false,
-                        searchable: false,
-                        render: function(data, type, row, meta) {
-                            return meta.row + 1;
-                        }
-                    },
-                    {
-                        data: 'data_produk'
-                    },
-                    {
-                        data: 'quantity'
-                    },
-                    {
-                        data: 'unit'
-                    },
-                    {
-                        data: 'unit_price'
-                    },
-                    {
-                        data: 'discount'
-                    },
-                    {
-                        data: 'tax'
-                    },
-                    {
-                        data: 'amount'
-                    }
-                ],
-                layout: {
-                    topStart: {
-                        buttons: [{
-                                text: '<i class="ti ti-plus me-1"></i> New',
-                                className: 'btn btn-primary btn-sm me-2',
-                                action: function(e, dt, node, config) {
-                                    var supplierId = $('#supplier_id').val();
+            // let table = new DataTable('#table', {
+            //     processing: true,
+            //     serverSide: false,
+            //     responsive: true,
+            //     select: true,
+            //     searching: false,
+            //     lengthMenu: [
+            //         [10, 25, 50, -1],
+            //         [10, 25, 50, 'All']
+            //     ],
+            //     data: prDetailsData, // Mengarah ke array di atas
+            //     columns: [{
+            //             data: null,
+            //             orderable: false,
+            //             searchable: false,
+            //             render: function(data, type, row, meta) {
+            //                 return meta.row + 1;
+            //             }
+            //         },
+            //         {
+            //             data: 'data_produk'
+            //         },
+            //         {
+            //             data: 'quantity'
+            //         },
+            //         {
+            //             data: 'unit'
+            //         },
+            //         {
+            //             data: 'unit_price'
+            //         },
+            //         {
+            //             data: 'discount'
+            //         },
+            //         {
+            //             data: 'tax'
+            //         },
+            //         {
+            //             data: 'amount'
+            //         }
+            //     ],
+            //     layout: {
+            //         topStart: {
+            //             buttons: [{
+            //                     text: '<i class="ti ti-plus me-1"></i> New',
+            //                     className: 'btn btn-primary btn-sm me-2',
+            //                     action: function(e, dt, node, config) {
+            //                         var supplierId = $('#supplier_id').val();
 
-                                    if (!supplierId || supplierId === '') {
-                                        Swal.fire({
-                                            icon: 'warning',
-                                            title: 'Warning!',
-                                            text: 'Please select Supplier first before adding new data.',
-                                            confirmButtonColor: '#3085d6',
-                                            confirmButtonText: 'OK',
-                                            customClass: {
-                                                confirmButton: 'btn btn-danger'
-                                            },
-                                            buttonsStyling: false
-                                        });
-                                        return false;
-                                    }
+            //                         if (!supplierId || supplierId === '') {
+            //                             Swal.fire({
+            //                                 icon: 'warning',
+            //                                 title: 'Warning!',
+            //                                 text: 'Please select Supplier first before adding new data.',
+            //                                 confirmButtonColor: '#3085d6',
+            //                                 confirmButtonText: 'OK',
+            //                                 customClass: {
+            //                                     confirmButton: 'btn btn-danger'
+            //                                 },
+            //                                 buttonsStyling: false
+            //                             });
+            //                             return false;
+            //                         }
 
-                                    $('#formPrDetail')[0].reset();
-                                    $('#detail_id').val('');
+            //                         $('#formPrDetail')[0].reset();
+            //                         $('#detail_id').val('');
 
-                                    if ($.fn.select2) {
-                                        $('#product_id').val('').trigger('change');
-                                        $('#unit_id').val('').trigger('change');
-                                    }
+            //                         if ($.fn.select2) {
+            //                             $('#product_id').val('').trigger('change');
+            //                             $('#unit_id').val('').trigger('change');
+            //                         }
 
-                                    $('#modalTitle').text('Create new entry');
-                                    $('#btnSubmitModal').text('Create');
-                                    $('#modalPrDetail').modal('show');
-                                }
-                            },
-                            {
-                                text: '<i class="ti ti-edit me-1"></i> Edit',
-                                className: 'btn btn-warning btn-sm me-2',
-                                extend: 'selectedSingle',
-                                action: function(e, dt, node, config) {
-                                    let data = dt.row({
-                                        selected: true
-                                    }).data();
-                                    let rowIndex = dt.row({
-                                        selected: true
-                                    }).index();
+            //                         $('#modalTitle').text('Create new entry');
+            //                         $('#btnSubmitModal').text('Create');
+            //                         $('#modalPrDetail').modal('show');
+            //                     }
+            //                 },
+            //                 {
+            //                     text: '<i class="ti ti-edit me-1"></i> Edit',
+            //                     className: 'btn btn-warning btn-sm me-2',
+            //                     extend: 'selectedSingle',
+            //                     action: function(e, dt, node, config) {
+            //                         let data = dt.row({
+            //                             selected: true
+            //                         }).data();
+            //                         let rowIndex = dt.row({
+            //                             selected: true
+            //                         }).index();
 
-                                    // 1. Set penanda bahwa ini adalah mode EDIT
-                                    window.isEditingMode = true;
+            //                         // 1. Set penanda bahwa ini adalah mode EDIT
+            //                         window.isEditingMode = true;
 
-                                    $('#detail_id').val(rowIndex);
-                                    $('#quantity').val(data.quantity);
-                                    $('#unit_id').data('pending-val', data.unit_id);
+            //                         $('#detail_id').val(rowIndex);
+            //                         $('#quantity').val(data.quantity);
+            //                         $('#unit_id').data('pending-val', data.unit_id);
 
-                                    // 2. Set value produk dan trigger change
-                                    $('#product_id').val(data.product_id).trigger('change');
+            //                         // 2. Set value produk dan trigger change
+            //                         $('#product_id').val(data.product_id).trigger('change');
 
-                                    // 3. Set harga unit price asli dari tabel data
-                                    $('#unit_price').val(data.unit_price);
-                                    $('#discount').val(data.discount || 0); // Jika ada diskon
-                                    $('#tax').val(data.tax || 0); // Jika ada tax
+            //                         // 3. Set harga unit price asli dari tabel data
+            //                         $('#unit_price').val(data.unit_price);
+            //                         $('#discount').val(data.discount || 0); // Jika ada diskon
+            //                         $('#tax').val(data.tax || 0); // Jika ada tax
 
-                                    $('#modalTitle').text('Edit entry');
-                                    $('#btnSubmitModal').text('Update');
-                                    $('#modalPrDetail').modal('show');
-                                }
-                            },
-                            {
-                                text: '<i class="ti ti-trash me-1"></i> Delete',
-                                className: 'btn btn-danger btn-sm me-2',
-                                extend: 'selected',
-                                action: function(e, dt, node, config) {
-                                    let rowIndex = dt.row({
-                                        selected: true
-                                    }).index();
-                                    let data = dt.row({
-                                        selected: true
-                                    }).data();
-                                    let name = data.data_produk ? data.data_produk : '';
+            //                         $('#modalTitle').text('Edit entry');
+            //                         $('#btnSubmitModal').text('Update');
+            //                         $('#modalPrDetail').modal('show');
+            //                     }
+            //                 },
+            //                 {
+            //                     text: '<i class="ti ti-trash me-1"></i> Delete',
+            //                     className: 'btn btn-danger btn-sm me-2',
+            //                     extend: 'selected',
+            //                     action: function(e, dt, node, config) {
+            //                         let rowIndex = dt.row({
+            //                             selected: true
+            //                         }).index();
+            //                         let data = dt.row({
+            //                             selected: true
+            //                         }).data();
+            //                         let name = data.data_produk ? data.data_produk : '';
 
-                                    Swal.fire({
-                                        title: 'Are you sure?',
-                                        text: "Want to delete data: " + name,
-                                        icon: 'warning',
-                                        showCancelButton: true,
-                                        confirmButtonText: 'Yes, delete it!',
-                                        cancelButtonText: 'Cancel',
-                                        customClass: {
-                                            confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
-                                            cancelButton: 'btn btn-label-secondary waves-effect waves-light'
-                                        },
-                                        buttonsStyling: false
-                                    }).then(function(result) {
-                                        if (result.isConfirmed) {
-                                            prDetailsData.splice(rowIndex, 1);
-                                            dt.clear().rows.add(prDetailsData).draw();
-                                            calculateGrandTotal();
-                                            calculateTotalOrder()
-                                            toastr.success('Deleted Data Successfully',
-                                                '', {
-                                                    timeOut: 1500,
-                                                    progressBar: true
-                                                });
-                                        }
-                                    });
-                                }
-                            },
-                            {
-                                text: '<i class="ti ti-refresh me-1"></i> Clear All',
-                                className: 'btn btn-secondary btn-sm',
-                                action: function(e, dt, node, config) {
-                                    prDetailsData = [];
-                                    dt.clear().draw();
-                                    calculateGrandTotal();
-                                    calculateTotalOrder()
-                                    $('#percent').val(0); // Jika ada tax
+            //                         Swal.fire({
+            //                             title: 'Are you sure?',
+            //                             text: "Want to delete data: " + name,
+            //                             icon: 'warning',
+            //                             showCancelButton: true,
+            //                             confirmButtonText: 'Yes, delete it!',
+            //                             cancelButtonText: 'Cancel',
+            //                             customClass: {
+            //                                 confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+            //                                 cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+            //                             },
+            //                             buttonsStyling: false
+            //                         }).then(function(result) {
+            //                             if (result.isConfirmed) {
+            //                                 prDetailsData.splice(rowIndex, 1);
+            //                                 dt.clear().rows.add(prDetailsData).draw();
+            //                                 calculateGrandTotal();
+            //                                 calculateTotalOrder()
+            //                                 toastr.success('Deleted Data Successfully',
+            //                                     '', {
+            //                                         timeOut: 1500,
+            //                                         progressBar: true
+            //                                     });
+            //                             }
+            //                         });
+            //                     }
+            //                 },
+            //                 {
+            //                     text: '<i class="ti ti-refresh me-1"></i> Clear All',
+            //                     className: 'btn btn-secondary btn-sm',
+            //                     action: function(e, dt, node, config) {
+            //                         prDetailsData = [];
+            //                         dt.clear().draw();
+            //                         calculateGrandTotal();
+            //                         calculateTotalOrder()
+            //                         $('#percent').val(0); // Jika ada tax
 
-                                }
-                            }
-                        ]
-                    }
-                }
-            });
+            //                     }
+            //                 }
+            //             ]
+            //         }
+            //     }
+            // });
 
             // 4. Event Handler: Mengubah Produk (AJAX List Unit & Harga)
             // $(document).on('change', '#product_id', function() {

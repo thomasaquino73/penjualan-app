@@ -101,7 +101,7 @@
 </body>
 
 </html>
-<script>
+{{-- <script>
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof $ !== 'undefined') {
 
@@ -133,7 +133,7 @@
             });
         }
     });
-</script>
+</script> --}}
 <script>
     let idleTime = 0;
     let idleInterval;
@@ -303,37 +303,36 @@
             });
         });
 
-    }); <
-    />
+    });
+</script>
 
-    <
-    script >
-        function lockBrowser() {
-            // Disable refresh (F5 & Ctrl+R)
-            document.onkeydown = function(e) {
-                if (e.key === "F5" || (e.ctrlKey && e.key === "r")) {
-                    e.preventDefault();
-                    return false;
-                }
-                // Cegah back (Alt+ArrowLeft / Backspace)
-                if (e.key === "Backspace" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
-                    e.preventDefault();
-                    return false;
-                }
-            };
-
-            // Disable klik kanan
-            document.oncontextmenu = function(e) {
+<script>
+    function lockBrowser() {
+        // Disable refresh (F5 & Ctrl+R)
+        document.onkeydown = function(e) {
+            if (e.key === "F5" || (e.ctrlKey && e.key === "r")) {
                 e.preventDefault();
                 return false;
-            };
+            }
+            // Cegah back (Alt+ArrowLeft / Backspace)
+            if (e.key === "Backspace" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+                e.preventDefault();
+                return false;
+            }
+        };
 
-            // Disable tombol back browser
-            history.pushState(null, null, location.href);
-            window.onpopstate = function() {
-                history.go(1);
-            };
-        }
+        // Disable klik kanan
+        document.oncontextmenu = function(e) {
+            e.preventDefault();
+            return false;
+        };
+
+        // Disable tombol back browser
+        history.pushState(null, null, location.href);
+        window.onpopstate = function() {
+            history.go(1);
+        };
+    }
 
     function unlockBrowser() {
         // Balikin normal
@@ -350,27 +349,27 @@
     // Lepaskan lock ketika modal hilang (misal setelah login ulang)
     $('#idleLockModal').on('hidden.bs.modal', function() {
         unlockBrowser();
-    }); <
-    />
+    });
+</script>
 
-    <
-    script >
-        document.addEventListener("DOMContentLoaded", function() {
-            // Saat modal ditampilkan
-            $('#idleLockModal').on('shown.bs.modal', function() {
-                // Fokus otomatis ke input password
-                $('#idlePassword').trigger('focus');
 
-                // Reset value agar kosong lagi
-                $('#idlePassword').val('');
-            });
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Saat modal ditampilkan
+        $('#idleLockModal').on('shown.bs.modal', function() {
+            // Fokus otomatis ke input password
+            $('#idlePassword').trigger('focus');
 
-            // Enter otomatis klik btnUnlock
-            $('#idlePassword').on('keypress', function(e) {
-                if (e.which === 13) { // 13 = Enter
-                    e.preventDefault(); // cegah form submit default
-                    $('#btnUnlock').click(); // trigger klik tombol Unlock
-                }
-            });
-        }); <
-    />
+            // Reset value agar kosong lagi
+            $('#idlePassword').val('');
+        });
+
+        // Enter otomatis klik btnUnlock
+        $('#idlePassword').on('keypress', function(e) {
+            if (e.which === 13) { // 13 = Enter
+                e.preventDefault(); // cegah form submit default
+                $('#btnUnlock').click(); // trigger klik tombol Unlock
+            }
+        });
+    });
+</script>

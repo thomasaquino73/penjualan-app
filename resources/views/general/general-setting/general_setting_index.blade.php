@@ -22,34 +22,44 @@
             <ul class="nav nav-pills mb-3" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab"
-                        data-bs-target="#navs-pills-top-home" aria-controls="navs-pills-top-home" aria-selected="true">
+                        data-bs-target="#navs-pills-top-bank" aria-controls="navs-pills-top-bank" aria-selected="true">
                         Cash & Bank
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
-                        data-bs-target="#navs-pills-top-profile" aria-controls="navs-pills-top-profile"
+                        data-bs-target="#navs-pills-top-currency" aria-controls="navs-pills-top-currency"
                         aria-selected="false" tabindex="-1">
                         Currency
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
-                        data-bs-target="#navs-pills-top-messages" aria-controls="navs-pills-top-messages"
+                        data-bs-target="#navs-pills-top-exchange" aria-controls="navs-pills-top-exchange"
                         aria-selected="false" tabindex="-1">
-                        Exchange Ratea
+                        Exchange Rates
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
+                        data-bs-target="#navs-pills-top-delivery" aria-controls="navs-pills-top-delivery"
+                        aria-selected="false" tabindex="-1">
+                        Company Delivery Address
                     </button>
                 </li>
             </ul>
             <div class="tab-content">
-                <div class="tab-pane fade show active" id="navs-pills-top-home" role="tabpanel">
+                <div class="tab-pane fade show active" id="navs-pills-top-bank" role="tabpanel">
                     @include('partials.general.cash_bank_table')
                 </div>
-                <div class="tab-pane fade" id="navs-pills-top-profile" role="tabpanel">
+                <div class="tab-pane fade" id="navs-pills-top-currency" role="tabpanel">
                     @include('partials.general.currency_table')
                 </div>
-                <div class="tab-pane fade" id="navs-pills-top-messages" role="tabpanel">
+                <div class="tab-pane fade" id="navs-pills-top-exchange" role="tabpanel">
                     @include('partials.general.exchange_rate_table')
+                </div>
+                <div class="tab-pane fade" id="navs-pills-top-delivery" role="tabpanel">
+                    @include('partials.general.company_delivery_table')
                 </div>
             </div>
         </div>

@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\General\CashBankController;
+use App\Http\Controllers\General\CompanyDeliveryController;
 use App\Http\Controllers\General\CompanyInfoController;
 use App\Http\Controllers\General\CurrencyController;
 use App\Http\Controllers\General\ExchangeRateController;
@@ -120,6 +121,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('/mata-uang', CurrencyController::class);
     Route::resource('/cash-bank', CashBankController::class);
     Route::resource('/exchange-rate', ExchangeRateController::class);
+    Route::resource('/company-delivery', CompanyDeliveryController::class);
 
     Route::prefix('token')->group(function () {
         Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');

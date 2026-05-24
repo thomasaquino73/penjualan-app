@@ -34,8 +34,11 @@
 
 <script>
     function resetValidation() {
-        $('.error').text('');
-        $('input, select').removeClass('is-invalid');
+        // 1. Menghapus teks error pada span dengan class text-danger
+        $('.text-danger').text('');
+
+        // 2. Menghapus class is-invalid pada input, textarea, dan select
+        $('input, textarea, select').removeClass('is-invalid');
     }
 
     function displayFieldError(fieldId, errorMessage) {
