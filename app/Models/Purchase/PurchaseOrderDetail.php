@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Transaction;
+namespace App\Models\Purchase;
 
 use App\Models\BasicCodeDetail;
 use App\Models\Master_Data\Barang;

@@ -1,23 +1,21 @@
 <?php
 
-namespace App\Models\Transaction;
+namespace App\Models\Purchase;
 
-use App\Models\Master_Data\Kendaraan;
-use App\Models\Master_Data\Supplier;
+use App\Models\Master_Data\Customer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PurchaseOrder extends Model
+class PurchaseRequisition extends Model
 {
     use HasFactory;
 
-    protected $table = 'purchase_order';
+    protected $table = 'purchase_requisition';
 
     protected $guarded = [];
 
     protected $casts = [
-        'expected_date' => 'datetime',
         'date' => 'datetime',
     ];
 
@@ -26,7 +24,7 @@ class PurchaseOrder extends Model
         parent::__construct($attributes);
 
         $year = date('Y');
-        $this->table = "purchase_order_{$year}";
+        $this->table = "purchase_requisition_{$year}";
     }
 
     public function creator()
@@ -39,18 +37,13 @@ class PurchaseOrder extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function supplier()
+    public function customer()
     {
-        return $this->belongsTo(Supplier::class, 'supplier_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function details()
     {
-        return $this->hasMany(PurchaseOrderDetail::class, 'purchase_order_id');
-    }
-
-    public function ship()
-    {
-        return $this->belongsTo(Kendaraan::class, 'vehicle_id');
+        return $this->hasMany(PurchaseRequisitionDetail::class, 'purchase_requisition_id');
     }
 }
