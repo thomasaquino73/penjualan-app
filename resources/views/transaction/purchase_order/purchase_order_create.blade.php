@@ -1186,8 +1186,11 @@
 
         // Event ketika salah satu list alamat di dalam dropdown diklik
         $(document).on('click', '.select-address', function() {
+
             let chosenAddress = $(this).data('address');
-            $('#address').val(chosenAddress); // Isi teks ke textarea #address
+
+            $('#shipping_address').val(chosenAddress);
+
         });
 
         function loadAddressHistory(companyId) {

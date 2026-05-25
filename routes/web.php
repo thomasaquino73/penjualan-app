@@ -33,6 +33,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\General\CashBankController;
+use App\Http\Controllers\General\CompanyDeliveryAddressController;
 use App\Http\Controllers\General\CompanyInfoController;
 use App\Http\Controllers\General\CurrencyController;
 use App\Http\Controllers\General\ExchangeRateController;
@@ -51,12 +52,12 @@ use App\Http\Controllers\Pengaturan\PermissionsController;
 use App\Http\Controllers\Pengaturan\RolesController;
 use App\Http\Controllers\Pengaturan\UserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Purchase\PurchaseOrderController;
+use App\Http\Controllers\Purchase\PurchaseRequisitionController;
 use App\Http\Controllers\Purchase\Supplier\KategoriSupplierController;
 use App\Http\Controllers\Purchase\Supplier\SupplierController;
 use App\Http\Controllers\Sales\Customer\CustomerController;
 use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
-use App\Http\Controllers\Purchase\PurchaseOrderController;
-use App\Http\Controllers\Purchase\PurchaseRequisitionController;
 use App\Http\Controllers\Transaction\SalesOrderController;
 use App\Models\General\Company;
 use App\Models\User;
@@ -274,6 +275,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
     Route::resource('sales-order', SalesOrderController::class);
+    Route::resource('company-delivery', CompanyDeliveryAddressController::class);
 });
 
 Route::fallback(function () {

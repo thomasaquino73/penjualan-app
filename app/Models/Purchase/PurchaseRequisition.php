@@ -2,7 +2,7 @@
 
 namespace App\Models\Purchase;
 
-use App\Models\Master_Data\Customer;
+use App\Models\Sales\Customer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

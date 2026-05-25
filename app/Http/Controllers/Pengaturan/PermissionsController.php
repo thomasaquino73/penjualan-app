@@ -106,9 +106,9 @@ class PermissionsController extends Controller
             }
 
             // Sync Role Groups (pivot table role_role_group)
-            if ($request->has('role_group_id')) {
-                $role->roleGroups()->sync($request->role_group_id);
-            }
+            // if ($request->has('role_group_id')) {
+            //     $role->roleGroups()->sync($request->role_group_id);
+            // }
 
             return response()->json([
                 'title' => $title,

@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Purchase;
 use App\Http\Controllers\Controller;
 use App\Models\General\Company;
 use App\Models\Inventory\Barang;
-use App\Models\Sales\Customer;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Purchase\PurchaseRequisition;
 use App\Models\Purchase\PurchaseRequisitionDetail;
+use App\Models\Sales\Customer;
 use App\Models\User;
 use App\Notifications\PurchaseRequisitionNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -372,7 +372,7 @@ class PurchaseRequisitionController extends Controller
                 ['label' => 'Edit', 'url' => ''],
             ],
             'customer' => Customer::where('status', '<>', 0)->get(),
-            'product' => Barang::where('status', '<>', 0)->get(),
+            'product' => customer::where('status', '<>', 0)->get(),
             'model' => $purchaseRequisition,
         ];
 
@@ -717,11 +717,13 @@ class PurchaseRequisitionController extends Controller
     public function submitToPending($id)
     {
         $pr = PurchaseRequisition::findOrFail($id);
-
         // Validasi keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
-        if ($pr->status !== 'draft' || $pr->created_by !== auth()->id()) {
-            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'], 403);
-        }
+      if ($pr->status != 'draft' || $pr->created_by != auth()->id()) {
+    return response()->json([
+        'success' => false,
+        'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'
+    ], 403);
+}
 
         // Ubah status menjadi pending
         $pr->status = 'pending';

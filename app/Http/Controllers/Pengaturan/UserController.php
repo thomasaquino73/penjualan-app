@@ -63,13 +63,13 @@ class UserController extends Controller
                 ->addIndexColumn()
                 ->addColumn('created_at', function ($row) {
                     return $row->created_at
-                        ? (optional($row->creator)->nama_lengkap ?? 'Unknown').
+                        ? (optional($row->creator)->fullname ?? 'Unknown').
                             ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
                         : 'N/A';
                 })
                 ->addColumn('updated_at', function ($row) {
                     if ($row->updated_at) {
-                        $updaterName = $row->updater->nama_lengkap ?? 'Unknown';
+                        $updaterName = $row->updater->fullname ?? 'Unknown';
                         $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
 
                         return $updaterName.

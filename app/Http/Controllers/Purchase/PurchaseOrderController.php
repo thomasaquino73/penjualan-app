@@ -7,14 +7,15 @@ use App\Http\Requests\PurchaseOrderRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\General\Company;
 use App\Models\General\CompanyDelivery;
-use App\Models\Master_Data\Barang;
-use App\Models\Master_Data\Kendaraan;
-use App\Models\Master_Data\Supplier;
+use App\Models\Inventory\Barang;
+use App\Models\Inventory\Kendaraan;
+use App\Models\Pengaturan\CompanyDeliveryAddress;
 use App\Models\Pengaturan\Shipping;
 use App\Models\Pengaturan\SyaratPembayaran;
-use App\Models\Transaction\PurchaseOrder;
-use App\Models\Transaction\PurchaseOrderDetail;
-use App\Models\Transaction\PurchaseRequisition;
+use App\Models\Purchase\PurchaseOrder;
+use App\Models\Purchase\PurchaseOrderDetail;
+use App\Models\Purchase\PurchaseRequisition;
+use App\Models\Purchase\Supplier;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Dotenv\Exception\ValidationException;
@@ -839,7 +840,7 @@ class PurchaseOrderController extends Controller
     public function getCompanyAddresses($companyId)
     {
 
-        $addresses = CompanyDelivery::where('company_id', 1)->where('active', 1)->get();
+        $addresses = CompanyDeliveryAddress::where('company_id', 1)->where('active', 1)->get();
 
         return response()->json([
             'success' => true,

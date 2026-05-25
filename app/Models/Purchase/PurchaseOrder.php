@@ -2,8 +2,7 @@
 
 namespace App\Models\Purchase;
 
-use App\Models\Master_Data\Kendaraan;
-use App\Models\Master_Data\Supplier;
+use App\Models\Purchase\Supplier;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -49,8 +48,8 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseOrderDetail::class, 'purchase_order_id');
     }
 
-    public function ship()
-    {
-        return $this->belongsTo(Kendaraan::class, 'vehicle_id');
-    }
+    // public function ship()
+    // {
+    //     return $this->belongsTo(Kendaraan::class, 'vehicle_id');
+    // }
 }

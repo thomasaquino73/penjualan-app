@@ -3,7 +3,7 @@
 namespace App\Models\Inventory;
 
 use App\Models\BasicCodeDetail;
-use App\Models\Transaction\PurchaseOrderDetail;
+use App\Models\Purchase\PurchaseOrderDetail;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
