@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Master_Data;
+namespace App\Models\Inventory;
 
 use App\Models\BasicCodeDetail;
 use App\Models\Transaction\PurchaseOrderDetail;

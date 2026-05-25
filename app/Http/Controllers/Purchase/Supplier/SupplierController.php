@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Master_Data\Supplier;
+namespace App\Http\Controllers\Purchase\Supplier;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SupplierRequest;
 use App\Models\BasicCodeDetail;
-use App\Models\Master_Data\Supplier;
+use App\Models\Purchase\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

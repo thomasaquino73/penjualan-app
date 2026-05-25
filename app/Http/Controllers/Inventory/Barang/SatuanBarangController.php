@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Master_Data\Barang;
+namespace App\Http\Controllers\Inventory\Barang;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SatuanBarangRequest;

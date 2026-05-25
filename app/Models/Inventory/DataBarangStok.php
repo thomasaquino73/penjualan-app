@@ -1,16 +1,17 @@
 <?php
 
-namespace App\Models\Master_Data;
+namespace App\Models\Inventory;
 
+use App\Models\BasicCodeDetail;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Supplier extends Model
+class DataBarangStok extends Model
 {
     use HasFactory;
 
-    protected $table = 'supplier';
+    protected $table = 'data_barang_stok';
 
     protected $guarded = [];
 
@@ -22,5 +23,15 @@ class Supplier extends Model
     public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function unitID()
+    {
+        return $this->belongsTo(BasicCodeDetail::class, 'stok_unit_id');
+    }
+
+    public function warehouseID()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
 }

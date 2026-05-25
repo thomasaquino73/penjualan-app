@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Master_Data\Barang;
+namespace App\Http\Controllers\Inventory\Barang;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\General\Company;
-use App\Models\Master_Data\Barang;
-use App\Models\Master_Data\DataBarangConversion;
-use App\Models\Master_Data\DataBarangStok;
-use App\Models\Master_Data\Supplier;
-use App\Models\Master_Data\Warehouse;
+use App\Models\Inventory\Barang;
+use App\Models\Inventory\DataBarangConversion;
+use App\Models\Inventory\DataBarangStok;
+use App\Models\Inventory\Warehouse;
+use App\Models\Purchase\Supplier;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;

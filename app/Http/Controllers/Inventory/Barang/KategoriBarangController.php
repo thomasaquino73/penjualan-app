@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Master_Data\Customer;
+namespace App\Http\Controllers\Inventory\Barang;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\KategoriCustomerRequest;
+use App\Http\Requests\KategoriBarangRequest;
 use App\Models\BasicCodeDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\DataTables;
 
-class KategoriCustomerController extends Controller
+class KategoriBarangController extends Controller
 {
     public function __construct()
     {
@@ -18,15 +18,15 @@ class KategoriCustomerController extends Controller
             $routeName = $request->route()->getName();
 
             $permissionMap = [
-                'kategori-customer.index' => 'kategori_customer-browse',
-                'kategori-customer.show' => 'kategori_customer-read',
-                'kategori-customer.create' => 'kategori_customer-create',
-                'kategori-customer.store' => 'kategori_customer-create',
-                'kategori-customer.edit' => 'kategori_customer-edit',
-                'kategori-customer.update' => 'kategori_customer-edit',
-                'kategori-customer.destroy' => 'kategori_customer-delete',
-                'kategori-customer.trash' => 'kategori_customer-trash',
-                'kategori-customer.restore' => 'kategori_customer-restore',
+                'kategori-barang.index' => 'kategori_barang-browse',
+                'kategori-barang.show' => 'kategori_barang-read',
+                'kategori-barang.create' => 'kategori_barang-create',
+                'kategori-barang.store' => 'kategori_barang-create',
+                'kategori-barang.edit' => 'kategori_barang-edit',
+                'kategori-barang.update' => 'kategori_barang-edit',
+                'kategori-barang.destroy' => 'kategori_barang-delete',
+                'kategori-barang.trash' => 'kategori_barang-trash',
+                'kategori-barang.restore' => 'kategori_barang-restore',
             ];
 
             if (isset($permissionMap[$routeName])) {
@@ -41,7 +41,7 @@ class KategoriCustomerController extends Controller
 
     public function index(Request $r)
     {
-        $data = BasicCodeDetail::where('master_id', 9)->get();
+        $data = BasicCodeDetail::where('master_id', 1)->get();
 
         if ($r->ajax()) {
             return DataTables::of($data)
@@ -76,12 +76,12 @@ class KategoriCustomerController extends Controller
                       
                       </button>
                       <ul class="dropdown-menu" style="">';
-                    if (auth()->user()->can('kategori_customer-edit')) {
+                    if (auth()->user()->can('kategori_barang-edit')) {
 
                         $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
                     }
-                    if (auth()->user()->can('kategori_customer-delete')) {
+                    if (auth()->user()->can('kategori_barang-delete')) {
 
                         $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                                 data-id="'.$row->id.'"
@@ -103,7 +103,7 @@ class KategoriCustomerController extends Controller
             ],
         ];
 
-        return view('master_data.customer.kategori_customer_index', $x);
+        return view('master_data.barang.kategori_barang_index', $x);
     }
 
     /**
@@ -114,12 +114,12 @@ class KategoriCustomerController extends Controller
         //
     }
 
-    public function store(KategoriCustomerRequest $request)
+    public function store(KategoriBarangRequest $request)
     {
         try {
             $id = $request->input('id');
             $data = $request->all();
-            $data['master_id'] = 9;
+            $data['master_id'] = 1;
 
             if (! empty($id)) {
                 $data['updated_at'] = now();
@@ -188,8 +188,8 @@ class KategoriCustomerController extends Controller
         try {
             $detail = BasicCodeDetail::findOrFail($id);
 
-            // Check if this code detail is being used in the 'customer' table
-            if ($detail->customer_category()->exists()) {
+            // Check if this code detail is being used in the 'barang' table
+            if ($detail->barang_category()->exists()) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Cannot delete this data because it is currently assigned to products.',

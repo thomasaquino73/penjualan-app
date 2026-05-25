@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Models\Master_Data;
+namespace App\Models\Purchase;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Warehouse extends Model
+class Supplier extends Model
 {
     use HasFactory;
 
-    protected $table = 'warehouse';
+    protected $table = 'supplier';
 
     protected $guarded = [];
 

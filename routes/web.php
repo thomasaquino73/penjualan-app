@@ -1,5 +1,34 @@
 <?php
 
+// use App\Http\Controllers\Auth\GoogleController;
+// use App\Http\Controllers\Auth\IdleController;
+// use App\Http\Controllers\DashboardController;
+// use App\Http\Controllers\General\CashBankController;
+// use App\Http\Controllers\General\CompanyInfoController;
+// use App\Http\Controllers\General\CurrencyController;
+// use App\Http\Controllers\General\ExchangeRateController;
+// use App\Http\Controllers\General\GeneralSettingController;
+// use App\Http\Controllers\GuestEmailVerificationController;
+// use App\Http\Controllers\Inventory\Barang\DataBarangController;
+// use App\Http\Controllers\Inventory\Barang\KategoriBarangController;
+// use App\Http\Controllers\Inventory\Barang\SatuanBarangController;
+// use App\Http\Controllers\Master_Data\WarehouseController;
+// use App\Http\Controllers\NotificationController;
+// use App\Http\Controllers\Pengaturan\Company\FobController;
+// use App\Http\Controllers\Pengaturan\Company\ShippingController;
+// use App\Http\Controllers\Pengaturan\Company\SyaratPembayaranController;
+// use App\Http\Controllers\Pengaturan\PengaturanSistemController;
+// use App\Http\Controllers\Pengaturan\PermissionsController;
+// use App\Http\Controllers\Pengaturan\RolesController;
+// use App\Http\Controllers\Pengaturan\UserController;
+// use App\Http\Controllers\ProfileController;
+// use App\Http\Controllers\Purchase\Supplier\KategoriSupplierController;
+// use App\Http\Controllers\Purchase\Supplier\SupplierController;
+// use App\Http\Controllers\Sales\Customer\CustomerController;
+// use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
+// use App\Http\Controllers\Transaction\PurchaseOrderController;
+// use App\Http\Controllers\Transaction\PurchaseRequisitionController;
+// use App\Http\Controllers\Transaction\SalesOrderController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
@@ -9,14 +38,10 @@ use App\Http\Controllers\General\CurrencyController;
 use App\Http\Controllers\General\ExchangeRateController;
 use App\Http\Controllers\General\GeneralSettingController;
 use App\Http\Controllers\GuestEmailVerificationController;
-use App\Http\Controllers\Master_Data\Barang\DataBarangController;
-use App\Http\Controllers\Master_Data\Barang\KategoriBarangController;
-use App\Http\Controllers\Master_Data\Barang\SatuanBarangController;
-use App\Http\Controllers\Master_Data\Customer\CustomerController;
-use App\Http\Controllers\Master_Data\Customer\KategoriCustomerController;
-use App\Http\Controllers\Master_Data\Supplier\KategoriSupplierController;
-use App\Http\Controllers\Master_Data\Supplier\SupplierController;
-use App\Http\Controllers\Master_Data\WarehouseController;
+use App\Http\Controllers\Inventory\Barang\DataBarangController;
+use App\Http\Controllers\Inventory\Barang\KategoriBarangController;
+use App\Http\Controllers\Inventory\Barang\SatuanBarangController;
+use App\Http\Controllers\Inventory\WarehouseController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengaturan\Company\FobController;
 use App\Http\Controllers\Pengaturan\Company\ShippingController;
@@ -26,8 +51,12 @@ use App\Http\Controllers\Pengaturan\PermissionsController;
 use App\Http\Controllers\Pengaturan\RolesController;
 use App\Http\Controllers\Pengaturan\UserController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Transaction\PurchaseOrderController;
-use App\Http\Controllers\Transaction\PurchaseRequisitionController;
+use App\Http\Controllers\Purchase\Supplier\KategoriSupplierController;
+use App\Http\Controllers\Purchase\Supplier\SupplierController;
+use App\Http\Controllers\Sales\Customer\CustomerController;
+use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
+use App\Http\Controllers\Purchase\PurchaseOrderController;
+use App\Http\Controllers\Purchase\PurchaseRequisitionController;
 use App\Http\Controllers\Transaction\SalesOrderController;
 use App\Models\General\Company;
 use App\Models\User;
@@ -211,15 +240,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/fob/delete-multiple', [FobController::class, 'deleteMultiple']);
     Route::resource('/fob', FobController::class);
     Route::resource('/syarat-pembayaran', SyaratPembayaranController::class);
-
-    // Master Data
-
-    // Route::post('/salesman/delete-multiple', [SalesmanController::class, 'deleteMultiple']);
-    // Route::post('/salesman/restore-multiple', [SalesmanController::class, 'restoreMultiple']);
-    // Route::get('/salesman/generate-id', [SalesmanController::class, 'generateId']);
-    // Route::get('/salesman/trash', [SalesmanController::class, 'trash'])->name('salesman.trash');
-    // Route::put('/salesman/restore/{id}', [SalesmanController::class, 'restore'])->name('salesman.restore');
-    // Route::resource('salesman', SalesmanController::class);
 
     Route::get('/permintaan-pembelian/trash', [PurchaseRequisitionController::class, 'trash'])->name('permintaan-pembelian.trash');
     Route::get('/permintaan-pembelian/table-pr', [PurchaseRequisitionController::class, 'table_pr'])->name('permintaan-pembelian.table_pr');

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Transaction;
+namespace App\Http\Controllers\Purchase;
 
 use App\Http\Controllers\Controller;
 use App\Models\General\Company;
-use App\Models\Master_Data\Barang;
-use App\Models\Master_Data\Customer;
+use App\Models\Inventory\Barang;
+use App\Models\Sales\Customer;
 use App\Models\Master_Data\DataBarangConversion;
 use App\Models\Transaction\PurchaseRequisition;
 use App\Models\Transaction\PurchaseRequisitionDetail;

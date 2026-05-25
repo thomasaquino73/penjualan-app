@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Master_Data;
+namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\WarehouseRequest;
-use App\Models\Master_Data\Warehouse;
+use App\Models\Inventory\Warehouse;
 use Dotenv\Exception\ValidationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

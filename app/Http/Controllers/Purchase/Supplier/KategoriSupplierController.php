@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Master_Data\Supplier;
+namespace App\Http\Controllers\Purchase\Supplier;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\KategoriSupplierRequest;

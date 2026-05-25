@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Master_Data\Customer;
+namespace App\Http\Controllers\Sales\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CustomerRequest;
 use App\Models\BasicCodeDetail;
-use App\Models\Master_Data\Customer;
+use App\Models\Sales\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
