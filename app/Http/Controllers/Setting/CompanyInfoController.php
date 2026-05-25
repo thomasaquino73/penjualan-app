@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\General;
+namespace App\Http\Controllers\Setting;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CompanyInfoRequest;
-use App\Models\General\Company;
-use App\Models\General\Currency;
+use App\Models\Setting\Company;
+use App\Models\Setting\Currency;
 use Illuminate\Support\Facades\DB;
 
 class CompanyInfoController extends Controller
@@ -23,7 +23,7 @@ class CompanyInfoController extends Controller
             'dataSistem' => $sistem,
         ];
 
-        return view('general.company-info.company_info_index', $x);
+        return view('setting.company-info.company_info_index', $x);
     }
 
     public function edit($id)
@@ -41,7 +41,7 @@ class CompanyInfoController extends Controller
             ],
         ];
 
-        return view('general.company-info.company_info_edit', $x);
+        return view('setting.company-info.company_info_edit', $x);
     }
 
     private function uploadAvatar($avatar)

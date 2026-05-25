@@ -83,7 +83,7 @@ class ShippingController extends Controller
             ],
         ];
 
-        return view('pengaturan.shipping.shipping_index', $x);
+        return view('setting.shipping.shipping_index', $x);
 
     }
 
@@ -260,7 +260,7 @@ class ShippingController extends Controller
             ],
         ];
 
-        return view('pengaturan.shipping.shipping_trash', $x);
+        return view('setting.shipping.shipping_trash', $x);
     }
 
     public function restore($id)

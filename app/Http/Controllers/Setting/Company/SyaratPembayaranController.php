@@ -55,7 +55,7 @@ class SyaratPembayaranController extends Controller
             ],
         ];
 
-        return view('pengaturan.syarat_pembayaran.syarat_pembayaran_index', $x);
+        return view('setting.syarat_pembayaran.syarat_pembayaran_index', $x);
     }
 
     public function store(SyaratPembayaranRequest $request)

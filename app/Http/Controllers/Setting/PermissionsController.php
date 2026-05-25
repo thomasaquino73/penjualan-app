@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Pengaturan;
+namespace App\Http\Controllers\Setting;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RoleRequest;
@@ -73,7 +73,7 @@ class PermissionsController extends Controller
             ],
         ];
 
-        return view('pengaturan.permissions.permissions_index', $x);
+        return view('setting.permissions.permissions_index', $x);
     }
 
     public function create(Request $request) {}
@@ -170,7 +170,7 @@ class PermissionsController extends Controller
 
         $roles = Role::orderBy('name', 'asc')->get();
 
-        return view('pengaturan.permissions.permissions_edit', [
+        return view('setting.permissions.permissions_edit', [
             'title' => 'Edit Permissions',
             'role' => $role,
             'groupedPermissions' => $groupedPermissions, // Isinya sekarang sudah terpisah grup asli

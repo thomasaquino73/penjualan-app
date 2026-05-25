@@ -48,13 +48,13 @@
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="navs-pills-top-general" role="tabpanel">
                                 <div class="row">
-                                    @include('master_data.barang.data_barang.part.data_umum')
+                                    @include('inventory.barang.data_barang.part.data_umum')
 
                                 </div>
                             </div>
                             <div class="tab-pane fade" id="navs-pills-top-term" role="tabpanel">
                                 <div class="row">
-                                    @include('master_data.barang.data_barang.part.stock_table')
+                                    @include('inventory.barang.data_barang.part.stock_table')
                                 </div>
                             </div>
                             <div class="tab-pane fade" id="navs-pills-top-tax" role="tabpanel">

@@ -4,7 +4,6 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Setting\CashBankController;
-use App\Http\Controllers\Setting\CompanyDeliveryAddressController;
 use App\Http\Controllers\Setting\CompanyInfoController;
 use App\Http\Controllers\Setting\CurrencyController;
 use App\Http\Controllers\Setting\ExchangeRateController;
@@ -15,13 +14,13 @@ use App\Http\Controllers\Inventory\Barang\KategoriBarangController;
 use App\Http\Controllers\Inventory\Barang\SatuanBarangController;
 use App\Http\Controllers\Inventory\WarehouseController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\Pengaturan\Company\FobController;
-use App\Http\Controllers\Pengaturan\Company\ShippingController;
-use App\Http\Controllers\Pengaturan\Company\SyaratPembayaranController;
-use App\Http\Controllers\Pengaturan\PengaturanSistemController;
-use App\Http\Controllers\Pengaturan\PermissionsController;
-use App\Http\Controllers\Pengaturan\RolesController;
-use App\Http\Controllers\Pengaturan\UserController;
+use App\Http\Controllers\Setting\Company\FobController;
+use App\Http\Controllers\Setting\Company\ShippingController;
+use App\Http\Controllers\Setting\Company\SyaratPembayaranController;
+use App\Http\Controllers\Setting\PengaturanSistemController;
+use App\Http\Controllers\Setting\PermissionsController;
+use App\Http\Controllers\Setting\RolesController;
+use App\Http\Controllers\Setting\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Purchase\PurchaseOrderController;
 use App\Http\Controllers\Purchase\PurchaseRequisitionController;
@@ -119,7 +118,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/company-info', [CompanyInfoController::class, 'index'])->name('company.info');
     Route::get('/company-info/{id}/edit', [CompanyInfoController::class, 'edit'])->name('company.edit');
     Route::put('/company-info/{id}/update', [CompanyInfoController::class, 'update'])->name('company.update');
-    Route::get('/general-setting', [SettingSettingController::class, 'index'])->name('general-setting.index');
+    Route::get('/general-setting', [PengaturanSistemController::class, 'index'])->name('general-setting.index');
 
     Route::prefix('token')->group(function () {
         Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');

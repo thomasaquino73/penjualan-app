@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Inventory\Barang;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Models\BasicCodeDetail;
-use App\Models\General\Company;
+use App\Models\Setting\Company;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\DataBarangStok;

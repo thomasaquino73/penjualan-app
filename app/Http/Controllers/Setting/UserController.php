@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Pengaturan;
+namespace App\Http\Controllers\Setting;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PenggunaRequest;
@@ -204,7 +204,7 @@ class UserController extends Controller
 
         ];
 
-        return view('pengaturan.user.user_index', $x);
+        return view('setting.user.user_index', $x);
     }
 
     private function getUserStatistics($data)
@@ -232,7 +232,7 @@ class UserController extends Controller
     {
         $roles = Role::get();
 
-        return view('pengaturan.user.user_create', [
+        return view('setting.user.user_create', [
             'title' => 'Add User',
             'breadcrumb' => [
                 ['label' => 'User', 'url' => route('user.index')],
@@ -313,7 +313,7 @@ class UserController extends Controller
             'user' => User::with(['roles', 'creator', 'updater'])->findOrFail($id),
         ];
 
-        return view('pengaturan.user.user_show', $x);
+        return view('setting.user.user_show', $x);
     }
 
     public function edit($id)
@@ -323,7 +323,7 @@ class UserController extends Controller
         $roles = Role::all();
         $userRoles = $account->getRoleNames()->toArray();
 
-        return view('pengaturan.user.user_edit', [
+        return view('setting.user.user_edit', [
             'title' => 'Change User',
             'breadcrumb' => [
                 ['label' => 'User', 'url' => route('user.index')],
@@ -490,7 +490,7 @@ class UserController extends Controller
             'users' => $users,
         ];
 
-        return view('pengaturan.user.user_trash', $x);
+        return view('setting.user.user_trash', $x);
     }
 
     public function restore_user($id)

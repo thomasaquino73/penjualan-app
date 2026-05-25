@@ -28,7 +28,7 @@
                             <h5 class="mb-0">{{ $title }}</h5>
                         </div>
                         <div class="col-12 col-lg-6 text-lg-end">
-                            @if (auth()->user()->can('login_background-create'))
+                            @if (auth()->user()->can('general-create'))
                                 <button id="create" class="btn  btn-sm btn-primary">
                                     <i class="ti ti-plus me-1"></i> Add Data
                                 </button>

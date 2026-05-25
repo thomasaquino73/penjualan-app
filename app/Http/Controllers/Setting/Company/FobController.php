@@ -99,7 +99,7 @@ class fobController extends Controller
             ],
         ];
 
-        return view('pengaturan.fob.fob_index', $x);
+        return view('setting.fob.fob_index', $x);
     }
 
     /**

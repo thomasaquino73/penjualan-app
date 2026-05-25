@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Pengaturan;
+namespace App\Http\Controllers\Setting;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RoleRequest;
@@ -105,7 +105,7 @@ class RolesController extends Controller
                 ->make(true);
         }
 
-        return view('pengaturan.role.role_index', [
+        return view('setting.role.role_index', [
             'title' => 'Roles',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
