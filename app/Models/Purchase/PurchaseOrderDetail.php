@@ -3,7 +3,7 @@
 namespace App\Models\Purchase;
 
 use App\Models\BasicCodeDetail;
-use App\Models\Master_Data\Barang;
+use App\Models\Inventory\Barang;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

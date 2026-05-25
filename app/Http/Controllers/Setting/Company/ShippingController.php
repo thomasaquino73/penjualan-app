@@ -126,7 +126,7 @@ class ShippingController extends Controller
 
                $shipping= Shipping::create($data);
 
-                            return response()->json([
+            return response()->json([
                 'action' => 'create',
                 'message' => 'Data created successfully',
                 'id' => $shipping->id,

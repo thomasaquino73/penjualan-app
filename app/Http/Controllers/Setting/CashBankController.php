@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\General;
+namespace App\Http\Controllers\Setting;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CashBankRequest;
-use App\Models\General\CashBank;
+use App\Models\Setting\CashBank;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

@@ -7,7 +7,6 @@ use App\Http\Controllers\Setting\CashBankController;
 use App\Http\Controllers\Setting\CompanyInfoController;
 use App\Http\Controllers\Setting\CurrencyController;
 use App\Http\Controllers\Setting\ExchangeRateController;
-use App\Http\Controllers\Setting\SettingSettingController;
 use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Inventory\Barang\DataBarangController;
 use App\Http\Controllers\Inventory\Barang\KategoriBarangController;

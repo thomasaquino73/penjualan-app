@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Purchase;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseOrderRequest;
 use App\Models\BasicCodeDetail;
-use App\Models\General\Company;
+use App\Models\Setting\Company;
 use App\Models\General\CompanyDelivery;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\Kendaraan;
-use App\Models\Pengaturan\CompanyDeliveryAddress;
-use App\Models\Pengaturan\Shipping;
-use App\Models\Pengaturan\SyaratPembayaran;
+use App\Models\Setting\CompanyDeliveryAddress;
+use App\Models\Setting\Shipping;
+use App\Models\Setting\SyaratPembayaran;
 use App\Models\Purchase\PurchaseOrder;
 use App\Models\Purchase\PurchaseOrderDetail;
 use App\Models\Purchase\PurchaseRequisition;
@@ -435,7 +435,6 @@ class PurchaseOrderController extends Controller
             'supplier' => Supplier::where('status', 1)->get(),
             'company' => Company::first(),
             'idNumber' => $this->generateNumberId(),
-            'kendaraan' => Kendaraan::where('status', 1)->get(),
             'term' => BasicCodeDetail::where('master_id', 5)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
             'fob' => BasicCodeDetail::where('master_id', 3)->get(),

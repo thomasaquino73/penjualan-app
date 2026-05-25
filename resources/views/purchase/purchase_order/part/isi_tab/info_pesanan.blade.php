@@ -20,21 +20,15 @@
                     <span class="input-group-text">
                         <i class="ti ti-truck"></i>
                     </span>
-
                     <select name="vehicle_id" id="vehicle_id" class="form-select select2">
-
                         <option value="">Select Shipping</option>
-
                         @foreach ($shipping as $item)
                             <option value="{{ $item->id }}">
                                 {{ $item->nama }}
                             </option>
                         @endforeach
-
                     </select>
-
                     <button type="button" class="btn btn-primary btn-sm" id="btnAddShipping">
-
                         <i class="ti ti-plus"></i>
                     </button>
                     <span class="error text-danger" id="vehicle_idError"></span>
@@ -55,6 +49,9 @@
                             <option value="{{ $pay->id }}">{{ $pay->nama }}</option>
                         @endforeach
                     </select>
+                    <button type="button" class="btn btn-primary btn-sm" id="btnAddTerm">
+                        <i class="ti ti-plus"></i>
+                    </button>
                 </div>
 
                 <span class="error text-danger" id="payment_termError"></span>

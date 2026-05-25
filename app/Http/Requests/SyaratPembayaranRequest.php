@@ -38,4 +38,10 @@ class SyaratPembayaranRequest extends FormRequest
             'status.required' => ' status is required',
         ];
     }
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'status' => $this->status ?? 1,
+        ]);
+    }
 }

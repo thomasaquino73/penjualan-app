@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\General;
+namespace App\Http\Controllers\Setting;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ExchangeRateRequest;
-use App\Models\General\Currency;
-use App\Models\General\ExchangeRate;
+use App\Models\Setting\ExchangeRate;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

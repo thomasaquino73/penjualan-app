@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\General\Company;
-use App\Models\General\Currency;
-use App\Models\General\ExchangeRate;
+use App\Models\Setting\Company;
+use App\Models\Setting\Currency;
+use App\Models\Setting\ExchangeRate;
 
 if (! function_exists('format_uang')) {
     function format_uang($amount, $decimal = null)

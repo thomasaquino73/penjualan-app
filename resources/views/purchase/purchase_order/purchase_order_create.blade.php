@@ -107,10 +107,10 @@
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane fade active show" id="navs-pills-left-home" role="tabpanel">
-                                @include('transaction.purchase_order.part.isi_tab.tabel_pesanan')
+                                @include('purchase.purchase_order.part.isi_tab.tabel_pesanan')
                             </div>
                             <div class="tab-pane fade" id="navs-pills-left-profile" role="tabpanel">
-                                @include('transaction.purchase_order.part.isi_tab.info_pesanan')
+                                @include('purchase.purchase_order.part.isi_tab.info_pesanan')
 
                             </div>
 
@@ -179,8 +179,8 @@
             </form>
         </div>
     </div>
-    @include('transaction.purchase_order.part.modals.modalPrDetail')
-    @include('transaction.purchase_order.part.modals.modalRequisitionDetail')
+    @include('purchase.purchase_order.part.modals.modalPrDetail')
+    @include('purchase.purchase_order.part.modals.modalRequisitionDetail')
     {{-- <div class="modal fade" id="modalPrDetail">
         <div class="modal-dialog modal-md">
             <div class="modal-content">
@@ -396,6 +396,154 @@
 
                         });
 
+                    }
+                });
+
+                // Swal.fire({
+                //     title: 'Add New Shipping',
+                //     input: 'text',
+                //     inputLabel: 'Shipping Name',
+                //     inputPlaceholder: 'Input shipping name...',
+                //     showCancelButton: true,
+                //     confirmButtonText: 'Save',
+                //     customClass: {
+                //         confirmButton: 'btn btn-info',
+                //         CancelButton: 'btn btn-secondary'
+                //     },
+                //     buttonsStyling: false,
+                //     inputValidator: (value) => {
+
+                //         if (!value) {
+                //             return 'Shipping wajib diisi';
+                //         }
+                //     }
+
+                //  }).then((result) => {
+
+                //     if (result.isConfirmed) {
+
+                //         $.ajax({
+
+                //             url: "{{ route('shipping.store') }}",
+                //             type: "POST",
+
+                //             data: {
+                //                 nama: result.value,
+                //                 _token: "{{ csrf_token() }}"
+                //             },
+
+                //             success: function(response) {
+
+                //                 let option = new Option(
+                //                     response.nama,
+                //                     response.id,
+                //                     true,
+                //                     true
+                //                 );
+
+                //                 $('#vehicle_id')
+                //                     .append(option)
+                //                     .trigger('change');
+
+                //                 Swal.fire({
+                //                     icon: 'success',
+                //                     title: 'Success',
+                //                     text: response.message
+                //                 });
+
+                //             },
+
+                //             error: function(xhr) {
+
+                //                 Swal.fire({
+                //                     icon: 'error',
+                //                     title: 'Error',
+                //                     text: 'Failed save shipping',
+                //                     customClass: {
+                //                         confirmButton: 'btn btn-info'
+                //                     },
+                //                     buttonsStyling: false,
+                //                 });
+
+                //             }
+
+                //         });
+
+                //     }
+
+                // });
+
+            });
+            $('#btnAddTerm').click(function() {
+
+                Swal.fire({
+                    title: 'Add New Payment Term',
+                    input: 'text',
+                    theme: 'bootstrap-5',
+                    inputLabel: 'Payment Term Name',
+                    inputPlaceholder: 'Input Payment Term name...',
+                    showCancelButton: true,
+                    confirmButtonText: "Save",
+                    cancelButtonText: "Cancel",
+                    customClass: {
+                        confirmButton: 'btn btn-primary me-2',
+                        cancelButton: 'btn btn-danger'
+                    },
+                    buttonsStyling: false,
+                    inputValidator: (value) => {
+
+                        if (!value) {
+                            return 'Shipping wajib diisi';
+                        }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        $.ajax({
+
+                            url: "{{ route('syarat-pembayaran.store') }}",
+                            type: "POST",
+
+                            data: {
+                                nama: result.value,
+                                _token: "{{ csrf_token() }}"
+                            },
+                            success: function(response) {
+                                let option = new Option(
+                                    response.nama,
+                                    response.id,
+                                    true,
+                                    true
+                                );
+                                $('#payment_term')
+                                    .append(option)
+                                    .trigger('change');
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: response.message,
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary me-2',
+                                    },
+                                    buttonsStyling: false,
+                                });
+
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Failed save payment term',
+                                    customClass: {
+                                        confirmButton: 'btn btn-info'
+                                    },
+                                    buttonsStyling: false,
+                                });
+
+                            }
+
+                        });
                     }
                 });
 

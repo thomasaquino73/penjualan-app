@@ -63,7 +63,7 @@ class SyaratPembayaranController extends Controller
         try {
             $id = $request->input('id');
             $data = $request->all();
-
+            $data['status'] = 1;
             if (! empty($id)) {
                 $data['updated_at'] = now();
                 $data['updated_by'] = Auth::id();
@@ -79,12 +79,14 @@ class SyaratPembayaranController extends Controller
                 $data['created_at'] = now();
                 $data['created_by'] = Auth::id();
 
-                SyaratPembayaran::create($data);
+                $payment =SyaratPembayaran::create($data);
 
-                return response()->json([
-                    'action' => 'create',
-                    'message' => 'Data created successfully',
-                ], 201);
+                 return response()->json([
+                'action' => 'create',
+                'message' => 'Data created successfully',
+                'id' => $payment->id,
+                'nama' => $payment->nama,
+            ], 201);
             }
 
         } catch (ValidationException $e) {
