@@ -111,7 +111,7 @@ class SupplierController extends Controller
             ],
         ];
 
-        return view('master_data.supplier.supplier_index', $x);
+        return view('purchase.supplier.supplier_index', $x);
     }
 
     private function generateNumberId()
@@ -169,7 +169,7 @@ class SupplierController extends Controller
 
         ];
 
-        return view('master_data.supplier.supplier_create', $x);
+        return view('purchase.supplier.supplier_create', $x);
     }
 
     public function store(SupplierRequest $request)
@@ -307,7 +307,7 @@ class SupplierController extends Controller
             'rekening' => $rekening,
         ];
 
-        return view('master_data.supplier.supplier_edit', $x);
+        return view('purchase.supplier.supplier_edit', $x);
     }
 
     public function update(SupplierRequest $request, $id)
@@ -572,7 +572,7 @@ class SupplierController extends Controller
             ],
         ];
 
-        return view('master_data.supplier.supplier_trash', $x);
+        return view('purchase.supplier.supplier_trash', $x);
     }
 
     public function restore($id)

@@ -182,7 +182,7 @@ class PurchaseRequisitionController extends Controller
             ],
         ];
 
-        return view('transaction.purchase_requisition.purchase_requisition_index', $x);
+        return view('purchase.purchase_requisition.purchase_requisition_index', $x);
     }
 
     public function table_pr(Request $r)
@@ -249,7 +249,7 @@ class PurchaseRequisitionController extends Controller
 
         ];
 
-        return view('transaction.purchase_requisition.purchase_requisition_create', $x);
+        return view('purchase.purchase_requisition.purchase_requisition_create', $x);
     }
 
     public function store(Request $request)
@@ -356,7 +356,7 @@ class PurchaseRequisitionController extends Controller
             'modelDetail' => $purchaseRequisition->details,
         ];
 
-        return view('transaction.purchase_requisition.purchase_requisition_show', $x);
+        return view('purchase.purchase_requisition.purchase_requisition_show', $x);
     }
 
     public function edit(string $id)
@@ -376,7 +376,7 @@ class PurchaseRequisitionController extends Controller
             'model' => $purchaseRequisition,
         ];
 
-        return view('transaction.purchase_requisition.purchase_requisition_edit', $x);
+        return view('purchase.purchase_requisition.purchase_requisition_edit', $x);
     }
 
     /**
@@ -581,7 +581,7 @@ class PurchaseRequisitionController extends Controller
 
         ];
 
-        return view('transaction.purchase_requisition.purchase_requisition_trash', $x);
+        return view('purchase.purchase_requisition.purchase_requisition_trash', $x);
     }
 
     public function getUnitsByProduct($id)

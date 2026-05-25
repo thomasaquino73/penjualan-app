@@ -110,7 +110,7 @@ class WarehouseController extends Controller
             ],
         ];
 
-        return view('master_data.warehouse.warehouse_index', $x);
+        return view('inventory.warehouse.warehouse_index', $x);
     }
 
     private function generateWarehouseId()
@@ -354,7 +354,7 @@ class WarehouseController extends Controller
             ],
         ];
 
-        return view('master_data.warehouse.warehouse_trash', $x);
+        return view('inventory.warehouse.warehouse_trash', $x);
     }
 
     public function restore($id)

@@ -1,43 +1,14 @@
 <?php
 
-// use App\Http\Controllers\Auth\GoogleController;
-// use App\Http\Controllers\Auth\IdleController;
-// use App\Http\Controllers\DashboardController;
-// use App\Http\Controllers\General\CashBankController;
-// use App\Http\Controllers\General\CompanyInfoController;
-// use App\Http\Controllers\General\CurrencyController;
-// use App\Http\Controllers\General\ExchangeRateController;
-// use App\Http\Controllers\General\GeneralSettingController;
-// use App\Http\Controllers\GuestEmailVerificationController;
-// use App\Http\Controllers\Inventory\Barang\DataBarangController;
-// use App\Http\Controllers\Inventory\Barang\KategoriBarangController;
-// use App\Http\Controllers\Inventory\Barang\SatuanBarangController;
-// use App\Http\Controllers\Master_Data\WarehouseController;
-// use App\Http\Controllers\NotificationController;
-// use App\Http\Controllers\Pengaturan\Company\FobController;
-// use App\Http\Controllers\Pengaturan\Company\ShippingController;
-// use App\Http\Controllers\Pengaturan\Company\SyaratPembayaranController;
-// use App\Http\Controllers\Pengaturan\PengaturanSistemController;
-// use App\Http\Controllers\Pengaturan\PermissionsController;
-// use App\Http\Controllers\Pengaturan\RolesController;
-// use App\Http\Controllers\Pengaturan\UserController;
-// use App\Http\Controllers\ProfileController;
-// use App\Http\Controllers\Purchase\Supplier\KategoriSupplierController;
-// use App\Http\Controllers\Purchase\Supplier\SupplierController;
-// use App\Http\Controllers\Sales\Customer\CustomerController;
-// use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
-// use App\Http\Controllers\Transaction\PurchaseOrderController;
-// use App\Http\Controllers\Transaction\PurchaseRequisitionController;
-// use App\Http\Controllers\Transaction\SalesOrderController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\General\CashBankController;
-use App\Http\Controllers\General\CompanyDeliveryAddressController;
-use App\Http\Controllers\General\CompanyInfoController;
-use App\Http\Controllers\General\CurrencyController;
-use App\Http\Controllers\General\ExchangeRateController;
-use App\Http\Controllers\General\GeneralSettingController;
+use App\Http\Controllers\Setting\CashBankController;
+use App\Http\Controllers\Setting\CompanyDeliveryAddressController;
+use App\Http\Controllers\Setting\CompanyInfoController;
+use App\Http\Controllers\Setting\CurrencyController;
+use App\Http\Controllers\Setting\ExchangeRateController;
+use App\Http\Controllers\Setting\SettingSettingController;
 use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Inventory\Barang\DataBarangController;
 use App\Http\Controllers\Inventory\Barang\KategoriBarangController;
@@ -59,7 +30,7 @@ use App\Http\Controllers\Purchase\Supplier\SupplierController;
 use App\Http\Controllers\Sales\Customer\CustomerController;
 use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
 use App\Http\Controllers\Transaction\SalesOrderController;
-use App\Models\General\Company;
+use App\Models\Setting\Company;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
@@ -148,7 +119,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/company-info', [CompanyInfoController::class, 'index'])->name('company.info');
     Route::get('/company-info/{id}/edit', [CompanyInfoController::class, 'edit'])->name('company.edit');
     Route::put('/company-info/{id}/update', [CompanyInfoController::class, 'update'])->name('company.update');
-    Route::get('/general-setting', [GeneralSettingController::class, 'index'])->name('general-setting.index');
+    Route::get('/general-setting', [SettingSettingController::class, 'index'])->name('general-setting.index');
 
     Route::prefix('token')->group(function () {
         Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');

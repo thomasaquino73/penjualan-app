@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Pengaturan\Company;
+namespace App\Http\Controllers\Setting\Company;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ShippingRequest;
-use App\Models\Pengaturan\Shipping;
+use App\Models\Setting\Shipping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

@@ -111,7 +111,7 @@ class CustomerController extends Controller
             ],
         ];
 
-        return view('master_data.customer.customer_index', $x);
+        return view('sales.customer.customer_index', $x);
     }
 
     private function generateNumberId()
@@ -242,7 +242,7 @@ class CustomerController extends Controller
 
         ];
 
-        return view('master_data.customer.customer_create', $x);
+        return view('sales.customer.customer_create', $x);
     }
 
     public function show(string $id)
@@ -274,7 +274,7 @@ class CustomerController extends Controller
             'kategoriCustomer' => BasicCodeDetail::where('master_id', 9)->get(),
         ];
 
-        return view('master_data.customer.customer_edit', $x);
+        return view('sales.customer.customer_edit', $x);
     }
 
     /**
@@ -483,7 +483,7 @@ class CustomerController extends Controller
             ],
         ];
 
-        return view('master_data.customer.customer_trash', $x);
+        return view('sales.customer.customer_trash', $x);
     }
 
     public function restore($id)

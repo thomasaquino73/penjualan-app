@@ -103,7 +103,7 @@ class KategoriSupplierController extends Controller
             ],
         ];
 
-        return view('master_data.supplier.kategori_supplier_index', $x);
+        return view('purchase.supplier.kategori_supplier_index', $x);
     }
 
     /**

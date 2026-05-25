@@ -152,7 +152,7 @@ class DataBarangController extends Controller
 
         ];
 
-        return view('master_data.barang.data_barang.data_barang_index', $x);
+        return view('inventory.barang.data_barang.data_barang_index', $x);
     }
 
     private function generateProductId()
@@ -198,7 +198,7 @@ class DataBarangController extends Controller
     {
         $company = Company::with('defaultCurrency')->first();
 
-        return view('master_data.barang.data_barang.data_barang_create', [
+        return view('inventory.barang.data_barang.data_barang_create', [
             'title' => 'Add Product',
             'breadcrumb' => [
                 ['label' => 'Product', 'url' => route('data-barang.index')],
@@ -339,7 +339,7 @@ class DataBarangController extends Controller
             ->where('qty', '>', 0) // Hanya ambil yang qty-nya lebih dari 0
             ->get();
 
-        return view('master_data.barang.data_barang.data_barang_detail', [
+        return view('inventory.barang.data_barang.data_barang_detail', [
             'title' => 'Detail Product',
             'breadcrumb' => [
                 ['label' => 'Product', 'url' => route('data-barang.index')],
@@ -366,7 +366,7 @@ class DataBarangController extends Controller
         $subUnit = DataBarangConversion::where('data_barang_id', $idDetail->id)->get();
         $unit = BasicCodeDetail::where('master_id', 2)->get();
 
-        return view('master_data.barang.data_barang.data_barang_edit', [
+        return view('inventory.barang.data_barang.data_barang_edit', [
             'title' => 'Edit Product',
             'breadcrumb' => [
                 ['label' => 'Product', 'url' => route('data-barang.index')],
@@ -664,7 +664,7 @@ class DataBarangController extends Controller
 
         ];
 
-        return view('master_data.barang.data_barang.data_barang_trash', $x);
+        return view('inventory.barang.data_barang.data_barang_trash', $x);
     }
 
     public function restore($id)

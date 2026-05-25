@@ -1,18 +1,17 @@
 <?php
 
-namespace App\Models\Pengaturan;
+namespace App\Models\Setting;
 
+use App\Models\Setting\Currency;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
-class Shipping extends Model
+class CashBank extends Model
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasFactory;
 
-    protected $table = 'shipping';
+    protected $table = 'bank_account';
 
     protected $guarded = [];
 
@@ -24,5 +23,10 @@ class Shipping extends Model
     public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'currency_id');
     }
 }

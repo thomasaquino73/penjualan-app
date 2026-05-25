@@ -57,7 +57,7 @@
                   </ul>
               </li> --}}
               <!--/ Language -->
-              @if (\App\Models\General\Company::first()?->default_currency_id)
+              @if (\App\Models\Setting\Company::first()?->default_currency_id)
                   <li class="nav-item d-flex align-items-center">
                       <select id="currency_id" class="form-select form-select-sm border-0 bg-transparent"
                           style="width:80px; cursor:pointer;" onchange="changeNavbarCurrency(this.value)">

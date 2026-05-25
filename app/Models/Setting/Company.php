@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models\General;
+namespace App\Models\Setting;
 
+use App\Models\Setting\Currency;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;

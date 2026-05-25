@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Pengaturan\Company;
+namespace App\Http\Controllers\Setting\Company;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FobRequest;

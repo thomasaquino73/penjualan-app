@@ -1,16 +1,18 @@
 <?php
 
-namespace App\Models\General;
+namespace App\Models\Setting;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class Currency extends Model
+class SyaratPembayaran extends Model
 {
-    use HasFactory;
+    use HasApiTokens, HasFactory, Notifiable;
 
-    protected $table = 'currencies';
+    protected $table = 'syarat_pembayaran';
 
     protected $guarded = [];
 
@@ -22,10 +24,5 @@ class Currency extends Model
     public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    public function ratesFrom()
-    {
-        return $this->hasMany(ExchangeRate::class, 'from_currency_id');
     }
 }

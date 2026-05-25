@@ -209,7 +209,7 @@ class PurchaseOrderController extends Controller
             ],
         ];
 
-        return view('transaction.purchase_order.purchase_order_index', $x);
+        return view('purchase.purchase_order.purchase_order_index', $x);
     }
 
     public function bulanRomawi($bulan)
@@ -296,7 +296,7 @@ class PurchaseOrderController extends Controller
 
         ];
 
-        return view('transaction.purchase_order.purchase_order_create', $x);
+        return view('purchase.purchase_order.purchase_order_create', $x);
     }
 
     public function getProcessingData()
@@ -443,7 +443,7 @@ class PurchaseOrderController extends Controller
 
         ];
 
-        return view('transaction.purchase_order.purchase_order_edit', $x);
+        return view('purchase.purchase_order.purchase_order_edit', $x);
     }
 
     public function update(PurchaseOrderRequest $request, string $id)
@@ -608,7 +608,7 @@ class PurchaseOrderController extends Controller
 
         ];
 
-        return view('transaction.purchase_order.purchase_order_trash', $x);
+        return view('purchase.purchase_order.purchase_order_trash', $x);
     }
 
     public function deleteMultiple(Request $request)
@@ -772,7 +772,7 @@ class PurchaseOrderController extends Controller
 
         ];
 
-        return view('transaction.purchase_order.purchase_order_show', $x);
+        return view('purchase.purchase_order.purchase_order_show', $x);
     }
 
     public function print($id)

@@ -103,7 +103,7 @@ class KategoriBarangController extends Controller
             ],
         ];
 
-        return view('master_data.barang.kategori_barang_index', $x);
+        return view('inventory.barang.kategori_barang_index', $x);
     }
 
     /**

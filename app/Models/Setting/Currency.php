@@ -1,18 +1,17 @@
 <?php
 
-namespace App\Models\Pengaturan;
+namespace App\Models\Setting;
 
+use App\Models\Setting\ExchangeRate;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
-class CompanyDeliveryAddress extends Model
+class Currency extends Model
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasFactory;
 
-    protected $table = 'companydeliveryaddress';
+    protected $table = 'currencies';
 
     protected $guarded = [];
 
@@ -24,5 +23,10 @@ class CompanyDeliveryAddress extends Model
     public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function ratesFrom()
+    {
+        return $this->hasMany(ExchangeRate::class, 'from_currency_id');
     }
 }

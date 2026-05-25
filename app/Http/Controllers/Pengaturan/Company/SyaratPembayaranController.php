@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Pengaturan\Company;
+namespace App\Http\Controllers\Setting\Company;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SyaratPembayaranRequest;
-use App\Models\Pengaturan\SyaratPembayaran;
+use App\Models\Setting\SyaratPembayaran;
 use Dotenv\Exception\ValidationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

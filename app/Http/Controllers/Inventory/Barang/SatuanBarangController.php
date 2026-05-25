@@ -99,7 +99,7 @@ class SatuanBarangController extends Controller
             ],
         ];
 
-        return view('master_data.barang.satuan_index', $x);
+        return view('inventory.barang.satuan_index', $x);
     }
 
     /**

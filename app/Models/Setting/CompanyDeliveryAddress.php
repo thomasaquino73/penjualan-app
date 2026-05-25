@@ -1,16 +1,18 @@
 <?php
 
-namespace App\Models\General;
+namespace App\Models\Setting;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class ExchangeRate extends Model
+class CompanyDeliveryAddress extends Model
 {
-    use HasFactory;
+    use HasApiTokens, HasFactory, Notifiable;
 
-    protected $table = 'exchange_rates';
+    protected $table = 'companydeliveryaddress';
 
     protected $guarded = [];
 
@@ -22,15 +24,5 @@ class ExchangeRate extends Model
     public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    public function fromCurrency()
-    {
-        return $this->belongsTo(Currency::class, 'from_currency_id');
-    }
-
-    public function toCurrency()
-    {
-        return $this->belongsTo(Currency::class, 'to_currency_id');
     }
 }
