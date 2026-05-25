@@ -13,16 +13,159 @@
          </thead>
      </table>
  </div>
- @push('style')
-     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
-     <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
- @endpush
- @push('scripts')
-     <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
-     <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
 
-     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
-     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
+ @push('scripts')
+     <script>
+         $('#vehicle_id').select2({
+             placeholder: 'Select Shipping',
+             tags: true,
+             width: '100%',
+             allowClear: true,
+
+             language: {
+                 noResults: function(params) {
+
+                     let term = $.trim(params.term);
+
+                     if (term === '') {
+                         return "No results found";
+                     }
+
+                     return 'Press ENTER to add "' + term + '"';
+                 }
+             },
+
+             escapeMarkup: function(markup) {
+                 return markup;
+             },
+
+             createTag: function(params) {
+
+                 let term = $.trim(params.term);
+
+                 if (term === '') {
+                     return null;
+                 }
+
+                 return {
+                     id: term,
+                     text: term,
+                     newTag: true
+                 };
+             }
+         });
+
+         // ENTER KEY FIX
+         $(document).on('keypress', '.select2-search__field', function(e) {
+
+             if (e.which == 13) {
+
+                 e.preventDefault();
+
+                 let value = $(this).val();
+
+                 if (value.trim() != '') {
+
+                     let option = new Option(value, value, true, true);
+
+                     $('#vehicle_id')
+                         .append(option)
+                         .trigger('change');
+
+                     $('#vehicle_id').trigger({
+                         type: 'select2:select',
+                         params: {
+                             data: {
+                                 id: value,
+                                 text: value,
+                                 newTag: true
+                             }
+                         }
+                     });
+
+                 }
+
+             }
+
+         });
+
+         $('#vehicle_id').on('select2:select', function(e) {
+
+             let data = e.params.data;
+
+             if (data.newTag) {
+
+                 Swal.fire({
+                     title: 'Save New Shipping?',
+                     text: 'Shipping belum ada, simpan data baru?',
+                     icon: 'question',
+                     showCancelButton: true,
+                     confirmButtonText: 'Yes, Save',
+                     cancelButtonText: 'Cancel'
+
+                 }).then((result) => {
+
+                     if (result.isConfirmed) {
+
+                         $.ajax({
+
+                             url: "{{ route('shipping.store') }}",
+                             type: "POST",
+
+                             data: {
+                                 nama: data.text,
+                                 _token: "{{ csrf_token() }}"
+                             },
+
+                             success: function(response) {
+
+                                 $('#vehicle_id option[value="' + data.id + '"]')
+                                     .remove();
+
+                                 let newOption = new Option(
+                                     response.nama,
+                                     response.id,
+                                     true,
+                                     true
+                                 );
+
+                                 $('#vehicle_id')
+                                     .append(newOption)
+                                     .trigger('change');
+
+                                 Swal.fire({
+                                     icon: 'success',
+                                     title: 'Success',
+                                     text: response.message
+                                 });
+
+                             },
+
+                             error: function() {
+
+                                 Swal.fire({
+                                     icon: 'error',
+                                     title: 'Error',
+                                     text: 'Failed save shipping'
+                                 });
+
+                             }
+
+                         });
+
+                     } else {
+
+                         $('#vehicle_id')
+                             .val(null)
+                             .trigger('change');
+                     }
+
+                 });
+
+             }
+
+         });
+     </script>
 
      <script>
          $(function() {
@@ -414,6 +557,27 @@
              //      //      }
              //      //  });
              //  });
+             $('#tabIndo').on('show.bs.tab', function(e) {
+
+                 if (typeof prDetailsData === 'undefined' || prDetailsData.length === 0) {
+
+                     e.preventDefault();
+
+                     Swal.fire({
+                         icon: 'warning',
+                         title: 'Empty Items',
+                         text: 'Please add at least one item detail to the table before saving.',
+                         confirmButtonText: 'OK',
+                         customClass: {
+                             confirmButton: 'btn btn-primary waves-effect waves-light'
+                         },
+                         buttonsStyling: false
+                     });
+
+                     return;
+                 }
+
+             });
 
              // 5. Event Handler: Submit Form Modal Detail (Sekarang baris prDetailsData PASTI terbaca)
              $('#formPrDetail').on('submit', function(e) {

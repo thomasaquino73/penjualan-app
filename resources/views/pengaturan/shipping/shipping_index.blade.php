@@ -27,17 +27,17 @@
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
 
-                    @canany(['kendaraan-create'])
+                    @canany(['shipping-create'])
                         <button id="create" class="btn  btn-sm btn-primary">
                             <i class="ti ti-plus me-1"></i> Add Data
                         </button>
                     @endcanany
-                    @canany(['kendaraan-trash'])
-                        <a href="{{ route('company-delivery.trash') }}" class="btn  btn-sm btn-secondary">
+                    @canany(['shipping-trash'])
+                        <a href="{{ route('shipping.trash') }}" class="btn  btn-sm btn-secondary">
                             <i class="ti ti-trash"></i> Trash Bin
                         </a>
                     @endcanany
-                    @canany(['kendaraan-delete'])
+                    @canany(['shipping-delete'])
                         <button id="deleteSelected" class="btn btn-sm btn-danger ">
                             <i class="ti ti-trash me-1"></i> Delete Selected
                         </button>
@@ -80,7 +80,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="postForm" name="postForm" method="POST" action="{{ route('company-delivery.store') }}"
+                    <form id="postForm" name="postForm" method="POST" action="{{ route('shipping.store') }}"
                         enctype="multipart/form-data">
                         @csrf
                         <input type="text" name="id" id="id" hidden>
@@ -159,7 +159,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('company-delivery.index') }}',
+                ajax: '{{ route('shipping.index') }}',
                 columns: [{
                         data: 'cekbok',
                         name: 'cekbok',
@@ -279,7 +279,7 @@
 
                 $.ajax({
                     type: "GET",
-                    url: "/company-delivery/" + id + "/edit",
+                    url: "/shipping/" + id + "/edit",
                     data: {
                         id: id
                     },
@@ -324,7 +324,7 @@
                 }).then(function(result) {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/company-delivery/${id}`,
+                            url: `/shipping/${id}`,
                             type: "DELETE",
                             cache: false,
                             data: {
@@ -403,7 +403,7 @@
 
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: '/company-delivery/delete-multiple',
+                            url: '/shipping/delete-multiple',
                             type: 'POST',
                             data: {
                                 ids: ids,

@@ -283,8 +283,8 @@ class Sidebar extends Component
                     ],
                     [
                         'name' => 'Shipping',
-                        'route' => 'company-delivery.index',
-                        'pattern' => 'company-delivery.*',
+                        'route' => 'shipping.index',
+                        'pattern' => 'shipping.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['shipping-browse'],
                     ],
@@ -295,16 +295,6 @@ class Sidebar extends Component
                         'roles' => ['Super Admin'],
                         'permissions' => ['fob-browse'],
                     ],
-                ],
-            ],
-            [
-                'type' => 'dropdown',
-                'name' => 'General Setting',
-                'icon' => 'ti ti-adjustments-horizontal',
-                'roles' => ['Super Admin'],
-                'permissions' => ['mata_uang-browse', 'company-browse', 'general-browse'],
-                'children' => [
-
                     [
                         'name' => 'General Setting',
                         'route' => 'general-setting.index',
@@ -312,14 +302,6 @@ class Sidebar extends Component
                         'roles' => ['Super Admin'],
                         'permissions' => ['general-browse'],
                     ],
-                    [
-                        'name' => 'Currency',
-                        'route' => 'mata-uang.index',
-                        'pattern' => 'mata-uang.*',
-                        'roles' => ['Super Admin'],
-                        'permissions' => ['mata_uang-browse'],
-                    ],
-
                 ],
             ],
             [

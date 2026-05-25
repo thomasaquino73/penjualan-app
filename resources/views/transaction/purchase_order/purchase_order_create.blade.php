@@ -97,7 +97,7 @@
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
+                                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" id='tabIndo'
                                     data-bs-target="#navs-pills-left-profile" aria-controls="navs-pills-left-profile"
                                     aria-selected="false" tabindex="-1">
                                     <i class="ti ti-info-circle"></i>
@@ -297,14 +297,186 @@
         </div>
     </div> --}}
 @endsection
-
+@push('style')
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
+@endpush
 @push('scripts')
     <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
     <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
 
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
+    <script>
+        $(document).ready(function() {
 
+            $('#vehicle_id').select2({
+                placeholder: 'Select Shipping',
+                width: '100%'
+            });
+
+            // tambah shipping baru
+            $('#btnAddShipping').click(function() {
+
+                Swal.fire({
+                    title: 'Add New Shipping',
+                    input: 'text',
+                    inputLabel: 'Shipping Name',
+                    inputPlaceholder: 'Input shipping name...',
+
+                    showCancelButton: true,
+
+                    // confirmButtonColor: "#3085d6",
+                    // cancelButtonColor: "#d33",
+
+                    confirmButtonText: "Save",
+                    cancelButtonText: "Cancel",
+                    customClass: {
+                        confirmButton: 'btn btn-primary me-2',
+                        cancelButton: 'btn btn-danger'
+                    },
+                    buttonsStyling: false,
+                    inputValidator: (value) => {
+
+                        if (!value) {
+                            return 'Shipping wajib diisi';
+                        }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        $.ajax({
+
+                            url: "{{ route('shipping.store') }}",
+                            type: "POST",
+
+                            data: {
+                                nama: result.value,
+                                _token: "{{ csrf_token() }}"
+                            },
+
+                            success: function(response) {
+
+                                let option = new Option(
+                                    response.nama,
+                                    response.id,
+                                    true,
+                                    true
+                                );
+
+                                $('#vehicle_id')
+                                    .append(option)
+                                    .trigger('change');
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: response.message,
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary me-2',
+                                    },
+                                    buttonsStyling: false,
+                                });
+
+                            },
+
+                            error: function(xhr) {
+
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Failed save shipping',
+                                    customClass: {
+                                        confirmButton: 'btn btn-info'
+                                    },
+                                    buttonsStyling: false,
+                                });
+
+                            }
+
+                        });
+
+                    }
+                });
+
+                // Swal.fire({
+                //     title: 'Add New Shipping',
+                //     input: 'text',
+                //     inputLabel: 'Shipping Name',
+                //     inputPlaceholder: 'Input shipping name...',
+                //     showCancelButton: true,
+                //     confirmButtonText: 'Save',
+                //     customClass: {
+                //         confirmButton: 'btn btn-info',
+                //         CancelButton: 'btn btn-secondary'
+                //     },
+                //     buttonsStyling: false,
+                //     inputValidator: (value) => {
+
+                //         if (!value) {
+                //             return 'Shipping wajib diisi';
+                //         }
+                //     }
+
+                //  }).then((result) => {
+
+                //     if (result.isConfirmed) {
+
+                //         $.ajax({
+
+                //             url: "{{ route('shipping.store') }}",
+                //             type: "POST",
+
+                //             data: {
+                //                 nama: result.value,
+                //                 _token: "{{ csrf_token() }}"
+                //             },
+
+                //             success: function(response) {
+
+                //                 let option = new Option(
+                //                     response.nama,
+                //                     response.id,
+                //                     true,
+                //                     true
+                //                 );
+
+                //                 $('#vehicle_id')
+                //                     .append(option)
+                //                     .trigger('change');
+
+                //                 Swal.fire({
+                //                     icon: 'success',
+                //                     title: 'Success',
+                //                     text: response.message
+                //                 });
+
+                //             },
+
+                //             error: function(xhr) {
+
+                //                 Swal.fire({
+                //                     icon: 'error',
+                //                     title: 'Error',
+                //                     text: 'Failed save shipping',
+                //                     customClass: {
+                //                         confirmButton: 'btn btn-info'
+                //                     },
+                //                     buttonsStyling: false,
+                //                 });
+
+                //             }
+
+                //         });
+
+                //     }
+
+                // });
+
+            });
+
+        });
+    </script>
     <script>
         $(document).ready(function() {
             // Mengaktifkan tooltip di dalam modal dengan aman

@@ -232,11 +232,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('/mata-uang', CurrencyController::class);
     Route::resource('/cash-bank', CashBankController::class);
     Route::resource('/exchange-rate', ExchangeRateController::class);
-    Route::post('/company-delivery/delete-multiple', [ShippingController::class, 'deleteMultiple']);
-    Route::post('/company-delivery/restore-multiple', [ShippingController::class, 'restoreMultiple']);
-    Route::get('/company-delivery/trash', [ShippingController::class, 'trash'])->name('company-delivery.trash');
-    Route::put('/company-delivery/restore/{id}', [ShippingController::class, 'restore'])->name('company-delivery.restore');
-    Route::resource('/company-delivery', ShippingController::class);
+    Route::post('/shipping/delete-multiple', [ShippingController::class, 'deleteMultiple']);
+    Route::post('/shipping/restore-multiple', [ShippingController::class, 'restoreMultiple']);
+    Route::get('/shipping/trash', [ShippingController::class, 'trash'])->name('shipping.trash');
+    Route::put('/shipping/restore/{id}', [ShippingController::class, 'restore'])->name('shipping.restore');
+    Route::resource('/shipping', ShippingController::class);
 
     Route::post('/fob/delete-multiple', [FobController::class, 'deleteMultiple']);
     Route::resource('/fob', FobController::class);
@@ -275,7 +275,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
     Route::resource('sales-order', SalesOrderController::class);
-    Route::resource('company-delivery', CompanyDeliveryAddressController::class);
 });
 
 Route::fallback(function () {

@@ -26,9 +26,16 @@ class ShippingRequest extends FormRequest
                 // Memastikan nama unik di tabel 'shipping', kolom 'nama', abaikan data milik $id ini
                 Rule::unique('shipping', 'nama')->ignore($id),
             ],
+            'status' => 'required', // 🛠️ Diperbaiki dari 'exsis' menjadi 'exists'
+
         ];
     }
-
+protected function prepareForValidation()
+{
+    $this->merge([
+        'status' => $this->status ?? 1,
+    ]);
+}
     /**
      * Get the error messages for the defined validation rules.
      */
@@ -37,6 +44,7 @@ class ShippingRequest extends FormRequest
         return [
             'nama.required' => 'Company Shipping Name is required.',
             'nama.unique' => 'Company Shipping Name already exists.', // 🛠️ Diperbaiki dari 'exsis' menjadi 'exists'
+            'status.required' => 'Status is required.',
         ];
     }
 }

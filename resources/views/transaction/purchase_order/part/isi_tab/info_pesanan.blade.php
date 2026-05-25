@@ -17,15 +17,27 @@
             <label class="col-md-4 col-form-label">Ship via</label>
             <div class="col-md-8">
                 <div class="input-group input-group-merge">
-                    <span class="input-group-text"><i class="ti ti-truck"></i> </span>
-                    <select name="vehicle_id" id="vehicle_id" class="form-select select2"
-                        data-placeholder="Select Shipping">
-                        <option></option>
-                        @foreach ($shipping as $shipping)
-                            <option value="{{ $shipping->id }}">{{ $shipping->nama }}</option>
+                    <span class="input-group-text">
+                        <i class="ti ti-truck"></i>
+                    </span>
+
+                    <select name="vehicle_id" id="vehicle_id" class="form-select select2">
+
+                        <option value="">Select Shipping</option>
+
+                        @foreach ($shipping as $item)
+                            <option value="{{ $item->id }}">
+                                {{ $item->nama }}
+                            </option>
                         @endforeach
+
                     </select>
-                    <span class="error text-danger" id="fob_idError"></span>
+
+                    <button type="button" class="btn btn-primary btn-sm" id="btnAddShipping">
+
+                        <i class="ti ti-plus"></i>
+                    </button>
+                    <span class="error text-danger" id="vehicle_idError"></span>
                 </div>
 
             </div>

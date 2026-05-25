@@ -102,6 +102,8 @@ class ShippingController extends Controller
         try {
 
             $data = $request->except('_token');
+            $data['status'] = 1;
+
             if (! empty($id)) {
 
                 // ✅ UPDATE
@@ -122,12 +124,14 @@ class ShippingController extends Controller
                 $data['created_at'] = now();
                 $data['created_by'] = Auth::id();
 
-                Shipping::create($data);
+               $shipping= Shipping::create($data);
 
-                return response()->json([
-                    'action' => 'create',
-                    'message' => 'Data created successfully',
-                ], 201);
+                            return response()->json([
+                'action' => 'create',
+                'message' => 'Data created successfully',
+                'id' => $shipping->id,
+                'nama' => $shipping->nama,
+            ], 201);
             }
 
         } catch (\Exception $e) {

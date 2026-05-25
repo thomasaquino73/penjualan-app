@@ -16,7 +16,7 @@
         </span>
     </h4>
 
-    @include('partials.pengaturan.navbar_general')
+    {{-- @include('partials.pengaturan.navbar_general') --}}
     <div class="col-xl-12">
         <div class="nav-align-top mb-4">
             <ul class="nav nav-pills mb-3" role="tablist">
