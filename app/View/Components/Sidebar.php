@@ -61,7 +61,7 @@ class Sidebar extends Component
             [
                 'type' => 'dropdown',
                 'name' => 'Supplier',
-                'icon' => 'ti ti-trolley',
+                'icon' => 'ti ti-user',
                 'roles' => ['Super Admin'],
                 'permissions' => ['supplier-browse', 'kategori_supplier-browse'],
                 'children' => [

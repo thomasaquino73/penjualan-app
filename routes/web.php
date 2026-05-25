@@ -221,19 +221,6 @@ Route::middleware('auth')->group(function () {
     // Route::put('/salesman/restore/{id}', [SalesmanController::class, 'restore'])->name('salesman.restore');
     // Route::resource('salesman', SalesmanController::class);
 
-    // Route::prefix('daftar-kendaraan')->name('daftar-kendaraan.')->group(function () {
-    //     Route::get('/', [DaftarKendaraanController::class, 'index'])->name('index');
-    //     Route::post('/store', [DaftarKendaraanController::class, 'store'])->name('store');
-    //     Route::get('/data', [DaftarKendaraanController::class, 'data'])->name('data');
-    //     Route::get('/trash', [DaftarKendaraanController::class, 'trash'])->name('trash');
-    //     Route::get('/{id}/edit', [DaftarKendaraanController::class, 'edit'])->name('edit');
-    //     Route::delete('/{id}', [DaftarKendaraanController::class, 'destroy'])->name('destroy');
-    //     Route::put('/{id}/restore', [DaftarKendaraanController::class, 'restore'])->name('restore');
-    //     Route::get('/{id}/detail', [DaftarKendaraanController::class, 'show'])->name('show');
-    //     Route::post('/delete-multiple', [DaftarKendaraanController::class, 'deleteMultiple']);
-    //     Route::post('/restore-multiple', [DaftarKendaraanController::class, 'restoreMultiple']);
-    // });
-
     Route::get('/permintaan-pembelian/trash', [PurchaseRequisitionController::class, 'trash'])->name('permintaan-pembelian.trash');
     Route::get('/permintaan-pembelian/table-pr', [PurchaseRequisitionController::class, 'table_pr'])->name('permintaan-pembelian.table_pr');
     Route::post('/permintaan-pembelian/delete-multiple', [PurchaseRequisitionController::class, 'deleteMultiple']);
