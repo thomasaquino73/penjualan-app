@@ -14,39 +14,38 @@ class PermissionSeeder extends Seeder
         $defaultActions = ['browse', 'create', 'read', 'edit', 'delete', 'trash', 'restore'];
 
         $modules = [
-            'role' => ['alias' => 'Role', 'group' => 'Access Management'],
-            'user' => ['alias' => 'User', 'group' => 'Access Management'],
-            'permission' => ['alias' => 'Permission', 'group' => 'Access Management'],
-
-            'customer' => ['alias' => 'Customer', 'group' => 'Master Data'],
-            'kategori_customer' => ['alias' => 'Customer Category', 'group' => 'Master Data'],
-            'supplier' => ['alias' => 'Supplier', 'group' => 'Master Data'],
-            'kategori_supplier' => ['alias' => 'Supplier Category', 'group' => 'Master Data'],
-            'salesman' => ['alias' => 'Salesman', 'group' => 'Master Data'],
-
-            'kendaraan' => ['alias' => 'Vehicle', 'group' => 'Master Data'],
-            'warehouse' => ['alias' => 'Warehouse', 'group' => 'Master Data'],
-
-            'barang' => ['alias' => 'Product', 'group' => 'Master Data'],
-            'kategori_barang' => ['alias' => 'Product Category', 'group' => 'Master Data'],
-            'satuan_barang' => ['alias' => 'Unit', 'group' => 'Master Data'],
-            'company' => ['alias' => 'Company', 'group' => 'General'],
-            'general' => ['alias' => 'General', 'group' => 'General'],
-            'shipping' => ['alias' => 'Shipping', 'group' => 'Pengaturan'],
-            'fob' => ['alias' => 'FOB', 'group' => 'Pengaturan'],
-            'syarat_pembayaran' => ['alias' => 'Payment Term', 'group' => 'Pengaturan'],
-
-            // 🔥 Modul transaksi ditambah action 'approval' khusus
+            'supplier' => ['alias' => 'Supplier', 'group' => 'Purchase'],
+            'kategori_supplier' => ['alias' => 'Supplier Category', 'group' => 'Purchase'],
             'permintaan_pembelian' => [
                 'alias' => 'Purchase Requisition',
-                'group' => 'Transaction',
+                'group' => 'Purchase',
                 'actions' => array_merge($defaultActions, ['approval']), // default + approval
             ],
             'purchase_order' => [
                 'alias' => 'Purchase Order',
-                'group' => 'Transaction',
+                'group' => 'Purchase',
                 'actions' => array_merge($defaultActions, ['approval']), // default + approval
             ],
+            'customer' => ['alias' => 'Customer', 'group' => 'Sales'],
+            'kategori_customer' => ['alias' => 'Customer Category', 'group' => 'Sales'],
+
+            'warehouse' => ['alias' => 'Warehouse', 'group' => 'Inventory'],
+            'barang' => ['alias' => 'Product', 'group' => 'Inventory'],
+            'kategori_barang' => ['alias' => 'Product Category', 'group' => 'Inventory'],
+            'satuan_barang' => ['alias' => 'Unit', 'group' => 'Inventory'],
+
+            'role' => ['alias' => 'Role', 'group' => 'Setting'],
+            'user' => ['alias' => 'User', 'group' => 'Setting'],
+            'permission' => ['alias' => 'Permission', 'group' => 'Setting'],
+            'company' => ['alias' => 'Company', 'group' => 'Setting'],
+            'general' => ['alias' => 'General', 'group' => 'Setting'],
+            'shipping' => ['alias' => 'Shipping', 'group' => 'Setting'],
+            'fob' => ['alias' => 'FOB', 'group' => 'Setting'],
+            'syarat_pembayaran' => ['alias' => 'Payment Term', 'group' => 'Setting'],
+
+            // 🔥 Modul transaksi ditambah action 'approval' khusus
+            
+            
         ];
 
         $role = Roles::firstOrCreate([

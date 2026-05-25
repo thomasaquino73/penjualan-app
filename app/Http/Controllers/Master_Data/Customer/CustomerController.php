@@ -181,7 +181,7 @@ class CustomerController extends Controller
                 'sapaan' => $request->sapaan,
                 'contact_person' => $request->contact_person,
                 'posisi_jabatan' => $request->posisi_jabatan,
-                 'email_kontak' => $request->email_kontak,
+                'email_kontak' => $request->email_kontak,
                 'phone1_kontak' => $request->phone1_kontak,
                 'phone2_kontak' => $request->phone1_kontak,
                 'faximili_kontak' => $request->faximili_kontak,
@@ -190,7 +190,7 @@ class CustomerController extends Controller
             ]);
             DB::table('customer_pengiriman')->insert([
                 'customer_id' => $customer->id,
-                         'default_pengiriman' => $request->has('default_pengiriman') ? 1 : 0,
+                'default_pengiriman' => $request->has('default_pengiriman') ? 1 : 0,
                 'nama_penerima' => $request->nama_penerima,
                 'handphone_penerima' => $request->handphone_penerima,
                 'alamat_pengiriman' => $request->alamat_pengiriman,
@@ -201,7 +201,7 @@ class CustomerController extends Controller
             ]);
             DB::table('customer_pajak')->insert([
                 'customer_id' => $customer->id,
-                      'default_pajak' => $request->has('default_pajak') ? 1 : 0,
+                'default_pajak' => $request->has('default_pajak') ? 1 : 0,
                 'check_address' => $request->has('check_address') ? 1 : 0,
                 'tipe_id_pajak' => $request->tipe_id_pajak,
                 'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
@@ -294,7 +294,7 @@ class CustomerController extends Controller
                 ->updateOrInsert(
                     ['customer_id' => $customer->id],
                     [
-                       'sapaan' => $request->sapaan,
+                        'sapaan' => $request->sapaan,
                         'contact_person' => $request->contact_person,
                         'posisi_jabatan' => $request->posisi_jabatan,
                         'email_kontak' => $request->email_kontak,
@@ -327,7 +327,7 @@ class CustomerController extends Controller
                 ->updateOrInsert(
                     ['customer_id' => $customer->id],
                     ['default_pajak' => $request->has('default_pajak') ? 1 : 0,
-                'check_address' => $request->has('check_address') ? 1 : 0,
+                        'check_address' => $request->has('check_address') ? 1 : 0,
                         'tipe_id_pajak' => $request->tipe_id_pajak,
                         'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
                         'nama_wajib_pajak' => $request->nama_wajib_pajak,

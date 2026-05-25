@@ -22,41 +22,8 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'section',
-                'label' => 'MASTER DATA',
+                'label' => 'PURCHASE',
                 'roles' => ['Super Admin'],
-            ],
-            [
-                'type' => 'dropdown',
-                'name' => 'Inventory',
-                'icon' => 'ti ti-trolley',
-                'roles' => ['Super Admin'],
-                'permissions' => ['barang-browse', 'kategori_barang-browse', 'satuan_barang-browse'],
-                'children' => [
-
-                    [
-                        'name' => 'Product',
-                        'route' => 'data-barang.index',
-                        'pattern' => 'data-barang.*',
-                        'roles' => ['Super Admin'],
-                        'permissions' => ['barang-browse'],
-                    ],
-
-                    [
-                        'name' => 'Product Category',
-                        'route' => 'kategori-barang.index',
-                        'pattern' => 'kategori-barang.*',
-                        'roles' => ['Super Admin'],
-                        'permissions' => ['kategori_barang-browse'],
-                    ],
-                    [
-                        'name' => 'Units',
-                        'route' => 'satuan-barang.index',
-                        'pattern' => 'satuan-barang.*',
-                        'roles' => ['Super Admin'],
-                        'permissions' => ['satuan_barang-browse'],
-                    ],
-
-                ],
             ],
             [
                 'type' => 'dropdown',
@@ -85,57 +52,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'Customer',
-                'icon' => 'ti ti-users-group',
-                'roles' => ['Super Admin'],
-                'permissions' => ['customer-browse', 'kategori_customer-browse'],
-                'children' => [
-
-                    [
-                        'name' => 'Customer List',
-                        'route' => 'customer.index',
-                        'pattern' => 'customer.*',
-                        'roles' => ['Super Admin'],
-                        'permissions' => ['customer-browse'],
-                    ],
-
-                    [
-                        'name' => 'Customer Category',
-                        'route' => 'kategori-customer.index',
-                        'pattern' => 'kategori-customer.*',
-                        'roles' => ['Super Admin'],
-                        'permissions' => ['kategori_customer-browse'],
-                    ],
-                ],
-            ],
-            [
-                'type' => 'single',
-                'name' => 'Warehouse',
-                'route' => 'warehouse.index',
-                'icon' => 'ti ti-building-warehouse',
-                'pattern' => 'warehouse.*',
-                'active' => true,
-                'roles' => ['Super Admin'],
-                'permissions' => ['warehouse-browse'],
-            ],
-            // [
-            //     'type' => 'single',
-            //     'name' => 'Vehicle',
-            //     'route' => 'daftar-kendaraan.index',
-            //     'icon' => 'ti-car',
-            //     'pattern' => 'daftar-kendaraan.*',
-            //     'active' => true,
-            //     'roles' => ['SuperAdmin'],
-            //     'permissions' => ['kendaraan-browse'],
-            // ],
-            [
-                'type' => 'section',
-                'label' => 'TRANSAKSI',
-                'roles' => ['Super Admin'],
-            ],
-            [
-                'type' => 'dropdown',
-                'name' => 'PEMBELIAN',
+                'name' => 'TRANSACTION',
                 'icon' => 'ti ti-shopping-cart',
                 'roles' => ['Super Admin'],
                 'permissions' => ['role-browse', 'permission-browse'],
@@ -185,8 +102,38 @@ class Sidebar extends Component
                 ],
             ],
             [
+                'type' => 'section',
+                'label' => 'SALES',
+                'roles' => ['Super Admin'],
+            ],
+            [
                 'type' => 'dropdown',
-                'name' => 'PENJUALAN',
+                'name' => 'Customer',
+                'icon' => 'ti ti-users-group',
+                'roles' => ['Super Admin'],
+                'permissions' => ['customer-browse', 'kategori_customer-browse'],
+                'children' => [
+
+                    [
+                        'name' => 'Customer List',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['customer-browse'],
+                    ],
+
+                    [
+                        'name' => 'Customer Category',
+                        'route' => 'kategori-customer.index',
+                        'pattern' => 'kategori-customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['kategori_customer-browse'],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'dropdown',
+                'name' => 'TRANSACTION',
                 'icon' => 'ti ti-moneybag',
                 'roles' => ['Super Admin'],
                 'permissions' => ['role-browse', 'permission-browse'],
@@ -237,21 +184,62 @@ class Sidebar extends Component
                 ],
             ],
             [
-                'type' => 'dropdown',
-                'name' => 'PENGIRIMAN',
+                'type' => 'single',
+                'name' => 'Delivery Order',
+                'route' => 'user.index',
                 'icon' => 'ti ti-truck-delivery',
+                'pattern' => 'user.*',
+                'active' => true,
                 'roles' => ['Super Admin'],
-                'permissions' => ['role-browse', 'permission-browse'],
+                'permissions' => ['user-browse'],
+            ],
+            [
+                'type' => 'section',
+                'label' => 'INVENTORY',
+                'roles' => ['Super Admin'],
+            ],
+            [
+                'type' => 'dropdown',
+                'name' => 'Product',
+                'icon' => 'ti ti-trolley',
+                'roles' => ['Super Admin'],
+                'permissions' => ['barang-browse', 'kategori_barang-browse', 'satuan_barang-browse'],
                 'children' => [
+
                     [
-                        'name' => 'Delivery Order',
+                        'name' => 'Product List',
+                        'route' => 'data-barang.index',
+                        'pattern' => 'data-barang.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['barang-browse'],
+                    ],
+
+                    [
+                        'name' => 'Product Category',
                         'route' => 'kategori-barang.index',
                         'pattern' => 'kategori-barang.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['kategori_barang-browse'],
                     ],
+                    [
+                        'name' => 'Units',
+                        'route' => 'satuan-barang.index',
+                        'pattern' => 'satuan-barang.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['satuan_barang-browse'],
+                    ],
 
                 ],
+            ],
+            [
+                'type' => 'single',
+                'name' => 'Warehouse',
+                'route' => 'warehouse.index',
+                'icon' => 'ti ti-building-warehouse',
+                'pattern' => 'warehouse.*',
+                'active' => true,
+                'roles' => ['Super Admin'],
+                'permissions' => ['warehouse-browse'],
             ],
             [
                 'type' => 'section',
