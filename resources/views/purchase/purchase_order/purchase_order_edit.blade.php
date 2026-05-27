@@ -187,10 +187,6 @@
                     <button type="submit" id="savedata" class="btn btn-primary">
                         <i class="fa fa-save me-1"></i> Update
                     </button>
-
-                    <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
-                        <i class="fa fa-plus-circle me-1"></i> Save and Create New
-                    </button>
                     <a href="{{ route('purchase-order.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>

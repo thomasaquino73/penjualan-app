@@ -119,7 +119,7 @@
                         data: 'status',
                     },
                     {
-                        data: 'expected_date',
+                        data: 'tanggal_kirim',
                     },
                     {
                         data: 'amount',

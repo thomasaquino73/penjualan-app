@@ -83,7 +83,7 @@
         <div class="mb-3 row">
             <label class="col-md-4 col-form-label">Description</label>
             <div class="col-md-8">
-                <textarea name="description" id="description" class="form-control" rows="8" placeholder="Enter description"></textarea>
+                <textarea name="description" id="description" class="form-control" rows="8" placeholder="Enter description">{{ $model->description }}</textarea>
                 <span class="error text-danger" id="descriptionError"></span>
             </div>
         </div>
@@ -123,7 +123,8 @@
                 <select name="fob_id" id="fob_id" class="form-select select2" data-placeholder="Select FOB">
                     <option></option>
                     @foreach ($fob as $f)
-                        <option value="{{ $f->detail }}"> {{ $f->detail }}</option>
+                        <option value="{{ $f->detail }}" {{ $model->fob_id == $f->detail ? 'selected' : '' }}>
+                            {{ $f->detail }}</option>
                     @endforeach
                 </select>
                 <span class="error text-danger" id="fob_idError"></span>

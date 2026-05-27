@@ -178,8 +178,12 @@ $(function () {
         },
     });
 });
-
 $(document).ready(function () {
+    if (prDetailsData.length > 0) {
+        calculateGrandTotal();
+        calculateTotalOrder();
+    }
+
     $(".select2-modal").each(function () {
         var $this = $(this);
         $this.wrap('<div class="position-relative"></div>').select2({
@@ -570,7 +574,7 @@ $(document).ready(function () {
             success: function (response) {
                 Swal.fire({
                     icon: "success",
-                    title: "Data Created Successfully",
+                    title: "Data Updated Successfully",
                     text: response.message,
                     customClass: {
                         confirmButton:

@@ -6,9 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseOrderRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
-use App\Models\Purchase\PurchaseOrder;
 use App\Models\Purchase\PurchaseOrderDetail;
-use App\Models\Purchase\PurchaseRequisition;
+use App\Models\Purchase\PurchaseOrder;
 use App\Models\Purchase\Supplier;
 use App\Models\Setting\Company;
 use App\Models\Setting\CompanyDeliveryAddress;
@@ -115,7 +114,7 @@ class PurchaseOrderController extends Controller
                     return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
                 })
                 ->addColumn('supplier', function ($row) {
-                    return $row->supplier->nama;
+                    return $row->supplier->nama_supplier;
                 })
                 ->addColumn('cekbok', function ($row) {
                     return '   <div class="form-check form-check-primary mt-3">
@@ -299,7 +298,7 @@ class PurchaseOrderController extends Controller
 
     public function getProcessingData()
     {
-        $orders = PurchaseRequisition::where('status', 'processing')->get();
+        $orders = PurchaseOrder::where('status', 'processing')->get();
 
         return response()->json($orders);
     }
@@ -344,6 +343,8 @@ class PurchaseOrderController extends Controller
             $data['disc_nominal'] = $request->discount_all;
             $data['grand_total'] = $request->total_order;
             $data['payment_term'] = $request->payment_term;
+            $data['kena_pajak'] =$request->has('kena_pajak') ? 1 : 0;
+            $data['total_termasuk_pajak'] =$request->has('total_termasuk_pajak') ? 1 : 0;
             $data['shipping_address'] = $request->shipping_address;
             $data['description'] = $request->description;
             $data['datePO'] = Carbon::parse($request->datePO)->format('Y-m-d');
@@ -466,7 +467,8 @@ class PurchaseOrderController extends Controller
                 'tanggal_kirim' => $request->tanggal_kirim
                     ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d')
                     : null,
-
+                      'kena_pajak' => $request->has('kena_pajak') ? 1 : 0,
+                'total_termasuk_pajak' => $request->has('total_termasuk_pajak') ? 1 : 0,
                 'fob_id' => $request->fob_id,
                 'vehicle_id' => $request->vehicle_id,
                 'payment_term' => $request->payment_term,
@@ -502,7 +504,6 @@ class PurchaseOrderController extends Controller
                         'unit_id' => $item['unit_id'],
                         'unit_price' => $item['unit_price'],
                         'discount' => $item['discount'],
-                        'tax' => $item['tax'],
                         'amount' => $item['amount'],
                         'updated_by' => Auth::id(),
                     ]);
@@ -520,7 +521,8 @@ class PurchaseOrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Purchase Requisition successfully updated!',
+                'title' => "Data Updated Successfully",
+                'message' => 'Purchase Order successfully updated!',
                 'redirect' => $redirectUrl,
             ], 200);
 
@@ -584,10 +586,10 @@ class PurchaseOrderController extends Controller
                     return Carbon::parse($row->tanggal_kirim)->format('d-m-Y');
                 })
                 ->addColumn('amount', function ($row) {
-                    return $row->amount;
+                    return $row->grand_total;
                 })
                 ->addColumn('supplier', function ($row) {
-                    return $row->supplier->nama;
+                    return $row->supplier->nama_supplier;
                 })
                 ->addColumn('cekbok', function ($row) {
                     return '   <div class="form-check form-check-primary mt-3">
