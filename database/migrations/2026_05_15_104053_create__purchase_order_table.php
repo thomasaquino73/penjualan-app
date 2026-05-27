@@ -19,7 +19,7 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('supplier_id');
             $table->string('code');
-            $table->date('date');
+            $table->date('datePO');
             $table->date('tanggal_kirim')->nullable();
             $table->bigInteger('vehicle_id')->nullable();
             $table->bigInteger('payment_term')->nullable();

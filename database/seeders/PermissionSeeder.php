@@ -44,8 +44,7 @@ class PermissionSeeder extends Seeder
             'syarat_pembayaran' => ['alias' => 'Payment Term', 'group' => 'Setting'],
 
             // 🔥 Modul transaksi ditambah action 'approval' khusus
-            
-            
+
         ];
 
         $role = Roles::firstOrCreate([

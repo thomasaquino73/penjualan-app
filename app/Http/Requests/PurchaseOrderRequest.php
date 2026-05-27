@@ -25,8 +25,8 @@ class PurchaseOrderRequest extends FormRequest
                 Rule::unique('purchase_order_'.date('Y'), 'code')->ignore($id),
             ],
             'supplier_id' => 'required',
-            'date' => 'required|date',
-            'expected_date' => 'nullable|date',
+            'datePO' => 'required|date',
+            'tanggal_kirim' => 'nullable|date',
             'description' => 'nullable|string',
             'items_detail' => 'required',
         ];
@@ -38,9 +38,9 @@ class PurchaseOrderRequest extends FormRequest
             'supplier_id.required' => 'Customer is required',
             'code.required' => 'Code is required',
             'code.unique' => 'Code has already been taken',
-            'date.required' => 'Date is required',
-            'date.date' => 'Date must be a valid date',
-            'expected_date.date' => 'Expected date must be a valid date',
+            'datePO.required' => 'Date is required',
+            'datePO.date' => 'Date must be a valid date',
+            'tanggal_kirim.date' => 'Shipping date must be a valid date',
             'items_detail.required' => 'Items detail is required',
         ];
     }

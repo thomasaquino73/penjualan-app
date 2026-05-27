@@ -2,7 +2,6 @@
 
 namespace App\Models\Setting;
 
-use App\Models\Setting\ExchangeRate;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

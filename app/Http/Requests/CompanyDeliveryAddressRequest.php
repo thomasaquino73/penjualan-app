@@ -35,9 +35,9 @@ class CompanyDeliveryAddressRequest extends FormRequest
             'address_name.required' => 'Address Name is required',
             'address_name.unique' => 'Address Name has already been taken',
             'address.required' => 'Address is required',
-             'address.string' => 'Address must be a string',
+            'address.string' => 'Address must be a string',
             'address.max' => 'Address must not exceed 255 characters',
-           
+
         ];
     }
 }

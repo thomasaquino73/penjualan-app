@@ -30,12 +30,14 @@ class ShippingRequest extends FormRequest
 
         ];
     }
-protected function prepareForValidation()
-{
-    $this->merge([
-        'status' => $this->status ?? 1,
-    ]);
-}
+
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'status' => $this->status ?? 1,
+        ]);
+    }
+
     /**
      * Get the error messages for the defined validation rules.
      */

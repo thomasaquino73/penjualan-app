@@ -124,14 +124,14 @@ class ShippingController extends Controller
                 $data['created_at'] = now();
                 $data['created_by'] = Auth::id();
 
-               $shipping= Shipping::create($data);
+                $shipping = Shipping::create($data);
 
-            return response()->json([
-                'action' => 'create',
-                'message' => 'Data created successfully',
-                'id' => $shipping->id,
-                'nama' => $shipping->nama,
-            ], 201);
+                return response()->json([
+                    'action' => 'create',
+                    'message' => 'Data created successfully',
+                    'id' => $shipping->id,
+                    'nama' => $shipping->nama,
+                ], 201);
             }
 
         } catch (\Exception $e) {

@@ -2,9 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\PengaturanSistem;
 use App\Models\Setting\Company;
 use App\Models\Setting\Currency;
-use App\Models\PengaturanSistem;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;

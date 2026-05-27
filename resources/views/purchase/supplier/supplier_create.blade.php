@@ -377,7 +377,7 @@
                                         <div class="divider my-4">
                                             <div class="divider-text">Bank Detail</div>
                                         </div>
-                                        @include('master_data.supplier.part.data_bank')
+                                        @include('purchase.supplier.part.data_bank')
                                     </div>
 
                                 </div>

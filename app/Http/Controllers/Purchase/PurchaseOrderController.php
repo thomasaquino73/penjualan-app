@@ -5,17 +5,15 @@ namespace App\Http\Controllers\Purchase;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseOrderRequest;
 use App\Models\BasicCodeDetail;
-use App\Models\Setting\Company;
-use App\Models\General\CompanyDelivery;
 use App\Models\Inventory\Barang;
-use App\Models\Inventory\Kendaraan;
-use App\Models\Setting\CompanyDeliveryAddress;
-use App\Models\Setting\Shipping;
-use App\Models\Setting\SyaratPembayaran;
 use App\Models\Purchase\PurchaseOrder;
 use App\Models\Purchase\PurchaseOrderDetail;
 use App\Models\Purchase\PurchaseRequisition;
 use App\Models\Purchase\Supplier;
+use App\Models\Setting\Company;
+use App\Models\Setting\CompanyDeliveryAddress;
+use App\Models\Setting\Shipping;
+use App\Models\Setting\SyaratPembayaran;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Dotenv\Exception\ValidationException;
@@ -98,7 +96,7 @@ class PurchaseOrderController extends Controller
                     return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
                 })
                 ->addColumn('date', function ($row) {
-                    return Carbon::parse($row->date)->format('d-m-Y');
+                    return Carbon::parse($row->datePO)->format('d-m-Y');
                 })
                 ->addColumn('tanggal_kirim', function ($row) {
                     return Carbon::parse($row->tanggal_kirim)->format('d-m-Y');
@@ -345,7 +343,10 @@ class PurchaseOrderController extends Controller
             $data['disc_percent'] = $request->percent;
             $data['disc_nominal'] = $request->discount_all;
             $data['grand_total'] = $request->total_order;
-            $data['date'] = Carbon::parse($request->date)->format('Y-m-d');
+            $data['payment_term'] = $request->payment_term;
+            $data['shipping_address'] = $request->shipping_address;
+            $data['description'] = $request->description;
+            $data['datePO'] = Carbon::parse($request->datePO)->format('Y-m-d');
             $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
             $data['total_hari'] = $syaratPembayaran->total_hari;
             $data['total_diskon'] = $syaratPembayaran->total_diskon;
@@ -435,9 +436,11 @@ class PurchaseOrderController extends Controller
             'supplier' => Supplier::where('status', 1)->get(),
             'company' => Company::first(),
             'idNumber' => $this->generateNumberId(),
-            'term' => BasicCodeDetail::where('master_id', 5)->get(),
+            'shipping' => Shipping::where('status', 1)->get(),
+            'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
-            'fob' => BasicCodeDetail::where('master_id', 3)->get(),
+            'fob' => BasicCodeDetail::where('master_id', 7)->get(),
+            'taxes' => BasicCodeDetail::where('master_id', 6)->get(),
             'model' => $purchaseOrder,
 
         ];
@@ -454,20 +457,32 @@ class PurchaseOrderController extends Controller
         DB::beginTransaction();
 
         try {
-            // 2. Update Data Master ke tabel `purchase_order`
+            $syaratPembayaran = SyaratPembayaran::find($request->payment_term);
             $prMaster->update([
                 'supplier_id' => $request->supplier_id,
                 'code' => $request->code,
-                'date' => Carbon::parse($request->date)->format('Y-m-d'),
-                'tanggal_kirim' => Carbon::parse($request->tanggal_kirim)->format('Y-m-d'),
+                'datePO' => Carbon::parse($request->datePO)->format('Y-m-d'),
+
+                'tanggal_kirim' => $request->tanggal_kirim
+                    ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d')
+                    : null,
+
                 'fob_id' => $request->fob_id,
-                'term' => $request->term,
                 'vehicle_id' => $request->vehicle_id,
+                'payment_term' => $request->payment_term,
+                'shipping_address' => $request->shipping_address,
                 'description' => $request->description,
+
                 'sub_total' => $request->sub_total,
                 'disc_percent' => $request->percent,
                 'disc_nominal' => $request->discount_all,
                 'grand_total' => $request->total_order,
+
+                // 🔥 TAMBAHAN dari create
+                'total_hari' => $syaratPembayaran->total_hari ?? 0,
+'total_diskon' => $syaratPembayaran->total_diskon ?? 0,
+'masa_jatuh_tempo' => $syaratPembayaran->masa_jatuh_tempo ?? 0,
+
                 'updated_by' => Auth::id(),
             ]);
 
@@ -563,7 +578,7 @@ class PurchaseOrderController extends Controller
                     return '<span class="badge bg-info">Processing Queue</span>';
                 })
                 ->addColumn('date', function ($row) {
-                    return Carbon::parse($row->date)->format('d-m-Y');
+                    return Carbon::parse($row->datePO)->format('d-m-Y');
                 })
                 ->addColumn('tanggal_kirim', function ($row) {
                     return Carbon::parse($row->tanggal_kirim)->format('d-m-Y');
@@ -822,7 +837,7 @@ class PurchaseOrderController extends Controller
             // Kuncinya di sini: kelompokkan berdasarkan harga, lalu ambil tanggal terbaru dengan MAX()
             ->select(
                 "{$tableDetail}.unit_price as harga",
-                DB::raw("MAX({$tableMaster}.date) as tanggal")
+                DB::raw("MAX({$tableMaster}.datePO) as tanggal")
             )
             ->groupBy("{$tableDetail}.unit_price")
             // Urutkan berdasarkan tanggal terbaru (hasil dari MAX tanggal di atas)

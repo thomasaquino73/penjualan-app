@@ -2,7 +2,6 @@
 
 namespace App\Models\Inventory;
 
-use App\Models\Inventory\Barang;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductVariant extends Model

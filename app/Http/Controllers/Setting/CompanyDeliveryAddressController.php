@@ -50,14 +50,14 @@ class CompanyDeliveryAddressController extends Controller
         //
     }
 
-     public function store(CompanyDeliveryAddressRequest $request)
+    public function store(CompanyDeliveryAddressRequest $request)
     {
         $id = $request->input('id');
 
         try {
 
             $data = $request->all();
-                $data['company_id'] = 1;
+            $data['company_id'] = 1;
 
             if (! empty($id)) {
 

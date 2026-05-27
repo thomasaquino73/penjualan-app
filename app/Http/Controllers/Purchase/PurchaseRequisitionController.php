@@ -372,7 +372,7 @@ class PurchaseRequisitionController extends Controller
                 ['label' => 'Edit', 'url' => ''],
             ],
             'customer' => Customer::where('status', '<>', 0)->get(),
-            'product' => customer::where('status', '<>', 0)->get(),
+            'product' => Customer::where('status', '<>', 0)->get(),
             'model' => $purchaseRequisition,
         ];
 
@@ -718,12 +718,12 @@ class PurchaseRequisitionController extends Controller
     {
         $pr = PurchaseRequisition::findOrFail($id);
         // Validasi keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
-      if ($pr->status != 'draft' || $pr->created_by != auth()->id()) {
-    return response()->json([
-        'success' => false,
-        'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'
-    ], 403);
-}
+        if ($pr->status != 'draft' || $pr->created_by != auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.',
+            ], 403);
+        }
 
         // Ubah status menjadi pending
         $pr->status = 'pending';
