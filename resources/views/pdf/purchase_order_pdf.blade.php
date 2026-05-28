@@ -257,7 +257,7 @@
                 <table>
                     <tr>
                         <td class="logo-box">
-                            <img src="{{ asset('image/logo/logo_print.png') }}" style="height: 80px;">
+                            <img src="{{ public_path('image/logo/logo_print.png') }}" style="height: 80px;">
                             {{-- @if (isset($company) && $company->logo)
                             @else
                                 <div
@@ -292,7 +292,7 @@
                 <div class="section-title">Kepada</div>
                 <div class="recipient-box">
                     <strong>{{ $model->supplier->nama_supplier }}</strong><br>
-                    {{ $model->supplier->alamat_pembayaran }}
+                    {{ $model->shipping_address }}
 
                 </div>
             </td>
@@ -390,12 +390,27 @@
                     <div class="dots-line"></div>
                 </td>
                 <td class="text-center" style="width: 40%;">
-                    <div class="approval-title">Disetujui Oleh,</div>
-                    <div style="height: 65px;">
-                        <img src="{{ asset('image/logo/STEMPEL.png') }}" style="height: 80px;">
-
+                    @php
+                        $title = '';
+                        $user = '';
+                        if ($model->status == 'rejected') {
+                            $title = 'Ditolak Oleh,';
+                            $user = $model->rejectedBy->fullname;
+                        } elseif ($model->status == 'approved') {
+                            $title = 'Disetujui Oleh,';
+                            $user = $model->approvedBy->fullname;
+                        }
+                    @endphp
+                    <div class="approval-title">
+                        {{ $title }}
                     </div>
-                    <div style="font-weight: bold; text-decoration: underline;">PT. ALMEX BINTANG TIMUR</div>
+                    <div style="height: 65px;">
+                        <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height: 80px;">
+                    </div>
+                    <div style="font-weight: bold; text-decoration: underline;">
+                        {{ $user }}
+                    </div>
+
                 </td>
             </tr>
         </table>

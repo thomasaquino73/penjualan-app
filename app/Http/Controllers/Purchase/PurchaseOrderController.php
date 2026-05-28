@@ -59,42 +59,90 @@ class PurchaseOrderController extends Controller
 
                     return 'N/A';
                 })
-                ->addColumn('status', function ($row) {
-                    switch ($row->status) {
-                        case 'draft': $badge = 'bg-label-secondary';
-                            $text = 'Draft';
-                            break;
-                        case 'pending': $badge = 'bg-label-warning';
-                            $text = 'Pending Approval';
-                            break;
-                        case 'processing': $badge = 'bg-label-info';
-                            $text = 'Processing';
-                            break;
-                        case 'approved': $badge = 'bg-label-success';
-                            $text = 'Processing';
-                            break;
-                        case 'deliver': $badge = 'bg-label-primary';
-                            $text = 'In Delivery';
-                            break;
-                        case 'received': $badge = 'bg-label-success';
-                            $text = 'Received';
-                            break;
-                        case 'completed': $badge = 'bg-success';
-                            $text = 'Completed';
-                            break;
-                        case 'rejected': $badge = 'bg-label-danger';
-                            $text = 'Rejected';
-                            break;
-                        case 'cancelled': $badge = 'bg-danger';
-                            $text = 'Cancelled';
-                            break;
-                        default: $badge = 'bg-label-secondary';
-                            $text = ucfirst($row->status);
-                            break;
-                    }
+               ->addColumn('status', function ($row) {
 
-                    return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
-                })
+    switch ($row->status) {
+
+        case 'draft':
+            $badge = 'bg-label-secondary';
+            $text = 'Draft';
+            break;
+
+        case 'pending':
+            $badge = 'bg-label-warning';
+            $text = 'Pending Approval';
+            break;
+
+        case 'processing':
+            $badge = 'bg-label-info';
+            $text = 'Processing';
+            break;
+
+        case 'approved':
+            $badge = 'bg-label-success';
+            $text = 'Approved';
+            break;
+
+        case 'deliver':
+            $badge = 'bg-label-primary';
+            $text = 'In Delivery';
+            break;
+
+        case 'received':
+            $badge = 'bg-label-success';
+            $text = 'Received';
+            break;
+
+        case 'completed':
+            $badge = 'bg-success';
+            $text = 'Completed';
+            break;
+
+        case 'rejected':
+            $badge = 'bg-label-danger';
+            $text = 'Rejected';
+            break;
+
+        case 'cancelled':
+            $badge = 'bg-danger';
+            $text = 'Cancelled';
+            break;
+
+        default:
+            $badge = 'bg-label-secondary';
+            $text = ucfirst($row->status);
+            break;
+    }
+
+    $html = '
+        <div class="d-flex flex-column">
+            <span class="badge '.$badge.' text-uppercase">
+                '.$text.'
+            </span>
+    ';
+
+    if ($row->status == 'approved' && $row->approvedBy) {
+
+        $html .= '
+            <small class="text-muted mt-1">
+                Approved By : '.$row->approvedBy->fullname.'
+            </small>
+        ';
+    }
+
+    if ($row->status == 'rejected' && $row->rejectedBy) {
+
+        $html .= '
+            <small class="text-muted mt-1">
+                Rejected By : '.$row->rejectedBy->fullname.'
+            </small>
+        ';
+    }
+
+    $html .= '</div>';
+
+    return $html;
+})
                 ->addColumn('date', function ($row) {
                     return Carbon::parse($row->datePO)->format('d-m-Y');
                 })
@@ -732,7 +780,7 @@ class PurchaseOrderController extends Controller
         }
 
         // 3. Validasi Keamanan: Pastikan yang mengubah status BUKAN orang yang membuat dokumen (Anti Self-Approval)
-        if ($poData->created_by === auth()->id()) {
+        if ($poData->created_by === Auth::user()->id) {
             return response()->json(['error' => 'You may not approve/reject documents you create yourself!'], 403);
         }
 
@@ -745,8 +793,8 @@ class PurchaseOrderController extends Controller
         // 5. Eksekusi Update ke Database
         DB::table($tableName)->where('id', $id)->update([
             'status' => $statusTarget,
-            'updated_by' => Auth::id(),
-            'updated_at' => now(), // Isi timestamp manual karena menggunakan Query Builder
+            'pic_by' => Auth::id(),
+            'pic_at' => now(), // Isi timestamp manual karena menggunakan Query Builder
         ]);
 
         // ==========================================

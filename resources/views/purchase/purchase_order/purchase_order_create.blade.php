@@ -54,8 +54,8 @@
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <span class="error text-danger" id="supplier_idError"></span>
                                     </div>
+                                    <span class="error text-danger" id="supplier_idError"></span>
                                 </div>
 
                             </div>
@@ -70,8 +70,8 @@
                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
                                     <input type="text" name="code" id="code" class="form-control"
                                         value="{{ $idNumber }}">
-                                    <span class="error text-danger" id="codeError"></span>
                                 </div>
+                                <span class="error text-danger" id="codeError"></span>
 
                             </div>
                             <div class="col-6 mb-3">
@@ -79,8 +79,8 @@
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
                                     <input type="text" name="datePO" id="datePO" class="form-control" value="">
-                                    <span class="error text-danger" id="datePOError"></span>
                                 </div>
+                                <span class="error text-danger" id="datePOError"></span>
 
                             </div>
                         </div>
@@ -194,4 +194,200 @@
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script src="{{ asset('assets/js/thomas/purchase_order/create-data.js') }}"></script>
+
+    <script>
+        $("#vehicle_id").on("select2:select", function(e) {
+            let data = e.params.data;
+
+            if (data.newTag) {
+                Swal.fire({
+                    title: "Save New Shipping?",
+                    text: "Shipping belum ada, simpan data baru?",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, Save",
+                    cancelButtonText: "Cancel",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "{{ route('shipping.store') }}",
+                            type: "POST",
+
+                            data: {
+                                nama: data.text,
+                                _token: "{{ csrf_token() }}",
+                            },
+
+                            success: function(response) {
+                                $(
+                                    '#vehicle_id option[value="' + data.id + '"]',
+                                ).remove();
+
+                                let newOption = new Option(
+                                    response.nama,
+                                    response.id,
+                                    true,
+                                    true,
+                                );
+
+                                $("#vehicle_id").append(newOption).trigger("change");
+
+                                Swal.fire({
+                                    icon: "success",
+                                    title: "Success",
+                                    text: response.message,
+                                });
+                            },
+
+                            error: function() {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Error",
+                                    text: "Failed save shipping",
+                                });
+                            },
+                        });
+                    } else {
+                        $("#vehicle_id").val(null).trigger("change");
+                    }
+                });
+            }
+        });
+
+        $("#btnAddShipping").click(function() {
+            Swal.fire({
+                title: "Add New Shipping",
+                input: "text",
+                inputLabel: "Shipping Name",
+                inputPlaceholder: "Input shipping name...",
+
+                showCancelButton: true,
+
+                // confirmButtonColor: "#3085d6",
+                // cancelButtonColor: "#d33",
+
+                confirmButtonText: "Save",
+                cancelButtonText: "Cancel",
+                customClass: {
+                    confirmButton: "btn btn-primary me-2",
+                    cancelButton: "btn btn-danger",
+                },
+                buttonsStyling: false,
+                inputValidator: (value) => {
+                    if (!value) {
+                        return "Shipping wajib diisi";
+                    }
+                },
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{{ route('shipping.store') }}",
+                        type: "POST",
+
+                        data: {
+                            nama: result.value,
+                            _token: "{{ csrf_token() }}",
+                        },
+
+                        success: function(response) {
+                            let option = new Option(
+                                response.nama,
+                                response.id,
+                                true,
+                                true,
+                            );
+
+                            $("#vehicle_id").append(option).trigger("change");
+
+                            Swal.fire({
+                                icon: "success",
+                                title: "Success",
+                                text: response.message,
+                                customClass: {
+                                    confirmButton: "btn btn-primary me-2",
+                                },
+                                buttonsStyling: false,
+                            });
+                        },
+
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "Failed save shipping",
+                                customClass: {
+                                    confirmButton: "btn btn-info",
+                                },
+                                buttonsStyling: false,
+                            });
+                        },
+                    });
+                }
+            });
+        });
+        $("#btnAddTerm").click(function() {
+            Swal.fire({
+                title: "Add New Payment Term",
+                input: "text",
+                theme: "bootstrap-5",
+                inputLabel: "Payment Term Name",
+                inputPlaceholder: "Input Payment Term name...",
+                showCancelButton: true,
+                confirmButtonText: "Save",
+                cancelButtonText: "Cancel",
+                customClass: {
+                    confirmButton: "btn btn-primary me-2",
+                    cancelButton: "btn btn-danger",
+                },
+                buttonsStyling: false,
+                inputValidator: (value) => {
+                    if (!value) {
+                        return "Shipping wajib diisi";
+                    }
+                },
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{{ route('syarat-pembayaran.store') }}",
+                        type: "POST",
+
+                        data: {
+                            nama: result.value,
+                            _token: "{{ csrf_token() }}",
+                        },
+                        success: function(response) {
+                            let option = new Option(
+                                response.nama,
+                                response.id,
+                                true,
+                                true,
+                            );
+                            $("#payment_term").append(option).trigger("change");
+
+                            Swal.fire({
+                                icon: "success",
+                                title: "Success",
+                                text: response.message,
+                                customClass: {
+                                    confirmButton: "btn btn-primary me-2",
+                                },
+                                buttonsStyling: false,
+                            });
+                        },
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "Failed save payment term",
+                                customClass: {
+                                    confirmButton: "btn btn-info",
+                                },
+                                buttonsStyling: false,
+                            });
+                        },
+                    });
+                }
+            });
+        });
+    </script>
 @endpush

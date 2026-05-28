@@ -244,7 +244,6 @@ Route::middleware('auth')->group(function () {
     });
     Route::prefix('receive-item')->name('receive-item.')->group(function () {
         Route::resource('', ReceiveItemController::class)->parameters(['' => 'receive_item']);
-
     });
 
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');

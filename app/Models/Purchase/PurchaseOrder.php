@@ -47,8 +47,13 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseOrderDetail::class, 'purchase_order_id');
     }
 
-    // public function ship()
-    // {
-    //     return $this->belongsTo(Kendaraan::class, 'vehicle_id');
-    // }
+     public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'pic_by');
+    }
+     public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'pic_by');
+    }
+
 }
