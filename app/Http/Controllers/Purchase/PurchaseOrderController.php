@@ -361,24 +361,6 @@ class PurchaseOrderController extends Controller
 
                     /*
                     |--------------------------------------------------------------------------
-                    | 6. VIEW DETAIL
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if ($user->can('purchase_order-read')) {
-
-                        $btn .= '
-            <a class="dropdown-item"
-                href="'.route('purchase-order.show', $row->id).'">
-
-                <i class="ti ti-list-details me-1"></i>
-                View Detail
-            </a>
-        ';
-                    }
-
-                    /*
-                    |--------------------------------------------------------------------------
                     | 7. PRINT
                     |--------------------------------------------------------------------------
                     */
@@ -981,15 +963,7 @@ class PurchaseOrderController extends Controller
 
     public function show(string $id)
     {
-        $purchaseOrder = PurchaseOrder::with(['details.produkID', 'details.unitID'])->findOrFail($id);
-        $x = [
-            'model' => $purchaseOrder,
-            'modelDetail' => $purchaseOrder->details,
-            'company' => Company::first(),
-
-        ];
-
-        return view('purchase.purchase_order.purchase_order_show', $x);
+        
     }
 
     public function print($id)

@@ -396,13 +396,13 @@
 
                         if ($model->status == 'rejected') {
                             $title = 'Ditolak Oleh,';
-                            $user = $model->rejectedBy->fullname;
-                        } elseif ($model->status == 'approved') {
+                            $user = $model->rejectedBy?->fullname;
+                        } elseif (in_array($model->status, ['approved', 'sent', 'partially_received', 'completed'])) {
                             $title = 'Disetujui Oleh,';
-                            $user = $model->approvedBy->fullname;
+                            $user = $model->approvedBy?->fullname;
                         }
                     @endphp
-                    @if ($model->pic_by != null)
+                    @if ($model->pic_by !== null)
                         <div class="approval-title">
                             {{ $title }}
                         </div>
