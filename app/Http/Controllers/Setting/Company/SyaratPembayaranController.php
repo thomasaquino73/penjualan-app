@@ -38,10 +38,10 @@ class SyaratPembayaranController extends Controller
                     return 'N/A';
                 })
                 ->addColumn('status', function ($row) {
-                    if ($row->status == 1) {
-                        return '<span class="badge bg-info">Active</span>';
+                    if ($row->status == 2) {
+                        return '<span class="badge bg-danger">Yes</span>';
                     } else {
-                        return '<span class="badge bg-danger">Not Active</span>';
+                        return '<span class="badge bg-info">No</span>';
                     }
                 })
                 ->rawColumns(['created_at', 'updated_at', 'status'])

@@ -73,8 +73,8 @@ class Sidebar extends Component
                     ],
                     [
                         'name' => 'Receive Item',
-                        'route' => 'customer.index',
-                        'pattern' => 'customer.*',
+                        'route' => 'receive-item.index',
+                        'pattern' => 'receive-item.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['barang-browse'],
                     ],

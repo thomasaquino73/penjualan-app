@@ -18,7 +18,8 @@ return new class extends Migration
             $table->bigInteger('total_diskon')->nullable();
             $table->bigInteger('masa_jatuh_tempo')->nullable();
             $table->string('keterangan')->nullable();
-            $table->integer('status')->default(1)->comment('0=delete, 1=active, 2=not active');
+            $table->boolean('edited')->default(1);
+            $table->integer('status')->default(1)->comment('1=delete, 1=No, 2=Yes');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();

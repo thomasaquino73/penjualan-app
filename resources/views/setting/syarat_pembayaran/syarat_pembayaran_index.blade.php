@@ -37,8 +37,8 @@
                         <th>Discount(%)</th>
                         <th>Discount Periode(day)</th>
                         <th>Due Date(day)</th>
-                        <th>Description</th>
-                        <th>status</th>
+                        <th>Notes</th>
+                        <th>Suspended</th>
                         <th>Created</th>
                         <th>Updated</th>
                     </tr>
@@ -69,7 +69,7 @@
 
                             </div>
                             <div class="col-md-12 col-sm-12 mb-3">
-                                <label for="total_hari" class="form-label">If paying within (day)</label>
+                                <label for="total_hari" class="form-label">If paid within (day)</label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
                                     <input type="number" id="total_hari" name="total_hari" class="form-control"
@@ -80,7 +80,7 @@
 
                             </div>
                             <div class="col-md-12 col-sm-12 mb-3">
-                                <label for="total_diskon" class="form-label">Eligible for a discount</label>
+                                <label for="total_diskon" class="form-label">Will get discount</label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-moneybag"></i></span>
                                     <input type="number" id="total_diskon" name="total_diskon" class="form-control"
@@ -91,7 +91,7 @@
 
                             </div>
                             <div class="col-md-12 col-sm-12 mb-3">
-                                <label for="masa_jatuh_tempo" class="form-label">Due Date</label>
+                                <label for="masa_jatuh_tempo" class="form-label">Due Period</label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
                                     <input type="number" id="masa_jatuh_tempo" name="masa_jatuh_tempo" class="form-control"
@@ -102,17 +102,17 @@
 
                             </div>
                             <div class="col-md-12 col-sm-12 mb-3">
-                                <label for="keterangan" class="form-label">Description</label>
+                                <label for="keterangan" class="form-label">Notes</label>
                                 <textarea type="text" id="keterangan" name="keterangan" class="form-control" placeholder=""></textarea>
                             </div>
                             <span class="error text-danger" id="keteranganError"></span>
 
                             <div class="col-md-6 col-sm-12 mb-3">
-                                <label class="form-label">Status</label>
+                                <label class="form-label">Suspended</label>
                                 <select name="status" id="status" class="form-control">
                                     <option value="" selected hidden>Select Status</option>
-                                    <option value="1">Active</option>
-                                    <option value="2">Not Active</option>
+                                    <option value="2">Yes</option>
+                                    <option value="1">No</option>
                                 </select>
                                 <span class="error text-danger" id="statusError"></span>
                             </div>

@@ -194,5 +194,4 @@
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script src="{{ asset('assets/js/thomas/purchase_order/create-data.js') }}"></script>
-    <script></script>
 @endpush

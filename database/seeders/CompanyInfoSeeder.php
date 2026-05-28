@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\General\Company;
-use App\Models\General\Currency;
+use App\Models\Setting\Company;
+use App\Models\Setting\Currency;
+use App\Models\Setting\SyaratPembayaran;
 use Illuminate\Database\Seeder;
 
 class CompanyInfoSeeder extends Seeder
@@ -45,6 +46,84 @@ class CompanyInfoSeeder extends Seeder
                 'country' => 'Singapore',
             ],
         ]);
+
+        SyaratPembayaran::insert([
+            [
+                'nama' => 'COD',
+                'total_diskon' => 0,
+                'total_hari' => 0,
+                'masa_jatuh_tempo' => 0,
+                'keterangan' => '',
+                'edited' => 1,
+                'created_by' => 1,
+                'created_at' => now(),
+            ],
+            [
+                'nama' => 'Cicilan',
+                'total_diskon' => 0,
+                'total_hari' => 0,
+                'masa_jatuh_tempo' => 0,
+                'keterangan' => '',
+                'edited' => 1,
+                'created_by' => 1,
+                'created_at' => now(),
+            ],
+            [
+                'nama' => 'Set Manual',
+                'total_diskon' => 0,
+                'total_hari' => 0,
+                'masa_jatuh_tempo' => 0,
+                'keterangan' => '',
+                'edited' => 1,
+                'created_by' => 1,
+                'created_at' => now(),
+            ],
+            [
+                'nama' => 'Net 15',
+                'total_diskon' => 0,
+                'total_hari' => 0,
+                'masa_jatuh_tempo' => 15,
+                'keterangan' => '',
+                'edited' => 1,
+                'created_by' => 1,
+                'created_at' => now(),
+            ],  [
+                'nama' => 'Net 30',
+                'total_diskon' => 0,
+                'total_hari' => 0,
+                'masa_jatuh_tempo' => 30,
+                'keterangan' => '',
+                'edited' => 1,
+                'created_by' => 1,
+                'created_at' => now(),
+            ],  [
+                'nama' => 'Net 45',
+                'total_diskon' => 0,
+                'total_hari' => 0,
+                'masa_jatuh_tempo' => 45,
+                'keterangan' => '',
+                'edited' => 1,
+                'created_by' => 1,
+                'created_at' => now(),
+            ], [
+                'nama' => 'Net 60',
+                'total_diskon' => 0,
+                'total_hari' => 0,
+                'masa_jatuh_tempo' => 60,
+                'keterangan' => '',
+                'edited' => 1,
+                'created_by' => 1,
+                'created_at' => now(),
+            ], [
+                'nama' => 'Net 7',
+                'total_diskon' => 0,
+                'total_hari' => 0,
+                'masa_jatuh_tempo' => 7,
+                'keterangan' => '',
+                'edited' => 1,
+                'created_by' => 1,
+                'created_at' => now(),
+            ]]);
 
     }
 }

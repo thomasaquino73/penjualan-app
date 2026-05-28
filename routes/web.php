@@ -12,6 +12,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Purchase\PurchaseOrderController;
 use App\Http\Controllers\Purchase\PurchaseRequisitionController;
+use App\Http\Controllers\Purchase\ReceiveItemController;
 use App\Http\Controllers\Purchase\Supplier\KategoriSupplierController;
 use App\Http\Controllers\Purchase\Supplier\SupplierController;
 use App\Http\Controllers\Sales\Customer\CustomerController;
@@ -240,6 +241,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/po/price-history', [PurchaseOrderController::class, 'getPriceHistory']);
         Route::get('/get-company-addresses/{companyId}', [PurchaseOrderController::class, 'getCompanyAddresses']);
         Route::resource('', PurchaseOrderController::class)->parameters(['' => 'purchase_order']);
+    });
+    Route::prefix('receive-item')->name('receive-item.')->group(function () {
+        Route::resource('', ReceiveItemController::class)->parameters(['' => 'receive_item']);
+
     });
 
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');

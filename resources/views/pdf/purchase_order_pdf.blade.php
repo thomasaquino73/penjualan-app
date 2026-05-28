@@ -257,21 +257,21 @@
                 <table>
                     <tr>
                         <td class="logo-box">
-                            @if (isset($company) && $company->logo)
-                                <img src="{{ $logoBase64 }}" style="height: 80px;">
+                            <img src="{{ asset('image/logo/logo_print.png') }}" style="height: 80px;">
+                            {{-- @if (isset($company) && $company->logo)
                             @else
                                 <div
                                     style="width: 70px; height: 70px; border: 1px dashed #ccc; background: #fafafa; text-align: center; line-height: 70px; color: #aaa; font-size: 8pt;">
                                     No Logo
                                 </div>
-                            @endif
+                            @endif --}}
                         </td>
-                        <td class="company-contact">
+                        {{-- <td class="company-contact">
                             {{ $company->nomor_telepon }}<br>
                             {{ $company->alamat }}<br>
                             {{ $company->email }}<br>
                             {{ $company->website }}<br>
-                        </td>
+                        </td> --}}
                     </tr>
                 </table>
             </td>
@@ -291,8 +291,8 @@
             <td style="padding-right: 25px;">
                 <div class="section-title">Kepada</div>
                 <div class="recipient-box">
-                    <strong>{{ $model->supplier->nama }}</strong><br>
-                    {{ $model->supplier->alamat }}
+                    <strong>{{ $model->supplier->nama_supplier }}</strong><br>
+                    {{ $model->supplier->alamat_pembayaran }}
 
                 </div>
             </td>
@@ -314,7 +314,7 @@
                         <td class="label">Tanggal Kirim</td>
                         <td class="colon">:</td>
                         <td class="value">
-                            {{ isset($model->expected_date) ? date('d M Y', strtotime($model->expected_date)) : '' }}
+                            {{ isset($model->tanggal_kirim) ? date('d M Y', strtotime($model->tanggal_kirim)) : '' }}
                         </td>
                     </tr>
                 </table>
@@ -391,7 +391,10 @@
                 </td>
                 <td class="text-center" style="width: 40%;">
                     <div class="approval-title">Disetujui Oleh,</div>
-                    <div style="height: 65px;"></div>
+                    <div style="height: 65px;">
+                        <img src="{{ asset('image/logo/STEMPEL.png') }}" style="height: 80px;">
+
+                    </div>
                     <div style="font-weight: bold; text-decoration: underline;">PT. ALMEX BINTANG TIMUR</div>
                 </td>
             </tr>
