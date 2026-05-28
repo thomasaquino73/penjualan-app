@@ -427,6 +427,86 @@
                 });
             });
 
+            $(document).on('click', '.btn-send-supplier', function() {
+
+                let id = $(this).data('id');
+
+                Swal.fire({
+                    title: 'Send PO to Supplier?',
+                    text: "This PO will be marked as sent.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Send',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-success',
+                        cancelButton: 'btn btn-secondary'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+
+                        $.ajax({
+                            url: '/purchase-order/send-supplier/' + id,
+                            type: 'POST',
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr('content')
+                            },
+
+                            beforeSend: function() {
+
+                                Swal.fire({
+                                    title: 'Processing...',
+                                    text: 'Please wait...',
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false,
+                                    showConfirmButton: false,
+                                    showCancelButton: false,
+                                    didOpen: () => {
+                                        Swal.showLoading();
+                                    },
+                                    customClass: {
+                                        confirmButton: false
+                                    },
+                                    buttonsStyling: false
+                                });
+
+                            },
+
+                            success: function(response) {
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: response.message,
+                                    customClass: {
+                                        confirmButton: 'btn btn-success'
+                                    },
+                                    buttonsStyling: false
+                                });
+
+                                $('#table').DataTable().ajax.reload(null, false);
+                            },
+
+                            error: function(xhr) {
+
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: xhr.responseJSON.message,
+                                    customClass: {
+                                        confirmButton: 'btn btn-danger'
+                                    },
+                                    buttonsStyling: false
+                                });
+                            }
+                        });
+
+                    }
+                });
+            });
+
             // filter
             $('#selectStatus').on('change', function() {
                 table.ajax.reload();

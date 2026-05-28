@@ -240,6 +240,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/print/{id}', [PurchaseOrderController::class, 'print'])->name('print');
         Route::get('/po/price-history', [PurchaseOrderController::class, 'getPriceHistory']);
         Route::get('/get-company-addresses/{companyId}', [PurchaseOrderController::class, 'getCompanyAddresses']);
+        Route::post('/send-supplier/{id}', [PurchaseOrderController::class, 'sendSupplier'])->name('send-supplier');
         Route::resource('', PurchaseOrderController::class)->parameters(['' => 'purchase_order']);
     });
     Route::prefix('receive-item')->name('receive-item.')->group(function () {

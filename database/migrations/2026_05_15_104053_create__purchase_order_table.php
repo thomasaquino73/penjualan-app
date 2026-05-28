@@ -28,22 +28,24 @@ return new class extends Migration
             $table->boolean('kena_pajak')->default(1)->comment('kena pajak atau tidak')->nullable();
             $table->boolean('total_termasuk_pajak')->default(1)->comment('harga total termasuk pajak')->nullable();
             $table->string('fob_id')->nullable();
-            $table->decimal('sub_total', 10, 2)->nullable();
-            $table->integer('disc_percent')->nullable();
-            $table->decimal('disc_nominal', 10, 2)->nullable();
-            $table->decimal('grand_total', 10, 2)->nullable();
+            $table->decimal('sub_total', 18, 2)->default(0)->nullable();
+            $table->decimal('disc_percent', 5, 2)->default(0)->nullable();
+            $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();
+            $table->decimal('grand_total', 18, 2)->default(0)->nullable();
             $table->bigInteger('total_hari')->nullable();
             $table->bigInteger('total_diskon')->nullable();
             $table->bigInteger('masa_jatuh_tempo')->nullable();
+            $table->bigInteger('total_received_qty')->default(0);
+            $table->bigInteger('total_outstanding_qty')->default(0);
             $table->enum('status', [
-                'draft',                 // Data baru dibuat, masih bisa diedit oleh staff purchasing
-                'pending',               // Menunggu persetujuan (approval) dari Manager/Direktur
-                'approved',              // Disetujui oleh atasan, siap dikirim ke supplier
-                'rejected',              // Ditolak oleh atasan saat pengajuan approval
-                'sent',                  // Dokumen PO sudah resmi dikirimkan ke pihak supplier
-                'partially_received',    // Barang dari supplier baru datang sebagian di gudang
-                'completed',             // Selesai (Semua barang telah diterima dengan lengkap)
-                'cancelled',             // Dibatalkan (baik oleh internal maupun supplier)
+                'draft',               // Baru dibuat
+                'pending',             // Menunggu approval
+                'approved',            // Sudah approve
+                'rejected',            // Ditolak
+                'sent',                // Sudah dikirim ke supplier
+                'partially_received',  // Barang diterima sebagian
+                'completed',           // Semua barang diterima
+                'cancelled',           // Dibatalkan
             ])->default('draft');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
@@ -57,10 +59,18 @@ return new class extends Migration
             $table->bigInteger('purchase_order_id');
             $table->bigInteger('product_id');
             $table->bigInteger('qty');
+            $table->bigInteger('received_qty')->default(0);
+            $table->bigInteger('outstanding_qty')->default(0);
             $table->bigInteger('unit_id');
             $table->decimal('unit_price', 10, 2);
             $table->decimal('discount', 10, 2)->default(0);
             $table->decimal('amount', 10, 2);
+            $table->enum('status', [
+                'open',
+                'partial',
+                'completed',
+                'cancelled',
+            ])->default('open');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

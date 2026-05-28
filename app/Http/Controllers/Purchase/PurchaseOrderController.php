@@ -59,90 +59,100 @@ class PurchaseOrderController extends Controller
 
                     return 'N/A';
                 })
-               ->addColumn('status', function ($row) {
+                ->addColumn('status', function ($row) {
 
-    switch ($row->status) {
+                    switch ($row->status) {
 
-        case 'draft':
-            $badge = 'bg-label-secondary';
-            $text = 'Draft';
-            break;
+                        case 'draft':
+                            $badge = 'bg-label-secondary';
+                            $text = 'Draft';
+                            break;
 
-        case 'pending':
-            $badge = 'bg-label-warning';
-            $text = 'Pending Approval';
-            break;
+                        case 'pending':
+                            $badge = 'bg-label-warning';
+                            $text = 'Pending Approval';
+                            break;
 
-        case 'processing':
-            $badge = 'bg-label-info';
-            $text = 'Processing';
-            break;
+                        case 'approved':
+                            $badge = 'bg-label-success';
+                            $text = 'Approved';
+                            break;
 
-        case 'approved':
-            $badge = 'bg-label-success';
-            $text = 'Approved';
-            break;
+                        case 'sent':
+                            $badge = 'bg-label-primary';
+                            $text = 'Sent To Supplier';
+                            break;
 
-        case 'deliver':
-            $badge = 'bg-label-primary';
-            $text = 'In Delivery';
-            break;
+                        case 'partially_received':
+                            $badge = 'bg-label-info';
+                            $text = 'Partially Received';
+                            break;
 
-        case 'received':
-            $badge = 'bg-label-success';
-            $text = 'Received';
-            break;
+                        case 'completed':
+                            $badge = 'bg-success';
+                            $text = 'Completed';
+                            break;
 
-        case 'completed':
-            $badge = 'bg-success';
-            $text = 'Completed';
-            break;
+                        case 'rejected':
+                            $badge = 'bg-label-danger';
+                            $text = 'Rejected';
+                            break;
 
-        case 'rejected':
-            $badge = 'bg-label-danger';
-            $text = 'Rejected';
-            break;
+                        case 'cancelled':
+                            $badge = 'bg-danger';
+                            $text = 'Cancelled';
+                            break;
 
-        case 'cancelled':
-            $badge = 'bg-danger';
-            $text = 'Cancelled';
-            break;
+                        default:
+                            $badge = 'bg-label-secondary';
+                            $text = ucfirst(str_replace('_', ' ', $row->status));
+                            break;
+                    }
 
-        default:
-            $badge = 'bg-label-secondary';
-            $text = ucfirst($row->status);
-            break;
-    }
-
-    $html = '
+                    $html = '
         <div class="d-flex flex-column">
             <span class="badge '.$badge.' text-uppercase">
                 '.$text.'
             </span>
     ';
 
-    if ($row->status == 'approved' && $row->approvedBy) {
+                    // APPROVED INFO
+                    if ($row->status == 'approved' && $row->approvedBy) {
 
-        $html .= '
+                        $html .= '
             <small class="text-muted mt-1">
                 Approved By : '.$row->approvedBy->fullname.'
             </small>
         ';
-    }
+                    }
 
-    if ($row->status == 'rejected' && $row->rejectedBy) {
+                    // REJECTED INFO
+                    if ($row->status == 'rejected' && $row->rejectedBy) {
 
-        $html .= '
+                        $html .= '
             <small class="text-muted mt-1">
                 Rejected By : '.$row->rejectedBy->fullname.'
             </small>
         ';
-    }
+                    }
 
-    $html .= '</div>';
+                    // OUTSTANDING INFO
+                    if (
+                        in_array($row->status, ['partially_received']) &&
+                        $row->total_outstanding_qty > 0
+                    ) {
 
-    return $html;
-})
+                        $html .= '
+            <small class="text-warning mt-1">
+                Outstanding : '.number_format($row->total_outstanding_qty).'
+            </small>
+        ';
+                    }
+
+                    $html .= '</div>';
+
+                    return $html;
+                })
                 ->addColumn('date', function ($row) {
                     return Carbon::parse($row->datePO)->format('d-m-Y');
                 })
@@ -172,74 +182,221 @@ class PurchaseOrderController extends Controller
                             </div>';
                 })
                 ->addColumn('action', function ($row) {
+
                     $currentUserId = auth()->id();
-                    $user = auth()->user(); // Ambil data user login untuk cek permission
+                    $user = auth()->user();
 
-                    // Pembuka komponen Dropdown Button
-                    $btn = '<div class="btn-group">
-                <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="ti ti-menu-2 ti-xs me-1"></i>
-                </button>
-                <ul class="dropdown-menu">';
+                    $btn = '
+        <div class="btn-group">
+            <button type="button"
+                class="btn btn-primary dropdown-toggle waves-effect waves-light"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+                <i class="ti ti-menu-2 ti-xs me-1"></i>
+            </button>
 
-                    // ─── 1. AKSI UNTUK PEMBUAT DOKUMEN (OWNER / PURCHASING STAFF) ───────────────────────────
+            <ul class="dropdown-menu">
+    ';
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 1. OWNER ACTION
+                    |--------------------------------------------------------------------------
+                    */
+
                     if ($row->created_by == $currentUserId) {
 
-                        // ✅ TOMBOL SUBMIT (Kirim ke Atasan / Manajer untuk di-approve)
+                        // SEND TO APPROVAL
                         if ($row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item btn-submit-po" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ti ti-send me-1"></i> Send to Approval</a>';
-                            $btn .= '<hr class="dropdown-divider">';
+
+                            $btn .= '
+                <a class="dropdown-item btn-submit-po"
+                    href="javascript:void(0)"
+                    data-id="'.$row->id.'">
+
+                    <i class="ti ti-send me-1"></i>
+                    Send To Approval
+                </a>
+            ';
                         }
 
-                        // ✅ TOMBOL EDIT (Hanya jika berstatus draft atau rejected)
-                        if ($user->can('purchase_order-edit') && ($row->status == 'draft' || $row->status == 'rejected')) {
-                            $btn .= '<a class="dropdown-item" href="'.route('purchase-order.edit', $row->id).'"><i class="far fa-edit me-1"></i> Edit PO</a>';
+                        // EDIT
+                        if (
+                            $user->can('purchase_order-edit') &&
+                            in_array($row->status, ['draft', 'rejected'])
+                        ) {
+
+                            $btn .= '
+                <a class="dropdown-item"
+                    href="'.route('purchase-order.edit', $row->id).'">
+
+                    <i class="far fa-edit me-1"></i>
+                    Edit PO
+                </a>
+            ';
                         }
 
-                        // ✅ TOMBOL DELETE / VOID (Hanya jika masih draft)
-                        if ($user->can('purchase_order-delete') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item text-danger" href="javascript:void(0)" id="delete" data-id="'.$row->id.'" data-name="'.$row->code.'"><i class="ti ti-trash me-1"></i> Delete</a>';
+                        // DELETE
+                        if (
+                            $user->can('purchase_order-delete') &&
+                            $row->status == 'draft'
+                        ) {
+
+                            $btn .= '
+                <a class="dropdown-item text-danger"
+                    href="javascript:void(0)"
+                    id="delete"
+                    data-id="'.$row->id.'"
+                    data-name="'.$row->code.'">
+
+                    <i class="ti ti-trash me-1"></i>
+                    Delete
+                </a>
+            ';
                         }
                     }
 
-                    // ─── 2. AKSI UNTUK USER LAIN (APPROVER / MANAGER / DIREKTUR) ─────────────────────────────
-                    // Syarat: Bukan pembuat dokumen AND Punya permission approval AND Status pending
-                    if ($row->created_by !== $currentUserId && $user->can('purchase_order-approval')) {
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 2. APPROVAL ACTION
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $row->created_by !== $currentUserId &&
+                        $user->can('purchase_order-approval')
+                    ) {
+
                         if ($row->status == 'pending') {
-                            $btn .= '<a class="dropdown-item text-success btn-approval-po" href="javascript:void(0)" data-status="approved" data-id="'.$row->id.'">
-                        <i class="ti ti-check me-1"></i> Approve PO
-                    </a>';
 
-                            $btn .= '<a class="dropdown-item text-danger btn-approval-po" href="javascript:void(0)" data-status="rejected" data-id="'.$row->id.'">
-                        <i class="ti ti-x me-1"></i> Reject PO
-                    </a>';
-                            $btn .= '<hr class="dropdown-divider">';
+                            $btn .= '
+                <a class="dropdown-item text-success btn-approval-po"
+                    href="javascript:void(0)"
+                    data-status="approved"
+                    data-id="'.$row->id.'">
+
+                    <i class="ti ti-check me-1"></i>
+                    Approve PO
+                </a>
+            ';
+
+                            $btn .= '
+                <a class="dropdown-item text-danger btn-approval-po"
+                    href="javascript:void(0)"
+                    data-status="rejected"
+                    data-id="'.$row->id.'">
+
+                    <i class="ti ti-x me-1"></i>
+                    Reject PO
+                </a>
+            ';
                         }
                     }
 
-                    // ─── 3. AKSI PASCA APPROVAL (SETELAH PO APPROVED) ───────────────────────────────────────
-                    // Jika PO sudah disetujui, staff bisa mengirimkan PO ini secara resmi ke Supplier
-                    if ($row->status == 'approved' && $user->can('purchase_order-send-supplier')) {
-                        $btn .= '<a class="dropdown-item text-info btn-sent-supplier" href="javascript:void(0)" data-id="'.$row->id.'">
-                    <i class="ti ti-mail-fast me-1"></i> Mark as Sent to Supplier
-                </a>';
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 3. SEND TO SUPPLIER
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $row->status == 'approved'
+                        // $row->status == 'approved' &&
+                        // $user->can('purchase_order-send-supplier')
+                    ) {
+
+                        $btn .= '
+            <a class="dropdown-item text-info btn-send-supplier"
+                href="javascript:void(0)"
+                data-id="'.$row->id.'">
+
+                <i class="ti ti-mail-fast me-1"></i>
+                Send To Supplier
+            </a>
+        ';
                     }
 
-                    // ─── 4. TOMBOL UMUM / GLOBAL (KAPANPUN BISA DIAKSES) ─────────────────────────────────────
-                    // Detail View
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 4. RECEIVE ITEM
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        in_array($row->status, ['sent', 'partially_received']) &&
+                        $user->can('purchase_order-receive')
+                    ) {
+
+                        $btn .= '
+            <a class="dropdown-item text-primary"
+                href="'.route('purchase-order.receive', $row->id).'">
+
+                <i class="ti ti-package-import me-1"></i>
+                Receive Item
+            </a>
+        ';
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 5. CANCEL PO
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        ! in_array($row->status, ['completed', 'cancelled']) &&
+                        $user->can('purchase_order-cancel')
+                    ) {
+
+                        $btn .= '
+            <a class="dropdown-item text-danger btn-cancel-po"
+                href="javascript:void(0)"
+                data-id="'.$row->id.'">
+
+                <i class="ti ti-circle-x me-1"></i>
+                Cancel PO
+            </a>
+        ';
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 6. VIEW DETAIL
+                    |--------------------------------------------------------------------------
+                    */
+
                     if ($user->can('purchase_order-read')) {
-                        $btn .= '<a class="dropdown-item" href="'.route('purchase-order.show', $row->id).'" data-id="'.$row->id.'">
-                    <i class="ti ti-list-details me-1"></i> View Detail
-                </a>';
+
+                        $btn .= '
+            <a class="dropdown-item"
+                href="'.route('purchase-order.show', $row->id).'">
+
+                <i class="ti ti-list-details me-1"></i>
+                View Detail
+            </a>
+        ';
                     }
 
-                    // Cetak PDF / Print PO
-                    $btn .= '<a class="dropdown-item" target="_blank" href="'.route('purchase-order.print', $row->id).'" data-id="'.$row->id.'">
-                <i class="ti ti-printer me-1"></i> Print / PDF
-            </a>';
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 7. PRINT
+                    |--------------------------------------------------------------------------
+                    */
 
-                    // Tutup komponen tag HTML dropdown
-                    $btn .= '</ul></div>';
+                    $btn .= '
+        <a class="dropdown-item"
+            target="_blank"
+            href="'.route('purchase-order.print', $row->id).'">
+
+            <i class="ti ti-printer me-1"></i>
+            Print / PDF
+        </a>
+    ';
+
+                    $btn .= '
+            </ul>
+        </div>
+    ';
 
                     return $btn;
                 })
@@ -912,4 +1069,27 @@ class PurchaseOrderController extends Controller
             'data' => $addresses,
         ]);
     }
+
+    public function sendSupplier($id)
+{
+    $po = PurchaseOrder::findOrFail($id);
+
+    // VALIDASI STATUS
+    if ($po->status != 'approved') {
+
+        return response()->json([
+            'message' => 'Only approved PO can be sent.'
+        ], 422);
+    }
+
+    // UPDATE STATUS
+    $po->update([
+        'status' => 'sent',
+        'updated_by' => Auth::user()->id
+    ]);
+
+    return response()->json([
+        'message' => 'PO successfully sent to supplier.'
+    ]);
+}
 }

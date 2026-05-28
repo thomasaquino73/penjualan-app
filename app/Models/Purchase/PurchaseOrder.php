@@ -2,6 +2,8 @@
 
 namespace App\Models\Purchase;
 
+use App\Models\Setting\Shipping;
+use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -47,13 +49,21 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseOrderDetail::class, 'purchase_order_id');
     }
 
-     public function approvedBy()
-    {
-        return $this->belongsTo(User::class, 'pic_by');
-    }
-     public function rejectedBy()
+    public function approvedBy()
     {
         return $this->belongsTo(User::class, 'pic_by');
     }
 
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'pic_by');
+    }
+    public function paymentTerm()
+    {
+        return $this->belongsTo(SyaratPembayaran::class, 'payment_term');
+    }
+    public function ship()
+    {
+        return $this->belongsTo(Shipping::class, 'vehicle_id');
+    }
 }
