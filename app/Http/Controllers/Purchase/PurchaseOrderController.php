@@ -9,6 +9,7 @@ use App\Models\Inventory\Barang;
 use App\Models\Purchase\PurchaseOrder;
 use App\Models\Purchase\PurchaseOrderDetail;
 use App\Models\Purchase\PurchaseRequisition;
+use App\Models\Purchase\PurchaseRequisitionDetail;
 use App\Models\Purchase\Supplier;
 use App\Models\Setting\Company;
 use App\Models\Setting\CompanyDeliveryAddress;
@@ -961,10 +962,7 @@ class PurchaseOrderController extends Controller
         ], 200);
     }
 
-    public function show(string $id)
-    {
-        
-    }
+    public function show(string $id) {}
 
     public function print($id)
     {
@@ -1045,25 +1043,69 @@ class PurchaseOrderController extends Controller
     }
 
     public function sendSupplier($id)
-{
-    $po = PurchaseOrder::findOrFail($id);
+    {
+        $po = PurchaseOrder::findOrFail($id);
 
-    // VALIDASI STATUS
-    if ($po->status != 'approved') {
+        // VALIDASI STATUS
+        if ($po->status != 'approved') {
+
+            return response()->json([
+                'message' => 'Only approved PO can be sent.',
+            ], 422);
+        }
+
+        // UPDATE STATUS
+        $po->update([
+            'status' => 'sent',
+            'updated_by' => Auth::user()->id,
+        ]);
 
         return response()->json([
-            'message' => 'Only approved PO can be sent.'
-        ], 422);
+            'message' => 'PO successfully sent to supplier.',
+        ]);
     }
 
-    // UPDATE STATUS
-    $po->update([
-        'status' => 'sent',
-        'updated_by' => Auth::user()->id
-    ]);
+  public function getRequisitionDetail(Request $request)
+{
+    $ids = $request->ids;
+
+    $details = PurchaseRequisitionDetail::with([
+            'produkID',
+            'unitID',
+            'requisition'
+        ])
+        ->whereIn('purchase_requisition_id', $ids)
+        ->where('active', 1)
+        ->get()
+        ->map(function ($item) {
+
+            return [
+
+                'id' => $item->id,
+
+                'product_id' => $item->product_id,
+
+                // nama barang
+                'product_name' => optional($item->produkID)->nama_barang,
+
+                'qty' => $item->qty,
+
+                'unit_id' => $item->unit_id,
+
+                // NAMA UNIT DARI RELASI unitID
+                'unit_name' => optional($item->unitID)->detail,
+
+                'required_date' => $item->required_date,
+
+                'notes' => $item->notes,
+
+                'requisition_code' => optional($item->requisition)->code,
+            ];
+        });
 
     return response()->json([
-        'message' => 'PO successfully sent to supplier.'
+        'success' => true,
+        'data' => $details
     ]);
 }
 }

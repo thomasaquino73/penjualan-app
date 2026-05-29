@@ -58,10 +58,12 @@ class PurchaseOrder extends Model
     {
         return $this->belongsTo(User::class, 'pic_by');
     }
+
     public function paymentTerm()
     {
         return $this->belongsTo(SyaratPembayaran::class, 'payment_term');
     }
+
     public function ship()
     {
         return $this->belongsTo(Shipping::class, 'vehicle_id');

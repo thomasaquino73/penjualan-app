@@ -14,7 +14,7 @@
                                     <input class="form-check-input" type="checkbox" id="checkAll">
                                 </div>
                             </th>
-                            <th>Invoice Number</th>
+                            <th>PR Number</th>
                             <th>Date</th>
                         </tr>
                     </thead>
