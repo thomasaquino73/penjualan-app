@@ -61,23 +61,33 @@ class PurchaseRequisitionController extends Controller
 
                     return 'N/A';
                 })
-                 ->addColumn('date', function ($row) {
-               return $row->date ? Carbon::parse($row->date)->format('d M Y') : 'N/A';
+                ->addColumn('date', function ($row) {
+                    return $row->date ? Carbon::parse($row->date)->format('d M Y') : 'N/A';
                 })
                 ->addColumn('status', function ($row) {
                     switch ($row->status) {
-                        case 'draft': $badge = 'bg-label-secondary';
+                        case 'draft':
+                            $badge = 'bg-label-secondary';
                             $text = 'Draft';
                             break;
-                        case 'processing': $badge = 'bg-label-info';
+
+                        case 'processing':
+                            $badge = 'bg-label-info';
                             $text = 'Processing';
                             break;
-                        case 'completed': $badge = 'bg-success';
+
+                        case 'completed':
+                            $badge = 'bg-success';
                             $text = 'Completed';
-                        case 'cancelled': $badge = 'bg-danger';
+                            break; // <- tambahkan ini
+
+                        case 'cancelled':
+                            $badge = 'bg-danger';
                             $text = 'Cancelled';
                             break;
-                        default: $badge = 'bg-label-secondary';
+
+                        default:
+                            $badge = 'bg-label-secondary';
                             $text = ucfirst($row->status);
                             break;
                     }
@@ -164,7 +174,7 @@ class PurchaseRequisitionController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok','date'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'date'])
                 ->make(true);
         }
 
@@ -398,6 +408,7 @@ class PurchaseRequisitionController extends Controller
                 'code' => $request->code,
                 'date' => Carbon::parse($request->date)->format('Y-m-d'),
                 'description' => $request->description,
+                'status' => $request->has('status') ? 'completed' : 'processing',
                 'updated_by' => Auth::id(),
             ]);
 

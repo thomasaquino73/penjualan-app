@@ -62,14 +62,17 @@
                             <span class="error text-danger" id="descriptionError"></span>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Close Request</label>
-                        <div class="form-check form-check-primary col-8">
-                            <input class="form-check-input" type="checkbox" value="1" name="default_pajak"
-                                id="default_pajak">
-                            <label class="form-check-label" for="default_pajak">Yes (Cannot proceed)</label>
+                    @if ($model->status != 'draft')
+                        <div class="col-md-6">
+                            <label class="form-label">Close Request</label>
+                            <div class="form-check form-check-primary col-8">
+                                <input class="form-check-input" type="checkbox" value="completed" name="status"
+                                    id="status" {{ isset($model) && $model->status == 'completed' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="status">Yes (Cannot proceed)</label>
+                            </div>
                         </div>
-                    </div>
+                    @endif
+
                 </div>
 
                 <div class="divider divider-dashed">
