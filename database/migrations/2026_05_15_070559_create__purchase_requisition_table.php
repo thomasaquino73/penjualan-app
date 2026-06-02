@@ -21,10 +21,11 @@ return new class extends Migration
             $table->date('date');
             $table->text('description')->nullable();
             $table->enum('status', [
-                'draft',        // Data baru dibuat, masih bisa diedit oleh staff
-                'processing',   // Disetujui, sedang dipersiapkan / dipacking di gudang
-                'closed',    // Selesai (Semua dokumen & pembayaran sudah klop)
-                'cancelled',     // Dibatalkan oleh user
+                'draft',        // Data baru dibuat
+                'processing',   // Disetujui, siap diproses
+                'partial',      // <--- TAMBAHKAN INI: Baru dibuatkan PO sebagian
+                'closed',       // Selesai (Semua qty sudah dibuatkan PO habis)
+                'done',         // Dibatalkan/Selesai alur lainnya
             ])->default('draft');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
@@ -36,6 +37,7 @@ return new class extends Migration
             $table->bigInteger('purchase_requisition_id');
             $table->bigInteger('product_id');
             $table->bigInteger('qty');
+            $table->decimal('po_qty', 18, 4)->default(0)->comment('Qty yang sudah sukses di-PO-kan');
             $table->bigInteger('unit_id');
             $table->date('required_date')->nullable();
             $table->string('notes')->nullable();
@@ -51,7 +53,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists("purchase_requisition_{$this->year}");
         Schema::dropIfExists("purchase_requisition_detail_{$this->year}");
+        Schema::dropIfExists("purchase_requisition_{$this->year}");
     }
 };

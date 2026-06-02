@@ -487,7 +487,12 @@ class PurchaseOrderController extends Controller
 
     public function getProcessingData()
     {
-        $orders = PurchaseRequisition::where('status', 'processing')->get();
+        // Mengambil data PR beserta item detailnya yang belum lunas di-PO
+        $orders = PurchaseRequisition::with(['details' => function ($query) {
+            $query->whereRaw('po_qty < qty'); // Hanya ambil item yang belum terpenuhi
+        }])
+            ->whereNotIn('status', ['draft', 'closed', 'done'])
+            ->get();
 
         return response()->json($orders);
     }
@@ -516,13 +521,18 @@ class PurchaseOrderController extends Controller
         DB::beginTransaction();
 
         try {
+            // Ambil tahun berjalan secara dinamis sesuai struktur tabel tahunan Anda
+            $currentYear = date('Y');
+
             // 1. Ambil semua data yang telah lolos validasi dari Form Request
             $data = $request->validated();
 
             // 2. Pisahkan data 'items_detail' dari array utama agar tidak masuk ke tabel purchase_order
             $itemsDetailRaw = $request->input('items_detail');
             unset($data['items_detail']); // Menghapus key dari antrean field insert tabel master
+
             $syaratPembayaran = SyaratPembayaran::find($request->payment_term);
+
             // 3. Lengkapi data audit log untuk tabel master
             $data['created_by'] = Auth::id();
             $data['updated_by'] = null;
@@ -532,8 +542,8 @@ class PurchaseOrderController extends Controller
             $data['disc_nominal'] = $request->discount_all;
             $data['grand_total'] = $request->total_order;
             $data['payment_term'] = $request->payment_term;
-            $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
-            $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
+            $data['kena_pajak'] = 0; // Di-set 0 karena tidak menggunakan sistem tax
+            $data['total_termasuk_pajak'] = 0; // Di-set 0 karena tidak menggunakan sistem tax
             $data['shipping_address'] = $request->shipping_address;
             $data['description'] = $request->description;
             $data['datePO'] = Carbon::parse($request->datePO)->format('Y-m-d');
@@ -553,7 +563,6 @@ class PurchaseOrderController extends Controller
             $data['code'] = $generatedCode;
 
             // 5. Simpan data ke tabel master 'purchase_order' menggunakan Eloquent Create
-            // (Otomatis mengisi created_at & updated_at serta mengembalikan objek data utuh)
             $purchaseOrder = PurchaseOrder::create($data);
 
             // 6. Proses simpan data ke tabel detail 'purchase_order_detail'
@@ -562,54 +571,155 @@ class PurchaseOrderController extends Controller
                 $items = json_decode($itemsDetailRaw, true);
 
                 if (is_array($items) && count($items) > 0) {
+                    // Array untuk menampung ID PR master yang terlibat (untuk kalkulasi status akhir dokumen)
+                    $involvedPrIds = [];
+
                     foreach ($items as $item) {
 
-                        // Hitung jumlah subtotal kotor per item untuk keperluan arsip data jika diperlukan
-                        $qty = floatval($item['quantity']) || 0;
-                        $unitPrice = floatval($item['unit_price']) || 0;
-                        $discount = floatval($item['discount']) || 0;
+                        // --- PROTEKSI & DETEKSI ALUR (Ambil PR vs Isi Sendiri) ---
+                        $prDetailId = null;
 
-                        $subTotal = $qty * $unitPrice;
-                        $setelahDiskon = $subTotal - $discount;
-                        $totalTax = $setelahDiskon;
-                        $amount = $setelahDiskon + $totalTax;
+                        // Pemetaan alternatif penamaan properti ID detail PR dari Javascript AJAX
+                        if (! empty($item['purchase_requisition_detail_id'])) {
+                            $prDetailId = $item['purchase_requisition_detail_id'];
+                        } elseif (! empty($item['pr_detail_id'])) {
+                            $prDetailId = $item['pr_detail_id'];
+                        } elseif (! empty($item['detail_id'])) {
+                            $prDetailId = $item['detail_id'];
+                        }
 
-                        // Insert data baris barang menggunakan Query Builder (Lebih cepat untuk batch insert)
+                        // Pemetaan alternatif penamaan kuantitas (quantity atau qty)
+                        $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
+
+                        // JIKA ITEM DIKATEGORIKAN AMBIL DARI PR
+                        if ($prDetailId) {
+                            // Ambil data detail PR menggunakan Query Builder agar dinamis membaca tabel tahunan
+                            $prDetail = DB::table("purchase_requisition_detail_{$currentYear}")
+                                ->where('id', $prDetailId)
+                                ->first();
+
+                            if ($prDetail) {
+                                // Ambil master dokumen PR untuk memeriksa status alurnya
+                                $prMaster = DB::table("purchase_requisition_{$currentYear}")
+                                    ->where('id', $prDetail->purchase_requisition_id)
+                                    ->first();
+
+                                // Proteksi status: Mengizinkan data jika PR berstatus 'processing' atau 'partial'
+                                if ($prMaster && ! in_array($prMaster->status, ['processing', 'partial'])) {
+                                    throw new \Exception("Barang '{$item['data_produk']}' tidak dapat diproses karena dokumen PR ({$prMaster->code}) berstatus: ".$prMaster->status);
+                                }
+
+                                // HITUNG LIMIT PARSIAL: Ambil sisa batas toleransi pengisian PO
+                                $sisaBolehPO = floatval($prDetail->qty) - floatval($prDetail->po_qty);
+
+                                // Batalkan transaksi jika user menginput kuantitas melebihi sisa permintaan PR asli
+                                if ($qtyInputForm > $sisaBolehPO) {
+                                    throw new \Exception("Kuantitas item '{$item['data_produk']}' melebihi sisa PR yang tersedia. Sisa kuantitas saat ini: {$sisaBolehPO}");
+                                }
+
+                                // UPDATE COUNTER PO_QTY: Tambahkan nominal kuantitas baru ke kolom penampung po_qty
+                                DB::table("purchase_requisition_detail_{$currentYear}")
+                                    ->where('id', $prDetailId)
+                                    ->increment('po_qty', $qtyInputForm);
+
+                                // Catat ID PR Master ke dalam array agar tidak terduplikasi saat dicek di langkah ke-7
+                                if (! in_array($prDetail->purchase_requisition_id, $involvedPrIds)) {
+                                    $involvedPrIds[] = $prDetail->purchase_requisition_id;
+                                }
+                            }
+                        }
+                        // -----------------------------------------------------------
+
+                        // Hitung Matematika Murni Nilai Rupiah Per Baris (Murni Tanpa Pajak)
+                        $unitPrice = floatval($item['unit_price'] ?? 0);
+                        $discount = floatval($item['discount'] ?? 0);
+
+                        $subTotal = $qtyInputForm * $unitPrice;
+                        $amount = $subTotal - $discount; // Total bersih per baris barang
+
+                        // Insert data baris barang menggunakan Model Eloquent
                         PurchaseOrderDetail::create([
-                            'purchase_order_id' => $purchaseOrder->id, // Hubungkan dengan ID tabel master di atas
+                            'purchase_order_id' => $purchaseOrder->id,
+                            'purchase_requisition_detail_id' => $prDetailId, // NULL jika isi manual sendiri
                             'product_id' => $item['product_id'],
-                            'qty' => $item['quantity'], // Format dari prDetailsData JS adalah 'quantity'
+                            'qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
-                            'unit_price' => $item['unit_price'] ?? 0,
-                            'discount' => $item['discount'] ?? 0,
-                            'amount' => $item['amount'] ?? $amount, // Menyimpan total bersih per baris item
+                            'unit_price' => $unitPrice,
+                            'discount' => $discount,
+                            'amount' => $item['amount'] ?? $amount,
                             'active' => 1,
                             'created_by' => Auth::id(),
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
                     }
+
+                    // =================================================================
+                    // 7. AUTOMATION STATUS MASTER PR (Closed vs Partial vs Processing)
+                    // =================================================================
+                    foreach ($involvedPrIds as $prId) {
+                        // Ambil seluruh baris item aktif yang terdaftar di PR tersebut
+                        $allPrItems = DB::table("purchase_requisition_detail_{$currentYear}")
+                            ->where('purchase_requisition_id', $prId)
+                            ->where('active', 1)
+                            ->get();
+
+                        $isPrFullyCompleted = true; // Flag untuk indikasi cicilan habis total
+                        $isAnyItemOrdered = false;   // Flag untuk indikasi adanya barang yang mulai dicicil
+
+                        foreach ($allPrItems as $prItem) {
+                            $orderedQty = floatval($prItem->po_qty);
+                            $requestedQty = floatval($prItem->qty);
+
+                            // Jika ada minimal satu item yang sudah di-PO kan
+                            if ($orderedQty > 0) {
+                                $isAnyItemOrdered = true;
+                            }
+
+                            // Jika didapati ada kuantitas PO yang masih kurang dari kuantitas PR
+                            if ($orderedQty < $requestedQty) {
+                                $isPrFullyCompleted = false;
+                            }
+                        }
+
+                        // Tentukan perubahan status final dokumen PR berdasarkan hasil kalkulasi item
+                        if ($isPrFullyCompleted) {
+                            // Kasus A: Kuantitas semua barang telah sukses terpenuhi 100% tanpa sisa
+                            DB::table("purchase_requisition_{$currentYear}")
+                                ->where('id', $prId)
+                                ->update(['status' => 'closed']);
+                        } elseif ($isAnyItemOrdered) {
+                            // Kasus B: Baru sebagian kuantitas atau sebagian barang yang dibuatkan PO
+                            DB::table("purchase_requisition_{$currentYear}")
+                                ->where('id', $prId)
+                                ->update(['status' => 'partial']);
+                        } else {
+                            // Kasus C: Kondisi default jika belum tersentuh PO sama sekali
+                            DB::table("purchase_requisition_{$currentYear}")
+                                ->where('id', $prId)
+                                ->update(['status' => 'processing']);
+                        }
+                    }
+                    // =================================================================
                 }
             }
 
             // Jika semua proses insert master dan detail sukses tanpa error, commit ke database
             DB::commit();
 
-            // Kembalikan response JSON sukses ke AJAX untuk penanganan redirect halaman
             return response()->json([
                 'status' => 'success',
                 'message' => 'Purchase Order '.$generatedCode.' berhasil disimpan.',
-                'redirect' => route('purchase-order.index'), // Alihkan ke halaman utama Purchase Order
+                'redirect' => route('purchase-order.index'),
             ], 200);
 
         } catch (\Exception $e) {
-            // Jika di tengah jalan ada baris kode yang gagal atau crash, batalkan semua perubahan di database
+            // Jika di tengah jalan ada kode yang gagal atau crash, batalkan semua perubahan di database
             DB::rollBack();
 
-            // Kembalikan response JSON error dengan status code 500 (Internal Server Error)
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to save data: '.$e->getMessage(),
+                'message' => 'Gagal menyimpan data: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -1065,47 +1175,56 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-    public function getRequisitionDetail(Request $request)
-    {
-        $ids = $request->ids;
+  public function getRequisitionDetail(Request $request)
+{
+    // 1. Ambil array ID master PR dari request AJAX
+    $ids = $request->ids; 
 
-        $details = PurchaseRequisitionDetail::with([
-            'produkID',
-            'unitID',
-            'requisition',
-        ])
-            ->whereIn('purchase_requisition_id', $ids)
-            ->where('active', 1)
-            ->get()
-            ->map(function ($item) {
-
-                return [
-
-                    'id' => $item->id,
-
-                    'product_id' => $item->product_id,
-
-                    // nama barang
-                    'product_name' => optional($item->produkID)->nama_barang,
-
-                    'qty' => $item->qty,
-
-                    'unit_id' => $item->unit_id,
-
-                    // NAMA UNIT DARI RELASI unitID
-                    'unit_name' => optional($item->unitID)->detail,
-
-                    'required_date' => $item->required_date,
-
-                    'notes' => $item->notes,
-
-                    'requisition_code' => optional($item->requisition)->code,
-                ];
-            });
-
+    if (empty($ids)) {
         return response()->json([
-            'success' => true,
-            'data' => $details,
+            'success' => false,
+            'message' => 'Tidak ada data PR yang dipilih.',
+            'data' => []
         ]);
     }
+
+    // 2. Ambil data detail menggunakan Eloquent Model agar dinamis membaca tabel tahunan
+    // dan panggil semua relasi yang sudah kamu buat di model
+    $details = PurchaseRequisitionDetail::with(['produkID', 'unitID', 'requisition'])
+        ->whereIn('purchase_requisition_id', $ids)
+        ->where('active', 1) // Pastikan hanya item aktif yang ditarik
+        ->get();
+
+    // 3. Transformasikan data Eloquent ke dalam format flat array yang dinanti oleh Javascript AJAX kamu
+    $formattedData = $details->map(function ($item) {
+        return [
+            'id'               => $item->id,
+            'product_id'       => $item->product_id,
+            
+            // Mengambil nama produk dari relasi produkID (Model Barang)
+            'product_name'     => $item->produkID->nama_barang ?? $item->produkID->product_name ?? 'Unknown Product',
+            
+            'qty'              => floatval($item->qty),     // Kuantitas awal PR
+            'po_qty'           => floatval($item->po_qty),  // Jumlah kuantitas yang sudah pernah di-PO
+            
+            'unit_id'          => $item->unit_id,
+            
+            // Mengambil nama satuan dari relasi unitID (Model BasicCodeDetail)
+            // Sesuaikan kolom namanya, biasanya 'name', 'nama', atau 'detail_name'
+            'unit_name'        => $item->unitID->name ?? $item->unitID->nama ?? $item->unitID->detail_name ?? 'PCS',
+            
+            // Mengambil nomor kode dan tanggal dari relasi induk master requisition
+            'requisition_code' => $item->requisition->code ?? 'N/A',
+            'required_date'    => $item->requisition->date ? \Carbon\Carbon::parse($item->requisition->date)->format('Y-m-d') : null,
+            
+            'notes'            => $item->notes ?? ''
+        ];
+});
+
+    // 4. Kembalikan response JSON yang rapi dan siap pakai
+    return response()->json([
+        'success' => true,
+        'data'    => $formattedData
+    ]);
+}
 }

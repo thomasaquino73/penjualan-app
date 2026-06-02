@@ -71,15 +71,21 @@ class PurchaseRequisitionController extends Controller
                             $text = 'Draft';
                             break;
 
-                        case 'open':
+                        case 'processing':
                             $badge = 'bg-label-info';
-                            $text = 'Open';
+                            $text = 'Processing';
+                            break;
+
+                            // ─── TAMBAHAN BADGE UNTUK STATUS PARTIAL ──────────────────
+                        case 'partial':
+                            $badge = 'bg-warning text-dark';
+                            $text = 'Partial PO';
                             break;
 
                         case 'closed':
                             $badge = 'bg-success';
                             $text = 'Closed';
-                            break; // <- tambahkan ini
+                            break;
 
                         case 'cancelled':
                             $badge = 'bg-danger';
@@ -113,8 +119,8 @@ class PurchaseRequisitionController extends Controller
                     if ($row->created_by == $currentUserId) {
 
                         if ($row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'" data-status="open">
-                        <i class="ti ti-send me-1"></i> Open Requisition
+                            $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'" data-status="processing">
+                        <i class="ti ti-send me-1"></i> Processing Requisition
                      </a>';
                             $btn .= '<hr class="dropdown-divider">';
                         }
@@ -136,7 +142,7 @@ class PurchaseRequisitionController extends Controller
                     }
 
                     // ─── INFO JIKA SUDAH DIPROSES ─────────────────────────────
-                    if ($row->status == 'open') {
+                    if ($row->status == 'processing') {
                         $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'">
                         <i class="far fa-edit me-1"></i> Edit
                      </a>';
@@ -370,7 +376,7 @@ class PurchaseRequisitionController extends Controller
                 'code' => $request->code,
                 'date' => Carbon::parse($request->date)->format('Y-m-d'),
                 'description' => $request->description,
-                'status' => $request->has('status') ? 'closed' : 'open',
+                'status' => $request->has('status') ? 'closed' : 'processing',
                 'updated_by' => Auth::id(),
             ]);
 
@@ -477,9 +483,9 @@ class PurchaseRequisitionController extends Controller
                             $text = 'Pending Approval';
                             break;
 
-                        case 'open':
+                        case 'processing':
                             $badge = 'bg-label-info'; // Biru Muda
-                            $text = 'Open';
+                            $text = 'Processing';
                             break;
 
                         case 'deliver':
@@ -684,7 +690,7 @@ class PurchaseRequisitionController extends Controller
     public function submitToPending($id)
     {
         $pr = PurchaseRequisition::findOrFail($id);
-        $pr->status = 'open';
+        $pr->status = 'processing';
         $pr->updated_by = auth()->id(); // Jika Anda mencatat siapa yang melakukan update terakhir
         $pr->save();
         // $users = User::whereHas('roles.permissions', function ($q) {
@@ -735,7 +741,7 @@ class PurchaseRequisitionController extends Controller
 
         // 3. LOGIKA QR CODE APPROVER (APPROVED BY) - Hanya jika status sudah disetujui
         $qrApprovalBase64 = null;
-        $approvedStatuses = ['open', 'rejected'];
+        $approvedStatuses = ['processing', 'rejected'];
 
         if (in_array($detail->status, $approvedStatuses)) {
             $updaterName = $detail->updater->fullname ?? 'Manager Purchasing';

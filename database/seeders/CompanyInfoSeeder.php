@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Purchase\Supplier;
 use App\Models\Setting\Company;
 use App\Models\Setting\Currency;
 use App\Models\Setting\SyaratPembayaran;
@@ -45,6 +46,30 @@ class CompanyInfoSeeder extends Seeder
                 'symbol' => 'SGD',
                 'country' => 'Singapore',
             ],
+        ]);
+
+        Supplier::create([
+            'id_supplier' => 'S-00001',
+            'nama_supplier' => 'PT Almex Bintang Timur',
+            'kategori_supplier_id' => 1,
+            'email' => 'info@almexbintangtimur.com',
+            'phone_1' => '081382397429',
+            'phone_2' => '081382397429',
+            'no_whatsapp' => '081382397429',
+            'faximili' => null,
+            'website' => 'https://www.almexbintangtimur.com',
+            'alamat_pembayaran' => 'Green Lake City Ruko Food City RKFC-005 Petir Cipondoh',
+            'kota' => 'Tangerang',
+            'kodepos' => '16424',
+            'provinsi' => 'Banten',
+            'negara' => 'Indonesia',
+            'tipe_pemasok_id' => null,
+            'syarat_pembelian' => 'Net 30',
+            'default_diskon' => null,
+            'default_deskripsi' => null,
+            'status' => 1,
+            'created_by' => 1,
+            'updated_by' => null,
         ]);
 
         SyaratPembayaran::insert([
