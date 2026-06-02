@@ -60,9 +60,9 @@ return new class extends Migration
             $table->decimal('received_qty', 18, 4)->default(0);
             $table->decimal('outstanding_qty', 18, 4)->default(0);
             $table->bigInteger('unit_id');
-            $table->decimal('unit_price', 10, 2);
-            $table->decimal('discount', 10, 2)->default(0);
-            $table->decimal('amount', 10, 2);
+            $table->decimal('unit_price', 15, 2);
+            $table->decimal('discount', 15, 2)->default(0);
+            $table->decimal('amount', 15, 2);
             $table->enum('status', [
                 'open',
                 'partial',

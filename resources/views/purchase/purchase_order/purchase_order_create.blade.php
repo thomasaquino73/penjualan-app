@@ -819,6 +819,7 @@
                     },
                 },
             });
+            
             $("#btnSubmitModal").on("click", function(e) {
                 let qtyInput = $("#quantity");
                 let currentQty = parseFloat(qtyInput.val()) || 0;

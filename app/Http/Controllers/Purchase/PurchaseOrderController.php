@@ -757,15 +757,17 @@ class PurchaseOrderController extends Controller
         DB::beginTransaction();
 
         try {
+            // Ambil data syarat pembayaran untuk melengkapi data master seperti di proses create
             $syaratPembayaran = SyaratPembayaran::find($request->payment_term);
+
+            // 1. Update Data Master Purchase Order
             $prMaster->update([
                 'supplier_id' => $request->supplier_id,
                 'code' => $request->code,
                 'datePO' => Carbon::parse($request->datePO)->format('Y-m-d'),
-
                 'tanggal_kirim' => $request->tanggal_kirim
-                    ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d')
-                    : null,
+                                            ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d')
+                                            : null,
                 'kena_pajak' => $request->has('kena_pajak') ? 1 : 0,
                 'total_termasuk_pajak' => $request->has('total_termasuk_pajak') ? 1 : 0,
                 'fob_id' => $request->fob_id,
@@ -779,7 +781,7 @@ class PurchaseOrderController extends Controller
                 'disc_nominal' => $request->discount_all,
                 'grand_total' => $request->total_order,
 
-                // 🔥 TAMBAHAN dari create
+                // 🔥 TAMBAHAN sinkronisasi dari data Syarat Pembayaran (Sama seperti Create)
                 'total_hari' => $syaratPembayaran->total_hari ?? 0,
                 'total_diskon' => $syaratPembayaran->total_diskon ?? 0,
                 'masa_jatuh_tempo' => $syaratPembayaran->masa_jatuh_tempo ?? 0,
@@ -787,35 +789,39 @@ class PurchaseOrderController extends Controller
                 'updated_by' => Auth::id(),
             ]);
 
-            // 3. Decode data array string JSON (`items_detail`) yang dikirim dari DataTables lokal
+            // 2. Decode data array string JSON (`items_detail`) dari DataTables / Form
             $items = json_decode($request->items_detail, true);
 
             if (is_array($items) && count($items) > 0) {
 
-                // Hapus semua detail lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
+                // Gunakan relasi hasMany jika ada (misal: $prMaster->details()), atau panggil Model Detail langsung
+                // Hapus semua detail lama terlebih dahulu untuk mencegah data gantung / duplikasi
                 PurchaseOrderDetail::where('purchase_order_id', $prMaster->id)->delete();
 
+                // Loop untuk insert ulang item baru (Alur disamakan dengan simpan baru pada Create)
                 foreach ($items as $item) {
                     PurchaseOrderDetail::create([
                         'purchase_order_id' => $prMaster->id,
                         'product_id' => $item['product_id'],
-                        'qty' => $item['quantity'] ?? $item['qty'],
+                        'qty' => $item['quantity'] ?? $item['qty'], // Fallback antisipasi perbedaan penamaan key
                         'unit_id' => $item['unit_id'],
                         'unit_price' => $item['unit_price'],
-                        'discount' => $item['discount'],
+                        'discount' => $item['discount'] ?? 0,
                         'amount' => $item['amount'],
+                        'created_by' => $prMaster->created_by, // Tetap jaga pembuat asli (jika ada kolomnya di detail)
                         'updated_by' => Auth::id(),
                     ]);
                 }
+
             } else {
-                // Gagalkan proses jika ternyata isi array kosong setelah didecode
+                // Validasi fail-safe jika item kosong
                 throw new \Exception('Minimal harus ada 1 item produk yang dimasukkan.');
             }
 
-            // Jika semua query aman tanpa error, terapkan simpan permanen ke database
+            // Jika semua langkah aman tanpa error, lakukan commit data ke database
             DB::commit();
 
-            // 4. Atur arah redirect URL (Aksi update biasanya langsung kembali ke halaman index utama)
+            // Target URL setelah sukses update
             $redirectUrl = route('purchase-order.index');
 
             return response()->json([
@@ -826,7 +832,7 @@ class PurchaseOrderController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            // Batalkan semua query yang sempat berjalan jika ada error di tengah jalan (Rollback)
+            // Batalkan semua query jika terjadi kegagalan di tengah jalan
             DB::rollBack();
 
             return response()->json([
@@ -1175,56 +1181,56 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-  public function getRequisitionDetail(Request $request)
-{
-    // 1. Ambil array ID master PR dari request AJAX
-    $ids = $request->ids; 
+    public function getRequisitionDetail(Request $request)
+    {
+        // 1. Ambil array ID master PR dari request AJAX
+        $ids = $request->ids;
 
-    if (empty($ids)) {
+        if (empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data PR yang dipilih.',
+                'data' => [],
+            ]);
+        }
+
+        // 2. Ambil data detail menggunakan Eloquent Model agar dinamis membaca tabel tahunan
+        // dan panggil semua relasi yang sudah kamu buat di model
+        $details = PurchaseRequisitionDetail::with(['produkID', 'unitID', 'requisition'])
+            ->whereIn('purchase_requisition_id', $ids)
+            ->where('active', 1) // Pastikan hanya item aktif yang ditarik
+            ->get();
+
+        // 3. Transformasikan data Eloquent ke dalam format flat array yang dinanti oleh Javascript AJAX kamu
+        $formattedData = $details->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+
+                // Mengambil nama produk dari relasi produkID (Model Barang)
+                'product_name' => $item->produkID->nama_barang ?? $item->produkID->product_name ?? 'Unknown Product',
+
+                'qty' => floatval($item->qty),     // Kuantitas awal PR
+                'po_qty' => floatval($item->po_qty),  // Jumlah kuantitas yang sudah pernah di-PO
+
+                'unit_id' => $item->unit_id,
+
+                // Mengambil nama satuan dari relasi unitID (Model BasicCodeDetail)
+                // Sesuaikan kolom namanya, biasanya 'name', 'nama', atau 'detail_name'
+                'unit_name' => $item->unitID->name ?? $item->unitID->nama ?? $item->unitID->detail_name ?? 'PCS',
+
+                // Mengambil nomor kode dan tanggal dari relasi induk master requisition
+                'requisition_code' => $item->requisition->code ?? 'N/A',
+                'required_date' => $item->requisition->date ? Carbon::parse($item->requisition->date)->format('Y-m-d') : null,
+
+                'notes' => $item->notes ?? '',
+            ];
+        });
+
+        // 4. Kembalikan response JSON yang rapi dan siap pakai
         return response()->json([
-            'success' => false,
-            'message' => 'Tidak ada data PR yang dipilih.',
-            'data' => []
+            'success' => true,
+            'data' => $formattedData,
         ]);
     }
-
-    // 2. Ambil data detail menggunakan Eloquent Model agar dinamis membaca tabel tahunan
-    // dan panggil semua relasi yang sudah kamu buat di model
-    $details = PurchaseRequisitionDetail::with(['produkID', 'unitID', 'requisition'])
-        ->whereIn('purchase_requisition_id', $ids)
-        ->where('active', 1) // Pastikan hanya item aktif yang ditarik
-        ->get();
-
-    // 3. Transformasikan data Eloquent ke dalam format flat array yang dinanti oleh Javascript AJAX kamu
-    $formattedData = $details->map(function ($item) {
-        return [
-            'id'               => $item->id,
-            'product_id'       => $item->product_id,
-            
-            // Mengambil nama produk dari relasi produkID (Model Barang)
-            'product_name'     => $item->produkID->nama_barang ?? $item->produkID->product_name ?? 'Unknown Product',
-            
-            'qty'              => floatval($item->qty),     // Kuantitas awal PR
-            'po_qty'           => floatval($item->po_qty),  // Jumlah kuantitas yang sudah pernah di-PO
-            
-            'unit_id'          => $item->unit_id,
-            
-            // Mengambil nama satuan dari relasi unitID (Model BasicCodeDetail)
-            // Sesuaikan kolom namanya, biasanya 'name', 'nama', atau 'detail_name'
-            'unit_name'        => $item->unitID->name ?? $item->unitID->nama ?? $item->unitID->detail_name ?? 'PCS',
-            
-            // Mengambil nomor kode dan tanggal dari relasi induk master requisition
-            'requisition_code' => $item->requisition->code ?? 'N/A',
-            'required_date'    => $item->requisition->date ? \Carbon\Carbon::parse($item->requisition->date)->format('Y-m-d') : null,
-            
-            'notes'            => $item->notes ?? ''
-        ];
-});
-
-    // 4. Kembalikan response JSON yang rapi dan siap pakai
-    return response()->json([
-        'success' => true,
-        'data'    => $formattedData
-    ]);
-}
 }
