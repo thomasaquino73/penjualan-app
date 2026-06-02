@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SupplierRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Purchase\Supplier;
+use App\Models\Setting\SyaratPembayaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -162,7 +163,7 @@ class SupplierController extends Controller
                 ['label' => 'Supplier New', 'url' => ''],
             ],
             'idNumber' => $this->generateNumberId(),
-            'paymentTerm' => BasicCodeDetail::where('master_id', 4)->get(),
+            'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
             'databank' => BasicCodeDetail::where('master_id', 5)->get(),
             'tipePemasok' => BasicCodeDetail::where('master_id', 3)->get(),
             'kategoriPemasok' => BasicCodeDetail::where('master_id', 8)->get(),
@@ -295,7 +296,7 @@ class SupplierController extends Controller
             ],
             'idNumber' => $this->generateNumberId(),
 
-            'paymentTerm' => BasicCodeDetail::where('master_id', 4)->get(),
+            'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
             'databank' => BasicCodeDetail::where('master_id', 5)->get(),
             'kategoriPemasok' => BasicCodeDetail::where('master_id', 8)->get(),
 

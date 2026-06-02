@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Purchase;
 
 use App\Http\Controllers\Controller;
-use App\Models\General\Company;
+use App\Models\Setting\Company;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Purchase\PurchaseRequisition;
@@ -114,7 +114,7 @@ class PurchaseRequisitionController extends Controller
 
                         if ($row->status == 'draft') {
                             $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'" data-status="processing">
-                        <i class="ti ti-send me-1"></i> Processing Data
+                        <i class="ti ti-send me-1"></i> Processing Requisition
                      </a>';
                             $btn .= '<hr class="dropdown-divider">';
                         }
@@ -135,15 +135,7 @@ class PurchaseRequisitionController extends Controller
                         }
                     }
 
-                    // ─── PROCESS (SEMUA USER / ATAU SESUAI ROLE) ─────────────────────────────
-                    if ($row->status == 'pending') {
-                        $btn .= '<a class="dropdown-item text-primary btn-processing-pr"
-                    href="javascript:void(0)"
-                    data-id="'.$row->id.'"
-                    data-status="processing">
-                    <i class="ti ti-settings me-1"></i> Process PR
-                 </a>';
-                    }
+                   
 
                     // ─── INFO JIKA SUDAH DIPROSES ─────────────────────────────
                     if ($row->status == 'processing') {
@@ -156,13 +148,6 @@ class PurchaseRequisitionController extends Controller
                         $btn .= '<span class="dropdown-item-text text-success small">
                     <i class="ti ti-circle-check me-1"></i> Closed
                  </span>';
-                    }
-
-                    // ─── DETAIL & PRINT ─────────────────────────────
-                    if ($user->can('permintaan_pembelian-read')) {
-                        $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.show', $row->id).'">
-                    <i class="ti ti-list-details"></i> Detail
-                 </a>';
                     }
 
                     $btn .= '<a class="dropdown-item" target="_blank"
@@ -342,25 +327,7 @@ class PurchaseRequisitionController extends Controller
 
     public function show(string $id)
     {
-        // 1. Ambil data master sekaligus detailnya di sini (Cukup 1 query utama)
-        $purchaseRequisition = PurchaseRequisition::with(['details.produkID', 'details.unitID'])->findOrFail($id);
-
-        $x = [
-            'title' => 'Purchase Requisition Show',
-            'breadcrumb' => [
-                ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Purchase Requisition', 'url' => route('permintaan-pembelian.index')],
-                ['label' => 'Show', 'url' => ''],
-            ],
-            'customer' => Customer::where('status', '<>', 0)->get(),
-            'product' => Barang::where('status', '<>', 0)->get(),
-            'model' => $purchaseRequisition,
-            'company' => Company::first(),
-
-            'modelDetail' => $purchaseRequisition->details,
-        ];
-
-        return view('purchase.purchase_requisition.purchase_requisition_show', $x);
+      
     }
 
     public function edit(string $id)

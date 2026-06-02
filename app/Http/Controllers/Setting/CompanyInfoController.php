@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CompanyInfoRequest;
 use App\Models\Setting\Company;
 use App\Models\Setting\Currency;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class CompanyInfoController extends Controller
@@ -61,6 +62,7 @@ class CompanyInfoController extends Controller
             $sistem = Company::findOrFail($id);
 
             $data = $r->except('avatar');
+            $data['cut_off_date'] = Carbon::parse($r->cut_off_date)->format('Y-m-d');
 
             if ($r->hasFile('avatar')) {
 

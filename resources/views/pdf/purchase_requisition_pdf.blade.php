@@ -222,8 +222,8 @@
                             <div class="company-info">
                                 {{ $company->alamat }}<br>
                                 {{ $company->negara }} {{ $company->kodepos ?? '16424' }}<br>
-                                 {{ $company->nomor_telepon }}<br>
-                               {{ $company->email }}<br>
+                                {{ $company->nomor_telepon }}<br>
+                                {{ $company->email }}<br>
                                 <span style="color: #3085d6;">{{ $company->website }}</span>
                             </div>
                         </td>
@@ -303,11 +303,15 @@
             <td style="width: 50%;"></td>
 
             <td class="signature-box" style="width: 25%; padding: 8px; vertical-align: top;">
+
+            </td>
+
+            <td class="signature-box" style="width: 25%; padding: 8px; vertical-align: top;">
                 <div
                     style="border: 1px solid #ddd; background-color: #fafafa; padding: 10px; border-radius: 6px; text-align: center;">
                     <div class="signature-title"
                         style="margin-bottom: 5px; font-size: 8.5pt; font-weight: bold; color: #555;">
-                        Digitally Created By:
+                        Created By:
                     </div>
 
                     <div class="signature-space" style="height: 70px; margin-bottom: 5px; text-align: center;">
@@ -333,44 +337,6 @@
                         E-SIGNED VERIFIED
                     </div>
                 </div>
-            </td>
-
-            <td class="signature-box" style="width: 25%; padding: 8px; vertical-align: top;">
-                @if (in_array($detail->status, ['processing']))
-                    <div
-                        style="border: 1px solid #ddd; background-color: #fafafa; padding: 10px; border-radius: 6px; text-align: center;">
-                        <div class="signature-title"
-                            style="margin-bottom: 5px; font-size: 8.5pt; font-weight: bold; color: #555;">
-                            Digitally Approved By:
-                        </div>
-
-                        <div class="signature-space" style="height: 70px; margin-bottom: 5px; text-align: center;">
-                            @if (isset($qrApprovalBase64) && $qrApprovalBase64 != null)
-                                <img src="{{ $qrApprovalBase64 }}"
-                                    style="width: 60px; height: 60px; display: inline-block;">
-                            @else
-                                <div
-                                    style="font-size: 7pt; color: #777; border: 1px dashed #ccc; width: 60px; height: 60px; line-height: 60px; margin: 0 auto; background: #fff;">
-                                    [QR CODE]
-                                </div>
-                            @endif
-                        </div>
-
-                        <div class="signature-line"
-                            style="width: 90%; border-bottom: 1px solid #999; margin: 0 auto 4px auto;"></div>
-
-                        <div class="signature-name" style="font-size: 9pt; color: #111; font-weight: bold;">
-                            {{-- DIPERBAIKI: Mengubah $detail->updater menjadi $detail->updater --}}
-                            {{ $detail->updater->fullname ?? 'Manager Purchasing' }}
-                        </div>
-
-                        <div class="signature-role"
-                            style="font-size: 7.5pt; color: #3085d6; font-weight: bold; text-transform: uppercase;">
-                            APPROVED VERIFIED
-                        </div>
-                    </div>
-                @else
-                @endif
             </td>
         </tr>
     </table>

@@ -39,48 +39,17 @@
                                 <figure class=" mr-2"><img id="preview"
                                         src="{{ $dataSistem->logo ? asset($dataSistem->logo) : asset('image/no-images.jpg') }}"
                                         width=10%></figure>
+                                <div class="col-md-3 mb-3">
+                                    <label>Logo</label>
+                                    <input type="file" name="avatar" id="avatar" class="form-control">
+                                    <span class="text-danger error" id="avatarError"></span>
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3 ">
                                 <label>Company Name<small>*</small></label>
                                 <input type="text" name="nama_perusahaan" id="nama_perusahaan" class="form-control"
                                     value="{{ $dataSistem->nama_perusahaan }}">
                                 <span class="text-danger error" id="nama_perusahaanError"></span>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <label>Logo</label>
-                                <input type="file" name="avatar" id="avatar" class="form-control">
-                                <span class="text-danger error" id="avatarError"></span>
-                            </div>
-                            <div class="col-md-3 mb-3 ">
-                                <label>Default Currency<small>*</small></label>
-                                <select name="default_currency_id" id="default_currency_id" class="form-select" required>
-                                    <option value="">-- Select Default Currency --</option>
-                                    @foreach ($currencies as $currency)
-                                        <option value="{{ $currency->id }}"
-                                            {{ ($dataSistem->default_currency_id ?? '') == $currency->id ? 'selected' : '' }}>
-                                            {{ $currency->code }} - {{ $currency->name }} ({{ $currency->symbol }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <span class="text-danger error" id="mata_uang_idError"></span>
-                            </div>
-                            <div class="col-md-12 mb-3 ">
-                                <label>Address<small>*</small></label>
-                                <input type="text" name="alamat" id="alamat" class="form-control"
-                                    value="{{ $dataSistem->alamat }}">
-                                <span class="text-danger error" id="alamatError"></span>
-                            </div>
-                            <div class="col-md-6 mb-3 ">
-                                <label>Postal Code<small>*</small></label>
-                                <input type="text" name="kodepos" id="kodepos" class="form-control"
-                                    value="{{ $dataSistem->kodepos }}">
-                                <span class="text-danger error" id="kodeposError"></span>
-                            </div>
-                            <div class="col-md-6 mb-3 ">
-                                <label>Country<small>*</small></label>
-                                <input type="text" name="negara" id="negara" class="form-control"
-                                    value="{{ $dataSistem->negara }}">
-                                <span class="text-danger error" id="negaraError"></span>
                             </div>
                             <div class="col-md-3 mb-3 ">
                                 <label>Phone Number<small>*</small></label>
@@ -94,6 +63,25 @@
                                     value="{{ $dataSistem->email }}">
                                 <span class="text-danger error" id="emailError"></span>
                             </div>
+                            <div class="col-md-12 mb-3 ">
+                                <label>Address<small>*</small></label>
+                                <input type="text" name="alamat" id="alamat" class="form-control"
+                                    value="{{ $dataSistem->alamat }}">
+                                <span class="text-danger error" id="alamatError"></span>
+                            </div>
+                            <div class="col-md-3 mb-3 ">
+                                <label>Postal Code<small>*</small></label>
+                                <input type="text" name="kodepos" id="kodepos" class="form-control"
+                                    value="{{ $dataSistem->kodepos }}">
+                                <span class="text-danger error" id="kodeposError"></span>
+                            </div>
+                            <div class="col-md-3 mb-3 ">
+                                <label>Country<small>*</small></label>
+                                <input type="text" name="negara" id="negara" class="form-control"
+                                    value="{{ $dataSistem->negara }}">
+                                <span class="text-danger error" id="negaraError"></span>
+                            </div>
+
                             <div class="col-md-6 mb-3 ">
                                 <label>Website<small>*</small></label>
                                 <input type="text" name="website" id="website" class="form-control"
@@ -101,7 +89,30 @@
                                 <span class="text-danger error" id="websiteError"></span>
                             </div>
                         </div>
-
+                        <div class="divider divider-dashed">
+                            <div class="divider-text">Other Information</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3 ">
+                                <label>Default Currency<small>*</small></label>
+                                <select name="default_currency_id" id="default_currency_id" class="form-select" required>
+                                    <option value="">-- Select Default Currency --</option>
+                                    @foreach ($currencies as $currency)
+                                        <option value="{{ $currency->id }}"
+                                            {{ ($dataSistem->default_currency_id ?? '') == $currency->id ? 'selected' : '' }}>
+                                            {{ $currency->code }} - {{ $currency->name }} ({{ $currency->symbol }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <span class="text-danger error" id="mata_uang_idError"></span>
+                            </div>
+                            <div class="col-md-6 mb-3 ">
+                                <label>Cut Off Date<small>*</small></label>
+                                <input type="text" name="cut_off_date" id="cut_off_date" class="form-control"
+                                    value="{{ $dataSistem->cut_off_date }}">
+                                <span class="text-danger error" id="cut_off_dateError"></span>
+                            </div>
+                        </div>
                         <div class="mt-3">
                             <a href="{{ route('company.info') }}" class="btn btn-secondary"> <i
                                     class="ti ti-chevron-left me-1"></i> Back </a>
@@ -117,6 +128,13 @@
 @endsection
 @push('scripts')
     <script>
+        $(function() {
+            const datePicker = flatpickr("#cut_off_date", {
+                enableTime: false,
+                dateFormat: "d-m-Y",
+            });
+
+        });
         $(document).ready(function() {
 
             $('#postForm').on('submit', function(e) {

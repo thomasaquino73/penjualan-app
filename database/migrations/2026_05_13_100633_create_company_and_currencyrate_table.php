@@ -42,6 +42,7 @@ return new class extends Migration
             $table->string('negara')->nullable();
             $table->string('email')->nullable();
             $table->string('website')->nullable();
+            $table->date('cut_off_date')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
 

@@ -35,8 +35,6 @@ return new class extends Migration
             $table->bigInteger('total_hari')->nullable();
             $table->bigInteger('total_diskon')->nullable();
             $table->bigInteger('masa_jatuh_tempo')->nullable();
-            $table->bigInteger('total_received_qty')->default(0);
-            $table->bigInteger('total_outstanding_qty')->default(0);
             $table->enum('status', [
                 'draft',               // Baru dibuat
                 'pending',             // Menunggu approval
@@ -45,7 +43,7 @@ return new class extends Migration
                 'sent',                // Sudah dikirim ke supplier
                 'partially_received',  // Barang diterima sebagian
                 'completed',           // Semua barang diterima
-                'cancelled',           // Dibatalkan
+                'closed',           // Dibatalkan
             ])->default('draft');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
@@ -58,9 +56,9 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('purchase_order_id');
             $table->bigInteger('product_id');
-            $table->bigInteger('qty');
-            $table->bigInteger('received_qty')->default(0);
-            $table->bigInteger('outstanding_qty')->default(0);
+            $table->decimal('qty', 18, 4);
+            $table->decimal('received_qty', 18, 4)->default(0);
+            $table->decimal('outstanding_qty', 18, 4)->default(0);
             $table->bigInteger('unit_id');
             $table->decimal('unit_price', 10, 2);
             $table->decimal('discount', 10, 2)->default(0);

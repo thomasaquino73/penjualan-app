@@ -41,31 +41,6 @@
                                 value="{{ $dataSistem->nama_perusahaan }}" disabled>
                             <span class="text-danger error" id="nama_perusahaanError"></span>
                         </div>
-                        <div class="col-md-6 mb-3 ">
-                            <label>Default Currency<small>*</small></label>
-                            <input type="text" name="mata_uang" id="mata_uang" class="form-control"
-                                value="{{ $dataSistem->defaultCurrency->code ?? 'Belum Diatur' }} - {{ $dataSistem->defaultCurrency->name ?? 'Belum Diatur' }}"
-                                disabled>
-                            <span class="text-danger error" id="mata_uangError"></span>
-                        </div>
-                        <div class="col-md-12 mb-3 ">
-                            <label>Address<small>*</small></label>
-                            <input type="text" name="alamat" id="alamat" class="form-control"
-                                value="{{ $dataSistem->alamat }}" disabled>
-                            <span class="text-danger error" id="alamatError"></span>
-                        </div>
-                        <div class="col-md-6 mb-3 ">
-                            <label>Postal Code<small>*</small></label>
-                            <input type="text" name="kodepos" id="kodepos" class="form-control"
-                                value="{{ $dataSistem->kodepos }}" disabled>
-                            <span class="text-danger error" id="kodeposError"></span>
-                        </div>
-                        <div class="col-md-6 mb-3 ">
-                            <label>Country<small>*</small></label>
-                            <input type="text" name="negara" id="negara" class="form-control"
-                                value="{{ $dataSistem->negara }}" disabled>
-                            <span class="text-danger error" id="negaraError"></span>
-                        </div>
                         <div class="col-md-3 mb-3 ">
                             <label>Phone Number<small>*</small></label>
                             <input type="text" name="nomor_telepon" id="nomor_telepon" class="form-control"
@@ -78,6 +53,25 @@
                                 value="{{ $dataSistem->email }}" disabled>
                             <span class="text-danger error" id="emailError"></span>
                         </div>
+                        <div class="col-md-12 mb-3 ">
+                            <label>Address<small>*</small></label>
+                            <input type="text" name="alamat" id="alamat" class="form-control"
+                                value="{{ $dataSistem->alamat }}" disabled>
+                            <span class="text-danger error" id="alamatError"></span>
+                        </div>
+                        <div class="col-md-3 mb-3 ">
+                            <label>Postal Code<small>*</small></label>
+                            <input type="text" name="kodepos" id="kodepos" class="form-control"
+                                value="{{ $dataSistem->kodepos }}" disabled>
+                            <span class="text-danger error" id="kodeposError"></span>
+                        </div>
+                        <div class="col-md-3 mb-3 ">
+                            <label>Country<small>*</small></label>
+                            <input type="text" name="negara" id="negara" class="form-control"
+                                value="{{ $dataSistem->negara }}" disabled>
+                            <span class="text-danger error" id="negaraError"></span>
+                        </div>
+
                         <div class="col-md-6 mb-3 ">
                             <label>Website<small>*</small></label>
                             <input type="text" name="website" id="website" class="form-control"
@@ -85,6 +79,25 @@
                             <span class="text-danger error" id="websiteError"></span>
                         </div>
 
+                    </div>
+                    <div class="divider divider-dashed">
+                        <div class="divider-text">Other Information</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3 ">
+                            <label>Default Currency<small>*</small></label>
+                            <input type="text" name="mata_uang" id="mata_uang" class="form-control"
+                                value="{{ $dataSistem->defaultCurrency->code ?? 'Belum Diatur' }} - {{ $dataSistem->defaultCurrency->name ?? 'Belum Diatur' }}"
+                                disabled>
+                            <span class="text-danger error" id="mata_uangError"></span>
+                        </div>
+                        <div class="col-md-6 mb-3 ">
+                            <label>Cut Off Date<small>*</small></label>
+                            <input type="text" name="cut_off_date" id="cut_off_date" class="form-control"
+                                value="{{ Carbon\Carbon::parse($dataSistem->cut_off_date)->format('d/m/Y') ?? 'Belum Diatur' }}"
+                                disabled>
+                            <span class="text-danger error" id="cut_off_dateError"></span>
+                        </div>
                     </div>
                     @if (auth()->user()->can('company-edit'))
                         <div class="mt-3">

@@ -61,7 +61,7 @@
                         <th>Date</th>
                         <th>Supplier</th>
                         <th>Status</th>
-                        <th>Expected Date</th>
+                        <th>Shipping Date</th>
                         <th>Grand Total</th>
                         <th>Description</th>
                         <th>Created</th>

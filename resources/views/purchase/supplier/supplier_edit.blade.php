@@ -386,8 +386,8 @@
                                                         <option></option>
                                                         @foreach ($paymentTerm as $term)
                                                             <option value="{{ $term->id }}"
-                                                                {{ $pembelian->payment_term == $term->id ? 'selected' : '' }}>
-                                                                {{ $term->detail }}
+                                                                 {{ $pembelian->payment_term == $term->id ? 'selected' : '' }}>
+                                                                {{ $term->nama }}
                                                             </option>
                                                         @endforeach
                                                     </select>
@@ -417,7 +417,7 @@
                                         <div class="divider my-4">
                                             <div class="divider-text">Bank Detail</div>
                                         </div>
-                                        @include('master_data.supplier.part.data_bank')
+                                        @include('purchase.supplier.part.data_bank')
                                     </div>
 
                                 </div>

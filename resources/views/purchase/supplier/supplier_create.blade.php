@@ -348,7 +348,7 @@
                                                         data-placeholder="Select Payment Term">
                                                         <option></option>
                                                         @foreach ($paymentTerm as $term)
-                                                            <option value="{{ $term->id }}">{{ $term->detail }}
+                                                            <option value="{{ $term->id }}">{{ $term->nama }}
                                                             </option>
                                                         @endforeach
                                                     </select>
