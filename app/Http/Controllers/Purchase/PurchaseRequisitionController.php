@@ -76,9 +76,9 @@ class PurchaseRequisitionController extends Controller
                             $text = 'Processing';
                             break;
 
-                        case 'completed':
+                        case 'closed':
                             $badge = 'bg-success';
-                            $text = 'Completed';
+                            $text = 'Closed';
                             break; // <- tambahkan ini
 
                         case 'cancelled':
@@ -152,9 +152,9 @@ class PurchaseRequisitionController extends Controller
                      </a>';
                     }
 
-                    if ($row->status == 'done') {
+                    if ($row->status == 'closed') {
                         $btn .= '<span class="dropdown-item-text text-success small">
-                    <i class="ti ti-circle-check me-1"></i> Completed
+                    <i class="ti ti-circle-check me-1"></i> Closed
                  </span>';
                     }
 
@@ -408,7 +408,7 @@ class PurchaseRequisitionController extends Controller
                 'code' => $request->code,
                 'date' => Carbon::parse($request->date)->format('Y-m-d'),
                 'description' => $request->description,
-                'status' => $request->has('status') ? 'completed' : 'processing',
+                'status' => $request->has('status') ? 'closed' : 'processing',
                 'updated_by' => Auth::id(),
             ]);
 
@@ -530,9 +530,9 @@ class PurchaseRequisitionController extends Controller
                             $text = 'Received';
                             break;
 
-                        case 'completed':
+                        case 'closed':
                             $badge = 'bg-success'; // Hijau Solid (Selesai Mutlak)
-                            $text = 'Completed';
+                            $text = 'Closed';
                             break;
 
                         case 'rejected':

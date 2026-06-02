@@ -23,13 +23,12 @@ return new class extends Migration
             $table->enum('status', [
                 'draft',        // Data baru dibuat, masih bisa diedit oleh staff
                 'processing',   // Disetujui, sedang dipersiapkan / dipacking di gudang
-                'completed',    // Selesai (Semua dokumen & pembayaran sudah klop)
+                'closed',    // Selesai (Semua dokumen & pembayaran sudah klop)
                 'cancelled',     // Dibatalkan oleh user
             ])->default('draft');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
-            $table->boolean('completed')->default(false);
             $table->timestamps();
         });
         Schema::create("purchase_requisition_detail_{$this->year}", function (Blueprint $table) {
