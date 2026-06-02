@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Purchase;
 
 use App\Http\Controllers\Controller;
-use App\Models\Setting\Company;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Purchase\PurchaseRequisition;
 use App\Models\Purchase\PurchaseRequisitionDetail;
 use App\Models\Sales\Customer;
+use App\Models\Setting\Company;
 use App\Models\User;
 use App\Notifications\PurchaseRequisitionNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -71,9 +71,9 @@ class PurchaseRequisitionController extends Controller
                             $text = 'Draft';
                             break;
 
-                        case 'processing':
+                        case 'open':
                             $badge = 'bg-label-info';
-                            $text = 'Processing';
+                            $text = 'Open';
                             break;
 
                         case 'closed':
@@ -113,8 +113,8 @@ class PurchaseRequisitionController extends Controller
                     if ($row->created_by == $currentUserId) {
 
                         if ($row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'" data-status="processing">
-                        <i class="ti ti-send me-1"></i> Processing Requisition
+                            $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'" data-status="open">
+                        <i class="ti ti-send me-1"></i> Open Requisition
                      </a>';
                             $btn .= '<hr class="dropdown-divider">';
                         }
@@ -135,10 +135,8 @@ class PurchaseRequisitionController extends Controller
                         }
                     }
 
-                   
-
                     // ─── INFO JIKA SUDAH DIPROSES ─────────────────────────────
-                    if ($row->status == 'processing') {
+                    if ($row->status == 'open') {
                         $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'">
                         <i class="far fa-edit me-1"></i> Edit
                      </a>';
@@ -325,10 +323,7 @@ class PurchaseRequisitionController extends Controller
         }
     }
 
-    public function show(string $id)
-    {
-      
-    }
+    public function show(string $id) {}
 
     public function edit(string $id)
     {
@@ -375,7 +370,7 @@ class PurchaseRequisitionController extends Controller
                 'code' => $request->code,
                 'date' => Carbon::parse($request->date)->format('Y-m-d'),
                 'description' => $request->description,
-                'status' => $request->has('status') ? 'closed' : 'processing',
+                'status' => $request->has('status') ? 'closed' : 'open',
                 'updated_by' => Auth::id(),
             ]);
 
@@ -482,9 +477,9 @@ class PurchaseRequisitionController extends Controller
                             $text = 'Pending Approval';
                             break;
 
-                        case 'processing':
+                        case 'open':
                             $badge = 'bg-label-info'; // Biru Muda
-                            $text = 'Processing';
+                            $text = 'Open';
                             break;
 
                         case 'deliver':
@@ -689,7 +684,7 @@ class PurchaseRequisitionController extends Controller
     public function submitToPending($id)
     {
         $pr = PurchaseRequisition::findOrFail($id);
-        $pr->status = 'processing';
+        $pr->status = 'open';
         $pr->updated_by = auth()->id(); // Jika Anda mencatat siapa yang melakukan update terakhir
         $pr->save();
         // $users = User::whereHas('roles.permissions', function ($q) {
@@ -740,7 +735,7 @@ class PurchaseRequisitionController extends Controller
 
         // 3. LOGIKA QR CODE APPROVER (APPROVED BY) - Hanya jika status sudah disetujui
         $qrApprovalBase64 = null;
-        $approvedStatuses = ['processing', 'rejected'];
+        $approvedStatuses = ['open', 'rejected'];
 
         if (in_array($detail->status, $approvedStatuses)) {
             $updaterName = $detail->updater->fullname ?? 'Manager Purchasing';

@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('address')->nullable(); // nomor DO supplier
             $table->string('description')->nullable(); // nomor DO supplier
             $table->date('shipping_date')->nullable(); // tanggal pengiriman dari supplier
-            $table->unsignedBigInteger('shipping_id')->nullable(); 
-            $table->unsignedBigInteger('fob_id')->nullable(); 
+            $table->unsignedBigInteger('shipping_id')->nullable();
+            $table->unsignedBigInteger('fob_id')->nullable();
             $table->enum('status', [
                 'draft',
                 'completed',
