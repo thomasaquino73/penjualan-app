@@ -119,19 +119,6 @@
             </div>
 
             <div class="card-footer d-flex justify-content-end gap-2 mt-4">
-                @if (auth()->id() != $model->created_by)
-                    @can('permintaan_pembelian-approval', $model)
-                        <button type="button" class="btn btn-primary btn-approval-pr" data-status="processing"
-                            data-id="{{ $model->id }}">
-                            Approve
-                        </button>
-
-                        <button type="button" class="btn btn-danger btn-approval-pr" data-status="rejected"
-                            data-id="{{ $model->id }}">
-                            Reject
-                        </button>
-                    @endcan
-                @endif
                 <a href="{{ route('permintaan-pembelian.index') }}" class="btn btn-secondary"><i
                         class="ti ti-chevron-left me-1"></i>back</a>
             </div>

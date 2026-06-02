@@ -281,7 +281,7 @@
 
                 Swal.fire({
                     title: 'Are you sure?',
-                    text: "This Purchase Requisition will be submitted for approval!",
+                    text: "This Purchase Requisition will be submitted for processing!",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, submit it!',
@@ -347,87 +347,38 @@
                 });
             });
 
-            $(document).on('click', '.btn-approval-pr', function() {
-                let id = $(this).data('id');
-                let statusTarget = $(this).data('status'); // Expected: 'processing' or 'rejected'
+           $(document).on('click', '.btn-processing-pr', function() {
+    let id = $(this).data('id');
+    let statusTarget = $(this).data('status'); // langsung 'processing'
 
-                // Konfigurasi teks berdasarkan statusTarget
-                let textKeterangan = statusTarget === 'processing' ? 'approve' : 'reject';
-                let confirmBtnColor = statusTarget === 'processing' ? '#28a745' : '#dc3545';
-                let confirmBtnText = statusTarget === 'processing' ? 'Yes, Approve!' : 'Yes, Reject!';
-                let confirmBtnClass = statusTarget === 'processing' ?
-                    'btn btn-success me-3 waves-effect waves-light' :
-                    'btn btn-danger me-3 waves-effect waves-light';
-
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: `You are about to ${textKeterangan} this Purchase Requisition document.`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: confirmBtnColor,
-                    confirmButtonText: confirmBtnText,
-                    customClass: {
-                        confirmButton: confirmBtnClass,
-                        cancelButton: 'btn btn-secondary'
-                    },
-                    buttonsStyling: false
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: '/permintaan-pembelian/change-status/' +
-                                id, // Match with your status update route
-                            type: "POST",
-                            data: {
-                                _token: "{{ csrf_token() }}",
-                                id: id,
-                                status: statusTarget
-                            },
-                            success: function(response) {
-                                Swal.fire({
-                                    title: 'Success!',
-                                    text: response.message ||
-                                        'The status has been updated successfully.',
-                                    icon: 'success',
-                                    showCancelButton: false,
-                                    confirmButtonColor: '#28a745',
-                                    confirmButtonText: 'OK',
-                                    customClass: {
-                                        confirmButton: 'btn btn-success'
-                                    },
-                                    buttonsStyling: false
-                                });
-
-                                // Reload table data (Pastikan ID table sesuai, contoh: #table atau #datatable)
-                                if ($.fn.DataTable.isDataTable('#table')) {
-                                    $('#table').DataTable().ajax.reload();
-                                }
-                            },
-                            error: function(err) {
-                                let errorMessage = 'Something went wrong.';
-                                if (err.responseJSON && err.responseJSON.error) {
-                                    errorMessage = err.responseJSON.error;
-                                } else if (err.responseJSON && err.responseJSON
-                                    .message) {
-                                    errorMessage = err.responseJSON.message;
-                                }
-
-                                Swal.fire({
-                                    title: 'Failed!',
-                                    text: errorMessage,
-                                    icon: 'error',
-                                    showCancelButton: false,
-                                    confirmButtonColor: '#3085d6',
-                                    confirmButtonText: 'OK',
-                                    customClass: {
-                                        confirmButton: 'btn btn-primary'
-                                    },
-                                    buttonsStyling: false
-                                });
-                            }
-                        });
-                    }
-                });
+    $.ajax({
+        url: '/permintaan-pembelian/change-status/' + id,
+        type: "POST",
+        data: {
+            _token: "{{ csrf_token() }}",
+            id: id,
+            status: statusTarget
+        },
+        success: function(response) {
+            Swal.fire({
+                title: 'Success!',
+                text: response.message || 'Status berhasil diubah ke processing.',
+                icon: 'success'
             });
+
+            if ($.fn.DataTable.isDataTable('#table')) {
+                $('#table').DataTable().ajax.reload();
+            }
+        },
+        error: function(err) {
+            Swal.fire({
+                title: 'Failed!',
+                text: 'Gagal update status',
+                icon: 'error'
+            });
+        }
+    });
+});
 
             // filter
             $('#selectStatus').on('change', function() {

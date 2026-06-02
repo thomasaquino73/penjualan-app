@@ -62,6 +62,14 @@
                             <span class="error text-danger" id="descriptionError"></span>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Close Request</label>
+                        <div class="form-check form-check-primary col-8">
+                            <input class="form-check-input" type="checkbox" value="1" name="default_pajak"
+                                id="default_pajak">
+                            <label class="form-check-label" for="default_pajak">Yes (Cannot proceed)</label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="divider divider-dashed">
@@ -119,8 +127,8 @@
 
                             <div class="col-3 mb-3">
                                 <label class="form-label" for="quantity">Quantity</label>
-                                <input type="number" id="quantity" name="quantity" class="form-control" placeholder="0"
-                                    min="1">
+                                <input type="number" id="quantity" name="quantity" class="form-control"
+                                    placeholder="0" min="1">
                                 <span class="error text-danger" id="quantityError"></span>
                             </div>
                             <div class="col-3 mb-3">
@@ -143,6 +151,7 @@
                                     placeholder="Enter notes">
                                 <span class="error text-danger" id="notesError"></span>
                             </div>
+
                         </div>
                     </div>
                     <div class="modal-footer">

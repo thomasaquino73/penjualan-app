@@ -1065,47 +1065,47 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-  public function getRequisitionDetail(Request $request)
-{
-    $ids = $request->ids;
+    public function getRequisitionDetail(Request $request)
+    {
+        $ids = $request->ids;
 
-    $details = PurchaseRequisitionDetail::with([
+        $details = PurchaseRequisitionDetail::with([
             'produkID',
             'unitID',
-            'requisition'
+            'requisition',
         ])
-        ->whereIn('purchase_requisition_id', $ids)
-        ->where('active', 1)
-        ->get()
-        ->map(function ($item) {
+            ->whereIn('purchase_requisition_id', $ids)
+            ->where('active', 1)
+            ->get()
+            ->map(function ($item) {
 
-            return [
+                return [
 
-                'id' => $item->id,
+                    'id' => $item->id,
 
-                'product_id' => $item->product_id,
+                    'product_id' => $item->product_id,
 
-                // nama barang
-                'product_name' => optional($item->produkID)->nama_barang,
+                    // nama barang
+                    'product_name' => optional($item->produkID)->nama_barang,
 
-                'qty' => $item->qty,
+                    'qty' => $item->qty,
 
-                'unit_id' => $item->unit_id,
+                    'unit_id' => $item->unit_id,
 
-                // NAMA UNIT DARI RELASI unitID
-                'unit_name' => optional($item->unitID)->detail,
+                    // NAMA UNIT DARI RELASI unitID
+                    'unit_name' => optional($item->unitID)->detail,
 
-                'required_date' => $item->required_date,
+                    'required_date' => $item->required_date,
 
-                'notes' => $item->notes,
+                    'notes' => $item->notes,
 
-                'requisition_code' => optional($item->requisition)->code,
-            ];
-        });
+                    'requisition_code' => optional($item->requisition)->code,
+                ];
+            });
 
-    return response()->json([
-        'success' => true,
-        'data' => $details
-    ]);
-}
+        return response()->json([
+            'success' => true,
+            'data' => $details,
+        ]);
+    }
 }

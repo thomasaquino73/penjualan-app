@@ -19,7 +19,6 @@ class PermissionSeeder extends Seeder
             'permintaan_pembelian' => [
                 'alias' => 'Purchase Requisition',
                 'group' => 'Purchase',
-                'actions' => array_merge($defaultActions, ['approval']), // default + approval
             ],
             'purchase_order' => [
                 'alias' => 'Purchase Order',

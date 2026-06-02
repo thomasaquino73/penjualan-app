@@ -653,7 +653,7 @@
                     topStart: {
                         buttons: [{
                                 text: '<i class="ti ti-plus me-1"></i> New',
-                                className: "btn btn-primary btn-sm me-2",
+                                className: "btn btn-primary btn-sm me-2 AddNew",
                                 action: function(e, dt, node, config) {
                                     var supplierId = $("#supplier_id").val();
 

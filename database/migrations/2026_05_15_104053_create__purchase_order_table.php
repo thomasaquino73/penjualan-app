@@ -71,8 +71,6 @@ return new class extends Migration
                 'completed',
                 'cancelled',
             ])->default('open');
-            $table->unsignedBigInteger('purchase_requisition_id')->nullable();
-$table->unsignedBigInteger('purchase_requisition_detail_id')->nullable();
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

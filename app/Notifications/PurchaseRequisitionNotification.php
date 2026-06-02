@@ -2,8 +2,8 @@
 
 namespace App\Notifications;
 
-use App\Models\General\Company;
 use App\Models\PengaturanSistem;
+use App\Models\Setting\Company;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
