@@ -53,4 +53,7 @@ class PurchaseRequisitionDetail extends Model
             'id'
         );
     }
+    public function purchaseOrderDetails() {
+    return $this->hasMany(PurchaseOrderDetail::class, 'purchase_requisition_detail_id');
+}
 }

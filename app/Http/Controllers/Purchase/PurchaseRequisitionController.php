@@ -153,7 +153,10 @@ class PurchaseRequisitionController extends Controller
                     <i class="ti ti-circle-check me-1"></i> Closed
                  </span>';
                     }
-
+  $btn .= '<a class="dropdown-item"
+                href="'.route('permintaan-pembelian.show', $row->id).'">
+                <i class="ti ti-list-details"></i> Detail
+             </a>';
                     $btn .= '<a class="dropdown-item" target="_blank"
                 href="'.route('permintaan-pembelian.print', $row->id).'">
                 <i class="ti ti-printer"></i> Print
@@ -329,7 +332,35 @@ class PurchaseRequisitionController extends Controller
         }
     }
 
-    public function show(string $id) {}
+    public function show(string $id) {
+          // Load master PR beserta detail, produk, dan relasi unitID (BasicCodeDetail)
+        $purchaseRequisition = PurchaseRequisition::with(['details.produkID', 'details.unitID','details.purchaseOrderDetails.purchaseOrder'])->findOrFail($id);
+        $company = Company::first();
+             $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+            }
+        }
+        $x = [
+            'title' => 'Purchase Requisition Show',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Purchase Requisition', 'url' => route('permintaan-pembelian.index')],
+                ['label' => 'Detail', 'url' => ''],
+            ],
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'product' => Customer::where('status', '<>', 0)->get(),
+            'model' => $purchaseRequisition,
+            'company' => $company,
+            'logoBase64' => $logoBase64,
+        ];
+
+        return view('purchase.purchase_requisition.purchase_requisition_show', $x);
+    }
 
     public function edit(string $id)
     {
