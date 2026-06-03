@@ -134,7 +134,7 @@
                 let id = $(this).data('id');
                 let token = $("meta[name='csrf-token']").attr("content");
                 Swal.fire({
-                    title: 'Restore this purchase requisition?',
+                    title: 'Restore this purchase order?',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, restore!',

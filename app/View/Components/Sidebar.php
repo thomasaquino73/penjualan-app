@@ -140,10 +140,10 @@ class Sidebar extends Component
                 'children' => [
                     [
                         'name' => 'Sales Quotation',
-                        'route' => 'customer.index',
-                        'pattern' => 'customer.*',
+                        'route' => 'sales-quotation.index',
+                        'pattern' => 'sales-quotation.*',
                         'roles' => ['Super Admin'],
-                        'permissions' => ['barang-browse'],
+                        'permissions' => ['sales_quotation-browse'],
                     ],
                     [
                         'name' => 'Sales Order',

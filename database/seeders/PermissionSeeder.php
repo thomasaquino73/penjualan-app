@@ -25,6 +25,15 @@ class PermissionSeeder extends Seeder
                 'group' => 'Purchase',
                 'actions' => array_merge($defaultActions, ['approval']), // default + approval
             ],
+            'sales_quotation' => [
+                'alias' => 'Sales Quotation',
+                'group' => 'Sales',
+            ],
+            'sales_order' => [
+                'alias' => 'Sales Order',
+                'group' => 'Sales',
+                'actions' => array_merge($defaultActions, ['approval']), // default + approval
+            ],
             'customer' => ['alias' => 'Customer', 'group' => 'Sales'],
             'kategori_customer' => ['alias' => 'Customer Category', 'group' => 'Sales'],
 

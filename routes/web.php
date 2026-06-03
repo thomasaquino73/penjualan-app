@@ -17,6 +17,7 @@ use App\Http\Controllers\Purchase\Supplier\KategoriSupplierController;
 use App\Http\Controllers\Purchase\Supplier\SupplierController;
 use App\Http\Controllers\Sales\Customer\CustomerController;
 use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
+use App\Http\Controllers\Sales\SalesQuotationController;
 use App\Http\Controllers\Setting\CashBankController;
 use App\Http\Controllers\Setting\Company\FobController;
 use App\Http\Controllers\Setting\Company\ShippingController;
@@ -179,7 +180,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('kategori-barang', KategoriBarangController::class);
 
     // TRANSAKSI
-
+    Route::resource('sales-quotation', SalesQuotationController::class);
     // PENGATURAN
     Route::resource('roles', RolesController::class);
     Route::get('edit-roles', [RolesController::class, 'edit']);

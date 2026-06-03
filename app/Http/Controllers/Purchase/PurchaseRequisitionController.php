@@ -22,11 +22,37 @@ use Yajra\DataTables\DataTables;
 
 class PurchaseRequisitionController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $routeName = $request->route()->getName();
+
+            $permissionMap = [
+                'purchase-requisition.index' => 'purchase_requisition-browse',
+                'purchase-requisition.show' => 'purchase_requisition-read',
+                'purchase-requisition.create' => 'purchase_requisition-create',
+                'purchase-requisition.store' => 'purchase_requisition-create',
+                'purchase-requisition.edit' => 'purchase_requisition-edit',
+                'purchase-requisition.update' => 'purchase_requisition-edit',
+                'purchase-requisition.destroy' => 'purchase_requisition-delete',
+                'purchase-requisition.trash' => 'purchase_requisition-trash',
+                'purchase-requisition.restore' => 'purchase_requisition-restore',
+            ];
+
+            if (isset($permissionMap[$routeName])) {
+                if (! $request->user()->can($permissionMap[$routeName])) {
+                    abort(403, 'Unauthorized action');
+                }
+            }
+
+            return $next($request);
+        });
+    }
     public function index(Request $r)
     {
         if ($r->ajax()) {
             // Ambil ID user yang sedang login
-            $userId = auth()->id();
+            $userId = Auth::user()->id;
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
             $query = PurchaseRequisition::where('active', '<>', 0)
@@ -100,14 +126,26 @@ class PurchaseRequisitionController extends Controller
 
                     return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
                 })
-                ->addColumn('cekbok', function ($row) {
-                    return '<div class="form-check form-check-primary mt-3">
-                        <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'">
-                    </div>';
+                 ->addColumn('cekbok', function ($row) {
+
+                    if (
+                        auth()->user()->can('purchase_requisition-delete') &&
+                        $row->status === 'draft'
+                    ) {
+                        return '
+                            <div class="form-check form-check-primary">
+                                <input class="form-check-input checkItem"
+                                    type="checkbox"
+                                    value="'.$row->id.'">
+                            </div>
+                        ';
+                    }
+
+                    return '';
                 })
                 ->addColumn('action', function ($row) {
-                    $currentUserId = auth()->id();
-                    $user = auth()->user();
+                    $currentUserId = Auth::user()->id;
+                    $user = Auth::user();
 
                     $btn = '<div class="btn-group">
                 <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown">
@@ -153,7 +191,7 @@ class PurchaseRequisitionController extends Controller
                     <i class="ti ti-circle-check me-1"></i> Closed
                  </span>';
                     }
-  $btn .= '<a class="dropdown-item"
+                    $btn .= '<a class="dropdown-item"
                 href="'.route('permintaan-pembelian.show', $row->id).'">
                 <i class="ti ti-list-details"></i> Detail
              </a>';
@@ -332,11 +370,12 @@ class PurchaseRequisitionController extends Controller
         }
     }
 
-    public function show(string $id) {
-          // Load master PR beserta detail, produk, dan relasi unitID (BasicCodeDetail)
-        $purchaseRequisition = PurchaseRequisition::with(['details.produkID', 'details.unitID','details.purchaseOrderDetails.purchaseOrder'])->findOrFail($id);
+    public function show(string $id)
+    {
+        // Load master PR beserta detail, produk, dan relasi unitID (BasicCodeDetail)
+        $purchaseRequisition = PurchaseRequisition::with(['details.produkID', 'details.unitID', 'details.purchaseOrderDetails.purchaseOrder'])->findOrFail($id);
         $company = Company::first();
-             $logoBase64 = null;
+        $logoBase64 = null;
         if ($company && $company->logo) {
             $path = public_path($company->logo);
             if (file_exists($path)) {
