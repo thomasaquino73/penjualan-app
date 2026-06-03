@@ -3,11 +3,16 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Models\Inventory\Barang;
+use App\Models\Sales\Customer;
 use App\Models\Sales\SalesQuotation;
 use App\Models\Sales\SalesQuotationDetail;
+use App\Models\Setting\SyaratPembayaran;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 class SalesQuotationController extends Controller
@@ -174,7 +179,7 @@ class SalesQuotationController extends Controller
                         }
 
                         // ✅ DELETE
-                        if ($user->can('permintaan_pembelian-delete') && $row->status == 'draft') {
+                        if ($user->can('sales_quotation-delete') && $row->status == 'draft') {
                             $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                         data-id="'.$row->id.'" data-name="'.$row->code.'">
                         <i class="ti ti-trash me-1"></i> Delete
@@ -222,14 +227,56 @@ class SalesQuotationController extends Controller
         return view('sales.salesQuotation.sales_quotation_index', $x);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+     private function generateNumberId()
     {
-        //
-    }
+        $last = SalesQuotation::whereNotNull('sales_quotation_code')
+            ->orderBy('id', 'desc')
+            ->first();
 
+        if (! $last) {
+            return 'SQ-0001';
+        }
+
+        $lastId = $last->sales_quotation_code;
+
+        // 🔥 ambil angka terakhir
+        preg_match('/(\d+)$/', $lastId, $matches);
+
+        if (! $matches) {
+            // kalau tidak ada angka → tambahin default
+            return $lastId.'01';
+        }
+
+        $number = (int) $matches[1];
+        $number++;
+
+        // 🔥 ambil prefix tanpa angka
+        $prefix = substr($lastId, 0, -strlen($matches[1]));
+
+        // 🔥 padding mengikuti panjang angka sebelumnya
+        $length = strlen($matches[1]);
+
+        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+    }
+    
+   public function create()
+    {
+        $x = [
+            'title' => 'Sales Quotation New',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Sales Quotation', 'url' => ''],
+            ],
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'idNumber' => $this->generateNumberId(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
+            'salesman' => User::where('status', '<>', 0)->get(),
+
+        ];
+
+        return view('sales.salesQuotation.sales_quotation_create', $x);
+    }
     /**
      * Store a newly created resource in storage.
      */
@@ -268,5 +315,11 @@ class SalesQuotationController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function getKontakByCustomer($customer_id)
+    {
+        $kontak = DB::table('customer_kontak')->where('customer_id', $customer_id)->get();
+        return response()->json($kontak);
     }
 }

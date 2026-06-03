@@ -19,13 +19,10 @@ return new class extends Migration
             $table->string('sales_quotation_code')->unique();
             $table->date('sales_quotation_date');
             $table->unsignedBigInteger('payment_term_id')->nullable();
-            $table->foreign('payment_term_id')->references('id')->on('syarat_pembayaran');
             $table->string('address')->nullable();
             $table->string('description')->nullable();
             $table->unsignedBigInteger('customer_id');
             $table->unsignedBigInteger('customer_contact_id');
-            $table->foreign('customer_contact_id')->references('id')->on('customer_kontak');
-            $table->foreign('customer_id')->references('id')->on('customer');
             $table->boolean('kena_pajak')->default(1)->comment('kena pajak atau tidak')->nullable();
             $table->boolean('total_termasuk_pajak')->default(1)->comment('harga total termasuk pajak')->nullable();
             $table->enum('status', [
@@ -50,11 +47,8 @@ return new class extends Migration
         Schema::create("sales_quotation_detail_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('sales_quotation_id');
-            $table->foreign('sales_quotation_id')->references('id')->on("sales_quotation_{$this->year}");
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('salesman_id')->nullable();
-            $table->foreign('product_id')->references('id')->on('data_barang');
-            $table->foreign('salesman_id')->references('id')->on('users');
             $table->integer('quantity');
             $table->decimal('price', 18, 2);
             $table->decimal('diskon_percent', 18, 2);

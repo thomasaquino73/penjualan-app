@@ -277,7 +277,6 @@ class PurchaseRequisitionController extends Controller
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Purchase Requisition', 'url' => ''],
             ],
-            'customer' => Customer::where('status', '<>', 0)->get(),
             'idNumber' => $this->generateNumberId(),
             'product' => Barang::where('status', '<>', 0)->get(),
 
@@ -413,7 +412,6 @@ class PurchaseRequisitionController extends Controller
                 ['label' => 'Purchase Requisition', 'url' => route('permintaan-pembelian.index')],
                 ['label' => 'Edit', 'url' => ''],
             ],
-            'customer' => Customer::where('status', '<>', 0)->get(),
             'product' => Customer::where('status', '<>', 0)->get(),
             'model' => $purchaseRequisition,
         ];

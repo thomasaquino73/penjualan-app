@@ -241,13 +241,16 @@
                                                                 <option value="" selected hidden>Select Salutation
                                                                 </option>
                                                                 <option value="Mr."
-                                                                    {{ $kontak->sapaan === 'Mr.' ? 'selected' : '' }}>Mr.
+                                                                    {{ optional($kontak)->sapaan === 'Mr.' ? 'selected' : '' }}>
+                                                                    Mr.
                                                                 </option>
                                                                 <option value="Mrs."
-                                                                    {{ $kontak->sapaan === 'Mrs.' ? 'selected' : '' }}>Mrs.
+                                                                    {{ optional($kontak)->sapaan === 'Mrs.' ? 'selected' : '' }}>
+                                                                    Mrs.
                                                                 </option>
                                                                 <option value="Ms."
-                                                                    {{ $kontak->sapaan === 'Ms.' ? 'selected' : '' }}>Ms.
+                                                                    {{ optional($kontak)->sapaan === 'Ms.' ? 'selected' : '' }}>
+                                                                    Ms.
                                                                 </option>
                                                             </select>
                                                         </div>
@@ -260,7 +263,7 @@
                                                             <input type="text" id="contact_person"
                                                                 name="contact_person" class="form-control"
                                                                 placeholder="Enter Contact Person"
-                                                                value="{{ $kontak->contact_person }}">
+                                                                value="{{ optional($kontak)->contact_person }}">
                                                         </div>
 
                                                     </div>
@@ -273,7 +276,7 @@
                                                     <span class="input-group-text"><i class="ti ti-sitemap"></i></span>
                                                     <input type="text" id="posisi_jabatan" name="posisi_jabatan"
                                                         class="form-control" placeholder="Enter Position"
-                                                        value="{{ $kontak->posisi_jabatan }}">
+                                                        value="{{ optional($kontak)->posisi_jabatan }}">
                                                 </div>
 
                                                 <span class="error text-danger" id="posisi_jabatanError"></span>
@@ -284,7 +287,7 @@
                                                     <span class="input-group-text"><i class="ti ti-mail"></i></span>
                                                     <input type="text" id="email_kontak" name="email_kontak"
                                                         class="form-control" placeholder="Enter Email"
-                                                        value="{{ $kontak->email_kontak }}">>
+                                                        value="{{ optional($kontak)->email_kontak }}">
                                                 </div>
                                                 <span class="error text-danger" id="email_kontakError"></span>
                                             </div>
@@ -294,7 +297,7 @@
                                                     <span class="input-group-text"><i class="ti ti-phone"></i></span>
                                                     <input type="text" id="phone1_kontak" name="phone1_kontak"
                                                         class="form-control" placeholder="Enter Phone Number"
-                                                        value="{{ $kontak->phone1_kontak }}">>
+                                                        value="{{ optional($kontak)->phone1_kontak }}">
                                                 </div>
                                                 <span class="error text-danger" id="phone1_kontakError"></span>
                                             </div>
@@ -305,7 +308,7 @@
                                                     <span class="input-group-text"><i class="ti ti-phone"></i></span>
                                                     <input type="text" id="phone2_kontak" name="phone2_kontak"
                                                         class="form-control" placeholder="Enter Phone Number"
-                                                        value="{{ $kontak->phone2_kontak }}">>
+                                                        value="{{ optional($kontak)->phone2_kontak }}">
                                                 </div>
                                                 <span class="error text-danger" id="phone2_kontakError"></span>
                                             </div>
@@ -318,7 +321,7 @@
                                                         class="form-control" placeholder="Enter Fax Number">
                                                 </div>
                                                 <span class="error text-danger" id="faximili_kontakError"
-                                                    value="{{ $kontak->faximili_kontak }}"></span>
+                                                    value="{{ optional($kontak)->faximili_kontak }}"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
                                                 <label for="website_kontak" class="form-label">Website
@@ -327,7 +330,7 @@
                                                     <span class="input-group-text"><i class="ti ti-globe"></i></span>
                                                     <input type="text" id="website_kontak" name="website_kontak"
                                                         class="form-control" placeholder="Enter Website URL"
-                                                        value="{{ $kontak->website_kontak }}">
+                                                        value="{{ optional($kontak)->website_kontak }}">
                                                 </div>
                                                 <span class="error text-danger" id="website_kontakError"></span>
                                             </div>
@@ -337,7 +340,7 @@
                                                     <span class="input-group-text"><i class="ti ti-notes"></i></span>
                                                     <input type="text" id="catatan" name="catatan"
                                                         class="form-control" placeholder="Enter Notes"
-                                                        value="{{ $kontak->catatan }}">
+                                                        value="{{ optional($kontak)->catatan }}">
                                                 </div>
                                                 <span class="error text-danger" id="catatanError"></span>
                                             </div>
@@ -354,7 +357,7 @@
                                                     <div class="form-check form-check-primary col-8">
                                                         <input class="form-check-input" type="checkbox" value="1"
                                                             name="default_pengiriman" id="default_pengiriman"
-                                                            {{ $pengiriman->default_pengiriman == 1 ? 'checked' : '' }}>
+                                                            {{ optional($pengiriman)->default_pengiriman == 1 ? 'checked' : '' }}>
                                                         <label class="form-check-label" for="default_pengiriman">Same as
                                                             billing address</label>
                                                     </div>
@@ -363,7 +366,7 @@
                                             <div class="col-md-12 col-sm-12 mb-3">
                                                 <label for="kota_pengiriman" class="form-label">Delivery Address</label>
 
-                                                <textarea id="alamat_pengiriman" name="alamat_pengiriman" class="form-control" placeholder="Enter Main Address">{{ $pengiriman->alamat_pengiriman }}</textarea>
+                                                <textarea id="alamat_pengiriman" name="alamat_pengiriman" class="form-control" placeholder="Enter Main Address">{{ optional($pengiriman)->alamat_pengiriman }}</textarea>
                                                 <span class="error text-danger" id="alamat_pengirimanError"></span>
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-3">
@@ -372,7 +375,7 @@
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
                                                     <input type="text" id="kota_pengiriman" name="kota_pengiriman"
                                                         class="form-control" placeholder="Enter City"
-                                                        value="{{ $pengiriman->kota_pengiriman }}">
+                                                        value="{{ optional($pengiriman)->kota_pengiriman }}">
                                                 </div>
 
                                                 <span class="error text-danger" id="kota_pengirimanError"></span>
@@ -385,7 +388,7 @@
                                                     <input type="text" id="kodepos_pengiriman"
                                                         name="kodepos_pengiriman" class="form-control"
                                                         placeholder="Enter Postal Code"
-                                                        value="{{ $pengiriman->kodepos_pengiriman }}">
+                                                        value="{{ optional($pengiriman)->kodepos_pengiriman }}">
                                                 </div>
 
                                                 <span class="error text-danger" id="kodepos_pengirimanError"></span>
@@ -397,7 +400,7 @@
                                                     <input type="text" id="provinsi_pengiriman"
                                                         name="provinsi_pengiriman" class="form-control"
                                                         placeholder="Enter Province"
-                                                        value="{{ $pengiriman->provinsi_pengiriman }}">
+                                                        value="{{ optional($pengiriman)->provinsi_pengiriman }}">
                                                 </div>
 
                                                 <span class="error text-danger" id="provinsi_pengirimanError"></span>
@@ -408,7 +411,7 @@
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
                                                     <input type="text" id="negara_pengiriman" name="negara_pengiriman"
                                                         class="form-control" placeholder="Enter Country"
-                                                        value="{{ $pengiriman->negara_pengiriman }}">
+                                                        value="{{ optional($pengiriman)->negara_pengiriman }}">
                                                 </div>
 
                                                 <span class="error text-danger" id="negara_pengirimanError"></span>
@@ -427,7 +430,7 @@
                                                 <div class="form-check form-check-primary col-8">
                                                     <input class="form-check-input" type="checkbox" value="1"
                                                         name="default_pajak" id="default_pajak"
-                                                        {{ $pajak->default_pajak == 1 ? 'checked' : '' }}>
+                                                        {{ optional($pajak)->default_pajak == 1 ? 'checked' : '' }}>
                                                     <label class="form-check-label" for="default_pajak">Default Invoice
                                                         includes Tax</label>
                                                 </div>
@@ -442,17 +445,19 @@
                                                     <select name="tipe_id_pajak" id="tipe_id_pajak" class="form-select">
                                                         <option value="" selected hidden>Select Type ID Tax</option>
                                                         <option value="NIK"
-                                                            {{ $pajak->tipe_id_pajak == 'NIK' ? 'selected' : '' }}>NIK
+                                                            {{ optional($pajak)->tipe_id_pajak == 'NIK' ? 'selected' : '' }}>
+                                                            NIK
                                                         </option>
                                                         <option value="NPWP"
-                                                            {{ $pajak->tipe_id_pajak == 'NPWP' ? 'selected' : '' }}>NPWP
+                                                            {{ optional($pajak)->tipe_id_pajak == 'NPWP' ? 'selected' : '' }}>
+                                                            NPWP
                                                         </option>
                                                         <option value="Paspor"
-                                                            {{ $pajak->tipe_id_pajak == 'Paspor' ? 'selected' : '' }}>
+                                                            {{ optional($pajak)->tipe_id_pajak == 'Paspor' ? 'selected' : '' }}>
                                                             Paspor
                                                         </option>
                                                         <option value="Lainnya"
-                                                            {{ $pajak->tipe_id_pajak == 'Lainnya' ? 'selected' : '' }}>
+                                                            {{ optional($pajak)->tipe_id_pajak == 'Lainnya' ? 'selected' : '' }}>
                                                             Lainnya
                                                         </option>
                                                     </select>
@@ -468,7 +473,7 @@
                                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
                                                     <input type="text" class="form-control" id="nomor_wajib_pajak"
                                                         name="nomor_wajib_pajak" placeholder="Enter NPWP number"
-                                                        value="{{ $pajak->nomor_wajib_pajak }}">
+                                                        value="{{ optional($pajak)->nomor_wajib_pajak }}">
                                                 </div>
 
                                             </div>
@@ -481,7 +486,7 @@
                                                     <span class="input-group-text"><i class="ti ti-user"></i></span>
                                                     <input type="text" class="form-control" id="nama_wajib_pajak"
                                                         name="nama_wajib_pajak" placeholder="Enter Taxpayer Name"
-                                                        value="{{ $pajak->nama_wajib_pajak }}">
+                                                        value="{{ optional($pajak)->nama_wajib_pajak }}">
                                                 </div>
 
                                             </div>
@@ -494,7 +499,7 @@
                                                     <span class="input-group-text"><i class="ti ti-id-badge-2"></i></span>
                                                     <input type="text" class="form-control" id="id_tku"
                                                         name="id_tku" placeholder="Enter ID TKU"
-                                                        value="{{ $pajak->id_tku }}">
+                                                        value="{{ optional($pajak)->id_tku }}">
                                                 </div>
 
                                             </div>
@@ -508,7 +513,7 @@
                                                 <div class="form-check form-check-primary col-8">
                                                     <input class="form-check-input" type="checkbox" value="1"
                                                         name="check_address" id="check_address"
-                                                        {{ $pajak->check_address == 1 ? 'checked' : '' }}>
+                                                        {{ optional($pajak)->check_address == 1 ? 'checked' : '' }}>
                                                     <label class="form-check-label" for="check_address">Tax address is
                                                         the same as billing address</label>
                                                 </div>
@@ -518,7 +523,7 @@
                                             <label class="col-sm-3 col-form-label"
                                                 for="basic-default-name">Address</label>
                                             <div class="col-sm-9">
-                                                <textarea class="form-control" id="alamat_pajak" name="alamat_pajak" placeholder="Enter Tax Address">{{ $pajak->alamat_pajak }}</textarea>
+                                                <textarea class="form-control" id="alamat_pajak" name="alamat_pajak" placeholder="Enter Tax Address">{{ optional($pajak)->alamat_pajak }}</textarea>
                                             </div>
                                         </div>
                                         <div class="row mb-3">
@@ -528,7 +533,7 @@
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
                                                     <input type="text" class="form-control" id="kota_pajak"
                                                         name="kota_pajak" placeholder="Enter City"
-                                                        value="{{ $pajak->kota_pajak }}">
+                                                        value="{{ optional($pajak)->kota_pajak }}">
                                                 </div>
 
                                             </div>
@@ -541,7 +546,7 @@
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
                                                     <input type="text" class="form-control" id="kodepos_pajak"
                                                         name="kodepos_pajak" placeholder="Enter Postal Code"
-                                                        value="{{ $pajak->kodepos_pajak }}">
+                                                        value="{{ optional($pajak)->kodepos_pajak }}">
                                                 </div>
 
                                             </div>
@@ -554,7 +559,7 @@
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
                                                     <input type="text" class="form-control" id="provinsi_pajak"
                                                         name="provinsi_pajak" placeholder="Enter Province"
-                                                        value="{{ $pajak->provinsi_pajak }}">
+                                                        value="{{ optional($pajak)->provinsi_pajak }}">
                                                 </div>
 
                                             </div>
@@ -567,7 +572,7 @@
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
                                                     <input type="text" class="form-control" id="negara_pajak"
                                                         name="negara_pajak" placeholder="Enter Country"
-                                                        value="{{ $pajak->negara_pajak }}">
+                                                        value="{{ optional($pajak)->negara_pajak }}">
                                                 </div>
 
                                             </div>

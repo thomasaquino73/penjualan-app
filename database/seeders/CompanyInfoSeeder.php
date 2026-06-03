@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Purchase\Supplier;
+use App\Models\Sales\Customer;
 use App\Models\Setting\Company;
 use App\Models\Setting\Currency;
 use App\Models\Setting\SyaratPembayaran;
@@ -67,6 +68,25 @@ class CompanyInfoSeeder extends Seeder
             'syarat_pembelian' => 'Net 30',
             'default_diskon' => null,
             'default_deskripsi' => null,
+            'status' => 1,
+            'created_by' => 1,
+            'updated_by' => null,
+        ]);
+
+           Customer::create([
+            'id_customer' => 'C-00001',
+            'nama_customer' => 'Thomas',
+            'kategori_customer_id' => 1,
+            'email' => 'info@almexbintangtimur.com',
+            'phone_1' => '081382397429',
+            'phone_2' => '081382397429',
+            'faximili' => null,
+            'website' => 'https://www.thomasaquino.my.id',
+            'alamat_tagihan' => 'Tangerang',
+            'kota_tagihan' => 'Tangerang',
+            'kodepos_tagihan' => '16424',
+            'provinsi_tagihan' => 'Banten',
+            'negara_tagihan' => 'Indonesia',
             'status' => 1,
             'created_by' => 1,
             'updated_by' => null,

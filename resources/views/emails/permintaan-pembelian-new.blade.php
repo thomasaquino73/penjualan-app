@@ -85,7 +85,7 @@
                 <p>Silakan klik tombol di bawah untuk membuka detail purchase requisitionnya:</p>
 
                 <p style="text-align:center;">
-                    <a href="{{ $url }}" class="button">Lihat Pesanan</a>
+                    <a href="{{ $url }}" class="button">Lihat Permintaan</a>
                 </p>
 
                 <p>Jika Anda bukan bagian dari proses editorial, Anda dapat mengabaikan email ini.</p>
