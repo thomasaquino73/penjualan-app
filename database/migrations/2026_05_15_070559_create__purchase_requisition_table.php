@@ -38,6 +38,8 @@ return new class extends Migration
             $table->bigInteger('product_id');
             $table->bigInteger('qty');
             $table->decimal('po_qty', 18, 4)->default(0)->comment('Qty yang sudah sukses di-PO-kan');
+            $table->decimal('outstanding_qty', 18, 4)->default(0)
+          ->comment('Sisa qty yang belum di-PO-kan: qty - po_qty');
             $table->bigInteger('unit_id');
             $table->date('required_date')->nullable();
             $table->string('notes')->nullable();

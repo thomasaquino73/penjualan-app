@@ -628,23 +628,31 @@
         }
     </script>
     <script>
-        let prDetailsData = [
-            @if (isset($model) && isset($model->details))
-                @foreach ($model->details as $detail)
-                    {
-                        'product_id': '{{ $detail->product_id }}',
-                        'data_produk': '{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}',
-                        'quantity': '{{ $detail->qty }}',
-                        'unit_id': '{{ $detail->unit_id }}',
-                        'unit': '{{ $detail->unitID ? $detail->unitID->name ?? ($detail->unitID->detail ?? $detail->unitID->nama) : 'Unit' }}',
-                        'unit_price': '{{ $detail->unit_price }}',
-                        'discount': '{{ $detail->discount ?? 0 }}',
-                        'amount': '{{ $detail->amount }}',
-                    }
-                    {{ !$loop->last ? ',' : '' }}
-                @endforeach
-            @endif
-        ];
+        let prDetailsData = @json($jsonDetails);
+
+        // Cek status PO global (Optional jika ingin mematikan tombol "Requisition" di pojok kanan atas saat edit)
+        let poIsFromPR = {{ $isFromPR ? 'true' : 'false' }};
+        if (poIsFromPR) {
+            // Jika PO ini dari PR, mungkin kamu mau mendisable tombol "REQUISITION" di atas agar user tidak tambah PR lain
+            $(".btn-success").html('<i class="ti ti-link"></i> Linked to PR').prop('disabled', true);
+        }
+        // let prDetailsData = [
+        //     @if (isset($model) && isset($model->details))
+        //         @foreach ($model->details as $detail)
+        //             {
+        //                 'product_id': '{{ $detail->product_id }}',
+        //                 'data_produk': '{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}',
+        //                 'quantity': '{{ $detail->qty }}',
+        //                 'unit_id': '{{ $detail->unit_id }}',
+        //                 'unit': '{{ $detail->unitID ? $detail->unitID->name ?? ($detail->unitID->detail ?? $detail->unitID->nama) : 'Unit' }}',
+        //                 'unit_price': '{{ $detail->unit_price }}',
+        //                 'discount': '{{ $detail->discount ?? 0 }}',
+        //                 'amount': '{{ $detail->amount }}',
+        //             }
+        //             {{ !$loop->last ? ',' : '' }}
+        //         @endforeach
+        //     @endif
+        // ];
 
         $(document).ready(function() {
             $(".select2-modal").each(function() {
@@ -736,13 +744,17 @@
                                     }
 
                                     $("#formPrDetail")[0].reset();
-                                    $("#detail_id").val("");
+                                    $("#detail_id").val(""); // Kosongkan index menandakan data baru
+
+                                    // === BERSIHKAN ATRIBUT VALDASI PR AGAR TIDAK MENGUNCI DATA BARU ===
+                                    $("#quantity").removeAttr("data-max-allowed");
+                                    $("#quantity").removeAttr("data-qty-lama");
 
                                     // Reset status asal source di modal saat buat data baru
                                     $("#badgeSource").removeClass("bg-primary").addClass(
                                         "bg-secondary").text("Source: Manual / Tanpa PR");
                                     $("#product_id").prop("disabled",
-                                    false); // Pastikan bisa dipilih kembali
+                                        false); // Pastikan bisa dipilih kembali
 
                                     if ($.fn.select2) {
                                         $("#product_id").val("").trigger("change");
@@ -752,67 +764,74 @@
                                     $("#modalTitle").text("Create new entry");
                                     $("#btnSubmitModal").text("Create");
                                     $("#modalPrDetail").modal("show");
-                                },
+                                }
                             },
                             {
                                 text: '<i class="ti ti-edit me-1"></i> Edit',
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
                                 action: function(e, dt, node, config) {
-                                    let data = dt.row({
+                                    let rowSelected = dt.row({
                                         selected: true
-                                    }).data();
-                                    let rowIndex = dt.row({
-                                        selected: true
-                                    }).index();
+                                    });
+                                    let data = rowSelected.data();
+                                    let rowIndex = rowSelected.index();
 
+                                    // 1. TANDAI BAHWA SEDANG PROSES EDIT (PENTING!)
+                                    // Gunakan ini untuk mencegah event 'change' product mereset form saat kita sedang mengisinya
+                                    window.isPopulating = true;
                                     window.isEditingMode = true;
 
-                                    // Menyimpan index baris array untuk penanda update
                                     $("#detail_id").val(rowIndex);
 
-                                    // --- AMANKAN DATA ID RELASI DI SINI ---
-                                    $("#modal_purchase_requisition_detail_id").val(data.detail_id ||
-                                        data.purchase_requisition_detail_id || "");
-                                    $("#modal_requisition_code").val(data.requisition_code || "");
+                                    // 2. Setup Maksimal Kuota
+                                    let kuotaMaksimal = parseFloat(data.kuota_asli || data.qty ||
+                                        data.quantity || 0);
+                                    $("#quantity").attr("data-max-allowed", kuotaMaksimal);
+                                    $("#modalTitle").html(
+                                        `Edit Entry | <span class="badge bg-danger">Maksimal Kuota PR: ${kuotaMaksimal}</span>`
+                                        );
 
-                                    // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
-                                    if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
-                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
-                                    } else {
-                                        $("#quantity").removeAttr("data-sisa-pr");
-                                    }
-                                    // --------------------------------------
+                                    // 3. Bersihkan Form Manual (Hindari .reset() untuk menjaga Select2 tetap stabil)
+                                    $("#formPrDetail").find("input, select, textarea").not(
+                                        '[type="hidden"]').val('');
 
-                                    // === CEK APAKAH ITEM INI BERASAL DARI PR ATAU BUKAN ===
-                                    // Item dianggap dari PR jika memiliki 'requisition_code' atau 'purchase_requisition_detail_id'
-                                    if (data.requisition_code || data
-                                        .purchase_requisition_detail_id) {
-                                        // JIKA DARI PR:
-                                        $("#badgeSource").removeClass("bg-secondary").addClass(
-                                            "bg-primary").text("Source: PR (" + data
-                                            .requisition_code + ")");
+                                    // 4. Isi Data Dasar
+                                    $("#quantity").val(parseFloat(data.quantity || 0));
+                                    $("#modal_purchase_requisition_detail_id").val(data
+                                        .purchase_requisition_detail_id || "");
+                                    $("#unit_price").val(parseFloat(data.unit_price || 0));
+                                    $("#discount").val(parseFloat(data.discount || 0));
+                                    $("#tax").val(parseFloat(data.tax || 0));
 
-                                        // Proteksi: Produk tidak boleh diganti jika dari PR (opsional, tergantung kebutuhan bisnis)
-                                        $("#product_id").prop("disabled", true);
-                                    } else {
-                                        // JIKA DI LUAR PR (Bikin Sendiri / Bebas):
-                                        $("#badgeSource").removeClass("bg-primary").addClass(
-                                            "bg-secondary").text("Source: Manual / Tanpa PR");
+                                    // 5. Pastikan dropdown tidak dalam keadaan disabled
+                                    $('#unit_id').prop("disabled", false);
+                                    $('#product_id').prop("disabled", false);
 
-                                        // Produk bebas diganti karena input manual
-                                        $("#product_id").prop("disabled", false);
-                                    }
+                                    // 6. Trigger Product untuk memuat daftar unit via AJAX
+                                    $("#product_id").val(data.product_id).trigger("change.select2");
 
-                                    // Load data ke dalam Form Modal
-                                    $("#quantity").val(data.quantity);
-                                    $("#unit_id").data("pending-val", data.unit_id);
-                                    $("#product_id").val(data.product_id).trigger("change");
-                                    $("#unit_price").val(data.unit_price);
-                                    $("#discount").val(data.discount || 0);
-                                    $("#tax").val(data.tax || 0);
+                                    // 7. Penanganan Unit (Delay untuk menunggu respons AJAX produk)
+                                    setTimeout(function() {
+                                        let $unitSelect = $('#unit_id');
 
-                                    $("#modalTitle").text("Edit entry");
+                                        // Hapus opsi lama jika ada
+                                        $unitSelect.empty();
+
+                                        if (data.unit_id) {
+                                            // Tambahkan data unit yang tersimpan
+                                            let newOption = new Option(data.unit || "Unit",
+                                                data.unit_id, true, true);
+                                            $unitSelect.append(newOption).trigger(
+                                                'change.select2');
+                                        } else {
+                                            $unitSelect.val('').trigger('change.select2');
+                                        }
+
+                                        // Lepaskan flag setelah selesai semua proses
+                                        window.isPopulating = false;
+                                    }, 500);
+
                                     $("#btnSubmitModal").text("Update");
                                     $("#modalPrDetail").modal("show");
                                 }
@@ -874,37 +893,83 @@
                     },
                 },
             });
-
             $("#btnSubmitModal").on("click", function(e) {
-                let qtyInput = $("#quantity");
-                let currentQty = parseFloat(qtyInput.val()) || 0;
+                e.preventDefault();
 
-                // Ambil batas sisa PR dari atribut input modal
-                let maxPrLimit = qtyInput.attr("data-sisa-pr");
+                let qtyInput = parseFloat($("#quantity").val() || 0);
+                let rowIndex = $("#detail_id").val();
+                let batasMaksimal = parseFloat($("#quantity").attr("data-max-allowed") || 0);
+                let isPrItem = ($("#modal_purchase_requisition_detail_id").val() !== "" && $(
+                    "#modal_purchase_requisition_detail_id").val() !== "null");
 
-                // JIKA BERDASARKAN PR (maxPrLimit terdefinisi dan tidak kosong)
-                if (maxPrLimit !== undefined && maxPrLimit !== null && maxPrLimit !== '') {
-                    maxPrLimit = parseFloat(maxPrLimit);
-
-                    if (currentQty > maxPrLimit) {
-                        e.preventDefault(); // Hentikan proses simpan/update ke array
-
-                        Swal.fire({
-                            icon: "warning",
-                            title: "Melebihi Sisa PR",
-                            text: `Kuantitas item ini tidak boleh melebihi sisa PR (Maksimal sisa: ${maxPrLimit}).`,
-                            customClass: {
-                                confirmButton: "btn btn-warning"
-                            },
-                            buttonsStyling: false
-                        });
-
-                        qtyInput.val(maxPrLimit); // Otomatis reset input ke angka maksimal
-                        return false;
-                    }
+                if (isPrItem && qtyInput > batasMaksimal) {
+                    Swal.fire({
+                        title: "Melebihi Kuota PR",
+                        text: `Kuantitas tidak boleh melebihi kuota PR. (Maksimal: ${batasMaksimal}).`,
+                        icon: "error",
+                        buttonsStyling: false,
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        }
+                    });
+                    return false;
                 }
 
-                // JIKA PO BEBAS (maxPrLimit tidak ada), AKAN LOLOS TANPA VALIDASI MAKSIMAL
+                // Ambil data form
+                let productId = $("#product_id").val();
+                let productName = $("#product_id option:selected").text();
+                let unitId = $("#unit_id").val();
+                let unitName = $("#unit_id option:selected").text(); // Ini adalah nama satuan yang benar
+
+                if (rowIndex !== "" && rowIndex !== undefined && rowIndex !== null) {
+                    // === SKENARIO EDIT ===
+                    rowIndex = parseInt(rowIndex);
+
+                    prDetailsData[rowIndex] = {
+                        ...prDetailsData[rowIndex],
+                        product_id: productId,
+                        product_name: productName,
+                        nama_produk: productName,
+                        data_produk: productName,
+                        quantity: qtyInput,
+                        unit_id: unitId,
+                        unit: unitName, // <--- PENTING: Update field unit
+                        unit_name: unitName, // <--- PENTING: Update field unit_name
+                        unit_price: parseFloat($("#unit_price").val() || 0),
+                        discount: parseFloat($("#discount").val() || 0),
+                        tax: parseFloat($("#tax").val() || 0),
+                        amount: (qtyInput * parseFloat($("#unit_price").val() || 0)) - parseFloat($(
+                            "#discount").val() || 0),
+                        purchase_requisition_detail_id: $("#modal_purchase_requisition_detail_id").val()
+                    };
+                } else {
+                    // === SKENARIO TAMBAH ===
+                    prDetailsData.push({
+                        product_id: productId,
+                        product_name: productName,
+                        nama_produk: productName,
+                        data_produk: productName,
+                        quantity: qtyInput,
+                        unit_id: unitId,
+                        unit: unitName, // <--- PENTING: Set field unit
+                        unit_name: unitName, // <--- PENTING: Set field unit_name
+                        unit_price: parseFloat($("#unit_price").val() || 0),
+                        discount: parseFloat($("#discount").val() || 0),
+                        tax: parseFloat($("#tax").val() || 0),
+                        amount: (qtyInput * parseFloat($("#unit_price").val() || 0)) - parseFloat($(
+                            "#discount").val() || 0),
+                        purchase_requisition_detail_id: null
+                    });
+                }
+
+                // Refresh Tabel
+                table.clear().rows.add(prDetailsData).draw();
+                $("#modalPrDetail").modal("hide");
+
+                // Reset & Kalkulasi
+                $("#formPrDetail")[0].reset();
+                $("#detail_id").val("");
+                if (typeof calculateGrandTotal === 'function') calculateGrandTotal();
             });
             // SIMPAN DATA SEMUA
             let saveAndNew = false;
