@@ -730,36 +730,51 @@ class PurchaseOrderController extends Controller
         }
     }
 
-    public function edit(string $id)
-    {
-        // 1. Load data PO beserta rantai relasinya sampai ke nomor kode PR induk
-        $purchaseOrder = PurchaseOrder::with([
-            'purchaseRequisition',
-            'details.produkID',
-            'details.unitID',
-            'details.purchaseRequisitionDetail.requisition', 
-        ])->findOrFail($id);
+public function edit(string $id)
+{
+    // Mengambil tahun berjalan untuk tabel dinamis
+    $year = date('Y');
 
-        // 2. Cek status PO global: Apakah mengandung minimal satu item hasil serapan PR?
-        $isFromPR = $purchaseOrder->details->whereNotNull('purchase_requisition_detail_id')->count() > 0;
+    // 1. Load data PO beserta relasinya
+    // Pastikan model PurchaseOrder dan Detail sudah mendukung table name dinamis jika diperlukan
+    $purchaseOrder = PurchaseOrder::with([
+        'purchaseRequisition',
+        'details.produkID',
+        'details.unitID',
+        'details.purchaseRequisitionDetail.requisition', 
+    ])->findOrFail($id);
 
-        // 3. Mapping data detail agar siap dikonsumsi langsung oleh JavaScript DataTables
-        $detailDataMapped = $purchaseOrder->details->map(function ($detail) {
-            
-            $requisitionCode = null;
-            $sisaPr = null;
-            $kuotaAsliPr = null; // Tambahkan variabel ini
+    // 2. Cek status PO global: Apakah mengandung minimal satu item hasil serapan PR?
+    $isFromPR = $purchaseOrder->details->whereNotNull('purchase_requisition_detail_id')->count() > 0;
+
+    // 3. Mapping data detail
+    $detailDataMapped = $purchaseOrder->details->map(function ($detail) use ($purchaseOrder, $year) {
+        
+        $requisitionCode = null;
+        $sisaPr = null;
+        $kuotaAsliPr = null;
+        $totalDiambilLainnya = 0;
 
         // Cek apakah item detail ini memiliki keterikatan dengan PR
-        if ($detail->purchaseRequisitionDetail) {
-            // Ambil sisa kuota untuk referensi
-            $sisaPr = (float) $detail->purchaseRequisitionDetail->outstanding_qty;
+        if ($detail->purchase_requisition_detail_id) {
+            // Ambil data referensi dari relasi
+            $prDetail = $detail->purchaseRequisitionDetail;
             
-            // AMBIL KUOTA ASLI DARI TABEL PR_DETAIL (Nilai awal/Total PR)
-            $kuotaAsliPr = (float) $detail->purchaseRequisitionDetail->qty;
-            
-            if ($detail->purchaseRequisitionDetail->purchaseRequisition) {
-                $requisitionCode = $detail->purchaseRequisitionDetail->purchaseRequisition->code; 
+            if ($prDetail) {
+                $sisaPr = (float) $prDetail->outstanding_qty;
+                $kuotaAsliPr = (float) $prDetail->qty;
+                
+                // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
+                // Menggunakan DB::table karena tabel bersifat dinamis per tahun
+                $totalDiambilLainnya = \DB::table("purchase_order_detail_{$year}")
+                    ->where('purchase_requisition_detail_id', $detail->purchase_requisition_detail_id)
+                    ->where('purchase_order_id', '<>', $purchaseOrder->id) // Kecuali PO ini sendiri
+                    ->where('active', 1)
+                    ->sum('qty');
+
+                if ($prDetail->purchaseRequisition) {
+                    $requisitionCode = $prDetail->purchaseRequisition->code; 
+                }
             }
         }
 
@@ -778,33 +793,33 @@ class PurchaseOrderController extends Controller
             'amount'                          => (float) $detail->amount,
             'tax'                             => (float) ($detail->tax ?? 0),
             'sisa_pr'                         => $sisaPr,
-            'kuota_asli'                      => $kuotaAsliPr, // KIRIM DATA INI KE FRONTEND
+            'kuota_asli'                      => $kuotaAsliPr,
+            'total_diambil_lainnya'           => (float) $totalDiambilLainnya, // Dikirim ke frontend
         ];
-        });
+    });
 
-        // 4. Susun semua variabel ke dalam array compact
-        $x = [
-            'title'       => 'Edit Purchase Order',
-            'breadcrumb'  => [
-                ['label' => 'Purchase Order', 'url' => route('purchase-order.index')],
-                ['label' => 'Edit Purchase Order', 'url' => ''],
-            ],
-            'supplier'    => Supplier::where('status', 1)->get(),
-            'company'     => Company::first(),
-            'idNumber'    => $this->generateNumberId(),
-            'shipping'    => Shipping::where('status', 1)->get(),
-            'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
-            'product'     => Barang::where('status', '<>', 0)->get(),
-            'fob'         => BasicCodeDetail::where('master_id', 7)->get(),
-            'taxes'       => BasicCodeDetail::where('master_id', 6)->get(),
-            'model'       => $purchaseOrder,
-            'isFromPR'    => $isFromPR,       // Dikirim dalam bentuk boolean
-            'jsonDetails' => $detailDataMapped, // Dilempar langsung ke variabel `prDetailsData` di blade
-        ];
+    // 4. Susun semua variabel ke dalam array compact
+    $x = [
+        'title'       => 'Edit Purchase Order',
+        'breadcrumb'  => [
+            ['label' => 'Purchase Order', 'url' => route('purchase-order.index')],
+            ['label' => 'Edit Purchase Order', 'url' => ''],
+        ],
+        'supplier'    => Supplier::where('status', 1)->get(),
+        'company'     => Company::first(),
+        'idNumber'    => $this->generateNumberId(),
+        'shipping'    => Shipping::where('status', 1)->get(),
+        'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
+        'product'     => Barang::where('status', '<>', 0)->get(),
+        'fob'         => BasicCodeDetail::where('master_id', 7)->get(),
+        'taxes'       => BasicCodeDetail::where('master_id', 6)->get(),
+        'model'       => $purchaseOrder,
+        'isFromPR'    => $isFromPR,
+        'jsonDetails' => $detailDataMapped,
+    ];
 
-        return view('purchase.purchase_order.purchase_order_edit', $x);
-    }
-
+    return view('purchase.purchase_order.purchase_order_edit', $x);
+}
   
 public function update(PurchaseOrderRequest $request, string $id)
 {

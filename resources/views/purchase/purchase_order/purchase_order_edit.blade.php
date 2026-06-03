@@ -777,49 +777,58 @@
                                     let data = rowSelected.data();
                                     let rowIndex = rowSelected.index();
 
-                                    // 1. TANDAI BAHWA SEDANG PROSES EDIT (PENTING!)
-                                    // Gunakan ini untuk mencegah event 'change' product mereset form saat kita sedang mengisinya
+                                    // 1. TANDAI BAHWA SEDANG PROSES EDIT
                                     window.isPopulating = true;
                                     window.isEditingMode = true;
 
+                                    // 2. Setup Data Dasar
                                     $("#detail_id").val(rowIndex);
 
-                                    // 2. Setup Maksimal Kuota
-                                    let kuotaMaksimal = parseFloat(data.kuota_asli || data.qty ||
-                                        data.quantity || 0);
-                                    $("#quantity").attr("data-max-allowed", kuotaMaksimal);
-                                    $("#modalTitle").html(
-                                        `Edit Entry | <span class="badge bg-danger">Maksimal Kuota PR: ${kuotaMaksimal}</span>`
-                                        );
+                                    // Ambil data untuk kalkulasi
+                                    let kuotaAwalPr = parseFloat(data.kuota_asli || 0);
+                                    let sisaPr = parseFloat(data.sisa_pr || 0);
+                                    let totalLain = parseFloat(data.total_diambil_lainnya ||
+                                        0); // Data baru dari backend
+                                    let qtySekarang = parseFloat(data.quantity || 0);
 
-                                    // 3. Bersihkan Form Manual (Hindari .reset() untuk menjaga Select2 tetap stabil)
+                                    // 3. Update Title & UI Modal dengan informasi total serapan lain
+                                    $("#modalTitle").html(`
+            Edit Entry | 
+            <span class="badge bg-primary">PR Awal: ${kuotaAwalPr}</span>
+            <span class="badge bg-warning text-dark">Sudah diambil PO lain: ${totalLain}</span>
+        `);
+
+                                    // 4. Bersihkan Form (Kecuali Hidden Fields)
                                     $("#formPrDetail").find("input, select, textarea").not(
                                         '[type="hidden"]').val('');
 
-                                    // 4. Isi Data Dasar
-                                    $("#quantity").val(parseFloat(data.quantity || 0));
+                                    // 5. Isi Data ke Input Form
+                                    $("#quantity").val(qtySekarang);
                                     $("#modal_purchase_requisition_detail_id").val(data
                                         .purchase_requisition_detail_id || "");
                                     $("#unit_price").val(parseFloat(data.unit_price || 0));
                                     $("#discount").val(parseFloat(data.discount || 0));
                                     $("#tax").val(parseFloat(data.tax || 0));
 
-                                    // 5. Pastikan dropdown tidak dalam keadaan disabled
+                                    // 6. Set Validasi Maksimal di Input
+                                    // Logika: Sisa PR (outstanding) + Qty PO ini sendiri (karena qty lama akan di-overwrite)
+                                    let maxAllowed = sisaPr + qtySekarang;
+                                    $("#quantity").attr("data-max-allowed", maxAllowed);
+                                    $("#quantity").attr("placeholder", "Maksimal: " + maxAllowed);
+
+                                    // 7. Penanganan Select2 (Product & Unit)
                                     $('#unit_id').prop("disabled", false);
                                     $('#product_id').prop("disabled", false);
 
-                                    // 6. Trigger Product untuk memuat daftar unit via AJAX
+                                    // Trigger Product untuk memuat daftar unit via AJAX
                                     $("#product_id").val(data.product_id).trigger("change.select2");
 
-                                    // 7. Penanganan Unit (Delay untuk menunggu respons AJAX produk)
+                                    // Delay untuk menunggu respons AJAX produk selesai
                                     setTimeout(function() {
                                         let $unitSelect = $('#unit_id');
-
-                                        // Hapus opsi lama jika ada
                                         $unitSelect.empty();
 
                                         if (data.unit_id) {
-                                            // Tambahkan data unit yang tersimpan
                                             let newOption = new Option(data.unit || "Unit",
                                                 data.unit_id, true, true);
                                             $unitSelect.append(newOption).trigger(
@@ -828,10 +837,11 @@
                                             $unitSelect.val('').trigger('change.select2');
                                         }
 
-                                        // Lepaskan flag setelah selesai semua proses
+                                        // Lepaskan flag setelah semua proses selesai
                                         window.isPopulating = false;
                                     }, 500);
 
+                                    // 8. Tampilkan Modal
                                     $("#btnSubmitModal").text("Update");
                                     $("#modalPrDetail").modal("show");
                                 }
