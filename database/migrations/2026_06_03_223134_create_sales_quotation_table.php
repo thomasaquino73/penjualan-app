@@ -6,12 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+     protected string $year;
+
+    public function __construct()
+    {
+        $this->year = date('Y'); // tahun berjalan
+    }
     public function up(): void
     {
-        Schema::create('sales_quotation', function (Blueprint $table) {
+        Schema::create("sales_quotation_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->string('sales_quotation_code')->unique();
             $table->date('sales_quotation_date');
@@ -44,6 +47,21 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
         });
+        Schema::create("sales_quotation_detail_{$this->year}", function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('sales_quotation_id');
+            $table->foreign('sales_quotation_id')->references('id')->on("sales_quotation_{$this->year}");
+            $table->unsignedBigInteger('product_id');
+            $table->unsignedBigInteger('salesman_id')->nullable();
+            $table->foreign('product_id')->references('id')->on('data_barang');
+            $table->foreign('salesman_id')->references('id')->on('users');
+            $table->integer('quantity');
+            $table->decimal('price', 18, 2);
+            $table->decimal('diskon_percent', 18, 2);
+            $table->decimal('diskon_nominal', 18, 2);
+            $table->decimal('amount', 18, 2);
+            $table->timestamps();
+        });
     }
 
     /**
@@ -51,6 +69,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sales_quotation');
+        Schema::dropIfExists("sales_quotation_detail_{$this->year}");
+        Schema::dropIfExists("sales_quotation_{$this->year}");
     }
 };

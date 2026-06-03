@@ -3,7 +3,12 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sales\SalesQuotation;
+use App\Models\Sales\SalesQuotationDetail;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\DataTables;
 
 class SalesQuotationController extends Controller
 {
@@ -37,10 +42,10 @@ class SalesQuotationController extends Controller
     {
         if ($r->ajax()) {
             // Ambil ID user yang sedang login
-            $userId = auth()->id();
+            $userId = Auth::user()->id;
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
-            $query = PurchaseRequisition::where('active', '<>', 0)
+            $query = SalesQuotation::where('active', '<>', 0)
                 ->where(function ($q) use ($userId) {
                     $q->where('status', '<>', 'draft')
                         ->orWhere(function ($subQ) use ($userId) {
@@ -48,7 +53,7 @@ class SalesQuotationController extends Controller
                                 ->where('created_by', $userId);
                         });
                 })
-                ->orderby('code', 'desc');
+                ->orderby('sales_quotation_code', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);
             }
@@ -72,8 +77,8 @@ class SalesQuotationController extends Controller
 
                     return 'N/A';
                 })
-                ->addColumn('date', function ($row) {
-                    return $row->date ? Carbon::parse($row->date)->format('d M Y') : 'N/A';
+                ->addColumn('sales_quotation_date', function ($row) {
+                    return $row->sales_quotation_date ? Carbon::parse($row->sales_quotation_date)->format('d M Y') : 'N/A';
                 })
                 ->addColumn('status', function ($row) {
                     switch ($row->status) {
@@ -128,9 +133,22 @@ class SalesQuotationController extends Controller
 
                     return '';
                 })
+                ->addColumn('total', function ($row) {
+                    // 1. Hitung total kotor (sum amount) dari detail item PO
+                    $subTotal = SalesQuotationDetail::where('sales_quotation_id', $row->id)
+                        ->where('active', 1)
+                        ->sum('amount');
+
+                    // 2. Hitung grand total: Subtotal dikurangi diskon nominal yang ada di tabel induk ($row)
+                    // Gunakan ?? 0 jika kolom disc_nominal di database bisa bernilai null
+                    $grandTotal = $subTotal - ($row->disc_nominal ?? 0);
+
+                    // 3. Kembalikan nilai yang sudah dikonversi dan diformat
+                    return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
+                })
                 ->addColumn('action', function ($row) {
-                    $currentUserId = auth()->id();
-                    $user = auth()->user();
+                    $currentUserId = Auth::user()->id;
+                    $user = Auth::user();
 
                     $btn = '<div class="btn-group">
                 <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown">
@@ -189,7 +207,7 @@ class SalesQuotationController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'date'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_quotation_date','total'])
                 ->make(true);
         }
 

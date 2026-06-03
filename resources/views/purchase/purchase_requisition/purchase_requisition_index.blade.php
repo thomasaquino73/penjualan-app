@@ -347,38 +347,39 @@
                 });
             });
 
-           $(document).on('click', '.btn-processing-pr', function() {
-    let id = $(this).data('id');
-    let statusTarget = $(this).data('status'); // langsung 'processing'
+            $(document).on('click', '.btn-processing-pr', function() {
+                let id = $(this).data('id');
+                let statusTarget = $(this).data('status'); // langsung 'processing'
 
-    $.ajax({
-        url: '/permintaan-pembelian/change-status/' + id,
-        type: "POST",
-        data: {
-            _token: "{{ csrf_token() }}",
-            id: id,
-            status: statusTarget
-        },
-        success: function(response) {
-            Swal.fire({
-                title: 'Success!',
-                text: response.message || 'Status berhasil diubah ke processing.',
-                icon: 'success'
-            });
+                $.ajax({
+                    url: '/permintaan-pembelian/change-status/' + id,
+                    type: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        id: id,
+                        status: statusTarget
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: response.message ||
+                                'Status berhasil diubah ke processing.',
+                            icon: 'success'
+                        });
 
-            if ($.fn.DataTable.isDataTable('#table')) {
-                $('#table').DataTable().ajax.reload();
-            }
-        },
-        error: function(err) {
-            Swal.fire({
-                title: 'Failed!',
-                text: 'Gagal update status',
-                icon: 'error'
+                        if ($.fn.DataTable.isDataTable('#table')) {
+                            $('#table').DataTable().ajax.reload();
+                        }
+                    },
+                    error: function(err) {
+                        Swal.fire({
+                            title: 'Failed!',
+                            text: 'Gagal update status',
+                            icon: 'error'
+                        });
+                    }
+                });
             });
-        }
-    });
-});
 
             // filter
             $('#selectStatus').on('change', function() {
@@ -399,8 +400,6 @@
                     $('.badge-notifications').text(count);
                 });
             }
-
-
         });
     </script>
 @endpush

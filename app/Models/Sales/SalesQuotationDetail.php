@@ -3,25 +3,25 @@
 namespace App\Models\Sales;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-class SalesQuotation extends Model
+class SalesQuotationDetail extends Model
 {
-   
-    use HasFactory;
+     use HasFactory;
 
-    protected $table = 'sales_quotation';
+    protected $table = 'sales_quotation_detail';
 
     protected $guarded = [];
 
-     public function __construct(array $attributes = [])
+    public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
 
         $year = date('Y');
-        $this->table = "sales_quotation_{$year}";
+        $this->table = "sales_quotation_detail_{$year}";
     }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

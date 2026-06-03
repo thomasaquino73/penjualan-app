@@ -180,6 +180,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('kategori-barang', KategoriBarangController::class);
 
     // TRANSAKSI
+    Route::get('/sales-quotation/trash', [SalesQuotationController::class, 'trash'])->name('sales-quotation.trash');
     Route::resource('sales-quotation', SalesQuotationController::class);
     // PENGATURAN
     Route::resource('roles', RolesController::class);
@@ -248,6 +249,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
     Route::resource('sales-order', SalesOrderController::class);
+
+    Route::post('/sales-quotation/{id}/submit', [SalesQuotationController::class, 'submitToPending'])->name('sales-quotation.submit');
+    Route::get('/sales-quotation/trash', [SalesQuotationController::class, 'trash'])->name('sales-quotation.trash');
+    Route::resource('sales-quotation', SalesQuotationController::class);
 });
 
 Route::fallback(function () {
