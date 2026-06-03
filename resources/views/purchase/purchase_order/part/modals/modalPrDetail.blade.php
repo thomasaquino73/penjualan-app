@@ -8,6 +8,7 @@
               <form id="formPrDetail">
                   @csrf
                   <input type="hidden" name="id" id="detail_id">
+                  <input type="hidden" name="purchase_requisition_detail_id" id="modal_purchase_requisition_detail_id">
                   <div class="modal-body">
                       <div class="row">
                           <div class="col-12 mb-3">

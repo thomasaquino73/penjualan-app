@@ -4,7 +4,6 @@ namespace App\Models\Purchase;
 
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
-use App\Models\Purchase\PurchaseRequisitionDetail;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -50,10 +49,9 @@ class PurchaseOrderDetail extends Model
     {
         return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
+
     public function purchaseRequisitionDetail()
     {
         return $this->belongsTo(PurchaseRequisitionDetail::class, 'purchase_requisition_detail_id', 'id');
     }
-
-  
 }

@@ -628,7 +628,30 @@
         }
     </script>
     <script>
-        let prDetailsData = @json($jsonDetails);
+        let prDetailsData = [
+            @if (isset($jsonDetails))
+                @foreach ($jsonDetails as $detail)
+                    {
+                        'id': '{{ $detail['id'] }}',
+                        'purchase_order_id': '{{ $detail['purchase_order_id'] }}',
+                        'purchase_requisition_detail_id': '{{ $detail['purchase_requisition_detail_id'] }}',
+                        'requisition_code': '{{ $detail['requisition_code'] ?? '' }}', // Ini yang Anda cari
+                        'product_id': '{{ $detail['product_id'] }}',
+                        'data_produk': '{{ $detail['data_produk'] }}',
+                        'quantity': '{{ $detail['quantity'] }}',
+                        'unit_id': '{{ $detail['unit_id'] }}',
+                        'unit': '{{ $detail['unit'] }}',
+                        'unit_price': '{{ $detail['unit_price'] }}',
+                        'discount': '{{ $detail['discount'] }}',
+                        'amount': '{{ $detail['amount'] }}',
+                        'sisa_pr': '{{ $detail['sisa_pr'] }}',
+                        'kuota_asli': '{{ $detail['kuota_asli'] }}',
+                        'total_diambil_lainnya': '{{ $detail['total_diambil_lainnya'] }}'
+                    }
+                    {{ !$loop->last ? ',' : '' }}
+                @endforeach
+            @endif
+        ];
 
         // Cek status PO global (Optional jika ingin mematikan tombol "Requisition" di pojok kanan atas saat edit)
         let poIsFromPR = {{ $isFromPR ? 'true' : 'false' }};
@@ -793,10 +816,10 @@
 
                                     // 3. Update Title & UI Modal dengan informasi total serapan lain
                                     $("#modalTitle").html(`
-            Edit Entry | 
-            <span class="badge bg-primary">PR Awal: ${kuotaAwalPr}</span>
-            <span class="badge bg-warning text-dark">Sudah diambil PO lain: ${totalLain}</span>
-        `);
+                                            Edit Entry |
+                                            <span class="badge bg-primary">PR Awal: ${kuotaAwalPr}</span>
+                                            <span class="badge bg-warning text-dark">Sudah diambil PO lain: ${totalLain}</span>
+                                        `);
 
                                     // 4. Bersihkan Form (Kecuali Hidden Fields)
                                     $("#formPrDetail").find("input, select, textarea").not(
@@ -906,80 +929,90 @@
             $("#btnSubmitModal").on("click", function(e) {
                 e.preventDefault();
 
-                let qtyInput = parseFloat($("#quantity").val() || 0);
-                let rowIndex = $("#detail_id").val();
-                let batasMaksimal = parseFloat($("#quantity").attr("data-max-allowed") || 0);
-                let isPrItem = ($("#modal_purchase_requisition_detail_id").val() !== "" && $(
-                    "#modal_purchase_requisition_detail_id").val() !== "null");
-
-                if (isPrItem && qtyInput > batasMaksimal) {
-                    Swal.fire({
-                        title: "Melebihi Kuota PR",
-                        text: `Kuantitas tidak boleh melebihi kuota PR. (Maksimal: ${batasMaksimal}).`,
-                        icon: "error",
-                        buttonsStyling: false,
-                        customClass: {
-                            confirmButton: 'btn btn-danger'
-                        }
-                    });
-                    return false;
-                }
-
-                // Ambil data form
+                // 1. Ambil data dari input form
                 let productId = $("#product_id").val();
                 let productName = $("#product_id option:selected").text();
+                let qtyInput = parseFloat($("#quantity").val() || 0);
                 let unitId = $("#unit_id").val();
-                let unitName = $("#unit_id option:selected").text(); // Ini adalah nama satuan yang benar
+                let unitName = $("#unit_id option:selected").text();
+                let unitPrice = parseFloat($("#unit_price").val() || 0);
+                let discount = parseFloat($("#discount").val() || 0);
+                let tax = parseFloat($("#tax").val() || 0);
 
-                if (rowIndex !== "" && rowIndex !== undefined && rowIndex !== null) {
-                    // === SKENARIO EDIT ===
-                    rowIndex = parseInt(rowIndex);
+                // 2. Ambil ID dan PR Detail ID
+                let rowIndex = $("#detail_id").val();
+                let prDetailId = $("#modal_purchase_requisition_detail_id").val();
 
-                    prDetailsData[rowIndex] = {
-                        ...prDetailsData[rowIndex],
-                        product_id: productId,
-                        product_name: productName,
-                        nama_produk: productName,
-                        data_produk: productName,
-                        quantity: qtyInput,
-                        unit_id: unitId,
-                        unit: unitName, // <--- PENTING: Update field unit
-                        unit_name: unitName, // <--- PENTING: Update field unit_name
-                        unit_price: parseFloat($("#unit_price").val() || 0),
-                        discount: parseFloat($("#discount").val() || 0),
-                        tax: parseFloat($("#tax").val() || 0),
-                        amount: (qtyInput * parseFloat($("#unit_price").val() || 0)) - parseFloat($(
-                            "#discount").val() || 0),
-                        purchase_requisition_detail_id: $("#modal_purchase_requisition_detail_id").val()
-                    };
-                } else {
-                    // === SKENARIO TAMBAH ===
-                    prDetailsData.push({
-                        product_id: productId,
-                        product_name: productName,
-                        nama_produk: productName,
-                        data_produk: productName,
-                        quantity: qtyInput,
-                        unit_id: unitId,
-                        unit: unitName, // <--- PENTING: Set field unit
-                        unit_name: unitName, // <--- PENTING: Set field unit_name
-                        unit_price: parseFloat($("#unit_price").val() || 0),
-                        discount: parseFloat($("#discount").val() || 0),
-                        tax: parseFloat($("#tax").val() || 0),
-                        amount: (qtyInput * parseFloat($("#unit_price").val() || 0)) - parseFloat($(
-                            "#discount").val() || 0),
-                        purchase_requisition_detail_id: null
-                    });
+                // Validasi dasar
+                if (!productId || qtyInput <= 0 || !unitId) {
+                    Swal.fire("Error", "Mohon lengkapi produk, quantity, dan unit.", "error");
+                    return;
                 }
 
-                // Refresh Tabel
-                table.clear().rows.add(prDetailsData).draw();
-                $("#modalPrDetail").modal("hide");
+                // 3. Normalisasi PR Detail ID agar benar-benar null jika tidak ada
+                prDetailId = (prDetailId && prDetailId !== "null" && prDetailId !== "") ? parseInt(
+                    prDetailId) : null;
 
-                // Reset & Kalkulasi
+                // 4. Validasi Kuota PR (jika ini adalah item dari PR)
+                let batasMaksimal = parseFloat($("#quantity").attr("data-max-allowed") || 0);
+                if (prDetailId !== null && batasMaksimal > 0 && qtyInput > batasMaksimal) {
+                    Swal.fire({
+                        title: "Melebihi Kuota PR",
+                        text: `Kuantitas tidak boleh melebihi kuota PR. (Maksimal: ${batasMaksimal})`,
+                        icon: "error"
+                    });
+                    return;
+                }
+
+                // 5. Buat objek data
+                let rowData = {
+                    product_id: productId,
+                    data_produk: productName,
+                    quantity: qtyInput,
+                    unit_id: unitId,
+                    unit: unitName,
+                    unit_price: unitPrice,
+                    discount: discount,
+                    tax: tax,
+                    amount: (qtyInput * unitPrice) - discount,
+                    purchase_requisition_detail_id: prDetailId // Ini yang akan dikirim ke controller
+                };
+
+                // 6. Update ke array global prDetailsData
+                if (rowIndex !== "" && rowIndex !== null && rowIndex !== undefined && prDetailsData[
+                        rowIndex]) {
+                    // Mode Edit: Update data pada index yang ada
+                    prDetailsData[rowIndex] = {
+                        ...prDetailsData[rowIndex],
+                        ...rowData
+                    };
+                } else {
+                    // Mode Create: Push data baru
+                    prDetailsData.push(rowData);
+                }
+
+                // 7. Refresh DataTable
+                table.clear().rows.add(prDetailsData).draw();
+
+                // 8. Bersihkan Modal
+                $("#modalPrDetail").modal("hide");
                 $("#formPrDetail")[0].reset();
                 $("#detail_id").val("");
-                if (typeof calculateGrandTotal === 'function') calculateGrandTotal();
+                $("#modal_purchase_requisition_detail_id").val(
+                    ""); // PENTING: Reset agar tidak terbawa ke item berikutnya
+
+                // Reset select2 jika digunakan
+                if ($.fn.select2) {
+                    $("#product_id, #unit_id").val("").trigger("change.select2");
+                }
+
+                // Update total perhitungan
+                if (typeof calculateGrandTotal === "function") {
+                    calculateGrandTotal();
+                }
+                if (typeof calculateTotalOrder === "function") {
+                    calculateTotalOrder();
+                }
             });
             // SIMPAN DATA SEMUA
             let saveAndNew = false;
@@ -1200,7 +1233,7 @@
                 } else {
                     // --- CARA B: AMBIL DARI PR & EDIT DATA ---
                     // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
-                    // Properti bawaan PR seperti 'requisition_code' & 'purchase_requisition_detail_id' 
+                    // Properti bawaan PR seperti 'requisition_code' & 'purchase_requisition_detail_id'
                     // akan otomatis aman dan dipertahankan.
                     prDetailsData[detailId] = {
                         ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)

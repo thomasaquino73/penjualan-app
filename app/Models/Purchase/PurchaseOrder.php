@@ -2,7 +2,6 @@
 
 namespace App\Models\Purchase;
 
-use App\Models\Purchase\PurchaseOrderDetail;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
@@ -69,6 +68,7 @@ class PurchaseOrder extends Model
     {
         return $this->belongsTo(Shipping::class, 'vehicle_id');
     }
+
     public function purchaseRequisition()
     {
         // Sesuaikan 'purchase_requisition_id' dengan nama kolom foreign key yang ada di tabel PO kamu
