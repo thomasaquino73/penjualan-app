@@ -42,7 +42,7 @@ return new class extends Migration
             $table->unsignedBigInteger('data_barang_id');
             $table->unsignedBigInteger('from_unit_id')->nullable();
             $table->unsignedBigInteger('to_unit_id')->nullable();
-            $table->integer('qty')->nullable();
+            $table->decimal('qty', 15, 4)->default(1);
             $table->timestamps();
             $table->index('data_barang_id');
             $table->index('from_unit_id');
@@ -51,7 +51,7 @@ return new class extends Migration
         Schema::create('data_barang_stok', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('data_barang_id');
-            $table->date('date')->nullable();
+            $table->date('date_stock')->nullable();
             $table->integer('quantity')->nullable();
             $table->integer('price')->nullable();
             $table->unsignedBigInteger('stok_unit_id')->nullable();
@@ -67,6 +67,29 @@ return new class extends Migration
             $table->json('specifications')->nullable();
 
             $table->timestamps();
+        });
+
+        Schema::create('stock_mutations', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('data_barang_id');
+            $table->unsignedBigInteger('unit_id');
+            $table->unsignedBigInteger('warehouse_id');
+            $table->date('date_stock')->nullable();
+            $table->decimal('qty_transaksi', 15, 4);
+            $table->decimal('total_base_qty', 15, 4);
+            $table->enum('type', ['in', 'out']);
+            $table->string('keterangan')->nullable();
+
+            // Tambahkan kolom ini untuk melacak siapa yang melakukan transaksi
+            $table->string('document_number')->nullable(); // Nomor dokumen (misal: RI-001, DO-999)
+            $table->enum('document_type', ['receive_item', 'delivery_order', 'initial_stock', 'adjustment'])->default('initial_stock');
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
+            $table->timestamps();
+
+            // Gunakan foreign key yang lengkap
+            $table->foreign('data_barang_id')->references('id')->on('data_barang')->onDelete('cascade');
+            $table->index(['data_barang_id', 'created_at']); // Indeks ini sangat mempercepat laporan kartu stok
         });
     }
 

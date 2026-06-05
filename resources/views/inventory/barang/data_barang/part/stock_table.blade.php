@@ -16,12 +16,12 @@
  @push('scripts')
      <script>
          $(document).ready(function() {
-             const datePicker = flatpickr("#date", {
-                 enableTime: false,
-                 dateFormat: "d-m-Y",
-                 // minDate: "today",
-                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}"
-             });
+             //  const datePicker = flatpickr("#date", {
+             //      enableTime: false,
+             //      dateFormat: "d-m-Y",
+             //      // minDate: "today",
+             //      defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}"
+             //  });
 
 
          });

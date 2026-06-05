@@ -4,6 +4,7 @@ namespace App\Models\Inventory;
 
 use App\Models\BasicCodeDetail;
 use App\Models\Purchase\PurchaseOrderDetail;
+use App\Models\StockMutation;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -66,6 +67,9 @@ class Barang extends Model
         // Parameter: NamaModelDetail, foreign_key_di_tabel_detail
         return $this->hasMany(PurchaseOrderDetail::class, 'product_id');
     }
+    public function mutations() {
+    return $this->hasMany(StockMutation::class, 'data_barang_id');
+}
 
     public function getPriceHistory()
     {

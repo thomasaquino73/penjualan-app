@@ -2,26 +2,25 @@
     <div class="col-lg-12">
         <div class="row g-3">
             <div class="col-md-3">
-    <label class="form-label">Product Type<small class="text-danger">*</small></label>
-    <div class="d-flex gap-2">
-        <div class="form-check form-check-success me-4">
-            <input name="product_type_disabled" class="form-check-input" type="radio" value="supply"
-                id="radioSupply" {{ $detail->product_type == 'supply' ? 'checked' : '' }} disabled>
-            <label class="form-check-label" for="radioSupply"> Supply </label>
-        </div>
+                <label class="form-label">Product Type<small class="text-danger">*</small></label>
+                <div class="d-flex gap-2">
+                    <div class="form-check form-check-success me-4">
+                        <input name="product_type_disabled" class="form-check-input" type="radio" value="supply"
+                            id="radioSupply" {{ $detail->product_type == 'supply' ? 'checked' : '' }} disabled>
+                        <label class="form-check-label" for="radioSupply"> Supply </label>
+                    </div>
 
-        <div class="form-check form-check-success">
-            <input name="product_type_disabled" class="form-check-input" type="radio"
-                value="non_supply" id="radioNonSupply"
-                {{ $detail->product_type == 'non_supply' ? 'checked' : '' }} disabled>
-            <label class="form-check-label" for="radioNonSupply"> Non Supply </label>
-        </div>
-    </div>
-    
-    <input type="hidden" name="product_type" value="{{ $detail->product_type }}">
-    
-    <span class="error text-danger" id="product_typeError"></span>
-</div>
+                    <div class="form-check form-check-success">
+                        <input name="product_type_disabled" class="form-check-input" type="radio" value="non_supply"
+                            id="radioNonSupply" {{ $detail->product_type == 'non_supply' ? 'checked' : '' }} disabled>
+                        <label class="form-check-label" for="radioNonSupply"> Non Supply </label>
+                    </div>
+                </div>
+
+                <input type="hidden" name="product_type" value="{{ $detail->product_type }}">
+
+                <span class="error text-danger" id="product_typeError"></span>
+            </div>
 
             <div class="col-md-3">
                 <label class="form-label">Status</label>
@@ -149,159 +148,93 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0"><strong>Unit Conversion</strong></h6>
             <div class="d-flex gap-2">
-            <button type="button" id="btn-add-conversion" class="btn btn-primary btn-sm rounded-pill">
-                <i class="ti ti-plus me-1"></i> Add Unit
-            </button>
-            <button type="button" id="btn-reset-conversion" class="btn btn-secondary btn-sm rounded-pill">
-                <i class="ti ti-refresh me-1"></i> Reset
-            </button>
+                <button type="button" id="btn-add-conversion" class="btn btn-primary btn-sm rounded-pill">
+                    <i class="ti ti-plus me-1"></i> Add Unit
+                </button>
+                <button type="button" id="btn-reset-conversion" class="btn btn-secondary btn-sm rounded-pill">
+                    <i class="ti ti-refresh me-1"></i> Reset
+                </button>
             </div>
         </div>
-<div id="conversion-wrapper">
-    <div id="conversion-container">
-        @if (!empty($detail->conversions) && $detail->conversions->count() > 0)
-            @foreach ($detail->conversions as $cIndex => $conversion)
-                <div class="conversion-item border p-3 mb-2 rounded position-relative">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="badge bg-label-secondary conversion-number">Unit #{{ $cIndex + 1 }}</span>
-                        <button type="button" class="btn btn-sm btn-text-danger btn-remove-conversion p-1">
-                            <i class="ti ti-trash fs-5"></i>
-                        </button>
-                    </div>
-                    <div class="row g-2">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control from_unit_text" value="{{ $detail->unitID->detail ?? '' }}" disabled>
-                            <input type="hidden" class="from_unit_id" name="conversion[{{ $cIndex }}][from_unit]" value="{{ $detail->unit_id }}">
+        <div id="conversion-wrapper">
+            <div id="conversion-container">
+                @if (!empty($detail->conversions) && $detail->conversions->count() > 0)
+                    @foreach ($detail->conversions as $cIndex => $conversion)
+                        <div class="conversion-item border p-3 mb-2 rounded position-relative">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-label-secondary conversion-number">Unit
+                                    #{{ $cIndex + 1 }}</span>
+                                <button type="button" class="btn btn-sm btn-text-danger btn-remove-conversion p-1">
+                                    <i class="ti ti-trash fs-5"></i>
+                                </button>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-3">
+                                    <select name="conversion[{{ $cIndex }}][to_unit]"
+                                        class="form-select to_unit">
+                                        <option value="">Select</option>
+                                        @foreach ($sub_unit as $sub)
+                                            <option value="{{ $sub->id }}"
+                                                {{ $conversion->from_unit_id == $sub->id ? 'selected' : '' }}>
+                                                {{ $sub->detail }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2 text-center">
+                                    <div class="fw-bold mt-2">=</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="number" name="conversion[{{ $cIndex }}][qty]"
+                                        class="form-control qty" placeholder="Qty" value="{{ $conversion->qty }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control from_unit_text"
+                                        value="{{ $detail->unitID->detail ?? '' }}" disabled>
+                                    <input type="hidden" class="from_unit_id"
+                                        name="conversion[{{ $cIndex }}][from_unit]"
+                                        value="{{ $detail->unit_id }}">
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-2 text-center">
-                            <div class="fw-bold mt-2">=</div>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" name="conversion[{{ $cIndex }}][qty]" class="form-control qty" placeholder="Qty" value="{{ $conversion->qty }}">
-                        </div>
-                        <div class="col-md-3">
-                            <select name="conversion[{{ $cIndex }}][to_unit]" class="form-select to_unit">
-                                <option value="">Select</option>
-                                @foreach ($sub_unit as $sub)
-                                    <option value="{{ $sub->id }}" {{ $conversion->to_unit_id == $sub->id ? 'selected' : '' }}>
-                                        {{ $sub->detail }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        @else
-            <div class="conversion-item border p-3 mb-2 rounded position-relative">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="badge bg-label-secondary conversion-number">Unit #1</span>
-                    <button type="button" class="btn btn-sm btn-text-danger btn-remove-conversion p-1">
-                        <i class="ti ti-trash fs-5"></i>
-                    </button>
-                </div>
-                <div class="row g-2">
-                    <div class="col-md-4">
-                        <input type="text" class="form-control from_unit_text" value="{{ $detail->unitID->detail ?? '' }}" disabled>
-                        <input type="hidden" name="conversion[0][from_unit]" class="from_unit_id" value="{{ $detail->unit_id }}">
-                    </div>
-                    <div class="col-md-2 text-center">
-                        <div class="fw-bold mt-2">=</div>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="number" name="conversion[0][qty]" class="form-control qty" placeholder="Qty">
-                    </div>
-                    <div class="col-md-3">
-                        <select name="conversion[0][to_unit]" class="form-select to_unit">
-                            <option value="">Select</option>
-                            @foreach ($sub_unit as $sub)
-                                <option value="{{ $sub->id }}">{{ $sub->detail }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            </div>
-        @endif
-    </div>
-</div>
-        {{-- <div id="conversion-container">
-            @if (!empty($detail->conversions) && $detail->conversions->count() > 0)
-                @foreach ($detail->conversions as $cIndex => $conversion)
+                    @endforeach
+                @else
                     <div class="conversion-item border p-3 mb-2 rounded position-relative">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="badge bg-label-secondary conversion-number">Unit #{{ $cIndex + 1 }}</span>
+                            <span class="badge bg-label-secondary conversion-number">Unit #1</span>
                             <button type="button" class="btn btn-sm btn-text-danger btn-remove-conversion p-1">
                                 <i class="ti ti-trash fs-5"></i>
                             </button>
                         </div>
                         <div class="row g-2">
-                            <div class="col-md-4">
-                                <input type="text" class="form-control from_unit_text"
-                                                value="{{ $detail->unitID->detail ?? '' }}" disabled>
-
-                                            <input type="hidden" class="from_unit_id"
-                                                name="conversion[{{ $cIndex }}][from_unit]"
-                                                value="{{ $detail->unit_id }}">
-                               
+                            <div class="col-md-3">
+                                <select name="conversion[0][to_unit]" class="form-select to_unit">
+                                    <option value="">Select</option>
+                                    @foreach ($sub_unit as $sub)
+                                        <option value="{{ $sub->id }}">{{ $sub->detail }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="col-md-2 text-center">
                                 <div class="fw-bold mt-2">=</div>
                             </div>
                             <div class="col-md-3">
-                                <input type="number" name="conversion[{{ $cIndex }}][qty]"
-                                    class="form-control qty" placeholder="Qty" value="{{ $conversion->qty }}">
+                                <input type="number" name="conversion[0][qty]" class="form-control qty"
+                                    placeholder="Qty">
                             </div>
-                            <div class="col-md-3">
-                                <select name="conversion[{{ $cIndex }}][to_unit]"
-                                                class="form-select to_unit">
-
-                                                <option value="">Select</option>
-
-                                                @foreach ($sub_unit as $sub)
-                                                    <option value="{{ $sub->id }}"
-                                                        {{ $conversion->to_unit_id == $sub->id ? 'selected' : '' }}>
-                                                        {{ $sub->detail }}
-                                                    </option>
-                                                @endforeach
-
-                                            </select>
-                              
+                            <div class="col-md-4">
+                                <input type="text" class="form-control from_unit_text"
+                                    value="{{ $detail->unitID->detail ?? '' }}" disabled>
+                                <input type="hidden" name="conversion[0][from_unit]" class="from_unit_id"
+                                    value="{{ $detail->unit_id }}">
                             </div>
                         </div>
                     </div>
-                @endforeach
-            @else
-                <div class="conversion-item border p-3 mb-2 rounded position-relative">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="badge bg-label-secondary conversion-number">Unit #1</span>
-                        <button type="button" class="btn btn-sm btn-text-danger btn-remove-conversion p-1">
-                            <i class="ti ti-trash fs-5"></i>
-                        </button>
-                    </div>
-                    <div class="row g-2">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control from_unit_text" disabled>
-                            <input type="hidden" name="conversion[0][from_unit]" class="from_unit_id">
-                        </div>
-                        <div class="col-md-2 text-center">
-                            <div class="fw-bold mt-2">=</div>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" name="conversion[0][qty]" class="form-control qty"
-                                placeholder="Qty" disabled>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="conversion[0][to_unit]" class="form-select to_unit" disabled>
-                                <option value="">Select</option>
-                                @foreach ($unit as $u)
-                                    <option value="{{ $u->id }}">{{ $u->detail }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            @endif
-        </div> --}}
+                @endif
+            </div>
+        </div>
+
     </div>
 
     <div class="col-lg-6" id="supplyForm">

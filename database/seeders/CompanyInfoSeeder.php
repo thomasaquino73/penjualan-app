@@ -73,7 +73,7 @@ class CompanyInfoSeeder extends Seeder
             'updated_by' => null,
         ]);
 
-           Customer::create([
+        Customer::create([
             'id_customer' => 'C-00001',
             'nama_customer' => 'Thomas',
             'kategori_customer_id' => 1,

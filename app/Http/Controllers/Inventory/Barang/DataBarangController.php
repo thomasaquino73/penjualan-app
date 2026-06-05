@@ -11,6 +11,7 @@ use App\Models\Inventory\DataBarangStok;
 use App\Models\Inventory\Warehouse;
 use App\Models\Purchase\Supplier;
 use App\Models\Setting\Company;
+use App\Models\StockMutation;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -255,8 +256,8 @@ class DataBarangController extends Controller
 
                 DataBarangConversion::create([
                     'data_barang_id' => $barang->id,
-                    'from_unit_id' => $request->unit_id, // selalu dari unit utama
-                    'to_unit_id' => $conv['to_unit'] ?? null,
+                    'to_unit_id' => $request->unit_id, // selalu dari unit utama
+                    'from_unit_id' => $conv['to_unit'] ?? null,
                     'qty' => $conv['qty'] ?? 0,
                 ]);
             }
@@ -284,21 +285,45 @@ class DataBarangController extends Controller
             $items = json_decode($request->items_detail, true);
 
             foreach ($items as $item) {
+                $qty_input = $item['quantity'] ?? $item['qty'] ?? 0;
+                $unit_id = $item['stok_unit_id'] ?? $request->unit_id; // unit saat transaksi
 
-                $date = ! empty($item['date'])
-                    ? Carbon::parse($item['date'])->format('Y-m-d')
-                    : null;
+                // HITUNG KONVERSI KE BASE UNIT (PCS)
+                // Ambil conversion rate dari tabel DataBarangConversion
+                $conversion = DataBarangConversion::where('data_barang_id', $barang->id)
+                    ->where('from_unit_id', $unit_id)
+                    ->first();
 
-                $price = floatval($item['unit_price'] ?? 0);
+                // Jika unit yang dipakai adalah unit dasar, rate = 1, jika tidak ambil dari DB
+                $rate = ($unit_id == $request->unit_id) ? 1 : ($conversion->qty ?? 1);
+                $total_base_qty = $qty_input * $rate;
 
+                // A. SIMPAN KE DATA BARANG STOK (Tabel lama Anda)
                 DataBarangStok::create([
                     'data_barang_id' => $barang->id,
-                    'date' => $date,
-                    'quantity' => $item['quantity'] ?? $item['qty'] ?? 0,
-                    'stok_unit_id' => $item['stok_unit_id'] ?? null,
+                    'date_stock' => Carbon::parse($item['date'])->format('Y-m-d'),
+                    'quantity' => $qty_input,
+                    'stok_unit_id' => $unit_id,
                     'warehouse_id' => $item['warehouse_id'] ?? null,
-                    'price' => $price,
+                    'price' => floatval($item['unit_price'] ?? 0),
                 ]);
+
+                // B. SIMPAN KE STOCK_MUTATIONS (Tabel baru untuk Laporan/Audit)
+                StockMutation::create([
+                    'data_barang_id' => $barang->id,
+                    'unit_id' => $unit_id,
+                    'warehouse_id' => $item['warehouse_id'] ?? null,
+                     'date_stock' => Carbon::parse($item['date'])->format('Y-m-d'),
+                    'qty_transaksi' => $qty_input,
+                    'total_base_qty' => $total_base_qty,
+                    'type' => 'in', // Karena ini input stok awal
+                    'keterangan' => 'Stok Awal dari Form Tambah Barang',
+                    'created_by' => Auth::id(),
+                    'document_type' => 'initial_stock',
+                ]);
+
+                // C. UPDATE QUANTITY DI TABEL BARANG (Total Stok Akhir)
+                $barang->increment('quantity', $total_base_qty);
             }
 
             DB::commit();
@@ -327,27 +352,43 @@ class DataBarangController extends Controller
      */
     public function show(string $id)
     {
-
+        // 1. Ambil detail barang dengan relasi yang diperlukan
+        // Kita tambahkan 'mutations' (pastikan Anda sudah mendefinisikan relasi 'mutations' di Model Barang)
         $idDetail = Barang::with([
             'variants',
             'stockHistories.warehouseID',
             'stockHistories.unitID',
+            'mutations' // Relasi ke model StockMutation
         ])->findOrFail($id);
 
-        // Menambahkan filter where qty > 0
+        // 2. Hitung Saldo Berjalan (Running Balance) dari tabel mutasi
+        $mutations = $idDetail->mutations()->orderBy('created_at', 'asc')->get();
+        
+        $runningBalance = 0;
+        foreach ($mutations as $mutation) {
+            if ($mutation->type == 'in') {
+                $runningBalance += $mutation->total_base_qty;
+            } else {
+                $runningBalance -= $mutation->total_base_qty;
+            }
+            $mutation->saldo_akhir = $runningBalance;
+        }
+
+        // 3. Ambil konversi satuan
         $unitConversion = DataBarangConversion::where('data_barang_id', $idDetail->id)
-            ->where('qty', '>', 0) // Hanya ambil yang qty-nya lebih dari 0
-            ->get();
+                ->where('qty', '>', 0)
+                ->get();
 
         return view('inventory.barang.data_barang.data_barang_detail', [
-            'title' => 'Detail Product',
-            'breadcrumb' => [
+            'title'          => 'Detail Product',
+            'breadcrumb'     => [
                 ['label' => 'Product', 'url' => route('data-barang.index')],
                 ['label' => 'Detail Product', 'url' => ''],
             ],
-            'detail' => $idDetail,
+            'detail'         => $idDetail,
+            'mutations'      => $mutations, // Kirim hasil perhitungan mutasi
             'unitConversion' => $unitConversion,
-            'stok' => $unitConversion,
+            'stok'           => $unitConversion,
         ]);
     }
 
@@ -355,34 +396,35 @@ class DataBarangController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
-    {
-        // Tambahkan with('variants') di sini
-        $idDetail = Barang::with([
-            'variants',
-            'stockHistories.warehouseID',
-            'stockHistories.unitID',
-        ])->findOrFail($id);
+{
+    // Mengambil data dengan relasi yang diperlukan
+    $idDetail = Barang::with([
+        'variants',
+        'stockHistories.warehouseID', // Pastikan relasi ini ada di Model Barang
+        'stockHistories.unitID',      // Pastikan relasi ini ada di Model Barang
+    ])->findOrFail($id);
 
-        $subUnit = DataBarangConversion::where('data_barang_id', $idDetail->id)->get();
-        $unit = BasicCodeDetail::where('master_id', 2)->get();
+    // Mengambil data referensi untuk form modal
+    $categories = BasicCodeDetail::where('master_id', 1)->get();
+    $unit = BasicCodeDetail::where('master_id', 2)->get();
+    $warehouses = Warehouse::where('status', 1)->get();
+    $suppliers = Supplier::where('status', 1)->get();
 
-        return view('inventory.barang.data_barang.data_barang_edit', [
-            'title' => 'Edit Product',
-            'breadcrumb' => [
-                ['label' => 'Product', 'url' => route('data-barang.index')],
-                ['label' => 'Edit Product', 'url' => ''],
-            ],
-            'idNumber' => $this->generateProductId(),
-            'categories' => BasicCodeDetail::where('master_id', 1)->get(),
-            'supplier' => Supplier::where('status', 1)->get(),
-            'unit' => $unit,
-            'sub_unit' => BasicCodeDetail::where('master_id', 2)->get(),
-            'warehouses' => Warehouse::where('status', 1)->get(),
-            'detail' => $idDetail, // Di dalam sini sekarang sudah me-load tabel product_variants
-            'subUnit' => $subUnit,
-
-        ]);
-    }
+    return view('inventory.barang.data_barang.data_barang_edit', [
+        'title'      => 'Edit Product',
+        'breadcrumb' => [
+            ['label' => 'Product', 'url' => route('data-barang.index')],
+            ['label' => 'Edit Product', 'url' => ''],
+        ],
+        'idNumber'   => $this->generateProductId(),
+        'categories' => $categories,
+        'supplier'   => $suppliers,
+        'unit'       => $unit,
+        'sub_unit'   => $unit,
+        'warehouses' => $warehouses,
+        'detail'     => $idDetail,
+    ]);
+}
 
     public function update(ProductRequest $request, $id)
     {
@@ -390,91 +432,46 @@ class DataBarangController extends Controller
 
         try {
             $isSaveAndNew = $request->input('save_and_new') == '1';
-
-            // 1. Ambil data barang utama
             $barang = Barang::findOrFail($id);
 
-            // 2. Siapkan data update (kecuali field khusus)
+            // ==================================================
+            // 1. UPDATE DATA MASTER BARANG
+            // ==================================================
             $data = $request->except(['_token', '_method', 'save_and_new', 'conversion', 'variants', 'items_detail']);
             $data['updated_by'] = Auth::id();
             $data['status'] = $request->has('status') ? 1 : 2;
 
-            // 3. Handle Upload Foto
             if ($request->hasFile('photo_filename')) {
                 if ($barang->photo_filename && file_exists(public_path('uploads/products/'.$barang->photo_filename))) {
                     unlink(public_path('uploads/products/'.$barang->photo_filename));
                 }
                 $data['photo_filename'] = $this->uploadAvatar($request->file('photo_filename'));
             }
-
-            // 4. Eksekusi Update Barang Utama
             $barang->update($data);
 
-            // $items = json_decode($request->items_detail, true) ?? [];
-
-            // // 1. Hapus semua data stok lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
-            // DataBarangStok::where('data_barang_id', $barang->id)->delete();
-
-            // // 2. Masukkan ulang semua data dari form / DataTables lokal
-            // if (is_array($items) && count($items) > 0) {
-            //     foreach ($items as $item) {
-            //         $price = $item['unit_price'] ?? $item['price'] ?? 0;
-            //         $stokUnitId = (! empty($item['stok_unit_id']) && $item['stok_unit_id'] !== 'Select Unit' && $item['stok_unit_id'] !== '') ? $item['stok_unit_id'] : null;
-            //         $warehouseId = (! empty($item['warehouse_id']) && $item['warehouse_id'] !== '') ? $item['warehouse_id'] : null;
-
-            //         // Standarisasi Format Tanggal
-            //         $dateRaw = $item['date'] ?? $item['date_stock'] ?? null;
-            //         $formattedDate = null;
-            //         if (! empty($dateRaw)) {
-            //             try {
-            //                 $formattedDate = Carbon::parse($dateRaw)->format('Y-m-d');
-            //             } catch (\Exception $e) {
-            //                 $formattedDate = null;
-            //             }
-            //         }
-
-            //         // Jalankan perintah Create langsung tanpa peduli ID lama
-            //         DataBarangStok::create([
-            //             'data_barang_id' => $barang->id, // Mengikat relasi ke barang utama
-            //             'date' => $formattedDate,
-            //             'quantity' => $item['quantity'] ?? $item['qty'] ?? 0,
-            //             'stok_unit_id' => $stokUnitId,
-            //             'warehouse_id' => $warehouseId,
-            //             'price' => $price,
-            //         ]);
-            //     }
-            // }
-
             // ==================================================
-            // PROSES UPDATE KONVERSI BARANG (Delete old, then create new)
+            // 2. UPDATE KONVERSI BARANG
             // ==================================================
-            $conversions = $request->conversion ?? [];
-
-            // 1. Lenyapkan semua data konversi lama milik barang ini agar tidak menumpuk/duplikat
             DataBarangConversion::where('data_barang_id', $barang->id)->delete();
-
-            // 2. Loop dan masukkan ulang data konversi baru (maksimal 2 index sesuai form kamu)
-            for ($i = 0; $i < 2; $i++) {
-                $conv = $conversions[$i] ?? [];
-
-                // Validasi: Jika user tidak memilih unit tujuan ('to_unit'), lewati (jangan di-insert)
-                if (empty($conv['to_unit']) || $conv['to_unit'] === 'Select Unit') {
-                    continue;
-                }
-
+            if ($request->has('conversion')) {
+                foreach ($request->conversion as $conv) {
+                    if (empty($conv['to_unit']) || $conv['to_unit'] === 'Select Unit') {
+                        continue;
+                    }
                 DataBarangConversion::create([
                     'data_barang_id' => $barang->id,
-                    'from_unit_id' => $request->unit_id, // selalu mengikuti unit utama yang baru di-update
-                    'to_unit_id' => $conv['to_unit'],
+                    'to_unit_id' => $request->unit_id, // selalu dari unit utama
+                    'from_unit_id' => $conv['to_unit'] ?? null,
                     'qty' => $conv['qty'] ?? 0,
                 ]);
+                  
+                }
             }
 
             // ==================================================
-            // PROSES UPDATE VARIAN
+            // 3. UPDATE VARIAN
             // ==================================================
             $barang->variants()->delete();
-
             if ($request->has('variants') && is_array($request->variants)) {
                 foreach ($request->variants as $variantData) {
                     if (empty($variantData['name'])) {
@@ -482,11 +479,9 @@ class DataBarangController extends Controller
                     }
 
                     $customSpecs = [];
-                    if (isset($variantData['specs']) && is_array($variantData['specs'])) {
-                        foreach ($variantData['specs'] as $spec) {
-                            if (! empty($spec['label'])) {
-                                $customSpecs[$spec['label']] = $spec['value'];
-                            }
+                    foreach ($variantData['specs'] ?? [] as $spec) {
+                        if (! empty($spec['label'])) {
+                            $customSpecs[$spec['label']] = $spec['value'];
                         }
                     }
 
@@ -498,32 +493,57 @@ class DataBarangController extends Controller
             }
 
             // ==================================================
-            // PROSES UPSERT DATA STOK BARANG (Direct Update / Create New)
+            // 4. SINKRONISASI STOK & MUTASI (Audit Trail)
             // ==================================================
-            $items = json_decode($request->items_detail, true);
+            $items = json_decode($request->items_detail, true) ?? [];
 
-            // if (is_array($items) && count($items) > 0) {
-
-            // Hapus semua detail lama terlebih dahulu untuk mencegah duplikasi atau data yatim (orphaned data)
+            // Hapus stok lama di tabel pendukung dan mutasi awal
             DataBarangStok::where('data_barang_id', $barang->id)->delete();
+            StockMutation::where('data_barang_id', $barang->id)
+                ->where('document_type', 'initial_stock')
+                ->delete();
+
+            $totalBaseQtyBaru = 0;
 
             foreach ($items as $item) {
-                $date = ! empty($item['date'])
-                    ? Carbon::parse($item['date'])->format('Y-m-d')
-                    : null;
+                $qty_input = $item['quantity'] ?? $item['qty'] ?? 0;
+                $unit_id = $item['stok_unit_id'] ?? $request->unit_id;
+
+                // Hitung Konversi ke Base Unit (PCS)
+                $conversion = DataBarangConversion::where('data_barang_id', $barang->id)
+                    ->where('from_unit_id', $unit_id)->first();
+                $rate = ($unit_id == $request->unit_id) ? 1 : ($conversion->qty ?? 1);
+                $total_base_qty = $qty_input * $rate;
+
+                $totalBaseQtyBaru += $total_base_qty;
+
+                // Simpan ke tabel pendukung
                 DataBarangStok::create([
                     'data_barang_id' => $barang->id,
-                    'date' => $date,
-                    'quantity' => $item['quantity'] ?? $item['qty'],
-                    'stok_unit_id' => $item['stok_unit_id'],
-                    'warehouse_id' => $item['warehouse_id'],
-                    'price' => $item['unit_price'] ?? null,
+                     'date_stock' => Carbon::parse($item['date'])->format('Y-m-d'),
+                    'quantity' => $qty_input,
+                    'stok_unit_id' => $unit_id,
+                    'warehouse_id' => $item['warehouse_id'] ?? null,
+                    'price' => floatval($item['unit_price'] ?? 0),
+                ]);
+
+                // SIMPAN KE STOCK_MUTATIONS (Audit Trail/Buku Besar)
+                StockMutation::create([
+                    'data_barang_id' => $barang->id,
+                    'unit_id' => $unit_id,
+                    'warehouse_id' => $item['warehouse_id'] ?? null,
+                     'date_stock' => Carbon::parse($item['date'])->format('Y-m-d'),
+                    'qty_transaksi' => $qty_input,
+                    'total_base_qty' => $total_base_qty,
+                    'type' => 'in',
+                    'keterangan' => 'Update stok awal melalui Form Edit Barang',
+                    'document_type' => 'initial_stock',
+                    'updated_by' => Auth::id(),
                 ]);
             }
-            // } else {
-            //     // Gagalkan proses jika ternyata isi array kosong setelah didecode
-            //     throw new \Exception('Minimal harus ada 1 item produk yang dimasukkan.');
-            // }
+
+            // Update total saldo akhir
+            $barang->update(['quantity' => $totalBaseQtyBaru]);
 
             DB::commit();
 

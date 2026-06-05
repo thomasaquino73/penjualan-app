@@ -43,7 +43,8 @@ class SalesQuotationController extends Controller
             return $next($request);
         });
     }
-      public function index(Request $r)
+
+    public function index(Request $r)
     {
         if ($r->ajax()) {
             // Ambil ID user yang sedang login
@@ -121,7 +122,7 @@ class SalesQuotationController extends Controller
 
                     return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
                 })
-                 ->addColumn('cekbok', function ($row) {
+                ->addColumn('cekbok', function ($row) {
 
                     if (
                         auth()->user()->can('sales_quotation-delete') &&
@@ -212,7 +213,7 @@ class SalesQuotationController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_quotation_date','total'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_quotation_date', 'total'])
                 ->make(true);
         }
 
@@ -227,7 +228,7 @@ class SalesQuotationController extends Controller
         return view('sales.salesQuotation.sales_quotation_index', $x);
     }
 
-     private function generateNumberId()
+    private function generateNumberId()
     {
         $last = SalesQuotation::whereNotNull('sales_quotation_code')
             ->orderBy('id', 'desc')
@@ -258,8 +259,8 @@ class SalesQuotationController extends Controller
 
         return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
     }
-    
-   public function create()
+
+    public function create()
     {
         $x = [
             'title' => 'Sales Quotation New',
@@ -277,6 +278,7 @@ class SalesQuotationController extends Controller
 
         return view('sales.salesQuotation.sales_quotation_create', $x);
     }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -320,6 +322,38 @@ class SalesQuotationController extends Controller
     public function getKontakByCustomer($customer_id)
     {
         $kontak = DB::table('customer_kontak')->where('customer_id', $customer_id)->get();
+
         return response()->json($kontak);
+    }
+
+    public function getPriceHistory(Request $request)
+    {
+        $productId = $request->get('product_id');
+        $customerId = $request->get('customer_id');
+
+        $year = date('Y');
+        $tableDetail = "sales_quotation_detail_{$year}";
+        $tableMaster = "sales_quotation_{$year}";
+
+        // Mengambil harga unik langsung dari database
+        $history = DB::table($tableDetail)
+            ->join($tableMaster, "{$tableDetail}.sales_quotation_id", '=', "{$tableMaster}.id")
+            ->where("{$tableDetail}.product_id", $productId)
+            ->where("{$tableMaster}.customer_id", $customerId)
+            // Kuncinya di sini: kelompokkan berdasarkan harga, lalu ambil tanggal terbaru dengan MAX()
+            ->select(
+                "{$tableDetail}.unit_price as harga",
+                DB::raw("MAX({$tableMaster}.sales_quotation_date) as tanggal")
+            )
+            ->groupBy("{$tableDetail}.unit_price")
+            // Urutkan berdasarkan tanggal terbaru (hasil dari MAX tanggal di atas)
+            ->orderBy('tanggal', 'desc')
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'history' => $history,
+        ]);
     }
 }

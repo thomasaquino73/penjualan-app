@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SalesQuotationDetail extends Model
 {
-     use HasFactory;
+    use HasFactory;
 
     protected $table = 'sales_quotation_detail';
 

@@ -256,21 +256,22 @@
                         </button>
                     </div>
                     <div class="row g-2">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control from_unit_text" disabled value="${$('.from_unit_text').first().val() || ''}">
-                            <input type="hidden" name="conversion[${index}][from_unit]" class="from_unit_id" value="${$('.from_unit_id').first().val() || ''}">
+                           <div class="col-md-3">
+                            <select name="conversion[${index}][to_unit]" class="form-select to_unit" ${$('.to_unit').first().is(':disabled') ? 'disabled' : ''}>
+                                <option value="">Select</option>
+                                ${$('.to_unit').first().html().split('</option>').slice(1).join('</option>')}
+                            </select>
                         </div>
+
                         <div class="col-md-2 text-center">
                             <div class="fw-bold mt-2">=</div>
                         </div>
                         <div class="col-md-3">
                             <input type="number" name="conversion[${index}][qty]" class="form-control qty" placeholder="Qty" ${$('.qty').first().is(':disabled') ? 'disabled' : ''}>
                         </div>
-                        <div class="col-md-3">
-                            <select name="conversion[${index}][to_unit]" class="form-select to_unit" ${$('.to_unit').first().is(':disabled') ? 'disabled' : ''}>
-                                <option value="">Select</option>
-                                ${$('.to_unit').first().html().split('</option>').slice(1).join('</option>')}
-                            </select>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control from_unit_text" disabled value="${$('.from_unit_text').first().val() || ''}">
+                            <input type="hidden" name="conversion[${index}][from_unit]" class="from_unit_id" value="${$('.from_unit_id').first().val() || ''}">
                         </div>
                     </div>
                 </div>`;
@@ -590,14 +591,27 @@
         $('#unit_id').on('change', function() {
             let unitId = $(this).val();
             let unitText = $('#unit_id option:selected').text();
+            if (unitId !== "") {
+                $('.from_unit_text').val(unitText);
 
-            $('.from_unit_text').val(unitText);
+                // isi ke hidden input (buat backend)
+                $('.from_unit_id').val(unitId);
+                // 🔥 AKTIFKAN INPUT
+                $('.qty').prop('disabled', false);
+                $('.to_unit').prop('disabled', false);
+                $('#btn-add-conversion').prop('disabled', false);
 
-            // isi ke hidden input (buat backend)
-            $('.from_unit_id').val(unitId);
-            // 🔥 AKTIFKAN INPUT
-            $('.qty').prop('disabled', false);
-            $('.to_unit').prop('disabled', false);
+            } else {
+                $('.from_unit_text').val(unitText);
+
+                // isi ke hidden input (buat backend)
+                $('.from_unit_id').val(unitId);
+                // 🔥 AKTIFKAN INPUT
+                $('.qty').prop('disabled', true);
+                $('.to_unit').prop('disabled', true);
+                $('#btn-add-conversion').prop('disabled', true);
+            }
+
         });
         let prDetailsData = [];
         $(function() {

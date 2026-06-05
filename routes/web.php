@@ -253,6 +253,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/get-kontak/{customer_id}', [SalesQuotationController::class, 'getKontakByCustomer']);
     Route::post('/sales-quotation/{id}/submit', [SalesQuotationController::class, 'submitToPending'])->name('sales-quotation.submit');
     Route::get('/sales-quotation/trash', [SalesQuotationController::class, 'trash'])->name('sales-quotation.trash');
+    Route::get('/sales-quotation/sq/price-history', [SalesQuotationController::class, 'getPriceHistory']);
     Route::resource('sales-quotation', SalesQuotationController::class);
 });
 

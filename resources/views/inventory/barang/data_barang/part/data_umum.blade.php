@@ -135,7 +135,7 @@
        <div class="col-lg-6">
            <div class="d-flex justify-content-between align-items-center mb-3">
                <h6 class="mb-0"><strong>Unit Conversion</strong></h6>
-               <button type="button" id="btn-add-conversion" class="btn btn-primary btn-sm rounded-pill">
+               <button type="button" id="btn-add-conversion" class="btn btn-primary btn-sm rounded-pill" disabled>
                    <i class="ti ti-plus me-1"></i> Add Unit
                </button>
            </div>
@@ -149,9 +149,13 @@
                        </button>
                    </div>
                    <div class="row g-2">
-                       <div class="col-md-4">
-                           <input type="text" class="form-control from_unit_text" disabled>
-                           <input type="hidden" name="conversion[0][from_unit]" class="from_unit_id">
+                       <div class="col-md-3">
+                           <select name="conversion[0][to_unit]" class="form-select to_unit" disabled>
+                               <option value="">Select</option>
+                               @foreach ($unit as $u)
+                                   <option value="{{ $u->id }}">{{ $u->detail }}</option>
+                               @endforeach
+                           </select>
                        </div>
                        <div class="col-md-2 text-center">
                            <div class="fw-bold mt-2">=</div>
@@ -160,13 +164,9 @@
                            <input type="number" name="conversion[0][qty]" class="form-control qty"
                                placeholder="Qty" disabled>
                        </div>
-                       <div class="col-md-3">
-                           <select name="conversion[0][to_unit]" class="form-select to_unit" disabled>
-                               <option value="">Select</option>
-                               @foreach ($unit as $u)
-                                   <option value="{{ $u->id }}">{{ $u->detail }}</option>
-                               @endforeach
-                           </select>
+                       <div class="col-md-4">
+                           <input type="text" class="form-control from_unit_text" disabled>
+                           <input type="hidden" name="conversion[0][from_unit]" class="from_unit_id">
                        </div>
                    </div>
                </div>
@@ -179,9 +179,13 @@
                        </button>
                    </div>
                    <div class="row g-2">
-                       <div class="col-md-4">
-                           <input type="text" class="form-control from_unit_text" disabled>
-                           <input type="hidden" name="conversion[1][from_unit]" class="from_unit_id">
+                       <div class="col-md-3">
+                           <select name="conversion[1][to_unit]" class="form-select to_unit" disabled>
+                               <option value="">Select</option>
+                               @foreach ($unit as $u)
+                                   <option value="{{ $u->id }}">{{ $u->detail }}</option>
+                               @endforeach
+                           </select>
                        </div>
                        <div class="col-md-2 text-center">
                            <div class="fw-bold mt-2">=</div>
@@ -190,13 +194,9 @@
                            <input type="number" name="conversion[1][qty]" class="form-control qty"
                                placeholder="Qty" disabled>
                        </div>
-                       <div class="col-md-3">
-                           <select name="conversion[1][to_unit]" class="form-select to_unit" disabled>
-                               <option value="">Select</option>
-                               @foreach ($unit as $u)
-                                   <option value="{{ $u->id }}">{{ $u->detail }}</option>
-                               @endforeach
-                           </select>
+                       <div class="col-md-4">
+                           <input type="text" class="form-control from_unit_text" disabled>
+                           <input type="hidden" name="conversion[1][from_unit]" class="from_unit_id">
                        </div>
                    </div>
                </div>

@@ -51,6 +51,7 @@ class PurchaseOrderController extends Controller
             return $next($request);
         });
     }
+
     public function index(Request $r)
     {
         if ($r->ajax()) {
@@ -202,7 +203,7 @@ class PurchaseOrderController extends Controller
                 ->addColumn('supplier', function ($row) {
                     return $row->supplier->nama_supplier;
                 })
-                 ->addColumn('cekbok', function ($row) {
+                ->addColumn('cekbok', function ($row) {
 
                     if (
                         auth()->user()->can('purchase_order-delete') &&
@@ -1380,89 +1381,90 @@ class PurchaseOrderController extends Controller
         return view('purchase.purchase_order.purchase_order_trash', $x);
     }
 
-   public function deleteMultiple(Request $request)
-{
-    DB::beginTransaction();
+    public function deleteMultiple(Request $request)
+    {
+        DB::beginTransaction();
 
-    try {
-        $ids = $request->ids;
+        try {
+            $ids = $request->ids;
 
-        if (!$ids || count($ids) == 0) {
-            return response()->json(['success' => false, 'message' => 'Tidak ada data yang dipilih.'], 400);
-        }
+            if (! $ids || count($ids) == 0) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada data yang dipilih.'], 400);
+            }
 
-        // 1. Ambil semua detail dari PO yang akan dihapus untuk sinkronisasi PR
-        $poDetails = PurchaseOrderDetail::whereIn('purchase_order_id', $ids)->get();
-        $involvedPrIds = [];
+            // 1. Ambil semua detail dari PO yang akan dihapus untuk sinkronisasi PR
+            $poDetails = PurchaseOrderDetail::whereIn('purchase_order_id', $ids)->get();
+            $involvedPrIds = [];
 
-        // 2. Tandai PO dan Detail PO sebagai tidak aktif (active = 0)
-        PurchaseOrder::whereIn('id', $ids)->update([
-            'active' => 0, 
-            'updated_by' => Auth::id()
-        ]);
-        PurchaseOrderDetail::whereIn('purchase_order_id', $ids)->update(['active' => 0]);
+            // 2. Tandai PO dan Detail PO sebagai tidak aktif (active = 0)
+            PurchaseOrder::whereIn('id', $ids)->update([
+                'active' => 0,
+                'updated_by' => Auth::id(),
+            ]);
+            PurchaseOrderDetail::whereIn('purchase_order_id', $ids)->update(['active' => 0]);
 
-        // 3. Update po_qty di PR Detail dan kumpulkan ID PR Master
-        foreach ($poDetails as $poDetail) {
-            if ($poDetail->purchase_requisition_detail_id) {
-                // Hitung total dari PO yang tersisa (yang masih aktif)
-                $totalRemainingPo = PurchaseOrderDetail::where('purchase_requisition_detail_id', $poDetail->purchase_requisition_detail_id)
-                    ->where('active', 1)
-                    ->sum('qty');
+            // 3. Update po_qty di PR Detail dan kumpulkan ID PR Master
+            foreach ($poDetails as $poDetail) {
+                if ($poDetail->purchase_requisition_detail_id) {
+                    // Hitung total dari PO yang tersisa (yang masih aktif)
+                    $totalRemainingPo = PurchaseOrderDetail::where('purchase_requisition_detail_id', $poDetail->purchase_requisition_detail_id)
+                        ->where('active', 1)
+                        ->sum('qty');
 
-                // Update ke tabel PR Detail
-                DB::table('purchase_requisition_detail_'.date('Y'))
-                    ->where('id', $poDetail->purchase_requisition_detail_id)
-                    ->update(['po_qty' => $totalRemainingPo]);
+                    // Update ke tabel PR Detail
+                    DB::table('purchase_requisition_detail_'.date('Y'))
+                        ->where('id', $poDetail->purchase_requisition_detail_id)
+                        ->update(['po_qty' => $totalRemainingPo]);
 
-                // Simpan ID PR untuk update status nanti
-                $prDetail = DB::table('purchase_requisition_detail_'.date('Y'))
-                    ->where('id', $poDetail->purchase_requisition_detail_id)
-                    ->first();
+                    // Simpan ID PR untuk update status nanti
+                    $prDetail = DB::table('purchase_requisition_detail_'.date('Y'))
+                        ->where('id', $poDetail->purchase_requisition_detail_id)
+                        ->first();
 
-                if ($prDetail && !in_array($prDetail->purchase_requisition_id, $involvedPrIds)) {
-                    $involvedPrIds[] = $prDetail->purchase_requisition_id;
+                    if ($prDetail && ! in_array($prDetail->purchase_requisition_id, $involvedPrIds)) {
+                        $involvedPrIds[] = $prDetail->purchase_requisition_id;
+                    }
                 }
             }
-        }
 
-        // 4. Update Status PR Master berdasarkan akumulasi terbaru
-        foreach ($involvedPrIds as $prId) {
-            $allDetails = DB::table('purchase_requisition_detail_'.date('Y'))
-                ->where('purchase_requisition_id', $prId)
-                ->get();
+            // 4. Update Status PR Master berdasarkan akumulasi terbaru
+            foreach ($involvedPrIds as $prId) {
+                $allDetails = DB::table('purchase_requisition_detail_'.date('Y'))
+                    ->where('purchase_requisition_id', $prId)
+                    ->get();
 
-            $totalRequested = $allDetails->sum('qty');
-            $totalOrdered = $allDetails->sum('po_qty');
+                $totalRequested = $allDetails->sum('qty');
+                $totalOrdered = $allDetails->sum('po_qty');
 
-            if ($totalOrdered >= $totalRequested) {
-                $status = 'closed';
-            } elseif ($totalOrdered > 0) {
-                $status = 'partial';
-            } else {
-                $status = 'processing';
+                if ($totalOrdered >= $totalRequested) {
+                    $status = 'closed';
+                } elseif ($totalOrdered > 0) {
+                    $status = 'partial';
+                } else {
+                    $status = 'processing';
+                }
+
+                DB::table('purchase_requisition_'.date('Y'))
+                    ->where('id', $prId)
+                    ->update(['status' => $status]);
             }
 
-            DB::table('purchase_requisition_'.date('Y'))
-                ->where('id', $prId)
-                ->update(['status' => $status]);
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Purchase Order berhasil dihapus dan status PR telah diperbarui.',
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus data: '.$e->getMessage(),
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true, 
-            'message' => 'Purchase Order berhasil dihapus dan status PR telah diperbarui.'
-        ], 200);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json([
-            'success' => false, 
-            'message' => 'Gagal menghapus data: ' . $e->getMessage()
-        ], 500);
     }
-}
 
     // public function restore($id)
     // {
@@ -1613,7 +1615,7 @@ class PurchaseOrderController extends Controller
                         ->where('id', $poDetail->purchase_requisition_detail_id)
                         ->first();
 
-                    if ($prDetail && !in_array($prDetail->purchase_requisition_id, $involvedPrIds)) {
+                    if ($prDetail && ! in_array($prDetail->purchase_requisition_id, $involvedPrIds)) {
                         $involvedPrIds[] = $prDetail->purchase_requisition_id;
                     }
                 }
@@ -1650,6 +1652,7 @@ class PurchaseOrderController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal merestore data: '.$e->getMessage(),

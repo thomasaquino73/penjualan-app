@@ -57,12 +57,12 @@ return new class extends Migration
             $table->bigInteger('purchase_order_id');
             $table->bigInteger('product_id');
             $table->decimal('qty', 18, 4);
-            $table->decimal('received_qty', 18, 4)->default(0);
-            $table->decimal('outstanding_qty', 18, 4)->default(0);
             $table->bigInteger('unit_id');
             $table->decimal('unit_price', 15, 2);
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('amount', 15, 2);
+            $table->decimal('received_qty', 18, 4)->default(0);
+            $table->decimal('outstanding_qty', 18, 4)->default(0);
             $table->enum('status', [
                 'open',
                 'partial',

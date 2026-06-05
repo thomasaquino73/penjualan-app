@@ -6,12 +6,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-     protected string $year;
+    protected string $year;
 
     public function __construct()
     {
         $this->year = date('Y'); // tahun berjalan
     }
+
     public function up(): void
     {
         Schema::create("sales_quotation_{$this->year}", function (Blueprint $table) {
@@ -49,11 +50,14 @@ return new class extends Migration
             $table->unsignedBigInteger('sales_quotation_id');
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('salesman_id')->nullable();
-            $table->integer('quantity');
-            $table->decimal('price', 18, 2);
-            $table->decimal('diskon_percent', 18, 2);
-            $table->decimal('diskon_nominal', 18, 2);
-            $table->decimal('amount', 18, 2);
+            $table->decimal('qty', 18, 4);
+            $table->bigInteger('unit_id');
+            $table->decimal('unit_price', 15, 2);
+            $table->decimal('discount', 15, 2)->default(0);
+            $table->decimal('amount', 15, 2);
+            $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
         });
     }

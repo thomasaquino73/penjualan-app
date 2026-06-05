@@ -229,7 +229,7 @@
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-header bg-white py-3 border-bottom border-light">
                 <h5 class="card-title mb-0 fw-bold">
-                    <i class="ti ti-history me-2 text-primary"></i>Stock History Details
+                    <i class="ti ti-history me-2 text-primary"></i>Stock Movement History
                 </h5>
             </div>
             <div class="card-body p-0">
@@ -237,32 +237,40 @@
                     <table class="table table-hover mb-0" id='table_history'>
                         <thead>
                             <tr class="bg-light">
-                                <th class="ps-4 py-3 text-muted fw-bold" width="10%">No</th>
+                                <th class="ps-4 py-3 text-muted fw-bold" width="5%">No</th>
                                 <th class="py-3 text-muted fw-bold">Date</th>
-                                <th class="py-3 text-muted fw-bold">Warehouse</th>
-                                <th class="py-3 text-muted fw-bold text-end">Quantity</th>
-                                <th class="py-3 text-muted fw-bold text-end">Price / Unit</th>
+                                <th class="py-3 text-muted fw-bold">Type</th>
+                                <th class="py-3 text-muted fw-bold text-end">In / Out</th>
+                                <th class="py-3 text-muted fw-bold text-end">Units</th>
+                                <th class="py-3 text-muted fw-bold text-end">Running Balance</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($detail->stockHistories as $index => $stock)
+                            @forelse($mutations as $index => $stock)
                                 <tr class="align-middle">
                                     <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
                                     <td class="py-3 text-dark">
-                                        {{ $stock->date ? \Carbon\Carbon::parse($stock->date)->translatedFormat('d M Y') : '-' }}
+                                        {{ $stock->created_at ? $stock->created_at->translatedFormat('d M Y H:i') : '-' }}
                                     </td>
-                                    <td class="py-3 text-secondary fw-medium">
-                                        {{ $stock->warehouseID->nama_gudang ?? '-' }}
+                                    <td class="py-3">
+                                        <span
+                                            class="badge {{ $stock->type == 'in' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} fw-bold">
+                                            {{ strtoupper($stock->type) }}
+                                        </span>
                                     </td>
                                     <td class="py-3 text-end">
-                                        <span class="fw-bold text-dark">
-                                            {{ number_format($stock->quantity ?? 0, 0, ',', '.') }}
+                                        <span class="fw-bold {{ $stock->type == 'in' ? 'text-success' : 'text-danger' }}">
+                                            {{ $stock->type == 'in' ? '+' : '-' }}
+                                            {{ number_format($stock->total_base_qty, 0, ',', '.') }}
                                         </span>
-                                        <small class="text-muted ms-1">{{ $stock->unitID->detail ?? '' }}</small>
                                     </td>
                                     <td class="py-3 text-end fw-bold text-primary">
-                                        {{ format_uang(convert_currency($stock->price, $row->currency_id ?? 1)) }}
+                                        {{ $stock->unitID->detail ?? 'N/A' }}
                                     </td>
+                                    <td class="py-3 text-end fw-bold text-primary">
+                                        {{ number_format($stock->saldo_akhir, 0, ',', '.') }}
+                                    </td>
+
                                 </tr>
                             @empty
                                 <tr>

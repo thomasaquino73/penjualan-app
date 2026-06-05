@@ -48,6 +48,7 @@ class PurchaseRequisitionController extends Controller
             return $next($request);
         });
     }
+
     public function index(Request $r)
     {
         if ($r->ajax()) {
@@ -126,7 +127,7 @@ class PurchaseRequisitionController extends Controller
 
                     return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
                 })
-                 ->addColumn('cekbok', function ($row) {
+                ->addColumn('cekbok', function ($row) {
 
                     if (
                         auth()->user()->can('purchase_requisition-delete') &&

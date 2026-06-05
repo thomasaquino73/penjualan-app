@@ -465,6 +465,7 @@
                     contactDropdown.empty().append('<option></option>');
                 }
             });
+
             $(document).on("change", "#product_id", function() {
                 let productId = $(this).val();
                 let unitSelect = $("#unit_id");
@@ -473,7 +474,7 @@
                 let dropdownMenu = $("#po-price-dropdown-menu");
                 let helperText = $("#po-history-helper");
 
-                // Pastikan ID selector ini sesuai dengan ID Select Supplier di form utama kamu
+                // Pastikan ID selector ini sesuai dengan ID Select Customer di form utama kamu
                 let customerId = $("#customer_id").val();
 
                 if (!productId) {
@@ -488,7 +489,7 @@
                 // Tambahan Validasi: Ingatkan user jika customer belum dipilih
                 if (!customerId) {
                     alert(
-                        "Silahkan pilih Supplier terlebih dahulu pada form utama PO!",
+                        "Silahkan pilih Customer terlebih dahulu pada form utama SQ!",
                     );
                     $(this).val("").trigger("change"); // Reset pilihan produk
                     return;
@@ -546,7 +547,7 @@
                 // 2. AJAX History PO + Fallback Harga Master
                 // ==========================================
                 $.ajax({
-                    url: `/purchase-order/po/price-history?product_id=${productId}&customer_id=${customerId}`,
+                    url: `/sales-quotation/sq/price-history?product_id=${productId}&customer_id=${customerId}`,
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -628,7 +629,7 @@
                             helperText
                                 .attr("class", "form-text text-muted")
                                 .text(
-                                    "Belum ada riwayat PO dengan customer ini. Silahkan isi harga manual.",
+                                    "Belum ada riwayat SQ dengan customer ini. Silahkan isi harga manual.",
                                 );
                             dropdownBtn.prop("disabled", true);
                             if (priceInput.val() === "") {
