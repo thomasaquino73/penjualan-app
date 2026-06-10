@@ -171,7 +171,7 @@ class SalesQuotationController extends Controller
 
                         if ($row->status == 'draft') {
                             $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'" data-status="processing">
-                        <i class="ti ti-send me-1"></i> Processing Requisition
+                        <i class="ti ti-send me-1"></i> Processing Quotation
                      </a>';
                             $btn .= '<hr class="dropdown-divider">';
                         }
@@ -217,7 +217,7 @@ class SalesQuotationController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_quotation_date', 'total','customer'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_quotation_date', 'total', 'customer'])
                 ->make(true);
         }
 
@@ -232,7 +232,7 @@ class SalesQuotationController extends Controller
         return view('sales.salesQuotation.sales_quotation_index', $x);
     }
 
-      public function bulanRomawi($bulan)
+    public function bulanRomawi($bulan)
     {
         $romawi = [
             1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',
@@ -298,7 +298,7 @@ class SalesQuotationController extends Controller
         return view('sales.salesQuotation.sales_quotation_create', $x);
     }
 
-     public function store(SalesQuotationRequest $request)
+    public function store(SalesQuotationRequest $request)
     {
         DB::beginTransaction();
 
@@ -474,7 +474,7 @@ class SalesQuotationController extends Controller
         ]);
     }
 
-     public function print(string $id)
+    public function print(string $id)
     {
         //
     }

@@ -27,7 +27,7 @@ return new class extends Migration
             $table->unsignedBigInteger('customer_contact_id');
             $table->boolean('kena_pajak')->default(1)->comment('kena pajak atau tidak')->nullable();
             $table->boolean('total_termasuk_pajak')->default(1)->comment('harga total termasuk pajak')->nullable();
-             $table->enum('status', [
+            $table->enum('status', [
                 'draft',        // Data baru dibuat
                 'processing',   // Disetujui, siap diproses
                 'partial',      // Baru dibuatkan SQ sebagian
@@ -52,7 +52,7 @@ return new class extends Migration
             $table->decimal('unit_price', 15, 2);
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('amount', 15, 2);
-                 $table->decimal('sq_qty', 18, 4)->default(0)->comment('Qty yang sudah sukses di-SQ-kan');
+            $table->decimal('sq_qty', 18, 4)->default(0)->comment('Qty yang sudah sukses di-SQ-kan');
             $table->decimal('outstanding_qty', 18, 4)->default(0)
                 ->comment('Sisa qty yang belum di-SQ-kan: qty - sq_qty');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');

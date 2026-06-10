@@ -322,13 +322,13 @@
                 @foreach ($detail->stockHistories as $stock)
                     {
                         // Ambil ID Gudang langsung dari property atau dari relasi
-                        'date': '{{ $stock->date }}',
+                        'date_stock': '{{ Carbon\Carbon::parse($stock->date_stock)->format('d-m-Y') }}',
                         'warehouse_id': '{{ $stock->warehouse_id }}',
 
                         // Mengambil nama gudang dari relasi warehouseID yang ada di model DataBarangStok
                         'warehouse_name': '{{ $stock->warehouseID ? $stock->warehouseID->nama_gudang : 'Gudang Tidak Ditemukan' }}',
 
-                        'date': '{{ $stock->date }}',
+                        'date_stock': '{{ Carbon\Carbon::parse($stock->date_stock)->format('d-m-Y') }}',
                         'quantity': '{{ $stock->quantity }}',
 
                         'stok_unit_id': '{{ $stock->stok_unit_id }}',
@@ -918,8 +918,6 @@
                 flatpickr("#date_stock", {
                     enableTime: false,
                     dateFormat: "d-m-Y",
-                    minDate: "today",
-                    defaultDate: new Date()
                 });
             });
 
@@ -962,7 +960,7 @@
                         }
                     },
                     {
-                        data: 'date',
+                        data: 'date_stock',
                     },
 
                     {
@@ -1014,7 +1012,7 @@
                                     $('#quantity').val(data.quantity);
                                     $('#unit_price').val(data.unit_price);
                                     $('#date_stock').val(data
-                                        .date); // Menyesuaikan id="date_stock" di modal kamu
+                                        .date_stock); // Menyesuaikan id="date_stock" di modal kamu
 
                                     // 3. Picu fungsi hitung total price agar langsung kalkulasi saat modal buka
                                     hitungTotal();
@@ -1145,7 +1143,7 @@
                     return;
                 }
                 let itemData = {
-                    'date': date,
+                    'date_stock': date,
                     'warehouse_name': warehouseName,
                     'warehouse_id': warehouseID,
                     'quantity': quantity,

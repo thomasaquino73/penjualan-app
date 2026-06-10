@@ -313,7 +313,7 @@ class DataBarangController extends Controller
                     'data_barang_id' => $barang->id,
                     'unit_id' => $unit_id,
                     'warehouse_id' => $item['warehouse_id'] ?? null,
-                     'date_stock' => Carbon::parse($item['date'])->format('Y-m-d'),
+                    'date_stock' => Carbon::parse($item['date'])->format('Y-m-d'),
                     'qty_transaksi' => $qty_input,
                     'total_base_qty' => $total_base_qty,
                     'type' => 'in', // Karena ini input stok awal
@@ -358,73 +358,138 @@ class DataBarangController extends Controller
             'variants',
             'stockHistories.warehouseID',
             'stockHistories.unitID',
-            'mutations' // Relasi ke model StockMutation
+            'mutations', // Relasi ke model StockMutation
         ])->findOrFail($id);
 
         // 2. Hitung Saldo Berjalan (Running Balance) dari tabel mutasi
-        $mutations = $idDetail->mutations()->orderBy('created_at', 'asc')->get();
-        
-        $runningBalance = 0;
-        foreach ($mutations as $mutation) {
-            if ($mutation->type == 'in') {
-                $runningBalance += $mutation->total_base_qty;
-            } else {
-                $runningBalance -= $mutation->total_base_qty;
-            }
-            $mutation->saldo_akhir = $runningBalance;
-        }
+        // $mutations = $idDetail->mutations()->orderBy('created_at', 'asc')->get();
+
+        // $runningBalance = 0;
+        // foreach ($mutations as $mutation) {
+        //     if ($mutation->type == 'in') {
+        //         $runningBalance += $mutation->total_base_qty;
+        //     } else {
+        //         $runningBalance -= $mutation->total_base_qty;
+        //     }
+        //     $mutation->saldo_akhir = $runningBalance;
+        // }
 
         // 3. Ambil konversi satuan
         $unitConversion = DataBarangConversion::where('data_barang_id', $idDetail->id)
-                ->where('qty', '>', 0)
-                ->get();
+            ->where('qty', '>', 0)
+            ->get();
+       
 
         return view('inventory.barang.data_barang.data_barang_detail', [
-            'title'          => 'Detail Product',
-            'breadcrumb'     => [
+            'title' => 'Detail Product',
+            'breadcrumb' => [
                 ['label' => 'Product', 'url' => route('data-barang.index')],
                 ['label' => 'Detail Product', 'url' => ''],
             ],
-            'detail'         => $idDetail,
-            'mutations'      => $mutations, // Kirim hasil perhitungan mutasi
+            'detail' => $idDetail,
+            'mutations' => $this->getMutation($idDetail->id),
             'unitConversion' => $unitConversion,
-            'stok'           => $unitConversion,
+            'stok' => $unitConversion,
+            'warehouseHistory' => $this->getWarehouse($idDetail->id),
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+  private function getWarehouse($data_barang_id)
 {
-    // Mengambil data dengan relasi yang diperlukan
-    $idDetail = Barang::with([
-        'variants',
-        'stockHistories.warehouseID', // Pastikan relasi ini ada di Model Barang
-        'stockHistories.unitID',      // Pastikan relasi ini ada di Model Barang
-    ])->findOrFail($id);
+    $date = request('date');
 
-    // Mengambil data referensi untuk form modal
-    $categories = BasicCodeDetail::where('master_id', 1)->get();
-    $unit = BasicCodeDetail::where('master_id', 2)->get();
-    $warehouses = Warehouse::where('status', 1)->get();
-    $suppliers = Supplier::where('status', 1)->get();
+    $query = StockMutation::with('unitID','warehouseID')
+        ->select(
+            'warehouse_id',
+            'unit_id',
+            DB::raw("
+                SUM(
+                    CASE 
+                        WHEN type = 'in' THEN total_base_qty
+                        WHEN type = 'out' THEN -total_base_qty
+                        ELSE 0
+                    END
+                ) as total_qty
+            ")
+        )
+        ->where('data_barang_id', $data_barang_id);
 
-    return view('inventory.barang.data_barang.data_barang_edit', [
-        'title'      => 'Edit Product',
-        'breadcrumb' => [
-            ['label' => 'Product', 'url' => route('data-barang.index')],
-            ['label' => 'Edit Product', 'url' => ''],
-        ],
-        'idNumber'   => $this->generateProductId(),
-        'categories' => $categories,
-        'supplier'   => $suppliers,
-        'unit'       => $unit,
-        'sub_unit'   => $unit,
-        'warehouses' => $warehouses,
-        'detail'     => $idDetail,
-    ]);
+    // ✅ FILTER TANGGAL (SALDO SAMPAI TANGGAL TERPILIH)
+    if ($date && \Carbon\Carbon::hasFormat($date, 'd-m-Y')) {
+        $date = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
+
+        $query->whereDate('date_stock', '<=', $date);
+    }
+
+    return $query
+        ->groupBy('warehouse_id', 'unit_id')
+        ->get();
 }
+private function getMutation($data_barang_id)
+{
+    $date = request('date');
+
+    $query = StockMutation::with('unitID','warehouseID')
+        ->where('data_barang_id', $data_barang_id)
+        ->orderBy('date_stock', 'asc');
+
+    // ✅ FILTER TANGGAL
+    if ($date && \Carbon\Carbon::hasFormat($date, 'd-m-Y')) {
+        $dateFormatted = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
+        $query->whereDate('date_stock', '<=', $dateFormatted);
+    }
+
+    $mutations = $query->get();
+
+    // ✅ RUNNING BALANCE
+    $runningBalance = 0;
+
+    foreach ($mutations as $mutation) {
+        $qty = (float) $mutation->total_base_qty;
+
+        if ($mutation->type === 'in') {
+            $runningBalance += $qty;
+        } else {
+            $runningBalance -= $qty;
+        }
+
+        $mutation->saldo_akhir = $runningBalance;
+    }
+
+    return $mutations;
+}
+
+
+    public function edit(string $id)
+    {
+        // Mengambil data dengan relasi yang diperlukan
+        $idDetail = Barang::with([
+            'variants',
+            'stockHistories.warehouseID', // Pastikan relasi ini ada di Model Barang
+            'stockHistories.unitID',      // Pastikan relasi ini ada di Model Barang
+        ])->findOrFail($id);
+
+        // Mengambil data referensi untuk form modal
+        $categories = BasicCodeDetail::where('master_id', 1)->get();
+        $unit = BasicCodeDetail::where('master_id', 2)->get();
+        $warehouses = Warehouse::where('status', 1)->get();
+        $suppliers = Supplier::where('status', 1)->get();
+
+        return view('inventory.barang.data_barang.data_barang_edit', [
+            'title' => 'Edit Product',
+            'breadcrumb' => [
+                ['label' => 'Product', 'url' => route('data-barang.index')],
+                ['label' => 'Edit Product', 'url' => ''],
+            ],
+            'idNumber' => $this->generateProductId(),
+            'categories' => $categories,
+            'supplier' => $suppliers,
+            'unit' => $unit,
+            'sub_unit' => $unit,
+            'warehouses' => $warehouses,
+            'detail' => $idDetail,
+        ]);
+    }
 
     public function update(ProductRequest $request, $id)
     {
@@ -458,13 +523,13 @@ class DataBarangController extends Controller
                     if (empty($conv['to_unit']) || $conv['to_unit'] === 'Select Unit') {
                         continue;
                     }
-                DataBarangConversion::create([
-                    'data_barang_id' => $barang->id,
-                    'to_unit_id' => $request->unit_id, // selalu dari unit utama
-                    'from_unit_id' => $conv['to_unit'] ?? null,
-                    'qty' => $conv['qty'] ?? 0,
-                ]);
-                  
+                    DataBarangConversion::create([
+                        'data_barang_id' => $barang->id,
+                        'to_unit_id' => $request->unit_id, // selalu dari unit utama
+                        'from_unit_id' => $conv['to_unit'] ?? null,
+                        'qty' => $conv['qty'] ?? 0,
+                    ]);
+
                 }
             }
 
@@ -520,7 +585,7 @@ class DataBarangController extends Controller
                 // Simpan ke tabel pendukung
                 DataBarangStok::create([
                     'data_barang_id' => $barang->id,
-                     'date_stock' => Carbon::parse($item['date'])->format('Y-m-d'),
+                    'date_stock' => Carbon::parse($item['date_stock'])->format('Y-m-d'),
                     'quantity' => $qty_input,
                     'stok_unit_id' => $unit_id,
                     'warehouse_id' => $item['warehouse_id'] ?? null,
@@ -532,7 +597,7 @@ class DataBarangController extends Controller
                     'data_barang_id' => $barang->id,
                     'unit_id' => $unit_id,
                     'warehouse_id' => $item['warehouse_id'] ?? null,
-                     'date_stock' => Carbon::parse($item['date'])->format('Y-m-d'),
+                    'date_stock' => Carbon::parse($item['date_stock'])->format('Y-m-d'),
                     'qty_transaksi' => $qty_input,
                     'total_base_qty' => $total_base_qty,
                     'type' => 'in',
@@ -750,4 +815,13 @@ class DataBarangController extends Controller
         return $pdf->stream('barang_all.pdf');
         // kalau mau download → ->download('barang.pdf');
     }
+    public function filter(Request $request)
+{
+    $id = $request->id;
+
+    return response()->json([
+        'mutations' => $this->getMutation($id),
+        'warehouse' => $this->getWarehouse($id),
+    ]);
+}
 }

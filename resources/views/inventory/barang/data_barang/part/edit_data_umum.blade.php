@@ -321,3 +321,14 @@
         </div>
     </div>
 </div>
+@push('scripts')
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll('.qty').forEach(function(input) {
+                if (input.value == 0 || input.value == '0.0000') {
+                    input.value = '';
+                }
+            });
+        });
+    </script>
+@endpush

@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Warehouse;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -25,13 +23,14 @@ class StockMutation extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
-     public function warehouseID()
+
+    public function warehouseID()
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
+
     public function unitID()
     {
         return $this->belongsTo(BasicCodeDetail::class, 'unit_id');
     }
-
 }

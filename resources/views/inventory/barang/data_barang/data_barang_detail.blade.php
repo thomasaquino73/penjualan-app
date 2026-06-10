@@ -232,60 +232,131 @@
                     <i class="ti ti-history me-2 text-primary"></i>Stock Movement History
                 </h5>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive text-nowrap">
-                    <table class="table table-hover mb-0" id='table_history'>
-                        <thead>
-                            <tr class="bg-light">
-                                <th class="ps-4 py-3 text-muted fw-bold" width="5%">No</th>
-                                <th class="py-3 text-muted fw-bold">Date</th>
-                                <th class="py-3 text-muted fw-bold">Description</th>
-                                <th class="py-3 text-muted fw-bold">Type</th>
-                                <th class="py-3 text-muted fw-bold text-end">In / Out</th>
-                                <th class="py-3 text-muted fw-bold text-end">Units</th>
-                                <th class="py-3 text-muted fw-bold text-end">Running Balance</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($mutations as $index => $stock)
-                                <tr class="align-middle">
-                                    <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
-                                    <td class="py-3 text-dark">
-                                        {{ $stock->created_at ? $stock->created_at->translatedFormat('d M Y H:i') : '-' }}
-                                    </td>
-                                    <td class="py-3 text-dark">
-                                        {{ $stock->keterangan ?? '-' }}
-                                    </td>
-                                    <td class="py-3">
-                                        <span
-                                            class="badge {{ $stock->type == 'in' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} fw-bold">
-                                            {{ strtoupper($stock->type) }}
-                                        </span>
-                                    </td>
-                                    <td class="py-3 text-end">
-                                        <span class="fw-bold {{ $stock->type == 'in' ? 'text-success' : 'text-danger' }}">
-                                            {{ $stock->type == 'in' ? '+' : '-' }}
-                                            {{ number_format($stock->total_base_qty, 0, ',', '.') }}
-                                        </span>
-                                    </td>
-                                    <td class="py-3 text-end fw-bold text-primary">
-                                        {{ $stock->unitID->detail ?? 'N/A' }}
-                                    </td>
-                                    <td class="py-3 text-end fw-bold text-primary">
-                                        {{ number_format($stock->saldo_akhir, 0, ',', '.') }}
-                                    </td>
+            <div class="card-body p-3">
+                <div class="row mb-5">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search_date" id="search_date"
+                                placeholder="Pilih tanggal..." value="{{ request('date') }}">
 
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted italic">
-                                        <i class="ti ti-clipboard-list d-block mb-2 fs-3"></i>
-                                        No stock movement history data found.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            <button class="btn btn-outline-danger" type="button" id="btnReset">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive ">
+                    <div class="nav-align-top nav-tabs-shadow mb-4 ps-3">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab"
+                                    data-bs-target="#navs-top-home" aria-controls="navs-top-home" aria-selected="true">
+                                    History
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
+                                    data-bs-target="#navs-top-profile" aria-controls="navs-top-profile"
+                                    aria-selected="false" tabindex="-1">
+                                    Warehouse
+                                </button>
+                            </li>
+
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="navs-top-home" role="tabpanel">
+                                <table class="table table-hover mb-0" id='table_history'>
+                                    <thead>
+                                        <tr class="bg-light">
+                                            <th class="ps-4 py-3 text-muted fw-bold" width="5%">No</th>
+                                            <th class="py-3 text-muted fw-bold">Date</th>
+                                            <th class="py-3 text-muted fw-bold">Description</th>
+                                            <th class="py-3 text-muted fw-bold">Type</th>
+                                            <th class="py-3 text-muted fw-bold text-end">In</th>
+                                            <th class="py-3 text-muted fw-bold text-end">Out</th>
+                                            <th class="py-3 text-muted fw-bold text-end">Units</th>
+                                            <th class="py-3 text-muted fw-bold text-end">Running Balance</th>
+                                            <th class="py-3 text-muted fw-bold text-end">Warehouse</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($mutations as $index => $stock)
+                                            <tr class="align-middle">
+                                                <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
+                                                <td class="py-3 text-dark">
+                                                    {{ $stock->created_at ? $stock->created_at->translatedFormat('d M Y H:i') : '-' }}
+                                                </td>
+                                                <td class="py-3 text-dark">
+                                                    {{ $stock->keterangan ?? '-' }}
+                                                </td>
+                                                <td class="py-3">
+                                                    <span
+                                                        class="badge {{ $stock->type == 'in' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} fw-bold">
+                                                        {{ strtoupper($stock->type) }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 text-end">
+                                                    <span class="fw-bold text-success">
+                                                        {{ $stock->type == 'in' ? number_format($stock->total_base_qty, 0, ',', '.') : '' }}
+                                                    </span>
+                                                </td>
+
+                                                <td class="py-3 text-end">
+                                                    <span class="fw-bold text-danger">
+                                                        {{ $stock->type == 'out' ? number_format($stock->total_base_qty, 0, ',', '.') : '' }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 text-end fw-bold text-primary">
+                                                    {{ $stock->unitID->detail ?? 'N/A' }}
+                                                </td>
+                                                <td class="py-3 text-end fw-bold text-primary">
+                                                    {{ number_format($stock->saldo_akhir, 0, ',', '.') }}
+                                                </td>
+                                                <td class="py-3 text-end fw-bold text-primary">
+                                                    {{ $stock->warehouseID->nama_gudang ?? 'N/A' }}
+                                                </td>
+
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="5" class="text-center py-4 text-muted italic">
+                                                    <i class="ti ti-clipboard-list d-block mb-2 fs-3"></i>
+                                                    No stock movement history data found.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="tab-pane fade" id="navs-top-profile" role="tabpanel">
+
+
+                                <table class="table table-hover mb-0" id='table_warehouse'>
+                                    <thead>
+                                        <tr class="bg-light">
+                                            <th class="ps-4 py-3 text-muted fw-bold">Warehouse</th>
+                                            <th class="py-3 text-muted fw-bold" width="5%">Balance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($warehouseHistory as $history)
+                                            <tr>
+                                                <td class="ps-4 py-3">{{ $history->warehouseID->nama_gudang ?? 'N/A' }}
+                                                </td>
+                                                <td class="py-3 text-end fw-bold text-primary">
+                                                    {{ number_format($history->total_qty, 0, ',', '.') }}
+                                                    <small
+                                                        class="text-muted">{{ $history->unitID->detail ?? 'N/A' }}</small>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -334,6 +405,45 @@
 @endsection
 @push('scripts')
     <script>
-        let table = new DataTable('#table_history');
+        let table_history = new DataTable('#table_history');
+        let table_warehouse = new DataTable('#table_warehouse');
+        document.getElementById('btnReset').addEventListener('click', function() {
+            let url = new URL(window.location.href);
+            url.searchParams.delete('date');
+            window.location.href = url.toString();
+        });
+        flatpickr("#search_date", {
+            dateFormat: "d-m-Y",
+            defaultDate: "{{ request('date') }}",
+            onChange: function(selectedDates, dateStr) {
+
+                fetch(`/data-barang/filter?id={{ $detail->id }}&date=${dateStr}`)
+                    .then(res => res.json())
+                    .then(res => {
+
+                        // 🔥 UPDATE TABLE HISTORY
+                        table_history.clear();
+                        res.mutations.forEach(item => {
+                            table_history.row.add([
+                                item.date_stock,
+                                item.type,
+                                item.total_base_qty,
+                                item.saldo_akhir
+                            ]);
+                        });
+                        table_history.draw();
+
+                        // 🔥 UPDATE TABLE WAREHOUSE
+                        table_warehouse.clear();
+                        res.warehouse.forEach(item => {
+                            table_warehouse.row.add([
+                                item.warehouseID?.nama_gudang ?? '-',
+                                item.total_qty
+                            ]);
+                        });
+                        table_warehouse.draw();
+                    });
+            }
+        });
     </script>
 @endpush

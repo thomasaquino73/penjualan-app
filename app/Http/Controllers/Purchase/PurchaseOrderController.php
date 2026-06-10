@@ -414,7 +414,7 @@ class PurchaseOrderController extends Controller
         </a>
             ';
 
-                            $btn .= '
+                    $btn .= '
                     </ul>
                 </div>
             ';
