@@ -397,51 +397,61 @@ class DataBarangController extends Controller
   private function getWarehouse($data_barang_id)
 {
     $date = request('date');
+    $warehouse_id = request('warehouse_id');
 
-    $query = StockMutation::with('unitID','warehouseID')
+    $query = StockMutation::query()
+        ->with(['unitID', 'warehouseID'])
         ->select(
-            'warehouse_id',
-            'unit_id',
-            DB::raw("
-                SUM(
-                    CASE 
-                        WHEN type = 'in' THEN total_base_qty
-                        WHEN type = 'out' THEN -total_base_qty
-                        ELSE 0
-                    END
-                ) as total_qty
-            ")
+            'warehouse_id', 'unit_id',
+            DB::raw("COALESCE(SUM(CASE WHEN type = 'in' THEN total_base_qty WHEN type = 'out' THEN -total_base_qty ELSE 0 END), 0) as total_qty")
         )
         ->where('data_barang_id', $data_barang_id);
 
-    // ✅ FILTER TANGGAL (SALDO SAMPAI TANGGAL TERPILIH)
-    if ($date && \Carbon\Carbon::hasFormat($date, 'd-m-Y')) {
-        $date = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
-
-        $query->whereDate('date_stock', '<=', $date);
+    // Filter Tanggal yang Aman
+    if (!empty($date)) {
+        try {
+            // Konversi d-m-Y ke Y-m-d untuk SQL
+            $formattedDate = \Carbon\Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
+            
+            $query->where(function ($q) use ($formattedDate) {
+                $q->where('date_stock', '<=', $formattedDate)
+                  ->orWhereNull('date_stock'); // Penting untuk stok lama/awal
+            });
+        } catch (\Exception $e) {
+            // Jika input date rusak, abaikan filter
+        }
     }
 
-    return $query
-        ->groupBy('warehouse_id', 'unit_id')
-        ->get();
+    if (!empty($warehouse_id)) {
+        $query->where('warehouse_id', $warehouse_id);
+    }
+
+    return $query->groupBy('warehouse_id', 'unit_id')->get()->map(function ($item) {
+        return [
+            'warehouse_id'   => $item->warehouse_id,
+            'warehouse_name' => optional($item->warehouseID)->nama_gudang ?? '-',
+            'unit_id'        => $item->unit_id,
+            'unit_name'      => optional($item->unitID)->detail ?? '-',
+            'total_qty'      => (float) $item->total_qty,
+        ];
+    });
 }
 private function getMutation($data_barang_id)
 {
-    $date = request('date');
+    // $date = request('date');
 
     $query = StockMutation::with('unitID','warehouseID')
         ->where('data_barang_id', $data_barang_id)
-        ->orderBy('date_stock', 'asc');
+        ->orderBy('date_stock', 'asc'); // 🔥 WAJIB ASC
 
-    // ✅ FILTER TANGGAL
-    if ($date && \Carbon\Carbon::hasFormat($date, 'd-m-Y')) {
-        $dateFormatted = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
-        $query->whereDate('date_stock', '<=', $dateFormatted);
-    }
+    // if ($date && \Carbon\Carbon::hasFormat($date, 'd-m-Y')) {
+    //     $dateFormatted = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
+    //     $query->where('date_stock', '<=', $dateFormatted . ' 23:59:59');
+    // }
 
     $mutations = $query->get();
 
-    // ✅ RUNNING BALANCE
+    // ✅ HITUNG RUNNING BALANCE (ASC)
     $runningBalance = 0;
 
     foreach ($mutations as $mutation) {
@@ -456,7 +466,8 @@ private function getMutation($data_barang_id)
         $mutation->saldo_akhir = $runningBalance;
     }
 
-    return $mutations;
+    // 🔥 BALIK KE DESC BUAT TAMPILAN
+    return $mutations->sortByDesc('date_stock')->values();
 }
 
 
@@ -815,13 +826,5 @@ private function getMutation($data_barang_id)
         return $pdf->stream('barang_all.pdf');
         // kalau mau download → ->download('barang.pdf');
     }
-    public function filter(Request $request)
-{
-    $id = $request->id;
 
-    return response()->json([
-        'mutations' => $this->getMutation($id),
-        'warehouse' => $this->getWarehouse($id),
-    ]);
-}
 }

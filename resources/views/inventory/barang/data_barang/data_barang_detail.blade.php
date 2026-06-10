@@ -233,18 +233,7 @@
                 </h5>
             </div>
             <div class="card-body p-3">
-                <div class="row mb-5">
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            <input type="text" class="form-control" name="search_date" id="search_date"
-                                placeholder="Pilih tanggal..." value="{{ request('date') }}">
 
-                            <button class="btn btn-outline-danger" type="button" id="btnReset">
-                                Reset
-                            </button>
-                        </div>
-                    </div>
-                </div>
                 <div class="table-responsive ">
                     <div class="nav-align-top nav-tabs-shadow mb-4 ps-3">
                         <ul class="nav nav-tabs" role="tablist">
@@ -276,7 +265,6 @@
                                             <th class="py-3 text-muted fw-bold text-end">Out</th>
                                             <th class="py-3 text-muted fw-bold text-end">Units</th>
                                             <th class="py-3 text-muted fw-bold text-end">Running Balance</th>
-                                            <th class="py-3 text-muted fw-bold text-end">Warehouse</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -312,9 +300,7 @@
                                                 <td class="py-3 text-end fw-bold text-primary">
                                                     {{ number_format($stock->saldo_akhir, 0, ',', '.') }}
                                                 </td>
-                                                <td class="py-3 text-end fw-bold text-primary">
-                                                    {{ $stock->warehouseID->nama_gudang ?? 'N/A' }}
-                                                </td>
+
 
                                             </tr>
                                         @empty
@@ -329,7 +315,20 @@
                                 </table>
                             </div>
                             <div class="tab-pane fade" id="navs-top-profile" role="tabpanel">
-
+                                <div class="row ">
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" name="date" id="search_date"
+                                                placeholder="Pilih tanggal..." value="{{ request('date') }}">
+                                            <button class="btn btn-outline-success" type="button" id="btnFilter">
+                                                <i class="ti ti-filter"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" type="button" id="btnReset">
+                                                <i class="ti ti-repeat"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <table class="table table-hover mb-0" id='table_warehouse'>
                                     <thead>
@@ -341,12 +340,11 @@
                                     <tbody>
                                         @foreach ($warehouseHistory as $history)
                                             <tr>
-                                                <td class="ps-4 py-3">{{ $history->warehouseID->nama_gudang ?? 'N/A' }}
-                                                </td>
+                                                <td class="ps-4 py-3">{{ $history['warehouse_name'] ?? 'N/A' }}</td>
+
                                                 <td class="py-3 text-end fw-bold text-primary">
-                                                    {{ number_format($history->total_qty, 0, ',', '.') }}
-                                                    <small
-                                                        class="text-muted">{{ $history->unitID->detail ?? 'N/A' }}</small>
+                                                    {{ number_format($history['total_qty'], 0, ',', '.') }}
+                                                    <small class="text-muted">{{ $history['unit_name'] ?? 'N/A' }}</small>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -407,43 +405,28 @@
     <script>
         let table_history = new DataTable('#table_history');
         let table_warehouse = new DataTable('#table_warehouse');
-        document.getElementById('btnReset').addEventListener('click', function() {
-            let url = new URL(window.location.href);
-            url.searchParams.delete('date');
-            window.location.href = url.toString();
-        });
-        flatpickr("#search_date", {
-            dateFormat: "d-m-Y",
-            defaultDate: "{{ request('date') }}",
-            onChange: function(selectedDates, dateStr) {
+        document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#search_date", {
+                enableTime: false,
+                dateFormat: "d-m-Y",
+            });
+            // Event Klik Filter
+            document.getElementById('btnFilter').addEventListener('click', function() {
+                let date = document.getElementById('search_date').value;
+                let url = new URL(window.location.href);
 
-                fetch(`/data-barang/filter?id={{ $detail->id }}&date=${dateStr}`)
-                    .then(res => res.json())
-                    .then(res => {
+                if (date) {
+                    url.searchParams.set('date', date);
+                }
+                window.location.href = url.toString(); // Reload halaman dengan parameter baru
+            });
 
-                        // 🔥 UPDATE TABLE HISTORY
-                        table_history.clear();
-                        res.mutations.forEach(item => {
-                            table_history.row.add([
-                                item.date_stock,
-                                item.type,
-                                item.total_base_qty,
-                                item.saldo_akhir
-                            ]);
-                        });
-                        table_history.draw();
-
-                        // 🔥 UPDATE TABLE WAREHOUSE
-                        table_warehouse.clear();
-                        res.warehouse.forEach(item => {
-                            table_warehouse.row.add([
-                                item.warehouseID?.nama_gudang ?? '-',
-                                item.total_qty
-                            ]);
-                        });
-                        table_warehouse.draw();
-                    });
-            }
+            // Event Klik Reset
+            document.getElementById('btnReset').addEventListener('click', function() {
+                let url = new URL(window.location.href);
+                url.searchParams.delete('date');
+                window.location.href = url.toString();
+            });
         });
     </script>
 @endpush
