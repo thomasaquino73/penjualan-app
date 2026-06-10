@@ -417,7 +417,22 @@ class SalesQuotationController extends Controller
      */
     public function edit(string $id)
     {
-        //
+         $salesQuotation = SalesQuotation::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $x = [
+            'title' => 'Sales Quotation New',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Sales Quotation', 'url' => ''],
+            ],
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'idNumber' => $this->generateNumberId(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
+            'salesman' => User::where('status', '<>', 0)->get(),
+            'model' => $salesQuotation,
+        ];
+
+        return view('sales.salesQuotation.sales_quotation_edit', $x);
     }
 
     /**

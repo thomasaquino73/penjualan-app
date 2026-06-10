@@ -28,8 +28,10 @@
 
         </div>
         <div class="card-body table-responsive p-3">
-            <form action="{{ route('sales-quotation.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
+            <form action="{{ route('sales-quotation.update', $model->id) }}" method="POST" id="postForm"
+                enctype="multipart/form-data">
                 @csrf
+                @method('PUT')
                 <div class="row mb-5">
 
                     <div class="col-md-6 mb-3">
@@ -43,7 +45,8 @@
                                             data-placeholder="Select Customer">
                                             <option></option>
                                             @foreach ($customer as $cust)
-                                                <option value="{{ $cust->id }}" data-alamat="{{ $cust->alamat }}">
+                                                <option value="{{ $cust->id }}" data-alamat="{{ $cust->alamat }}"
+                                                    {{ $model->customer_id == $cust->id ? 'selected' : '' }}>
                                                     [{{ $cust->id_customer }}] {{ $cust->nama_customer }}
                                                 </option>
                                             @endforeach
@@ -58,7 +61,7 @@
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
                                     <input type="text" name="sales_quotation_code" id="sales_quotation_code"
-                                        class="form-control" value="{{ $idNumber }}">
+                                        class="form-control" value="{{ $model->sales_quotation_code ?? '' }}">
                                 </div>
                                 <span class="error text-danger" id="sales_quotation_codeError"></span>
 
@@ -74,7 +77,8 @@
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
                                     <input type="text" name="sales_quotation_date" id="sales_quotation_date"
-                                        class="form-control" value="">
+                                        class="form-control"
+                                        value="{{ Carbon\Carbon::parse($model->sales_quotation_date)->format('d-m-Y') ?? '' }}">
                                 </div>
                                 <span class="error text-danger" id="sales_quotation_dateError"></span>
 
@@ -85,7 +89,10 @@
                                     data-placeholder="Select Salesman">
                                     <option></option>
                                     @foreach ($salesman as $salesman)
-                                        <option value="{{ $salesman->id }}">{{ $salesman->fullname }}</option>
+                                        <option value="{{ $salesman->id }}"
+                                            {{ $model->salesman_id == $salesman->id ? 'selected' : '' }}>
+                                            {{ $salesman->fullname }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <span class="error text-danger" id="salesman_idError"></span>
@@ -119,7 +126,7 @@
 
                             </div>
                             <div class="tab-pane fade" id="navs-pills-left-profile" role="tabpanel">
-                                @include('sales.salesQuotation.part.info_sales_quotation')
+                                @include('sales.salesQuotation.part.info_sales_quotation_edit')
 
                             </div>
 
@@ -135,7 +142,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                 <input type="number" id="sub_total" name="sub_total" class="form-control"
-                                    placeholder="0" readonly>
+                                    placeholder="0" readonly value="{{ $model->sub_total ?? 0 }}">
                             </div>
 
                         </div>
@@ -148,7 +155,8 @@
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text">%</span>
                                         <input type="number" id="percent" name="percent" min="0"
-                                            step="any" class="form-control" placeholder="0">
+                                            step="any" class="form-control" placeholder="0"
+                                            value="{{ $model->discount_percent ?? 0 }}">
                                         <span class="text-danger" id="discountError"></span>
                                     </div>
                                 </div>
@@ -156,7 +164,7 @@
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                         <input type="number" id="discount_all" name="discount_all" class="form-control"
-                                            placeholder="0" min='0'>
+                                            placeholder="0" min='0' value="{{ $model->discount_nominal ?? 0 }}">
                                     </div>
                                 </div>
                             </div>
@@ -169,7 +177,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                 <input type="number" id="total_order" name="total_order" class="form-control"
-                                    placeholder="0" readonly>
+                                    placeholder="0" readonly value="{{ $model->grand_total ?? 0 }}">
                             </div>
 
                         </div>
@@ -203,13 +211,28 @@
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
-        let prDetailsData = [];
+        let prDetailsData = [
+            @if (isset($model) && $model->details)
+                @foreach ($model->details as $detail)
+                    {
+                        'product_id': '{{ $detail->product_id }}',
+                        'data_produk': '{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}',
+                        'quantity': '{{ $detail->qty ?? 0 }}',
+                        'unit_id': '{{ $detail->unit_id }}',
+                        'unit': '{{ $detail->unitID ? $detail->unitID->name ?? ($detail->unitID->detail ?? ($detail->unitID->nama ?? 'Unit')) : 'Unit' }}',
+                        'unit_price': '{{ $detail->unit_price ?? 0 }}',
+                        'discount': '{{ $detail->discount ?? 0 }}',
+                        'amount': '{{ $detail->amount ?? 0 }}',
+                    }
+                    {{ !$loop->last ? ',' : '' }}
+                @endforeach
+            @endif
+        ];
+        const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
         $(function() {
             const datePicker = flatpickr("#sales_quotation_date", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                minDate: "today",
-                defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
             });
         });
         $(document).ready(function() {

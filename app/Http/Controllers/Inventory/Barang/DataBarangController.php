@@ -525,24 +525,37 @@ private function getMutation($data_barang_id)
             }
             $barang->update($data);
 
-            // ==================================================
-            // 2. UPDATE KONVERSI BARANG
-            // ==================================================
-            DataBarangConversion::where('data_barang_id', $barang->id)->delete();
+         // 1. Ambil data konversi yang valid saja
+            $newConversions = [];
             if ($request->has('conversion')) {
                 foreach ($request->conversion as $conv) {
-                    if (empty($conv['to_unit']) || $conv['to_unit'] === 'Select Unit') {
-                        continue;
+                    if (!empty($conv['to_unit']) && $conv['to_unit'] !== 'Select Unit') {
+                        $newConversions[] = $conv;
                     }
-                    DataBarangConversion::create([
-                        'data_barang_id' => $barang->id,
-                        'to_unit_id' => $request->unit_id, // selalu dari unit utama
-                        'from_unit_id' => $conv['to_unit'] ?? null,
-                        'qty' => $conv['qty'] ?? 0,
-                    ]);
-
                 }
             }
+
+            // 2. Pastikan minimal ada 2 index (tambahkan array kosong jika kurang dari 2)
+            while (count($newConversions) < 2) {
+                $newConversions[] = ['to_unit' => null, 'qty' => 0];
+            }
+
+            // 3. Update database
+            // Menggunakan transaction agar lebih aman
+            \DB::transaction(function () use ($barang, $request, $newConversions) {
+                // Hapus data lama
+                DataBarangConversion::where('data_barang_id', $barang->id)->delete();
+
+                // Insert data yang sudah dipastikan minimal 2
+                foreach ($newConversions as $conv) {
+                    DataBarangConversion::create([
+                        'data_barang_id' => $barang->id,
+                        'to_unit_id'     => $request->unit_id,
+                        'from_unit_id'   => $conv['to_unit'] ?? null,
+                        'qty'            => $conv['qty'] ?? 0,
+                    ]);
+                }
+            });
 
             // ==================================================
             // 3. UPDATE VARIAN

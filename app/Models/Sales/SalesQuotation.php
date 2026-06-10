@@ -36,4 +36,8 @@ class SalesQuotation extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+      public function details()
+    {
+        return $this->hasMany(SalesQuotationDetail::class, 'sales_quotation_id');
+    }
 }
