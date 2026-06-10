@@ -35,19 +35,13 @@ class BasicCodeDetailSeeder extends Seeder
             [
                 'id' => $i++,
                 'master_id' => '2',
-                'detail' => 'Unit',
+                'detail' => 'Batang',
                 'description' => '',
             ],
             [
                 'id' => $i++,
                 'master_id' => '2',
-                'detail' => 'Pack',
-                'description' => '',
-            ],
-            [
-                'id' => $i++,
-                'master_id' => '2',
-                'detail' => 'KG',
+                'detail' => 'Meter',
                 'description' => '',
             ],
             [

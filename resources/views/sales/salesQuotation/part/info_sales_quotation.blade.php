@@ -13,8 +13,8 @@
                         @endforeach
                         <option></option>
                     </select>
-                    <span class="error text-danger" id="payment_term_idError"></span>
                 </div>
+                <span class="error text-danger" id="payment_term_idError"></span>
 
             </div>
         </div>
@@ -26,8 +26,8 @@
                         <i class="ti ti-map"></i>
                     </span>
                     <textarea name="address" id="address" class="form-control" placeholder="Enter address"></textarea>
-                    <span class="error text-danger" id="addressError"></span>
                 </div>
+                <span class="error text-danger" id="addressError"></span>
 
             </div>
         </div>

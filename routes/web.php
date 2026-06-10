@@ -250,6 +250,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
     Route::resource('sales-order', SalesOrderController::class);
 
+    Route::get('/sales-quotation/print/{id}', [SalesQuotationController::class, 'print'])->name('sales-quotation.print');
     Route::get('/get-kontak/{customer_id}', [SalesQuotationController::class, 'getKontakByCustomer']);
     Route::post('/sales-quotation/{id}/submit', [SalesQuotationController::class, 'submitToPending'])->name('sales-quotation.submit');
     Route::get('/sales-quotation/trash', [SalesQuotationController::class, 'trash'])->name('sales-quotation.trash');

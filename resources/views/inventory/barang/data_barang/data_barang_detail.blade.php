@@ -239,6 +239,7 @@
                             <tr class="bg-light">
                                 <th class="ps-4 py-3 text-muted fw-bold" width="5%">No</th>
                                 <th class="py-3 text-muted fw-bold">Date</th>
+                                <th class="py-3 text-muted fw-bold">Description</th>
                                 <th class="py-3 text-muted fw-bold">Type</th>
                                 <th class="py-3 text-muted fw-bold text-end">In / Out</th>
                                 <th class="py-3 text-muted fw-bold text-end">Units</th>
@@ -251,6 +252,9 @@
                                     <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
                                     <td class="py-3 text-dark">
                                         {{ $stock->created_at ? $stock->created_at->translatedFormat('d M Y H:i') : '-' }}
+                                    </td>
+                                    <td class="py-3 text-dark">
+                                        {{ $stock->keterangan ?? '-' }}
                                     </td>
                                     <td class="py-3">
                                         <span

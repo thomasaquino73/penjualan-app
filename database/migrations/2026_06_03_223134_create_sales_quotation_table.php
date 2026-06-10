@@ -20,21 +20,19 @@ return new class extends Migration
             $table->string('sales_quotation_code')->unique();
             $table->date('sales_quotation_date');
             $table->unsignedBigInteger('payment_term_id')->nullable();
+            $table->unsignedBigInteger('salesman_id')->nullable();
             $table->string('address')->nullable();
             $table->string('description')->nullable();
             $table->unsignedBigInteger('customer_id');
             $table->unsignedBigInteger('customer_contact_id');
             $table->boolean('kena_pajak')->default(1)->comment('kena pajak atau tidak')->nullable();
             $table->boolean('total_termasuk_pajak')->default(1)->comment('harga total termasuk pajak')->nullable();
-            $table->enum('status', [
-                'draft',               // Baru dibuat
-                'pending',             // Menunggu approval
-                'approved',            // Sudah approve
-                'rejected',            // Ditolak
-                'sent',                // Sudah dikirim ke supplier
-                'partially_received',  // Barang diterima sebagian
-                'completed',           // Semua barang diterima
-                'closed',           // Dibatalkan
+             $table->enum('status', [
+                'draft',        // Data baru dibuat
+                'processing',   // Disetujui, siap diproses
+                'partial',      // Baru dibuatkan SQ sebagian
+                'closed',       // Selesai (Semua qty sudah dibuatkan SQ habis)
+                'done',         // Dibatalkan/Selesai alur lainnya
             ])->default('draft');
             $table->decimal('sub_total', 18, 2)->default(0)->nullable();
             $table->decimal('disc_percent', 5, 2)->default(0)->nullable();
@@ -49,12 +47,14 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('sales_quotation_id');
             $table->unsignedBigInteger('product_id');
-            $table->unsignedBigInteger('salesman_id')->nullable();
             $table->decimal('qty', 18, 4);
             $table->bigInteger('unit_id');
             $table->decimal('unit_price', 15, 2);
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('amount', 15, 2);
+                 $table->decimal('sq_qty', 18, 4)->default(0)->comment('Qty yang sudah sukses di-SQ-kan');
+            $table->decimal('outstanding_qty', 18, 4)->default(0)
+                ->comment('Sisa qty yang belum di-SQ-kan: qty - sq_qty');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

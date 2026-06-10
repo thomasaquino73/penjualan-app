@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SalesQuotationRequest;
 use App\Models\Inventory\Barang;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesQuotation;
@@ -85,6 +86,9 @@ class SalesQuotationController extends Controller
                 })
                 ->addColumn('sales_quotation_date', function ($row) {
                     return $row->sales_quotation_date ? Carbon::parse($row->sales_quotation_date)->format('d M Y') : 'N/A';
+                })
+                ->addColumn('customer', function ($row) {
+                    return $row->customerID->nama_customer ?? 'N/A';
                 })
                 ->addColumn('status', function ($row) {
                     switch ($row->status) {
@@ -182,7 +186,7 @@ class SalesQuotationController extends Controller
                         // ✅ DELETE
                         if ($user->can('sales_quotation-delete') && $row->status == 'draft') {
                             $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
-                        data-id="'.$row->id.'" data-name="'.$row->code.'">
+                        data-id="'.$row->id.'" data-name="'.$row->sales_quotation_code.'">
                         <i class="ti ti-trash me-1"></i> Delete
                      </a>';
                         }
@@ -201,19 +205,19 @@ class SalesQuotationController extends Controller
                  </span>';
                     }
                     $btn .= '<a class="dropdown-item"
-                href="'.route('sales-quotation.show', $row->id).'">
-                <i class="ti ti-list-details"></i> Detail
-             </a>';
+                            href="'.route('sales-quotation.show', $row->id).'">
+                            <i class="ti ti-list-details"></i> Detail
+                        </a>';
                     $btn .= '<a class="dropdown-item" target="_blank"
-                href="'.route('sales-quotation.print', $row->id).'">
-                <i class="ti ti-printer"></i> Print
-             </a>';
+                            href="'.route('sales-quotation.print', $row->id).'">
+                            <i class="ti ti-printer"></i> Print
+                        </a>';
 
                     $btn .= '</ul></div>';
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_quotation_date', 'total'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_quotation_date', 'total','customer'])
                 ->make(true);
         }
 
@@ -228,14 +232,29 @@ class SalesQuotationController extends Controller
         return view('sales.salesQuotation.sales_quotation_index', $x);
     }
 
+      public function bulanRomawi($bulan)
+    {
+        $romawi = [
+            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',
+            5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII',
+            9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII',
+        ];
+
+        return $romawi[$bulan] ?? 'I';
+    }
+
     private function generateNumberId()
     {
-        $last = SalesQuotation::whereNotNull('sales_quotation_code')
+        $year = date('Y');
+        $month = $this->bulanRomawi(date('n'));
+
+        // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
+        $last = SalesQuotation::where('sales_quotation_code', 'like', "SQ/$year/$month/%")
             ->orderBy('id', 'desc')
             ->first();
 
         if (! $last) {
-            return 'SQ-0001';
+            return "SQ/$year/$month/0001";
         }
 
         $lastId = $last->sales_quotation_code;
@@ -279,12 +298,110 @@ class SalesQuotationController extends Controller
         return view('sales.salesQuotation.sales_quotation_create', $x);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+     public function store(SalesQuotationRequest $request)
     {
-        //
+        DB::beginTransaction();
+
+        try {
+            $currentYear = date('Y');
+            $data = $request->validated();
+            $itemsDetailRaw = $request->input('items_detail');
+            unset($data['items_detail']);
+
+            $syaratPembayaran = SyaratPembayaran::find($request->payment_term);
+
+            $data['created_by'] = Auth::id();
+            $data['updated_by'] = null;
+            $data['sales_quotation_date'] = Carbon::parse($request->sales_quotation_date)->format('Y-m-d');
+            $data['salesman_id'] = $request->salesman_id;
+            $data['sub_total'] = $request->sub_total;
+            $data['disc_percent'] = $request->percent;
+            $data['disc_nominal'] = $request->discount_all;
+            $data['grand_total'] = $request->total_order;
+            $data['payment_term_id'] = $request->payment_term_id;
+            $data['kena_pajak'] = 0;
+            $data['total_termasuk_pajak'] = 0;
+            $data['address'] = $request->address;
+            $data['description'] = $request->description;
+            $data['description'] = $request->description;
+
+            do {
+                $generatedCode = $this->generateNumberId();
+                $exists = SalesQuotation::where('sales_quotation_code', $generatedCode)->exists();
+            } while ($exists);
+
+            $data['sales_quotation_code'] = $generatedCode;
+            $salesQuotation = SalesQuotation::create($data);
+
+            if ($itemsDetailRaw) {
+                $items = json_decode($itemsDetailRaw, true);
+                $involvedPrIds = [];
+
+                if (is_array($items) && count($items) > 0) {
+                    foreach ($items as $item) {
+                        // $prDetailId = $item['purchase_requisition_detail_id'] ?? $item['pr_detail_id'] ?? $item['detail_id'] ?? null;
+                        $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
+                        $unitPrice = floatval($item['unit_price'] ?? 0);
+                        $discount = floatval($item['discount'] ?? 0);
+                        $amount = ($qtyInputForm * $unitPrice) - $discount;
+
+                        SalesQuotationDetail::create([
+                            'sales_quotation_id' => $salesQuotation->id,
+                            // 'purchase_requisition_detail_id' => $prDetailId,
+                            'product_id' => $item['product_id'],
+                            'qty' => $qtyInputForm,
+                            'unit_id' => $item['unit_id'],
+                            'unit_price' => $unitPrice,
+                            'discount' => $discount,
+                            'amount' => $item['amount'] ?? $amount,
+                            'active' => 1,
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+
+                    }
+
+                    // --- OTOMASI STATUS PR MASTER ---
+                    foreach ($involvedPrIds as $prId) {
+                        $allDetails = DB::table("purchase_requisition_detail_{$currentYear}")
+                            ->where('purchase_requisition_id', $prId)
+                            ->get();
+
+                        $totalRequested = $allDetails->sum('qty');
+                        $totalOrdered = $allDetails->sum('po_qty');
+
+                        if ($totalOrdered >= $totalRequested) {
+                            $newStatus = 'closed';
+                        } elseif ($totalOrdered > 0) {
+                            $newStatus = 'partial';
+                        } else {
+                            $newStatus = 'processing';
+                        }
+
+                        DB::table("purchase_requisition_{$currentYear}")
+                            ->where('id', $prId)
+                            ->update(['status' => $newStatus]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Sales Quotation '.$generatedCode.' berhasil disimpan.',
+                'redirect' => route('sales-quotation.index'),
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan data: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -355,5 +472,10 @@ class SalesQuotationController extends Controller
             'success' => true,
             'history' => $history,
         ]);
+    }
+
+     public function print(string $id)
+    {
+        //
     }
 }

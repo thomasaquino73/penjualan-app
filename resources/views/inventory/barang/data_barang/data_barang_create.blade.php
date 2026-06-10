@@ -177,9 +177,9 @@
                                 <span class="error text-danger" id="warehouse_idError"></span>
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label" for="date">Date</label>
-                                <input type="text" id="date" name="date" class="form-control ">
-                                <span class="error text-danger" id="dateError"></span>
+                                <label class="form-label" for="date_stock">Date</label>
+                                <input type="text" id="date_stock" name="date_stock" class="form-control ">
+                                <span class="error text-danger" id="date_stockError"></span>
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="form-label" for="quantity">Quantity</label>
@@ -786,7 +786,7 @@
                 let unitId = $('#unit_id_modals').val();
                 let unitName = $('#unit_id_modals option:selected').text();
                 let unitPrice = parseFloat($('#unit_price').val()) || 0;
-                let date = $('#date').val() || '';
+                let date = $('#date_stock').val() || '';
                 let detailId = $('#detail_id').val();
                 if (!warehouseID) {
                     Swal.fire({
@@ -851,4 +851,5 @@
             });
         });
     </script>
+    
 @endpush

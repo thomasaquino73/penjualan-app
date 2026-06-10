@@ -138,30 +138,30 @@ class PurchaseOrderController extends Controller
                     }
 
                     $html = '
-        <div class="d-flex flex-column">
-            <span class="badge '.$badge.' text-uppercase">
-                '.$text.'
-            </span>
-    ';
+                        <div class="d-flex flex-column">
+                            <span class="badge '.$badge.' text-uppercase">
+                                '.$text.'
+                            </span>
+                    ';
 
                     // APPROVED INFO
                     if ($row->status == 'approved' && $row->approvedBy) {
 
                         $html .= '
-            <small class="text-muted mt-1">
-                Approved By : '.$row->approvedBy->fullname.'
-            </small>
-        ';
+                        <small class="text-muted mt-1">
+                            Approved By : '.$row->approvedBy->fullname.'
+                        </small>
+                    ';
                     }
 
                     // REJECTED INFO
                     if ($row->status == 'rejected' && $row->rejectedBy) {
 
                         $html .= '
-            <small class="text-muted mt-1">
-                Rejected By : '.$row->rejectedBy->fullname.'
-            </small>
-        ';
+                            <small class="text-muted mt-1">
+                                Rejected By : '.$row->rejectedBy->fullname.'
+                            </small>
+                        ';
                     }
 
                     // OUTSTANDING INFO
@@ -171,10 +171,10 @@ class PurchaseOrderController extends Controller
                     ) {
 
                         $html .= '
-            <small class="text-warning mt-1">
-                Outstanding : '.number_format($row->total_outstanding_qty).'
-            </small>
-        ';
+                            <small class="text-warning mt-1">
+                                Outstanding : '.number_format($row->total_outstanding_qty).'
+                            </small>
+                        ';
                     }
 
                     $html .= '</div>';
@@ -226,16 +226,16 @@ class PurchaseOrderController extends Controller
                     $user = auth()->user();
 
                     $btn = '
-        <div class="btn-group">
-            <button type="button"
-                class="btn btn-primary dropdown-toggle waves-effect waves-light"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
-                <i class="ti ti-menu-2 ti-xs me-1"></i>
-            </button>
+                            <div class="btn-group">
+                                <button type="button"
+                                    class="btn btn-primary dropdown-toggle waves-effect waves-light"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <i class="ti ti-menu-2 ti-xs me-1"></i>
+                                </button>
 
-            <ul class="dropdown-menu">
-    ';
+                                <ul class="dropdown-menu">
+                        ';
 
                     /*
                     |--------------------------------------------------------------------------
@@ -249,14 +249,14 @@ class PurchaseOrderController extends Controller
                         if ($row->status == 'draft') {
 
                             $btn .= '
-                <a class="dropdown-item btn-submit-po"
-                    href="javascript:void(0)"
-                    data-id="'.$row->id.'">
+                                <a class="dropdown-item btn-submit-po"
+                                    href="javascript:void(0)"
+                                    data-id="'.$row->id.'">
 
-                    <i class="ti ti-send me-1"></i>
-                    Send To Approval
-                </a>
-            ';
+                                    <i class="ti ti-send me-1"></i>
+                                    Send To Approval
+                                </a>
+                            ';
                         }
 
                         // EDIT
@@ -266,13 +266,13 @@ class PurchaseOrderController extends Controller
                         ) {
 
                             $btn .= '
-                <a class="dropdown-item"
-                    href="'.route('purchase-order.edit', $row->id).'">
+                                <a class="dropdown-item"
+                                    href="'.route('purchase-order.edit', $row->id).'">
 
-                    <i class="far fa-edit me-1"></i>
-                    Edit PO
-                </a>
-            ';
+                                    <i class="far fa-edit me-1"></i>
+                                    Edit PO
+                                </a>
+                            ';
                         }
 
                         // DELETE
@@ -282,16 +282,16 @@ class PurchaseOrderController extends Controller
                         ) {
 
                             $btn .= '
-                <a class="dropdown-item text-danger"
-                    href="javascript:void(0)"
-                    id="delete"
-                    data-id="'.$row->id.'"
-                    data-name="'.$row->code.'">
+                                <a class="dropdown-item text-danger"
+                                    href="javascript:void(0)"
+                                    id="delete"
+                                    data-id="'.$row->id.'"
+                                    data-name="'.$row->code.'">
 
-                    <i class="ti ti-trash me-1"></i>
-                    Delete
-                </a>
-            ';
+                                    <i class="ti ti-trash me-1"></i>
+                                    Delete
+                                </a>
+                            ';
                         }
                     }
 
@@ -309,26 +309,26 @@ class PurchaseOrderController extends Controller
                         if ($row->status == 'pending') {
 
                             $btn .= '
-                <a class="dropdown-item text-success btn-approval-po"
-                    href="javascript:void(0)"
-                    data-status="approved"
-                    data-id="'.$row->id.'">
+                                    <a class="dropdown-item text-success btn-approval-po"
+                                        href="javascript:void(0)"
+                                        data-status="approved"
+                                        data-id="'.$row->id.'">
 
-                    <i class="ti ti-check me-1"></i>
-                    Approve PO
-                </a>
-            ';
+                                        <i class="ti ti-check me-1"></i>
+                                        Approve PO
+                                    </a>
+                                ';
 
                             $btn .= '
-                <a class="dropdown-item text-danger btn-approval-po"
-                    href="javascript:void(0)"
-                    data-status="rejected"
-                    data-id="'.$row->id.'">
+                                    <a class="dropdown-item text-danger btn-approval-po"
+                                        href="javascript:void(0)"
+                                        data-status="rejected"
+                                        data-id="'.$row->id.'">
 
-                    <i class="ti ti-x me-1"></i>
-                    Reject PO
-                </a>
-            ';
+                                        <i class="ti ti-x me-1"></i>
+                                        Reject PO
+                                    </a>
+                                ';
                         }
                     }
 
@@ -345,14 +345,14 @@ class PurchaseOrderController extends Controller
                     ) {
 
                         $btn .= '
-            <a class="dropdown-item text-info btn-send-supplier"
-                href="javascript:void(0)"
-                data-id="'.$row->id.'">
+                            <a class="dropdown-item text-info btn-send-supplier"
+                                href="javascript:void(0)"
+                                data-id="'.$row->id.'">
 
-                <i class="ti ti-mail-fast me-1"></i>
-                Send To Supplier
-            </a>
-        ';
+                                <i class="ti ti-mail-fast me-1"></i>
+                                Send To Supplier
+                            </a>
+                        ';
                     }
 
                     /*
@@ -412,12 +412,12 @@ class PurchaseOrderController extends Controller
             <i class="ti ti-printer me-1"></i>
             Print / PDF
         </a>
-    ';
+            ';
 
-                    $btn .= '
-            </ul>
-        </div>
-    ';
+                            $btn .= '
+                    </ul>
+                </div>
+            ';
 
                     return $btn;
                 })
