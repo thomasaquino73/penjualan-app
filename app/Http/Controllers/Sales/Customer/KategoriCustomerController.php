@@ -103,7 +103,7 @@ class KategoriCustomerController extends Controller
             ],
         ];
 
-        return view('master_data.customer.kategori_customer_index', $x);
+        return view('sales.customer.kategori_customer_index', $x);
     }
 
     /**

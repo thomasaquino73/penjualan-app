@@ -49,8 +49,8 @@
                     <select name="customer_contact_id" id="customer_contact_id" class="form-select">
                         <option></option>
                     </select>
-                    <span class="error text-danger" id="customer_contact_idError"></span>
                 </div>
+                <span class="error text-danger" id="customer_contact_idError"></span>
 
             </div>
         </div>

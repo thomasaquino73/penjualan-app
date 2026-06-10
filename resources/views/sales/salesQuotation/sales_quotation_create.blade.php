@@ -184,7 +184,7 @@
                     <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
                         <i class="fa fa-plus-circle me-1"></i> Save and Create New
                     </button>
-                    <a href="{{ route('purchase-order.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{{ route('sales-quotation.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>
@@ -932,6 +932,58 @@
 
                 // Tutup Modal Form Detail
                 $("#modalPrDetail").modal("hide");
+            });
+
+            $("#percent").on("input", function() {
+                let subTotal = parseFloat($("#sub_total").val()) || 0;
+                let percent = parseFloat($(this).val()) || 0;
+
+                // Batasi agar persen tidak minus atau lebih dari 100
+                if (percent < 0) {
+                    percent = 0;
+                    $(this).val(0);
+                }
+                if (percent > 100) {
+                    percent = 100;
+                    $(this).val(100);
+                }
+
+                // Hitung nominal Rupiahnya
+                let discountNominal = subTotal * (percent / 100);
+
+                // Masukkan hasil ke kolom Rupiah (discount_all)
+                $("#discount_all").val(Math.round(discountNominal));
+
+                // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
+                calculateTotalOrder();
+            });
+
+            // B. Jika User Mengetik di Kolom NOMINAL (Rp)
+            $("#discount_all").on("input", function() {
+                let subTotal = parseFloat($("#sub_total").val()) || 0;
+                let discountNominal = parseFloat($(this).val()) || 0;
+
+                // Batasi agar nominal diskon tidak melebihi subtotal
+                if (discountNominal < 0) {
+                    discountNominal = 0;
+                    $(this).val(0);
+                }
+                if (discountNominal > subTotal) {
+                    discountNominal = subTotal;
+                    $(this).val(subTotal);
+                }
+
+                // Hitung Persentasenya
+                let percent = 0;
+                if (subTotal > 0) {
+                    percent = (discountNominal / subTotal) * 100;
+                }
+
+                // Masukkan hasil ke kolom persen (ambil 2 angka di belakang koma agar presisi)
+                $("#percent").val(percent % 1 === 0 ? percent : percent.toFixed(2));
+
+                // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
+                calculateTotalOrder();
             });
         });
     </script>

@@ -435,13 +435,76 @@ class SalesQuotationController extends Controller
         return view('sales.salesQuotation.sales_quotation_edit', $x);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
+    public function update(SalesQuotationRequest $request, $id)
+{
+    DB::beginTransaction();
+
+    try {
+        $salesQuotation = SalesQuotation::findOrFail($id);
+        $data = $request->validated();
+        $itemsDetailRaw = $request->input('items_detail');
+        unset($data['items_detail']);
+
+        // Update data utama
+        $data['updated_by'] = Auth::id();
+        $data['sales_quotation_date'] = Carbon::parse($request->sales_quotation_date)->format('Y-m-d');
+        $data['salesman_id'] = $request->salesman_id;
+        $data['sub_total'] = $request->sub_total;
+        $data['disc_percent'] = $request->percent;
+        $data['disc_nominal'] = $request->discount_all;
+        $data['grand_total'] = $request->total_order;
+        $data['payment_term_id'] = $request->payment_term_id;
+        $data['address'] = $request->address;
+        $data['description'] = $request->description;
+
+        $salesQuotation->update($data);
+
+        // Update Detail: Hapus yang lama, insert yang baru
+        // (Ini cara paling aman jika tidak menggunakan ID unik pada tiap baris detail di form)
+        SalesQuotationDetail::where('sales_quotation_id', $salesQuotation->id)->delete();
+
+        if ($itemsDetailRaw) {
+            $items = json_decode($itemsDetailRaw, true);
+
+            if (is_array($items) && count($items) > 0) {
+                foreach ($items as $item) {
+                    $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
+                    $unitPrice = floatval($item['unit_price'] ?? 0);
+                    $discount = floatval($item['discount'] ?? 0);
+                    $amount = ($qtyInputForm * $unitPrice) - $discount;
+
+                    SalesQuotationDetail::create([
+                        'sales_quotation_id' => $salesQuotation->id,
+                        'product_id' => $item['product_id'],
+                        'qty' => $qtyInputForm,
+                        'unit_id' => $item['unit_id'],
+                        'unit_price' => $unitPrice,
+                        'discount' => $discount,
+                        'amount' => $item['amount'] ?? $amount,
+                        'active' => 1,
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+            }
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Sales Quotation ' . $salesQuotation->sales_quotation_code . ' berhasil diperbarui.',
+            'redirect' => route('sales-quotation.index'),
+        ], 200);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Gagal memperbarui data: ' . $e->getMessage(),
+        ], 500);
     }
+}
 
     /**
      * Remove the specified resource from storage.

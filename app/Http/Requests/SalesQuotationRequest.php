@@ -27,7 +27,7 @@ class SalesQuotationRequest extends FormRequest
             'customer_id' => 'required',
             'sales_quotation_date' => 'required|date',
             'payment_term_id' => 'required',
-            'customer_contact_id' => 'required',
+            // 'customer_contact_id' => 'required',
             'address' => 'required',
             'description' => 'nullable|string',
             'items_detail' => 'required',
@@ -43,7 +43,7 @@ class SalesQuotationRequest extends FormRequest
             'sales_quotation_date.required' => 'Date is required',
             'sales_quotation_date.date' => 'Date must be a valid date',
             'payment_term_id.required' => 'Payment term is required',
-            'customer_contact_id.required' => 'Customer contact is required',
+            // 'customer_contact_id.required' => 'Customer contact is required',
             'address.required' => 'Address is required',
             'items_detail.required' => 'Items detail is required',
         ];

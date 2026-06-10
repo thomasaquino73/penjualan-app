@@ -156,7 +156,7 @@
                                         <span class="input-group-text">%</span>
                                         <input type="number" id="percent" name="percent" min="0"
                                             step="any" class="form-control" placeholder="0"
-                                            value="{{ $model->discount_percent ?? 0 }}">
+                                            value="{{ $model->disc_percent ?? 0 }}">
                                         <span class="text-danger" id="discountError"></span>
                                     </div>
                                 </div>
@@ -164,7 +164,7 @@
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                         <input type="number" id="discount_all" name="discount_all" class="form-control"
-                                            placeholder="0" min='0' value="{{ $model->discount_nominal ?? 0 }}">
+                                            placeholder="0" min='0' value="{{ $model->disc_nominal ?? 0 }}">
                                     </div>
                                 </div>
                             </div>
@@ -185,14 +185,10 @@
 
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">
-                    <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
-                        <i class="fa fa-upload me-1"></i> Save and Close
+                    <button type="submit" id="savedata" class="btn btn-primary">
+                        <i class="fa fa-save me-1"></i> Update
                     </button>
-
-                    <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
-                        <i class="fa fa-plus-circle me-1"></i> Save and Create New
-                    </button>
-                    <a href="{{ route('purchase-order.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{{ route('sales-quotation.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>
@@ -379,14 +375,7 @@
                                         data.purchase_requisition_detail_id || "");
                                     $("#modal_requisition_code").val(data.requisition_code || "");
 
-                                    // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
-                                    if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
-                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
-                                    } else {
-                                        $("#quantity").removeAttr(
-                                            "data-sisa-pr"); // Jika PO bebas, hapus batasannya
-                                    }
-                                    // --------------------------------------
+                                    $("#total_price").val(data.amount || data.total_price || 0);
 
                                     $("#quantity").val(data.quantity);
                                     $("#unit_id").data("pending-val", data.unit_id);
@@ -488,6 +477,8 @@
                 } else {
                     contactDropdown.empty().append('<option></option>');
                 }
+                // Panggil fungsi untuk load kontak dengan parameter customerId yang baru
+                loadKontak(customerId);
             });
 
             $(document).on("change", "#product_id", function() {
@@ -956,6 +947,96 @@
                 // Tutup Modal Form Detail
                 $("#modalPrDetail").modal("hide");
             });
+
+            $("#percent").on("input", function() {
+                let subTotal = parseFloat($("#sub_total").val()) || 0;
+                let percent = parseFloat($(this).val()) || 0;
+
+                // Batasi agar persen tidak minus atau lebih dari 100
+                if (percent < 0) {
+                    percent = 0;
+                    $(this).val(0);
+                }
+                if (percent > 100) {
+                    percent = 100;
+                    $(this).val(100);
+                }
+
+                // Hitung nominal Rupiahnya
+                let discountNominal = subTotal * (percent / 100);
+
+                // Masukkan hasil ke kolom Rupiah (discount_all)
+                $("#discount_all").val(Math.round(discountNominal));
+
+                // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
+                calculateTotalOrder();
+            });
+
+            // B. Jika User Mengetik di Kolom NOMINAL (Rp)
+            $("#discount_all").on("input", function() {
+                let subTotal = parseFloat($("#sub_total").val()) || 0;
+                let discountNominal = parseFloat($(this).val()) || 0;
+
+                // Batasi agar nominal diskon tidak melebihi subtotal
+                if (discountNominal < 0) {
+                    discountNominal = 0;
+                    $(this).val(0);
+                }
+                if (discountNominal > subTotal) {
+                    discountNominal = subTotal;
+                    $(this).val(subTotal);
+                }
+
+                // Hitung Persentasenya
+                let percent = 0;
+                if (subTotal > 0) {
+                    percent = (discountNominal / subTotal) * 100;
+                }
+
+                // Masukkan hasil ke kolom persen (ambil 2 angka di belakang koma agar presisi)
+                $("#percent").val(percent % 1 === 0 ? percent : percent.toFixed(2));
+
+                // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
+                calculateTotalOrder();
+            });
+
+            function loadKontak(customerId, selectedContactId = null) {
+                var contactDropdown = $('#customer_contact_id');
+
+                // Tampilkan state loading
+                contactDropdown.html('<option>Loading...</option>').trigger('change.select2');
+
+                if (customerId) {
+                    $.ajax({
+                        url: '/get-kontak/' + customerId,
+                        type: "GET",
+                        dataType: "json",
+                        success: function(data) {
+                            contactDropdown.empty().append('<option value="">Select Contact</option>');
+
+                            $.each(data, function(key, value) {
+                                // Tambahkan atribut selected jika id cocok
+                                var isSelected = (value.id == selectedContactId) ? 'selected' :
+                                    '';
+                                contactDropdown.append(
+                                    `<option value="${value.id}" ${isSelected}>` +
+                                    `${value.sapaan} ${value.contact_person} (${value.posisi_jabatan})` +
+                                    `</option>`
+                                );
+                            });
+
+                            // Trigger change agar Select2 merender ulang pilihan
+                            contactDropdown.trigger('change.select2');
+                        },
+                        error: function() {
+                            contactDropdown.html('<option value="">Error loading contacts</option>')
+                                .trigger('change.select2');
+                        }
+                    });
+                } else {
+                    contactDropdown.empty().append('<option></option>').trigger('change.select2');
+                }
+            }
         });
     </script>
     <script>
