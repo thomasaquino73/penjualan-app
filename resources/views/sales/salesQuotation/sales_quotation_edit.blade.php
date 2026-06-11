@@ -1000,42 +1000,41 @@
                 calculateTotalOrder();
             });
 
-            function loadKontak(customerId, selectedContactId = null) {
+            var initialCustomerId = $('#customer_id').val();
+            if (initialCustomerId) {
+                // Panggil fungsi atau jalankan AJAX yang sama dengan yang ada di event change
+                loadKontak(initialCustomerId);
+            }
+
+            function loadKontak(customerId) {
                 var contactDropdown = $('#customer_contact_id');
+                var selectedContactId =
+                    "{{ $model->customer_contact_id ?? '' }}"; // Ambil ID kontak yang tersimpan
 
-                // Tampilkan state loading
-                contactDropdown.html('<option>Loading...</option>').trigger('change.select2');
+                $.ajax({
+                    url: '/get-kontak/' + customerId,
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        contactDropdown.empty();
+                        contactDropdown.append('<option value="">Pilih Kontak</option>');
 
-                if (customerId) {
-                    $.ajax({
-                        url: '/get-kontak/' + customerId,
-                        type: "GET",
-                        dataType: "json",
-                        success: function(data) {
-                            contactDropdown.empty().append('<option value="">Select Contact</option>');
+                        $.each(data, function(key, value) {
+                            // Cek apakah ID kontak ini sama dengan yang tersimpan di database
+                            var isSelected = (value.id == selectedContactId) ? 'selected' : '';
 
-                            $.each(data, function(key, value) {
-                                // Tambahkan atribut selected jika id cocok
-                                var isSelected = (value.id == selectedContactId) ? 'selected' :
-                                    '';
-                                contactDropdown.append(
-                                    `<option value="${value.id}" ${isSelected}>` +
-                                    `${value.sapaan} ${value.contact_person} (${value.posisi_jabatan})` +
-                                    `</option>`
-                                );
-                            });
+                            contactDropdown.append(
+                                '<option value="' + value.id + '" ' + isSelected + '>' +
+                                value.sapaan + ' ' + value.contact_person + ' (' + value
+                                .posisi_jabatan + ')' +
+                                '</option>'
+                            );
+                        });
 
-                            // Trigger change agar Select2 merender ulang pilihan
-                            contactDropdown.trigger('change.select2');
-                        },
-                        error: function() {
-                            contactDropdown.html('<option value="">Error loading contacts</option>')
-                                .trigger('change.select2');
-                        }
-                    });
-                } else {
-                    contactDropdown.empty().append('<option></option>').trigger('change.select2');
-                }
+                        // Jika Anda menggunakan Select2, jangan lupa trigger update
+                        contactDropdown.trigger('change.select2');
+                    }
+                });
             }
         });
     </script>
