@@ -302,9 +302,7 @@
         <tr>
             <td style="width: 50%;"></td>
 
-            <td class="signature-box" style="width: 25%; padding: 8px; vertical-align: top;">
 
-            </td>
 
             <td class="signature-box" style="width: 25%; padding: 8px; vertical-align: top;">
                 <div
@@ -315,26 +313,57 @@
                     </div>
 
                     <div class="signature-space" style="height: 70px; margin-bottom: 5px; text-align: center;">
-                        @if (isset($qrCodeBase64) && $qrCodeBase64 != null)
+                        {{-- @if (isset($qrCodeBase64) && $qrCodeBase64 != null)
                             <img src="{{ $qrCodeBase64 }}" style="width: 60px; height: 60px; display: inline-block;">
                         @else
                             <div
                                 style="font-size: 7pt; color: #777; border: 1px dashed #ccc; width: 60px; height: 60px; line-height: 60px; margin: 0 auto; background: #fff;">
                                 [QR CODE]
                             </div>
-                        @endif
+                        @endif --}}
                     </div>
 
-                    <div class="signature-line"
-                        style="width: 90%; border-bottom: 1px solid #999; margin: 0 auto 4px auto;"></div>
+
 
                     <div class="signature-name" style="font-size: 9pt; color: #111; font-weight: bold;">
                         {{ $detail->creator->fullname ?? 'Staff Purchasing' }}
                     </div>
-
+                    <div class="signature-line"
+                        style="width: 90%; border-bottom: 1px solid #999; margin: 0 auto 4px auto;"></div>
                     <div class="signature-role"
-                        style="font-size: 7.5pt; color: #27ae60; font-weight: bold; text-transform: uppercase;">
-                        E-SIGNED VERIFIED
+                        style="  font-weight: bold; text-transform: uppercase; text-align:left; ">
+                        <small> date:</small>
+                    </div>
+                </div>
+            </td>
+            <td class="signature-box" style="width: 25%; padding: 8px; vertical-align: top;">
+                <div
+                    style="border: 1px solid #ddd; background-color: #fafafa; padding: 10px; border-radius: 6px; text-align: center;">
+                    <div class="signature-title"
+                        style="margin-bottom: 5px; font-size: 8.5pt; font-weight: bold; color: #555;">
+                        Approved By:
+                    </div>
+
+                    <div class="signature-space" style="height: 70px; margin-bottom: 5px; text-align: center;">
+                        {{-- @if (isset($qrCodeBase64) && $qrCodeBase64 != null)
+                            <img src="{{ $qrCodeBase64 }}" style="width: 60px; height: 60px; display: inline-block;">
+                        @else
+                            <div
+                                style="font-size: 7pt; color: #777; border: 1px dashed #ccc; width: 60px; height: 60px; line-height: 60px; margin: 0 auto; background: #fff;">
+                                [QR CODE]
+                            </div>
+                        @endif --}}
+                    </div>
+
+
+
+                    <div class="signature-name" style="font-size: 9pt; color: #111; font-weight: bold;height: 17px;">
+                    </div>
+                    <div class="signature-line"
+                        style="width: 90%; border-bottom: 1px solid #999; margin: 0 auto 4px auto;"></div>
+                    <div class="signature-role"
+                        style="  font-weight: bold; text-transform: uppercase; text-align:left; ">
+                        <small> date:</small>
                     </div>
                 </div>
             </td>
