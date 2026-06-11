@@ -315,6 +315,7 @@ class SalesQuotationController extends Controller
             $data['updated_by'] = null;
             $data['sales_quotation_date'] = Carbon::parse($request->sales_quotation_date)->format('Y-m-d');
             $data['salesman_id'] = $request->salesman_id;
+            $data['customer_contact_id'] = $request->customer_contact_id;
             $data['sub_total'] = $request->sub_total;
             $data['disc_percent'] = $request->percent;
             $data['disc_nominal'] = $request->discount_all;
@@ -450,6 +451,7 @@ class SalesQuotationController extends Controller
             $data['updated_by'] = Auth::id();
             $data['sales_quotation_date'] = Carbon::parse($request->sales_quotation_date)->format('Y-m-d');
             $data['salesman_id'] = $request->salesman_id;
+            $data['customer_contact_id'] = $request->customer_contact_id;
             $data['sub_total'] = $request->sub_total;
             $data['disc_percent'] = $request->percent;
             $data['disc_nominal'] = $request->discount_all;
@@ -758,6 +760,21 @@ class SalesQuotationController extends Controller
             'success' => true,
             'history' => $history,
         ]);
+    }
+
+      public function submitToPending($id)
+    {
+        $sq = SalesQuotation::findOrFail($id);
+        $sq->status = 'processing';
+        $sq->updated_by = Auth::id(); // Jika Anda mencatat siapa yang melakukan update terakhir
+        $sq->save();
+        // $users = User::whereHas('roles.permissions', function ($q) {
+        //     $q->where('name', 'permintaan_pembelian-approval');
+        // })->get();
+        // $users = User::all();
+        // Notification::send($users, new PurchaseRequisitionNotification($pr));
+
+        return response()->json(['success' => true, 'message' => 'Sales Quotation berhasil diproses!']);
     }
 
     public function print(string $id)
