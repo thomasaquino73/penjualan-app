@@ -3,11 +3,20 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SalesOrderRequest;
+use App\Models\BasicCodeDetail;
+use App\Models\Inventory\Barang;
+use App\Models\Sales\Customer;
+use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderDetail;
-use App\Models\Transaction\SalesOrder;
+use App\Models\Sales\SalesQuotation;
+use App\Models\Setting\Shipping;
+use App\Models\Setting\SyaratPembayaran;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class SalesOrderController extends Controller
@@ -18,15 +27,15 @@ class SalesOrderController extends Controller
             $routeName = $request->route()->getName();
 
             $permissionMap = [
-                'sales-quotation.index' => 'sales_quotation-browse',
-                'sales-quotation.show' => 'sales_quotation-read',
-                'sales-quotation.create' => 'sales_quotation-create',
-                'sales-quotation.store' => 'sales_quotation-create',
-                'sales-quotation.edit' => 'sales_quotation-edit',
-                'sales-quotation.update' => 'sales_quotation-edit',
-                'sales-quotation.destroy' => 'sales_quotation-delete',
-                'sales-quotation.trash' => 'sales_quotation-trash',
-                'sales-quotation.restore' => 'sales_quotation-restore',
+                'sales-order.index' => 'sales_order-browse',
+                'sales-order.show' => 'sales_order-read',
+                'sales-order.create' => 'sales_order-create',
+                'sales-order.store' => 'sales_order-create',
+                'sales-order.edit' => 'sales_order-edit',
+                'sales-order.update' => 'sales_order-edit',
+                'sales-order.destroy' => 'sales_order-delete',
+                'sales-order.trash' => 'sales_order-trash',
+                'sales-order.restore' => 'sales_order-restore',
             ];
 
             if (isset($permissionMap[$routeName])) {
@@ -54,7 +63,7 @@ class SalesOrderController extends Controller
                                 ->where('created_by', $userId);
                         });
                 })
-                ->orderby('sales_quotation_code', 'desc');
+                ->orderby('sales_order_code', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);
             }
@@ -78,8 +87,8 @@ class SalesOrderController extends Controller
 
                     return 'N/A';
                 })
-                ->addColumn('sales_quotation_date', function ($row) {
-                    return $row->sales_quotation_date ? Carbon::parse($row->sales_quotation_date)->format('d M Y') : 'N/A';
+                ->addColumn('sales_order_date', function ($row) {
+                    return $row->sales_order_date ? Carbon::parse($row->sales_order_date)->format('d M Y') : 'N/A';
                 })
                 ->addColumn('customer', function ($row) {
                     return $row->customerID->nama_customer ?? 'N/A';
@@ -123,7 +132,7 @@ class SalesOrderController extends Controller
                 ->addColumn('cekbok', function ($row) {
 
                     if (
-                        auth()->user()->can('sales_quotation-delete') &&
+                        auth()->user()->can('sales_order-delete') &&
                         $row->status === 'draft'
                     ) {
                         return '
@@ -211,7 +220,7 @@ class SalesOrderController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_quotation_date', 'total', 'customer'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_order_date', 'total', 'customer'])
                 ->make(true);
         }
 
@@ -226,20 +235,179 @@ class SalesOrderController extends Controller
         return view('sales.salesOrder.sales_order_index', $x);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+     public function bulanRomawi($bulan)
     {
-        //
+        $romawi = [
+            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',
+            5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII',
+            9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII',
+        ];
+
+        return $romawi[$bulan] ?? 'I';
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    private function generateNumberId()
     {
-        //
+        $year = date('Y');
+        $month = $this->bulanRomawi(date('n'));
+
+        // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
+        $last = SalesOrder::where('sales_order_code', 'like', "SO/$year/$month/%")
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (! $last) {
+            return "SO/$year/$month/0001";
+        }
+
+        $lastId = $last->sales_order_code;
+
+        // 🔥 ambil angka terakhir
+        preg_match('/(\d+)$/', $lastId, $matches);
+
+        if (! $matches) {
+            // kalau tidak ada angka → tambahin default
+            return $lastId.'01';
+        }
+
+        $number = (int) $matches[1];
+        $number++;
+
+        // 🔥 ambil prefix tanpa angka
+        $prefix = substr($lastId, 0, -strlen($matches[1]));
+
+        // 🔥 padding mengikuti panjang angka sebelumnya
+        $length = strlen($matches[1]);
+
+        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+    }
+
+    public function create()
+    {
+        $x = [
+            'title' => 'Sales Order New',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Sales Order', 'url' => ''],
+            ],
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'idNumber' => $this->generateNumberId(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
+            'salesman' => User::where('status', '<>', 0)->get(),
+            'shipping' => Shipping::where('status', 1)->get(),
+            'fob' => BasicCodeDetail::where('master_id', 7)->get(),
+
+        ];
+
+        return view('sales.salesOrder.sales_order_create', $x);
+    }
+
+      public function store(SalesOrderRequest $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $currentYear = date('Y');
+            $data = $request->validated();
+            $itemsDetailRaw = $request->input('items_detail');
+            unset($data['items_detail']);
+
+            $syaratPembayaran = SyaratPembayaran::find($request->payment_term);
+
+            $data['created_by'] = Auth::id();
+            $data['updated_by'] = null;
+            $data['sales_order_date'] = Carbon::parse($request->sales_order_date)->format('Y-m-d');
+            $data['salesman_id'] = $request->salesman_id;
+            $data['customer_contact_id'] = $request->customer_contact_id;
+            $data['sub_total'] = $request->sub_total;
+            $data['disc_percent'] = $request->percent;
+            $data['disc_nominal'] = $request->discount_all;
+            $data['grand_total'] = $request->total_order;
+            $data['payment_term_id'] = $request->payment_term_id;
+            $data['kena_pajak'] = 0;
+            $data['total_termasuk_pajak'] = 0;
+            $data['address'] = $request->address;
+            $data['description'] = $request->description;
+            $data['description'] = $request->description;
+
+            do {
+                $generatedCode = $this->generateNumberId();
+                $exists = SalesOrder::where('sales_order_code', $generatedCode)->exists();
+            } while ($exists);
+
+            $data['sales_order_code'] = $generatedCode;
+            $salesOrder = SalesOrder::create($data);
+
+            if ($itemsDetailRaw) {
+                $items = json_decode($itemsDetailRaw, true);
+                $involvedPrIds = [];
+
+                if (is_array($items) && count($items) > 0) {
+                    foreach ($items as $item) {
+                        // $prDetailId = $item['sales_quotation_detail_id'] ?? $item['pr_detail_id'] ?? $item['detail_id'] ?? null;
+                        $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
+                        $unitPrice = floatval($item['unit_price'] ?? 0);
+                        $discount = floatval($item['discount'] ?? 0);
+                        $amount = ($qtyInputForm * $unitPrice) - $discount;
+
+                        SalesOrderDetail::create([
+                            'sales_order_id' => $salesOrder->id,
+                            // 'sales_quotation_detail_id' => $prDetailId,
+                            'product_id' => $item['product_id'],
+                            'qty' => $qtyInputForm,
+                            'unit_id' => $item['unit_id'],
+                            'unit_price' => $unitPrice,
+                            'discount' => $discount,
+                            'amount' => $item['amount'] ?? $amount,
+                            'active' => 1,
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+
+                    }
+
+                    // --- OTOMASI STATUS PR MASTER ---
+                    foreach ($involvedPrIds as $prId) {
+                        $allDetails = DB::table("sales_quotation_detail_{$currentYear}")
+                            ->where('sales_quotation_id', $prId)
+                            ->get();
+
+                        $totalRequested = $allDetails->sum('qty');
+                        $totalOrdered = $allDetails->sum('po_qty');
+
+                        if ($totalOrdered >= $totalRequested) {
+                            $newStatus = 'closed';
+                        } elseif ($totalOrdered > 0) {
+                            $newStatus = 'partial';
+                        } else {
+                            $newStatus = 'processing';
+                        }
+
+                        DB::table("sales_quotation_{$currentYear}")
+                            ->where('id', $prId)
+                            ->update(['status' => $newStatus]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Sales Order '.$generatedCode.' berhasil disimpan.',
+                'redirect' => route('sales-order.index'),
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan data: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -272,5 +440,47 @@ class SalesOrderController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+       public function getProcessingData()
+    {
+        // Mengambil data PR beserta item detailnya yang belum lunas di-PO
+        $orders = SalesQuotation::with(['details' => function ($query) {
+            $query->whereRaw('sq_qty < qty'); // Hanya ambil item yang belum terpenuhi
+        }])
+            ->whereNotIn('status', ['draft', 'closed', 'done'])
+            ->get();
+
+        return response()->json($orders);
+    }
+     public function getPriceHistory(Request $request)
+    {
+        $productId = $request->get('product_id');
+        $customerId = $request->get('customer_id');
+
+        $year = date('Y');
+        $tableDetail = "sales_order_detail_{$year}";
+        $tableMaster = "sales_order_{$year}";
+
+        // Mengambil harga unik langsung dari database
+        $history = DB::table($tableDetail)
+            ->join($tableMaster, "{$tableDetail}.sales_order_id", '=', "{$tableMaster}.id")
+            ->where("{$tableDetail}.product_id", $productId)
+            ->where("{$tableMaster}.customer_id", $customerId)
+            // Kuncinya di sini: kelompokkan berdasarkan harga, lalu ambil tanggal terbaru dengan MAX()
+            ->select(
+                "{$tableDetail}.unit_price as harga",
+                DB::raw("MAX({$tableMaster}.sales_order_date) as tanggal")
+            )
+            ->groupBy("{$tableDetail}.unit_price")
+            // Urutkan berdasarkan tanggal terbaru (hasil dari MAX tanggal di atas)
+            ->orderBy('tanggal', 'desc')
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'history' => $history,
+        ]);
     }
 }

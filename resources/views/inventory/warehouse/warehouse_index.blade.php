@@ -321,15 +321,10 @@
                         $('#modal-title').html('Edit Warehouse');
                         $('#id').val(data.id);
                         $('#id_gudang').val(data.id_gudang);
-                        $('#nama').val(data.nama);
+                        $('#nama_gudang').val(data.nama_gudang);
                         $('#alamat').val(data.alamat);
-                        $('#alamat_pajak').val(data.alamat_pajak);
-                        $('#kodepos').val(data.kodepos);
-                        $('#negara').val(data.negara);
-                        $('#telepon').val(data.telepon);
-                        $('#personal_kontak').val(data.personal_kontak);
-                        $('#email').val(data.email);
-                        $('#website').val(data.website);
+                        $('#keterangan').val(data.keterangan);
+                        $('#penanggung_jawab').val(data.penanggung_jawab);
                         $('#status').val(data.status).trigger('change');
                         resetValidation();
                     }

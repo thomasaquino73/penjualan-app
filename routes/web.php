@@ -179,16 +179,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/kategori-barang/delete-multiple', [KategoriBarangController::class, 'deleteMultiple']);
     Route::resource('kategori-barang', KategoriBarangController::class);
 
-    // TRANSAKSI
-    Route::post('/sales-quotation/{id}/submit', [SalesQuotationController::class, 'submitToPending'])->name('sales-quotation.submit');
-    Route::post('/sales-quotation/restore-multiple', [SalesQuotationController::class, 'restoreMultiple']);
-    Route::put('/sales-quotation/restore/{id}', [SalesQuotationController::class, 'restore'])->name('sales-quotation.restore');
-    Route::post('/sales-quotation/delete-multiple', [SalesQuotationController::class, 'deleteMultiple']);
-    Route::get('/sales-quotation/trash', [SalesQuotationController::class, 'trash'])->name('sales-quotation.trash');
-    Route::resource('sales-quotation', SalesQuotationController::class);
 
-    Route::post('/sales-order/{id}/submit', [SalesOrderController::class, 'submitToPending'])->name('sales-order.submit');
-    Route::resource('sales-order', SalesOrderController::class);
+
 
     // PENGATURAN
     Route::resource('roles', RolesController::class);
@@ -255,14 +247,22 @@ Route::middleware('auth')->group(function () {
         Route::resource('', ReceiveItemController::class)->parameters(['' => 'receive_item']);
     });
 
+
+    Route::get('/sales-order/print/{id}', [SalesOrderController::class, 'print'])->name('sales-order.print');
+        Route::get('/sales-order/sq/price-history', [SalesOrderController::class, 'getPriceHistory']);
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
+   Route::get('/sales-order/get-processing-order', [SalesOrderController::class, 'getProcessingData'])->name('sales-order.quotation.processing');
+    Route::post('/sales-order/{id}/submit', [SalesOrderController::class, 'submitToPending'])->name('sales-order.submit');
     Route::resource('sales-order', SalesOrderController::class);
 
     Route::get('/sales-quotation/print/{id}', [SalesQuotationController::class, 'print'])->name('sales-quotation.print');
     Route::get('/get-kontak/{customer_id}', [SalesQuotationController::class, 'getKontakByCustomer']);
-    Route::post('/sales-quotation/{id}/submit', [SalesQuotationController::class, 'submitToPending'])->name('sales-quotation.submit');
-    Route::get('/sales-quotation/trash', [SalesQuotationController::class, 'trash'])->name('sales-quotation.trash');
     Route::get('/sales-quotation/sq/price-history', [SalesQuotationController::class, 'getPriceHistory']);
+    Route::post('/sales-quotation/{id}/submit', [SalesQuotationController::class, 'submitToPending'])->name('sales-quotation.submit');
+    Route::post('/sales-quotation/restore-multiple', [SalesQuotationController::class, 'restoreMultiple']);
+    Route::put('/sales-quotation/restore/{id}', [SalesQuotationController::class, 'restore'])->name('sales-quotation.restore');
+    Route::post('/sales-quotation/delete-multiple', [SalesQuotationController::class, 'deleteMultiple']);
+    Route::get('/sales-quotation/trash', [SalesQuotationController::class, 'trash'])->name('sales-quotation.trash');
     Route::resource('sales-quotation', SalesQuotationController::class);
 });
 
