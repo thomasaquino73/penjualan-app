@@ -44,7 +44,7 @@ return new class extends Migration
             $table->string('po_number')->nullable();
             $table->date('tanggal_pengiriman')->nullable();
             $table->unsignedBigInteger('jenis_pengiriman')->nullable();
-            $table->unsignedBigInteger('fob_id')->nullable();
+            $table->string('fob_id')->nullable();
 
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();

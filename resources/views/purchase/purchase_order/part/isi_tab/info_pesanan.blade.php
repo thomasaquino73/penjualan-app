@@ -20,7 +20,7 @@
                     <span class="input-group-text">
                         <i class="ti ti-truck"></i>
                     </span>
-                    <select name="jenis_pengiriman" id="jenis_pengiriman" class="form-select select2">
+                    <select name="vehicle_id" id="vehicle_id" class="form-select select2">
                         <option value="">Select Shipping</option>
                         @foreach ($shipping as $item)
                             <option value="{{ $item->id }}">
@@ -31,11 +31,10 @@
                     <button type="button" class="btn btn-primary btn-sm" id="btnAddShipping">
                         <i class="ti ti-plus"></i>
                     </button>
-                    <span class="error text-danger" id="jenis_pengirimanError"></span>
+                    <span class="error text-danger" id="vehicle_idError"></span>
                 </div>
 
             </div>
-
         </div>
         <div class="mb-3 row">
             <label class="col-md-4 col-form-label">Payment Term</label>

@@ -288,6 +288,22 @@
                 },
             });
         });
+
+        //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
+        $("#checkAll").on("change", function() {
+            // Jika checkAll dicentang, semua .checkItem ikut dicentang, begitu sebaliknya
+            $(".checkItem").prop("checked", $(this).prop("checked"));
+        });
+
+        // Jika salah satu item diuncheck secara manual, matikan checkAll di atas head tabel
+        $(document).on("change", ".checkItem", function() {
+            if ($(".checkItem:checked").length === $(".checkItem").length) {
+                $("#checkAll").prop("checked", true);
+            } else {
+                $("#checkAll").prop("checked", false);
+            }
+        });
+
         $(document).ready(function() {
             $(".select2-modal").each(function() {
                 var $this = $(this);
@@ -697,6 +713,7 @@
                                 a.on("click", function(e) {
                                     e.preventDefault();
                                     priceInput.val(harga);
+                                    calculateTotal();
                                 });
 
                                 li.append(a);

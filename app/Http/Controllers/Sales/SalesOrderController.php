@@ -329,7 +329,9 @@ class SalesOrderController extends Controller
             $data['total_termasuk_pajak'] = 0;
             $data['address'] = $request->address;
             $data['description'] = $request->description;
-            $data['description'] = $request->description;
+            $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
+            $data['jenis_pengiriman'] = $request->jenis_pengiriman;
+            $data['fob_id'] = $request->fob_id;
 
             do {
                 $generatedCode = $this->generateNumberId();
