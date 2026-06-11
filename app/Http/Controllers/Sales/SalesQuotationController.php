@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\DataTables;
 
 class SalesQuotationController extends Controller
@@ -417,7 +418,7 @@ class SalesQuotationController extends Controller
      */
     public function edit(string $id)
     {
-         $salesQuotation = SalesQuotation::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $salesQuotation = SalesQuotation::with(['details.produkID', 'details.unitID'])->findOrFail($id);
         $x = [
             'title' => 'Sales Quotation New',
             'breadcrumb' => [
@@ -436,82 +437,289 @@ class SalesQuotationController extends Controller
     }
 
     public function update(SalesQuotationRequest $request, $id)
-{
-    DB::beginTransaction();
+    {
+        DB::beginTransaction();
 
-    try {
-        $salesQuotation = SalesQuotation::findOrFail($id);
-        $data = $request->validated();
-        $itemsDetailRaw = $request->input('items_detail');
-        unset($data['items_detail']);
+        try {
+            $salesQuotation = SalesQuotation::findOrFail($id);
+            $data = $request->validated();
+            $itemsDetailRaw = $request->input('items_detail');
+            unset($data['items_detail']);
 
-        // Update data utama
-        $data['updated_by'] = Auth::id();
-        $data['sales_quotation_date'] = Carbon::parse($request->sales_quotation_date)->format('Y-m-d');
-        $data['salesman_id'] = $request->salesman_id;
-        $data['sub_total'] = $request->sub_total;
-        $data['disc_percent'] = $request->percent;
-        $data['disc_nominal'] = $request->discount_all;
-        $data['grand_total'] = $request->total_order;
-        $data['payment_term_id'] = $request->payment_term_id;
-        $data['address'] = $request->address;
-        $data['description'] = $request->description;
+            // Update data utama
+            $data['updated_by'] = Auth::id();
+            $data['sales_quotation_date'] = Carbon::parse($request->sales_quotation_date)->format('Y-m-d');
+            $data['salesman_id'] = $request->salesman_id;
+            $data['sub_total'] = $request->sub_total;
+            $data['disc_percent'] = $request->percent;
+            $data['disc_nominal'] = $request->discount_all;
+            $data['grand_total'] = $request->total_order;
+            $data['payment_term_id'] = $request->payment_term_id;
+            $data['address'] = $request->address;
+            $data['description'] = $request->description;
 
-        $salesQuotation->update($data);
+            $salesQuotation->update($data);
 
-        // Update Detail: Hapus yang lama, insert yang baru
-        // (Ini cara paling aman jika tidak menggunakan ID unik pada tiap baris detail di form)
-        SalesQuotationDetail::where('sales_quotation_id', $salesQuotation->id)->delete();
+            // Update Detail: Hapus yang lama, insert yang baru
+            // (Ini cara paling aman jika tidak menggunakan ID unik pada tiap baris detail di form)
+            SalesQuotationDetail::where('sales_quotation_id', $salesQuotation->id)->delete();
 
-        if ($itemsDetailRaw) {
-            $items = json_decode($itemsDetailRaw, true);
+            if ($itemsDetailRaw) {
+                $items = json_decode($itemsDetailRaw, true);
 
-            if (is_array($items) && count($items) > 0) {
-                foreach ($items as $item) {
-                    $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
-                    $unitPrice = floatval($item['unit_price'] ?? 0);
-                    $discount = floatval($item['discount'] ?? 0);
-                    $amount = ($qtyInputForm * $unitPrice) - $discount;
+                if (is_array($items) && count($items) > 0) {
+                    foreach ($items as $item) {
+                        $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
+                        $unitPrice = floatval($item['unit_price'] ?? 0);
+                        $discount = floatval($item['discount'] ?? 0);
+                        $amount = ($qtyInputForm * $unitPrice) - $discount;
 
-                    SalesQuotationDetail::create([
-                        'sales_quotation_id' => $salesQuotation->id,
-                        'product_id' => $item['product_id'],
-                        'qty' => $qtyInputForm,
-                        'unit_id' => $item['unit_id'],
-                        'unit_price' => $unitPrice,
-                        'discount' => $discount,
-                        'amount' => $item['amount'] ?? $amount,
-                        'active' => 1,
-                        'created_by' => Auth::id(),
-                    ]);
+                        SalesQuotationDetail::create([
+                            'sales_quotation_id' => $salesQuotation->id,
+                            'product_id' => $item['product_id'],
+                            'qty' => $qtyInputForm,
+                            'unit_id' => $item['unit_id'],
+                            'unit_price' => $unitPrice,
+                            'discount' => $discount,
+                            'amount' => $item['amount'] ?? $amount,
+                            'active' => 1,
+                            'created_by' => Auth::id(),
+                        ]);
+                    }
                 }
             }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Sales Quotation '.$salesQuotation->sales_quotation_code.' berhasil diperbarui.',
+                'redirect' => route('sales-quotation.index'),
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memperbarui data: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+     public function destroy(Request $request, $id)
+    {
+
+        try {
+            $table = SalesQuotation::findOrFail($id);
+            $table->active = 0;
+            $table->updated_by = Auth::user()->id;
+            $table->save();
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => $e->errors(),
+            ], 422);
+        }
+    }
+
+     public function deleteMultiple(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (! $ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
         }
 
-        DB::commit();
+        SalesQuotation::whereIn('id', $ids)->update([
+            'active' => '0',
+            'updated_by' => Auth::id(),
+        ]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Sales Quotation ' . $salesQuotation->sales_quotation_code . ' berhasil diperbarui.',
-            'redirect' => route('sales-quotation.index'),
-        ], 200);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Gagal memperbarui data: ' . $e->getMessage(),
-        ], 500);
+        return response()->json(['success' => true]);
     }
-}
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function trash(Request $r)
     {
-        //
+        if ($r->ajax()) {
+            // Ambil ID user yang sedang login
+            $userId = Auth::user()->id;
+
+            // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
+            $query = SalesQuotation::where('active',  0)
+                ->where(function ($q) use ($userId) {
+                    $q->where('status', '<>', 'draft')
+                        ->orWhere(function ($subQ) use ($userId) {
+                            $subQ->where('status', 'draft')
+                                ->where('created_by', $userId);
+                        });
+                })
+                ->orderby('sales_quotation_code', 'desc');
+            if ($r->status) {
+                $query->where('status', $r->status);
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('created_at', function ($row) {
+                    return $row->created_at
+                        ? (($row->creator->fullname ?? 'Unknown')).
+                            ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
+                        : 'N/A';
+                })
+                ->addColumn('updated_at', function ($row) {
+                    if ($row->updated_at) {
+                        $updaterName = $row->updater->fullname ?? 'Unknown';
+                        $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
+
+                        return $updaterName.
+                            ' <br><small class="text-muted">'.$timeAgo.'</small>';
+                    }
+
+                    return 'N/A';
+                })
+                ->addColumn('sales_quotation_date', function ($row) {
+                    return $row->sales_quotation_date ? Carbon::parse($row->sales_quotation_date)->format('d M Y') : 'N/A';
+                })
+                ->addColumn('customer', function ($row) {
+                    return $row->customerID->nama_customer ?? 'N/A';
+                })
+                ->addColumn('status', function ($row) {
+                    switch ($row->status) {
+                        case 'draft':
+                            $badge = 'bg-label-secondary';
+                            $text = 'Draft';
+                            break;
+
+                        case 'processing':
+                            $badge = 'bg-label-info';
+                            $text = 'Processing';
+                            break;
+
+                            // ─── TAMBAHAN BADGE UNTUK STATUS PARTIAL ──────────────────
+                        case 'partial':
+                            $badge = 'bg-warning text-dark';
+                            $text = 'Partial PO';
+                            break;
+
+                        case 'closed':
+                            $badge = 'bg-success';
+                            $text = 'Closed';
+                            break;
+
+                        case 'cancelled':
+                            $badge = 'bg-danger';
+                            $text = 'Cancelled';
+                            break;
+
+                        default:
+                            $badge = 'bg-label-secondary';
+                            $text = ucfirst($row->status);
+                            break;
+                    }
+
+                    return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
+                })
+                ->addColumn('cekbok', function ($row) {
+
+                    if (
+                        auth()->user()->can('sales_quotation-delete') &&
+                        $row->status === 'draft'
+                    ) {
+                        return '
+                            <div class="form-check form-check-primary">
+                                <input class="form-check-input checkItem"
+                                    type="checkbox"
+                                    value="'.$row->id.'">
+                            </div>
+                        ';
+                    }
+
+                    return '';
+                })
+                ->addColumn('total', function ($row) {
+                    // 1. Hitung total kotor (sum amount) dari detail item PO
+                    $subTotal = SalesQuotationDetail::where('sales_quotation_id', $row->id)
+                        ->where('active', 1)
+                        ->sum('amount');
+
+                    // 2. Hitung grand total: Subtotal dikurangi diskon nominal yang ada di tabel induk ($row)
+                    // Gunakan ?? 0 jika kolom disc_nominal di database bisa bernilai null
+                    $grandTotal = $subTotal - ($row->disc_nominal ?? 0);
+
+                    // 3. Kembalikan nilai yang sudah dikonversi dan diformat
+                    return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
+                })
+                 ->addColumn('action', function ($row) {
+                    $btn = '<div class="btn-group">
+                      <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ti ti-menu-2 ti-xs me-1"></i>
+                      </button>
+                      <ul class="dropdown-menu" style="">';
+
+                    if (auth()->user()->can('sales_quotation-restore')) {
+                        $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
+                            data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
+                    }
+
+                    return $btn;
+                })
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_quotation_date', 'total', 'customer'])
+                ->make(true);
+        }
+
+        $x = [
+            'title' => 'Deleted Sales Quotation List',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Deleted Sales Quotation', 'url' => ''],
+            ],
+        ];
+
+        return view('sales.salesQuotation.sales_quotation_trash', $x);
+    }
+
+    public function restore($id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $salesQuotation = SalesQuotation::find($id);
+            $salesQuotation->active = 1;
+            $salesQuotation->updated_by = Auth::id();
+            $salesQuotation->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'redirect' => true,
+                'message' => 'Sales quotation successfully restored.',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => true,
+                'redirect' => true,
+                'message' => 'Sales quotation successfully restored.',
+            ]);
+        }
+    }
+
+    public function restoreMultiple(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (! $ids || count($ids) == 0) {
+            return response()->json(['success' => false]);
+        }
+
+        SalesQuotation::whereIn('id', $ids)->update([
+            'active' => '1',
+            'updated_by' => Auth::id(),
+        ]);
+
+        return response()->json(['success' => true]);
     }
 
     public function getKontakByCustomer($customer_id)

@@ -378,7 +378,6 @@ class DataBarangController extends Controller
         $unitConversion = DataBarangConversion::where('data_barang_id', $idDetail->id)
             ->where('qty', '>', 0)
             ->get();
-       
 
         return view('inventory.barang.data_barang.data_barang_detail', [
             'title' => 'Detail Product',
@@ -394,82 +393,82 @@ class DataBarangController extends Controller
         ]);
     }
 
-  private function getWarehouse($data_barang_id)
-{
-    $date = request('date');
-    $warehouse_id = request('warehouse_id');
+    private function getWarehouse($data_barang_id)
+    {
+        $date = request('date');
+        $warehouse_id = request('warehouse_id');
 
-    $query = StockMutation::query()
-        ->with(['unitID', 'warehouseID'])
-        ->select(
-            'warehouse_id', 'unit_id',
-            DB::raw("COALESCE(SUM(CASE WHEN type = 'in' THEN total_base_qty WHEN type = 'out' THEN -total_base_qty ELSE 0 END), 0) as total_qty")
-        )
-        ->where('data_barang_id', $data_barang_id);
+        $query = StockMutation::query()
+            ->with(['unitID', 'warehouseID'])
+            ->select(
+                'warehouse_id', 'unit_id',
+                DB::raw("COALESCE(SUM(CASE WHEN type = 'in' THEN total_base_qty WHEN type = 'out' THEN -total_base_qty ELSE 0 END), 0) as total_qty")
+            )
+            ->where('data_barang_id', $data_barang_id);
 
-    // Filter Tanggal yang Aman
-    if (!empty($date)) {
-        try {
-            // Konversi d-m-Y ke Y-m-d untuk SQL
-            $formattedDate = \Carbon\Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
-            
-            $query->where(function ($q) use ($formattedDate) {
-                $q->where('date_stock', '<=', $formattedDate)
-                  ->orWhereNull('date_stock'); // Penting untuk stok lama/awal
-            });
-        } catch (\Exception $e) {
-            // Jika input date rusak, abaikan filter
-        }
-    }
+        // Filter Tanggal yang Aman
+        if (! empty($date)) {
+            try {
+                // Konversi d-m-Y ke Y-m-d untuk SQL
+                $formattedDate = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
 
-    if (!empty($warehouse_id)) {
-        $query->where('warehouse_id', $warehouse_id);
-    }
-
-    return $query->groupBy('warehouse_id', 'unit_id')->get()->map(function ($item) {
-        return [
-            'warehouse_id'   => $item->warehouse_id,
-            'warehouse_name' => optional($item->warehouseID)->nama_gudang ?? '-',
-            'unit_id'        => $item->unit_id,
-            'unit_name'      => optional($item->unitID)->detail ?? '-',
-            'total_qty'      => (float) $item->total_qty,
-        ];
-    });
-}
-private function getMutation($data_barang_id)
-{
-    // $date = request('date');
-
-    $query = StockMutation::with('unitID','warehouseID')
-        ->where('data_barang_id', $data_barang_id)
-        ->orderBy('date_stock', 'asc'); // 🔥 WAJIB ASC
-
-    // if ($date && \Carbon\Carbon::hasFormat($date, 'd-m-Y')) {
-    //     $dateFormatted = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
-    //     $query->where('date_stock', '<=', $dateFormatted . ' 23:59:59');
-    // }
-
-    $mutations = $query->get();
-
-    // ✅ HITUNG RUNNING BALANCE (ASC)
-    $runningBalance = 0;
-
-    foreach ($mutations as $mutation) {
-        $qty = (float) $mutation->total_base_qty;
-
-        if ($mutation->type === 'in') {
-            $runningBalance += $qty;
-        } else {
-            $runningBalance -= $qty;
+                $query->where(function ($q) use ($formattedDate) {
+                    $q->where('date_stock', '<=', $formattedDate)
+                        ->orWhereNull('date_stock'); // Penting untuk stok lama/awal
+                });
+            } catch (\Exception $e) {
+                // Jika input date rusak, abaikan filter
+            }
         }
 
-        $mutation->saldo_akhir = $runningBalance;
+        if (! empty($warehouse_id)) {
+            $query->where('warehouse_id', $warehouse_id);
+        }
+
+        return $query->groupBy('warehouse_id', 'unit_id')->get()->map(function ($item) {
+            return [
+                'warehouse_id' => $item->warehouse_id,
+                'warehouse_name' => optional($item->warehouseID)->nama_gudang ?? '-',
+                'unit_id' => $item->unit_id,
+                'unit_name' => optional($item->unitID)->detail ?? '-',
+                'total_qty' => (float) $item->total_qty,
+            ];
+        });
     }
 
-    // 🔥 BALIK KE DESC BUAT TAMPILAN
-    return $mutations->sortByDesc('date_stock')->values();
-}
+    private function getMutation($data_barang_id)
+    {
+        // $date = request('date');
 
+        $query = StockMutation::with('unitID', 'warehouseID')
+            ->where('data_barang_id', $data_barang_id)
+            ->orderBy('date_stock', 'asc'); // 🔥 WAJIB ASC
+
+        // if ($date && \Carbon\Carbon::hasFormat($date, 'd-m-Y')) {
+        //     $dateFormatted = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
+        //     $query->where('date_stock', '<=', $dateFormatted . ' 23:59:59');
+        // }
+
+        $mutations = $query->get();
+
+        // ✅ HITUNG RUNNING BALANCE (ASC)
+        $runningBalance = 0;
+
+        foreach ($mutations as $mutation) {
+            $qty = (float) $mutation->total_base_qty;
+
+            if ($mutation->type === 'in') {
+                $runningBalance += $qty;
+            } else {
+                $runningBalance -= $qty;
+            }
+
+            $mutation->saldo_akhir = $runningBalance;
+        }
+
+        // 🔥 BALIK KE DESC BUAT TAMPILAN
+        return $mutations->sortByDesc('date_stock')->values();
+    }
 
     public function edit(string $id)
     {
@@ -525,11 +524,11 @@ private function getMutation($data_barang_id)
             }
             $barang->update($data);
 
-         // 1. Ambil data konversi yang valid saja
+            // 1. Ambil data konversi yang valid saja
             $newConversions = [];
             if ($request->has('conversion')) {
                 foreach ($request->conversion as $conv) {
-                    if (!empty($conv['to_unit']) && $conv['to_unit'] !== 'Select Unit') {
+                    if (! empty($conv['to_unit']) && $conv['to_unit'] !== 'Select Unit') {
                         $newConversions[] = $conv;
                     }
                 }
@@ -550,9 +549,9 @@ private function getMutation($data_barang_id)
                 foreach ($newConversions as $conv) {
                     DataBarangConversion::create([
                         'data_barang_id' => $barang->id,
-                        'to_unit_id'     => $request->unit_id,
-                        'from_unit_id'   => $conv['to_unit'] ?? null,
-                        'qty'            => $conv['qty'] ?? 0,
+                        'to_unit_id' => $request->unit_id,
+                        'from_unit_id' => $conv['to_unit'] ?? null,
+                        'qty' => $conv['qty'] ?? 0,
                     ]);
                 }
             });
@@ -839,5 +838,4 @@ private function getMutation($data_barang_id)
         return $pdf->stream('barang_all.pdf');
         // kalau mau download → ->download('barang.pdf');
     }
-
 }

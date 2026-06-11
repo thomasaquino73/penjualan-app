@@ -33,7 +33,8 @@ class SalesQuotationDetail extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
-     public function produkID()
+
+    public function produkID()
     {
         return $this->belongsTo(Barang::class, 'product_id', 'id');
     }

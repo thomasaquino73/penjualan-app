@@ -180,6 +180,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('kategori-barang', KategoriBarangController::class);
 
     // TRANSAKSI
+    Route::post('/sales-quotation/restore-multiple', [SalesQuotationController::class, 'restoreMultiple']);
+    Route::put('/sales-quotation/restore/{id}', [SalesQuotationController::class, 'restore'])->name('sales-quotation.restore');
+    Route::post('/sales-quotation/delete-multiple', [SalesQuotationController::class, 'deleteMultiple']);
     Route::get('/sales-quotation/trash', [SalesQuotationController::class, 'trash'])->name('sales-quotation.trash');
     Route::resource('sales-quotation', SalesQuotationController::class);
     // PENGATURAN
