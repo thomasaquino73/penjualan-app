@@ -150,7 +150,7 @@ class Sidebar extends Component
                         'route' => 'sales-order.index',
                         'pattern' => 'sales-order.*',
                         'roles' => ['Super Admin'],
-                        'permissions' => ['barang-browse'],
+                        'permissions' => ['sales_order-browse'],
                     ],
 
                     // [

@@ -17,6 +17,7 @@ use App\Http\Controllers\Purchase\Supplier\KategoriSupplierController;
 use App\Http\Controllers\Purchase\Supplier\SupplierController;
 use App\Http\Controllers\Sales\Customer\CustomerController;
 use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
+use App\Http\Controllers\Sales\SalesOrderController;
 use App\Http\Controllers\Sales\SalesQuotationController;
 use App\Http\Controllers\Setting\CashBankController;
 use App\Http\Controllers\Setting\Company\FobController;
@@ -29,7 +30,6 @@ use App\Http\Controllers\Setting\PengaturanSistemController;
 use App\Http\Controllers\Setting\PermissionsController;
 use App\Http\Controllers\Setting\RolesController;
 use App\Http\Controllers\Setting\UserController;
-use App\Http\Controllers\Transaction\SalesOrderController;
 use App\Models\Setting\Company;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
@@ -186,6 +186,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/sales-quotation/delete-multiple', [SalesQuotationController::class, 'deleteMultiple']);
     Route::get('/sales-quotation/trash', [SalesQuotationController::class, 'trash'])->name('sales-quotation.trash');
     Route::resource('sales-quotation', SalesQuotationController::class);
+
+    Route::post('/sales-order/{id}/submit', [SalesOrderController::class, 'submitToPending'])->name('sales-order.submit');
+    Route::resource('sales-order', SalesOrderController::class);
 
     // PENGATURAN
     Route::resource('roles', RolesController::class);
