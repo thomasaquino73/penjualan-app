@@ -325,7 +325,7 @@ class SalesQuotationController extends Controller
             $data['disc_nominal'] = $request->discount_all;
             $data['grand_total'] = $request->total_order;
             $data['payment_term_id'] = $request->payment_term_id;
-             $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
+            $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
             $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
             $data['address'] = $request->address;
             $data['description'] = $request->description;
@@ -804,7 +804,7 @@ class SalesQuotationController extends Controller
         return response()->json(['success' => true, 'message' => 'Sales Quotation berhasil diproses!']);
     }
 
-     public function print($id)
+    public function print($id)
     {
         $SalesQuotation = SalesQuotation::with(['details.produkID', 'details.unitID'])->findOrFail($id);
         $company = Company::first();

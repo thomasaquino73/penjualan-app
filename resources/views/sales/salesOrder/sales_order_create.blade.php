@@ -197,7 +197,7 @@
         </div>
     </div>
     @include('sales.salesOrder.part.modal_sales_order')
-    @include('sales.salesOrder.part.modalOrderDetail')
+    @include('sales.salesOrder.part.modalQuotationDetail')
 @endsection
 @push('style')
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
@@ -222,7 +222,7 @@
         $("#showModalpr").on("click", function(e) {
             e.preventDefault();
 
-            let tbody = $("#requisitionTableBody");
+            let tbody = $("#quotationTableBody");
             var customerId = $("#customer_id").val();
 
             // Validasi wajib pilih customer dulu
@@ -247,13 +247,16 @@
             tbody.html(
                 '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>',
             );
-            $("#modalOrderDetail").modal("show");
+            $("#modalQuotationDetail").modal("show");
 
             // Ambil data PR berstatus processing
             $.ajax({
                 url: "{{ route('sales-order.quotation.processing') }}",
                 type: "GET",
                 dataType: "json",
+                data: {
+                    customer_id: customerId
+                },
                 success: function(response) {
                     tbody.empty();
 
@@ -347,9 +350,9 @@
                         data: "data_produk",
                         render: function(data, type, row) {
                             // Menampilkan kode referensi PR di bawah nama produk jika ada
-                            // if (row.requisition_code) {
-                            //     return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.requisition_code}</small>`;
-                            // }
+                            if (row.quotation_code) {
+                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.quotation_code}</small>`;
+                            }
                             return `<strong>${data}</strong>`;
                         }
                     },
@@ -444,9 +447,9 @@
                                     $("#detail_id").val(rowIndex);
 
                                     // --- AMANKAN DATA ID RELASI DI SINI ---
-                                    $("#modal_purchase_requisition_detail_id").val(data.detail_id ||
-                                        data.purchase_requisition_detail_id || "");
-                                    $("#modal_requisition_code").val(data.requisition_code || "");
+                                    $("#modal_purchase_quotation_detail_id").val(data.detail_id ||
+                                        data.purchase_quotation_detail_id || "");
+                                    $("#modal_quotation_code").val(data.quotation_code || "");
 
                                     // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
                                     if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
@@ -793,6 +796,37 @@
                 // Masukkan hasil kalkulasi ke input Total Order
                 $("#total_order").val(Math.round(totalOrder));
             }
+            $("#btnSubmitModal").on("click", function(e) {
+                let qtyInput = $("#quantity");
+                let currentQty = parseFloat(qtyInput.val()) || 0;
+
+                // Ambil batas sisa PR dari atribut input modal
+                let maxPrLimit = qtyInput.attr("data-sisa-pr");
+
+                // JIKA BERDASARKAN PR (maxPrLimit terdefinisi dan tidak kosong)
+                if (maxPrLimit !== undefined && maxPrLimit !== null && maxPrLimit !== '') {
+                    maxPrLimit = parseFloat(maxPrLimit);
+
+                    if (currentQty > maxPrLimit) {
+                        e.preventDefault(); // Hentikan proses simpan/update ke array
+
+                        Swal.fire({
+                            icon: "warning",
+                            title: "Melebihi Sisa PR",
+                            text: `Kuantitas item ini tidak boleh melebihi sisa PR (Maksimal sisa: ${maxPrLimit}).`,
+                            customClass: {
+                                confirmButton: "btn btn-warning"
+                            },
+                            buttonsStyling: false
+                        });
+
+                        qtyInput.val(maxPrLimit); // Otomatis reset input ke angka maksimal
+                        return false;
+                    }
+                }
+
+                // JIKA PO BEBAS (maxPrLimit tidak ada), AKAN LOLOS TANPA VALIDASI MAKSIMAL
+            });
 
             let saveAndNew = false;
             let activeBtn = null;
@@ -1008,7 +1042,7 @@
                 } else {
                     // --- CARA B: AMBIL DARI PR & EDIT DATA ---
                     // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
-                    // Properti bawaan PR seperti 'requisition_code' & 'purchase_requisition_detail_id' 
+                    // Properti bawaan PR seperti 'quotation_code' & 'purchase_quotation_detail_id' 
                     // akan otomatis aman dan dipertahankan.
                     prDetailsData[detailId] = {
                         ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)
@@ -1077,6 +1111,152 @@
 
                 // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
                 calculateTotalOrder();
+            });
+
+            $("#btnSubmitSelected").on("click", function() {
+                let checkedBoxes = $(".checkItem:checked");
+
+                // 1. Validasi jika tidak ada PR yang dicentang
+                if (checkedBoxes.length === 0) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Peringatan",
+                        text: "Silakan pilih minimal satu data quotation!",
+                        customClass: {
+                            confirmButton: "btn btn-danger",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return;
+                }
+
+                // 2. Ambil ID quotation yang dicentang
+                let ids = [];
+                checkedBoxes.each(function() {
+                    ids.push($(this).val());
+                });
+
+                // 3. Tampilkan konfirmasi SweetAlert sebelum memproses
+                Swal.fire({
+                    title: "Proses data terpilih?",
+                    text: `Anda memilih ${checkedBoxes.length} data untuk dimasukkan ke tabel.`,
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonText: "Ya, Masukkan!",
+                    cancelButtonText: "Batal",
+                    customClass: {
+                        confirmButton: "btn btn-primary",
+                        cancelButton: "btn btn-secondary",
+                    },
+                    buttonsStyling: false,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        // 4. Kirim request AJAX ke backend
+                        $.ajax({
+                            url: "{{ route('sales-order.get-quotation-detail') }}",
+                            type: "POST",
+                            data: {
+                                ids: ids,
+                                _token: "{{ csrf_token() }}"
+                            },
+                            beforeSend: function() {
+                                $("#btnSubmitSelected")
+                                    .html(
+                                        '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
+                                    )
+                                    .prop("disabled", true);
+                            },
+                            success: function(response) {
+                                if (response.success) {
+
+                                    // Bersihkan atau siapkan array penampung global jika belum didefinisikan sebelumnya
+                                    if (typeof prDetailsData === 'undefined') {
+                                        window.prDetailsData = [];
+                                    }
+
+                                    // 5. Looping data response backend untuk dimasukkan ke array DataTables
+                                    response.data.forEach(function(item) {
+                                        console.log(response.data);
+                                        let qtyAwal = parseFloat(item.qty || 0);
+                                        let sudahPO = parseFloat(item.sq_qty ||
+                                            0);
+                                        let sisaPr = qtyAwal -
+                                            sudahPO; // Batas maksimal kuantitas PR
+
+                                        if (sisaPr <= 0) {
+                                            return; // Jika sisa PR habis, jangan masukkan ke list
+                                        }
+
+                                        let unitPrice = item.unit_price;
+                                        let discount = item.discount;
+                                        let amount = item.amount;
+
+                                        prDetailsData.push({
+                                            detail_id: item
+                                                .id, // ID Detail PR tersimpan di sini
+                                            product_id: item.product_id,
+                                            data_produk: item
+                                                .product_name,
+                                            quantity: sisaPr,
+                                            sisa_pr: sisaPr, // <--- TAMBAHKAN INI: Sebagai acuan validasi batas maksimal
+                                            unit_id: item.unit_id,
+                                            unit: item.unit_name,
+                                            unit_price: unitPrice,
+                                            discount: discount,
+                                            amount: amount,
+                                            quotation_code: item
+                                                .quotation_code,
+                                        });
+                                    });
+
+                                    // 6. Refresh dan gambar ulang DataTables kamu
+                                    $('#table').DataTable()
+                                        .clear()
+                                        .rows.add(prDetailsData)
+                                        .draw();
+
+                                    // 7. Hitung ulang total matematika PO
+                                    if (typeof calculateGrandTotal === "function") {
+                                        calculateGrandTotal();
+                                    }
+                                    if (typeof calculateTotalOrder === "function") {
+                                        calculateTotalOrder();
+                                    }
+
+                                    // 8. Tutup Modal Requisition
+                                    $("#modalQuotationDetail").modal("hide");
+
+                                    // 9. Beri feedback sukses ke user
+                                    Swal.fire({
+                                        icon: "success",
+                                        title: "Success",
+                                        text: "Data quotation berhasil dimasukkan.",
+                                        customClass: {
+                                            confirmButton: "btn btn-primary",
+                                        },
+                                        buttonsStyling: false,
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Error",
+                                    text: "Terjadi kesalahan saat mengambil data.",
+                                });
+                            },
+                            complete: function() {
+                                // Kembalikan kondisi tombol submit ke semula
+                                $("#btnSubmitSelected")
+                                    .html(
+                                        '<i class="ti ti-check me-1"></i> Process Selected'
+                                    )
+                                    .prop("disabled", false);
+                            }
+                        });
+                    }
+                });
             });
         });
     </script>

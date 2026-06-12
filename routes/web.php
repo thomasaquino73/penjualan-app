@@ -247,6 +247,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('', ReceiveItemController::class)->parameters(['' => 'receive_item']);
     });
 
+     Route::post('/sales-order/restore-multiple', [SalesOrderController::class, 'restoreMultiple']);
+    Route::put('/sales-order/restore/{id}', [SalesOrderController::class, 'restore'])->name('sales-order.restore');
+    Route::post('/sales-order/delete-multiple', [SalesOrderController::class, 'deleteMultiple']);
+    Route::post('/sales-order/get-quotation-detail', [SalesOrderController::class, 'getQuotationDetail'])->name('sales-order.get-quotation-detail');
     Route::get('/sales-order/print/{id}', [SalesOrderController::class, 'print'])->name('sales-order.print');
     Route::get('/sales-order/sq/price-history', [SalesOrderController::class, 'getPriceHistory']);
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');

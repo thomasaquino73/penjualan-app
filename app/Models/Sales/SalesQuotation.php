@@ -42,7 +42,8 @@ class SalesQuotation extends Model
     {
         return $this->belongsTo(SyaratPembayaran::class, 'payment_term_id');
     }
-     public function details()
+
+    public function details()
     {
         return $this->hasMany(SalesQuotationDetail::class, 'sales_quotation_id');
     }

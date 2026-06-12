@@ -10,6 +10,7 @@ use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderDetail;
 use App\Models\Sales\SalesQuotation;
+use App\Models\Sales\SalesQuotationDetail;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
@@ -347,7 +348,7 @@ class SalesOrderController extends Controller
 
                 if (is_array($items) && count($items) > 0) {
                     foreach ($items as $item) {
-                        // $prDetailId = $item['sales_quotation_detail_id'] ?? $item['pr_detail_id'] ?? $item['detail_id'] ?? null;
+                        $sqDetailId = $item['sales_quotation_detail_id'] ?? $item['pr_detail_id'] ?? $item['detail_id'] ?? null;
                         $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
                         $unitPrice = floatval($item['unit_price'] ?? 0);
                         $discount = floatval($item['discount'] ?? 0);
@@ -355,7 +356,7 @@ class SalesOrderController extends Controller
 
                         SalesOrderDetail::create([
                             'sales_order_id' => $salesOrder->id,
-                            // 'sales_quotation_detail_id' => $prDetailId,
+                            'sales_quotation_detail_id' => $sqDetailId,
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
@@ -367,6 +368,27 @@ class SalesOrderController extends Controller
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
+                        // --- LOGIKA SINKRONISASI PO KE PR ---
+                        if ($sqDetailId) {
+                            $prDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
+
+                            if ($prDetail) {
+                                // Hitung ulang total qty yang sudah di-PO kan untuk PR detail ini
+                                $totalPoForThisItem = SalesOrderDetail::where('sales_quotation_detail_id', $sqDetailId)
+                                    ->where('active', 1)
+                                    ->sum('qty');
+
+                                // Update sq_qty di tabel PR Detail
+                                DB::table("sales_quotation_detail_{$currentYear}")
+                                    ->where('id', $sqDetailId)
+                                    ->update(['sq_qty' => $totalPoForThisItem]);
+
+                                // Catat ID PR Master agar statusnya bisa dihitung ulang nanti
+                                if (! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
+                                    $involvedPrIds[] = $prDetail->sales_quotation_id;
+                                }
+                            }
+                        }
 
                     }
 
@@ -377,7 +399,7 @@ class SalesOrderController extends Controller
                             ->get();
 
                         $totalRequested = $allDetails->sum('qty');
-                        $totalOrdered = $allDetails->sum('po_qty');
+                        $totalOrdered = $allDetails->sum('sq_qty');
 
                         if ($totalOrdered >= $totalRequested) {
                             $newStatus = 'closed';
@@ -436,20 +458,465 @@ class SalesOrderController extends Controller
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Request $request, $id)
     {
-        //
+        DB::beginTransaction();
+
+        try {
+            // 1. Cari PO yang akan dihapus
+            $po = SalesOrder::findOrFail($id);
+
+            // 2. Ambil detail PO untuk mendapatkan referensi PR Detail yang terkait
+            $sqDetails = SalesOrderDetail::where('sales_order_id', $po->id)->get();
+            $involvedPrIds = [];
+
+            foreach ($sqDetails as $sqDetail) {
+                if ($sqDetail->sales_quotation_detail_id) {
+                    // Catat ID PR Master-nya
+                    $prDetail = SalesQuotationDetail::where('id', $sqDetail->sales_quotation_detail_id)
+                        ->first();
+
+                    if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
+                        $involvedPrIds[] = $prDetail->sales_quotation_id;
+                    }
+                }
+            }
+
+            // 3. Nonaktifkan PO dan Detail PO
+            $po->update(['active' => 0, 'updated_by' => Auth::id()]);
+            SalesOrderDetail::where('sales_order_id', $po->id)->update(['active' => 0]);
+
+            // 4. Update Ulang sq_qty di setiap PR Detail yang terdampak
+            // Kita hitung ulang berdasarkan sisa PO yang masih 'active' = 1
+            foreach ($sqDetails as $sqDetail) {
+                if ($sqDetail->sales_quotation_detail_id) {
+                    $totalRemainingPo = SalesOrderDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
+                        ->where('active', 1)
+                        ->sum('qty');
+
+                    DB::table('sales_quotation_detail_'.date('Y'))
+                        ->where('id', $sqDetail->sales_quotation_detail_id)
+                        ->update(['sq_qty' => $totalRemainingPo]);
+                }
+            }
+
+            // 5. Update Status PR Master
+            foreach ($involvedPrIds as $prId) {
+                $allDetails = SalesQuotationDetail::where('sales_quotation_id', $prId)
+                    ->get();
+
+                $totalRequested = $allDetails->sum('qty');
+                $totalOrdered = $allDetails->sum('sq_qty');
+
+                if ($totalOrdered >= $totalRequested) {
+                    $status = 'closed';
+                } elseif ($totalOrdered > 0) {
+                    $status = 'partial';
+                } else {
+                    $status = 'processing';
+                }
+
+                SalesQuotation::where('id', $prId)
+                    ->update(['status' => $status]);
+            }
+
+            DB::commit();
+
+            return response()->json(['status' => 'success', 'message' => 'PO berhasil dibatalkan.'], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan PO: '.$e->getMessage()], 500);
+        }
     }
 
-    public function getProcessingData()
+    public function trash(Request $r)
     {
-        // Mengambil data PR beserta item detailnya yang belum lunas di-PO
-        $orders = SalesQuotation::with(['details' => function ($query) {
-            $query->whereRaw('sq_qty < qty'); // Hanya ambil item yang belum terpenuhi
-        }])
+        if ($r->ajax()) {
+            $query = SalesOrder::where('active', '0')
+                ->orderby('sales_order_code', 'desc')->get();
+            
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('created_at', function ($row) {
+                    return $row->created_at
+                        ? (($row->creator->fullname ?? 'Unknown')).
+                            ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
+                        : 'N/A';
+                })
+                ->addColumn('updated_at', function ($row) {
+                    if ($row->updated_at) {
+                        $updaterName = $row->updater->fullname ?? 'Unknown';
+                        $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
+
+                        return $updaterName.
+                            ' <br><small class="text-muted">'.$timeAgo.'</small>';
+                    }
+
+                    return 'N/A';
+                })
+                ->addColumn('sales_order_date', function ($row) {
+                    return $row->sales_order_date ? Carbon::parse($row->sales_order_date)->format('d M Y') : 'N/A';
+                })
+                ->addColumn('customer', function ($row) {
+                    return $row->customerID->nama_customer ?? 'N/A';
+                })
+                ->addColumn('status', function ($row) {
+                    switch ($row->status) {
+                        case 'draft':
+                            $badge = 'bg-label-secondary';
+                            $text = 'Draft';
+                            break;
+
+                        case 'processing':
+                            $badge = 'bg-label-info';
+                            $text = 'Processing';
+                            break;
+
+                            // ─── TAMBAHAN BADGE UNTUK STATUS PARTIAL ──────────────────
+                        case 'partial':
+                            $badge = 'bg-warning text-dark';
+                            $text = 'Partial PO';
+                            break;
+
+                        case 'closed':
+                            $badge = 'bg-success';
+                            $text = 'Closed';
+                            break;
+
+                        case 'cancelled':
+                            $badge = 'bg-danger';
+                            $text = 'Cancelled';
+                            break;
+
+                        default:
+                            $badge = 'bg-label-secondary';
+                            $text = ucfirst($row->status);
+                            break;
+                    }
+
+                    return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
+                })
+                ->addColumn('cekbok', function ($row) {
+
+                    if (
+                        auth()->user()->can('sales_order-delete') &&
+                        $row->status === 'draft'
+                    ) {
+                        return '
+                            <div class="form-check form-check-primary">
+                                <input class="form-check-input checkItem"
+                                    type="checkbox"
+                                    value="'.$row->id.'">
+                            </div>
+                        ';
+                    }
+
+                    return '';
+                })
+                ->addColumn('total', function ($row) {
+                    // 1. Hitung total kotor (sum amount) dari detail item PO
+                    $subTotal = SalesOrderDetail::where('sales_order_id', $row->id)
+                        ->where('active', 1)
+                        ->sum('amount');
+
+                    // 2. Hitung grand total: Subtotal dikurangi diskon nominal yang ada di tabel induk ($row)
+                    // Gunakan ?? 0 jika kolom disc_nominal di database bisa bernilai null
+                    $grandTotal = $subTotal - ($row->disc_nominal ?? 0);
+
+                    // 3. Kembalikan nilai yang sudah dikonversi dan diformat
+                    return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '<div class="btn-group">
+                      <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ti ti-menu-2 ti-xs me-1"></i>
+                      </button>
+                      <ul class="dropdown-menu" style="">';
+
+                    if (auth()->user()->can('purchase_order-restore')) {
+                        $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
+                            data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
+                    }
+
+                    return $btn;
+                })
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_order_date', 'total', 'customer'])
+                ->make(true);
+        }
+
+        $x = [
+            'title' => 'Deleted Sales Order List',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Deleted Sales Order', 'url' => ''],
+            ],
+        ];
+
+        return view('sales.salesOrder.sales_order_trash', $x);
+    }
+
+    public function deleteMultiple(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $ids = $request->ids;
+
+            if (! $ids || count($ids) == 0) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada data yang dipilih.'], 400);
+            }
+
+            // 1. Ambil semua detail dari PO yang akan dihapus untuk sinkronisasi PR
+            $sqDetails = SalesOrderDetail::whereIn('sales_order_id', $ids)->get();
+            $involvedPrIds = [];
+
+            // 2. Tandai PO dan Detail PO sebagai tidak aktif (active = 0)
+            SalesOrder::whereIn('id', $ids)->update([
+                'active' => 0,
+                'updated_by' => Auth::id(),
+            ]);
+            SalesOrderDetail::whereIn('sales_order_id', $ids)->update(['active' => 0]);
+
+            // 3. Update sq_qty di PR Detail dan kumpulkan ID PR Master
+            foreach ($sqDetails as $sqDetail) {
+                if ($sqDetail->sales_quotation_detail_id) {
+                    // Hitung total dari PO yang tersisa (yang masih aktif)
+                    $totalRemainingPo = SalesOrderDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
+                        ->where('active', 1)
+                        ->sum('qty');
+
+                    // Update ke tabel PR Detail
+                    DB::table('sales_quotation_detail_'.date('Y'))
+                        ->where('id', $sqDetail->sales_quotation_detail_id)
+                        ->update(['sq_qty' => $totalRemainingPo]);
+
+                    // Simpan ID PR untuk update status nanti
+                    $prDetail = DB::table('sales_quotation_detail_'.date('Y'))
+                        ->where('id', $sqDetail->sales_quotation_detail_id)
+                        ->first();
+
+                    if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
+                        $involvedPrIds[] = $prDetail->sales_quotation_id;
+                    }
+                }
+            }
+
+            // 4. Update Status PR Master berdasarkan akumulasi terbaru
+            foreach ($involvedPrIds as $prId) {
+                $allDetails = DB::table('sales_quotation_detail_'.date('Y'))
+                    ->where('sales_quotation_id', $prId)
+                    ->get();
+
+                $totalRequested = $allDetails->sum('qty');
+                $totalOrdered = $allDetails->sum('sq_qty');
+
+                if ($totalOrdered >= $totalRequested) {
+                    $status = 'closed';
+                } elseif ($totalOrdered > 0) {
+                    $status = 'partial';
+                } else {
+                    $status = 'processing';
+                }
+
+                DB::table('sales_quotation_'.date('Y'))
+                    ->where('id', $prId)
+                    ->update(['status' => $status]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sales Order berhasil dihapus dan status PR telah diperbarui.',
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus data: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+      public function restore($id)
+    {
+        DB::beginTransaction();
+
+        try {
+            // 1. Aktifkan kembali PO
+            $po = SalesOrder::findOrFail($id);
+            $po->update(['active' => 1, 'updated_by' => Auth::id()]);
+
+            // 2. Aktifkan kembali Detail PO
+            SalesOrderDetail::where('sales_order_id', $po->id)->update(['active' => 1]);
+
+            // 3. Ambil semua detail PO yang baru saja diaktifkan
+            $poDetails = SalesOrderDetail::where('sales_order_id', $po->id)->get();
+            $involvedPrIds = [];
+
+            // 4. Update ulang sq_qty di PR Detail
+            foreach ($poDetails as $poDetail) {
+                if ($poDetail->sales_quotation_detail_id) {
+                    // Hitung total dari semua PO yang aktif
+                    $totalPoForThisItem = SalesOrderDetail::where('sales_quotation_detail_id', $poDetail->sales_quotation_detail_id)
+                        ->where('active', 1)
+                        ->sum('qty');
+
+                    // Update ke tabel PR Detail
+                    DB::table('sales_quotation_detail_'.date('Y'))
+                        ->where('id', $poDetail->sales_quotation_detail_id)
+                        ->update(['sq_qty' => $totalPoForThisItem]);
+
+                    // Simpan ID PR untuk update status
+                    $prDetail = DB::table('sales_quotation_detail_'.date('Y'))
+                        ->where('id', $poDetail->sales_quotation_detail_id)
+                        ->first();
+
+                    if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
+                        $involvedPrIds[] = $prDetail->sales_quotation_id;
+                    }
+                }
+            }
+
+            // 5. Update Status PR Master
+            foreach ($involvedPrIds as $prId) {
+                $allDetails = DB::table('sales_quotation_detail_'.date('Y'))
+                    ->where('sales_quotation_id', $prId)
+                    ->get();
+
+                $totalRequested = $allDetails->sum('qty');
+                $totalOrdered = $allDetails->sum('sq_qty');
+
+                if ($totalOrdered >= $totalRequested) {
+                    $status = 'closed';
+                } elseif ($totalOrdered > 0) {
+                    $status = 'partial';
+                } else {
+                    $status = 'processing';
+                }
+
+                DB::table('sales_quotation_'.date('Y'))
+                    ->where('id', $prId)
+                    ->update(['status' => $status]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sales Order berhasil dikembalikan (restored).',
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal merestore data: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function restoreMultiple(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $ids = $request->ids;
+
+            if (! $ids || count($ids) == 0) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada data yang dipilih.'], 400);
+            }
+
+            // 1. Update status PO jadi aktif
+            SalesOrder::whereIn('id', $ids)->update([
+                'active' => 1,
+                'updated_by' => Auth::id(),
+            ]);
+
+            // 2. Aktifkan kembali semua detail PO yang berkaitan dengan PO-PO tersebut
+            SalesOrderDetail::whereIn('sales_order_id', $ids)->update(['active' => 1]);
+
+            // 3. Ambil semua detail PO yang baru saja diaktifkan untuk sinkronisasi
+            $poDetails = SalesOrderDetail::whereIn('sales_order_id', $ids)->get();
+            $involvedPrIds = [];
+
+            // 4. Update sq_qty di PR Detail dan kumpulkan ID PR Master
+            foreach ($poDetails as $poDetail) {
+                if ($poDetail->sales_quotation_detail_id) {
+                    // Hitung total dari semua PO yang aktif
+                    $totalPoForThisItem = SalesOrderDetail::where('sales_quotation_detail_id', $poDetail->sales_quotation_detail_id)
+                        ->where('active', 1)
+                        ->sum('qty');
+
+                    // Update ke tabel PR Detail
+                    DB::table('sales_quotation_detail_'.date('Y'))
+                        ->where('id', $poDetail->sales_quotation_detail_id)
+                        ->update(['sq_qty' => $totalPoForThisItem]);
+
+                    // Simpan ID PR untuk update status nanti (hindari duplikat)
+                    $prDetail = DB::table('sales_quotation_detail_'.date('Y'))
+                        ->where('id', $poDetail->sales_quotation_detail_id)
+                        ->first();
+
+                    if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
+                        $involvedPrIds[] = $prDetail->sales_quotation_id;
+                    }
+                }
+            }
+
+            // 5. Update Status PR Master berdasarkan akumulasi terbaru
+            foreach ($involvedPrIds as $prId) {
+                $allDetails = DB::table('sales_quotation_detail_'.date('Y'))
+                    ->where('sales_quotation_id', $prId)
+                    ->get();
+
+                $totalRequested = $allDetails->sum('qty');
+                $totalOrdered = $allDetails->sum('sq_qty');
+
+                if ($totalOrdered >= $totalRequested) {
+                    $status = 'closed';
+                } elseif ($totalOrdered > 0) {
+                    $status = 'partial';
+                } else {
+                    $status = 'processing';
+                }
+
+                DB::table('sales_quotation_'.date('Y'))
+                    ->where('id', $prId)
+                    ->update(['status' => $status]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sales Order terpilih berhasil dikembalikan.',
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal merestore data: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getProcessingData(Request $request)
+    {
+        $orders = SalesQuotation::with([
+            'details' => function ($query) {
+                $query->whereColumn('sq_qty', '<', 'qty');
+            },
+        ])
+            ->where('customer_id', $request->customer_id)
             ->whereNotIn('status', ['draft', 'closed', 'done'])
             ->get();
 
@@ -484,6 +951,73 @@ class SalesOrderController extends Controller
         return response()->json([
             'success' => true,
             'history' => $history,
+        ]);
+    }
+
+    public function getQuotationDetail(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data SQ yang dipilih.',
+                'data' => [],
+            ]);
+        }
+
+        $details = SalesQuotationDetail::with([
+            'produkID',
+            'unitID',
+            'quotation',
+        ])
+            ->whereIn('sales_quotation_id', $ids)
+            ->where('active', 1)
+            ->whereHas('quotation', function ($q) {
+                $q->whereIn('status', ['processing', 'partial']);
+            })
+            ->get();
+
+        $formattedData = $details->map(function ($item) {
+
+            return [
+                'id' => $item->id,
+
+                // relasi PR
+                'sales_quotation_detail_id' => $item->id,
+                'sales_quotation_id' => $item->sales_quotation_id,
+
+                // produk
+                'product_id' => $item->product_id,
+                'product_name' => $item->produkID->nama_barang ?? '',
+                'data_produk' => $item->produkID->nama_barang ?? '',
+
+                // qty langsung dari PR
+                'quantity' => (float) $item->qty,
+                'qty' => (float) $item->qty,
+
+                // unit
+                'unit_id' => $item->unit_id,
+                'unit' => $item->unitID->detail ?? '',
+                'unit_name' => $item->unitID->detail ?? '',
+
+                // harga default
+                'unit_price' => $item->unit_price,
+                'discount' => $item->discount,
+                'amount' => $item->amount,
+                'tax' => 0,
+
+                // informasi SQ
+                'quotation_code' => $item->quotation->sales_quotation_code ?? '',
+                // hanya status
+                'quotation_status' => $item->quotation->status ?? '',
+
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $formattedData,
         ]);
     }
 }

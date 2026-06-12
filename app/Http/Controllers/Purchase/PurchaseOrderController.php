@@ -17,7 +17,6 @@ use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
-use Dotenv\Exception\ValidationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -199,6 +198,7 @@ class PurchaseOrderController extends Controller
 
                     // 3. Kembalikan nilai yang sudah dikonversi dan diformat
                     $selectedCurrencyId = session('currency_id', 1); // Ambil dari session, default 1 (IDR)
+
                     return format_uang(convert_currency($grandTotal, $selectedCurrencyId));
                 })
                 ->addColumn('supplier', function ($row) {
@@ -898,7 +898,6 @@ class PurchaseOrderController extends Controller
                 'disc_nominal' => $request->discount_all,
                 'grand_total' => $request->total_order,
 
-
                 'updated_by' => Auth::id(),
             ]);
 
@@ -1112,21 +1111,6 @@ class PurchaseOrderController extends Controller
         }
     }
 
-    // public function destroy(Request $request, $id)
-    // {
-
-    //     try {
-    //         $table = PurchaseOrder::findOrFail($id);
-    //         $table->active = 0;
-    //         $table->updated_by = Auth::user()->id;
-    //         $table->save();
-    //     } catch (ValidationException $e) {
-    //         return response()->json([
-    //             'errors' => $e->errors(),
-    //         ], 422);
-    //     }
-    // }
-
     public function destroy(Request $request, $id)
     {
         DB::beginTransaction();
@@ -1279,7 +1263,7 @@ class PurchaseOrderController extends Controller
             <span class="badge '.$badge.' text-uppercase">
                 '.$text.'
             </span>
-    ';
+        ';
 
                     // APPROVED INFO
                     if ($row->status == 'approved' && $row->approvedBy) {
@@ -1460,8 +1444,6 @@ class PurchaseOrderController extends Controller
             ], 500);
         }
     }
-
-   
 
     public function restore($id)
     {

@@ -1,4 +1,4 @@
-<div class="modal fade" id="modalOrderDetail">
+<div class="modal fade" id="modalQuotationDetail">
     <div class="modal-dialog modal-md">
         <div class="modal-content">
             <div class="modal-header">
@@ -18,7 +18,7 @@
                             <th>Date</th>
                         </tr>
                     </thead>
-                    <tbody id="requisitionTableBody">
+                    <tbody id="quotationTableBody">
                     </tbody>
                 </table>
             </div>
