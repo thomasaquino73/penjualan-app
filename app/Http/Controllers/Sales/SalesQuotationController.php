@@ -114,7 +114,7 @@ class SalesQuotationController extends Controller
                             break;
 
                         case 'closed':
-                            $badge = 'bg-success';
+                            $badge = 'bg-dark';
                             $text = 'Closed';
                             break;
 
@@ -204,10 +204,11 @@ class SalesQuotationController extends Controller
                      </a>';
                     }
 
-                    if ($row->status == 'closed') {
-                        $btn .= '<span class="dropdown-item-text text-success small">
-                    <i class="ti ti-circle-check me-1"></i> Closed
-                 </span>';
+                    if ($row->status != 'closed') {
+                       $btn .= '<a class="dropdown-item"
+                href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->sales_quotation_code.'">
+                <i class="ti ti-lock"></i> Close SQ
+             </a>';
                     }
                     $btn .= '<a class="dropdown-item"
                             href="'.route('sales-quotation.show', $row->id).'">
@@ -838,5 +839,19 @@ class SalesQuotationController extends Controller
 
         // kalau mau download:
         // return $pdf->download('sales-quotation.pdf');
+    }
+        public function CloseDocument(Request $request, $id)
+    {
+
+        try {
+            $table = SalesQuotation::findOrFail($id);
+            $table->status = 'closed';
+            $table->updated_by = Auth::user()->id;
+            $table->save();
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => $e->errors(),
+            ], 422);
+        }
     }
 }

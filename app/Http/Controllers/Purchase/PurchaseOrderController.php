@@ -17,6 +17,7 @@ use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Dotenv\Exception\ValidationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -128,6 +129,10 @@ class PurchaseOrderController extends Controller
                         case 'cancelled':
                             $badge = 'bg-danger';
                             $text = 'Cancelled';
+                            break;
+                        case 'closed':
+                            $badge = 'bg-dark';
+                            $text = 'Closed';
                             break;
 
                         default:
@@ -398,7 +403,12 @@ class PurchaseOrderController extends Controller
             </a>
         ';
                     }
-
+  if ($row->status != 'closed') {
+                        $btn .= '<a class="dropdown-item"
+                href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->code.'">
+                <i class="ti ti-lock"></i> Close PO
+             </a>';
+                    }
                     /*
                     |--------------------------------------------------------------------------
                     | 7. PRINT
@@ -1779,5 +1789,19 @@ class PurchaseOrderController extends Controller
             'success' => true,
             'data' => $formattedData,
         ]);
+    }
+    public function CloseDocument(Request $request, $id)
+    {
+
+        try {
+            $table = PurchaseOrder::findOrFail($id);
+            $table->status = 'closed';
+            $table->updated_by = Auth::user()->id;
+            $table->save();
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => $e->errors(),
+            ], 422);
+        }
     }
 }

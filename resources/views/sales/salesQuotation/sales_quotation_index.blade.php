@@ -389,6 +389,66 @@
                 });
             });
 
+            $('body').on('click', '#close', function() {
+                let id = $(this).data('id');
+                let name = $(this).data('name');
+                let token = $("meta[name='csrf-token']").attr("content");
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Want to close data: " + name,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, close it!',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                    },
+                    buttonsStyling: false
+                }).then(function(result) {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `/sales-quotation/${id}/close`,
+                            type: "PATCH",
+                            cache: false,
+                            data: {
+                                _token: token
+                            },
+                            success: function(response) {
+                                table.draw();
+                                toastr.success('Closed Data Successfully', '', {
+                                    timeOut: 1500,
+                                    progressBar: true,
+                                    closeButton: false,
+                                    positionClass: 'toast-top-right',
+                                });
+                            },
+                            error: function(jqXHR, textStatus, errorThrown) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Failed to delete',
+                                    text: 'An error occurred. Please try again later.',
+                                    timer: 5000,
+                                    customClass: {
+                                        confirmButton: 'btn btn-info waves-effect waves-light'
+                                    }
+                                });
+                            }
+                        });
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Cancelled',
+                            text: 'Your data is safe.',
+                            customClass: {
+                                confirmButton: 'btn btn-info waves-effect waves-light'
+                            }
+                        });
+                    }
+                });
+            });
+
             // filter
             $('#selectStatus').on('change', function() {
                 table.ajax.reload();

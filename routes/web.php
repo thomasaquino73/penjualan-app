@@ -222,14 +222,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/get-units-by-product/{id}', [PurchaseRequisitionController::class, 'getUnitsByProduct'])
         ->name('permintaan-pembelian.get_units');
     Route::post('/permintaan-pembelian/{id}/submit', [PurchaseRequisitionController::class, 'submitToPending'])->name('permintaan-pembelian.submit');
+    Route::patch('/permintaan-pembelian/{id}/close', [PurchaseRequisitionController::class, 'CloseDocument'])->name('permintaan-pembelian.close');
     Route::get('/permintaan-pembelian/print/{id}', [PurchaseRequisitionController::class, 'print'])->name('permintaan-pembelian.print');
     Route::resource('permintaan-pembelian', PurchaseRequisitionController::class);
 
     Route::prefix('purchase-order')->name('purchase-order.')->group(function () {
+        Route::patch('/{id}/close', [PurchaseOrderController::class, 'CloseDocument'])->name('close');
         Route::get('/trash', [PurchaseOrderController::class, 'trash'])->name('trash');
         Route::post('/delete-multiple', [PurchaseOrderController::class, 'deleteMultiple']);
         Route::post('/restore-multiple', [PurchaseOrderController::class, 'restoreMultiple']);
-        Route::put('/restore/{id}', [PurchaseOrderController::class, 'restore'])->name('purchase-order.restore');
+        Route::put('/restore/{id}', [PurchaseOrderController::class, 'restore'])->name('restore');
         Route::get('/get-product-price/{id}', [PurchaseOrderController::class, 'getPrice']);
         Route::get('/table-pr', [PurchaseOrderController::class, 'table_pr'])->name('table_pr');
         Route::get('/trash', [PurchaseOrderController::class, 'trash'])->name('trash');
@@ -246,6 +248,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('receive-item')->name('receive-item.')->group(function () {
         Route::resource('', ReceiveItemController::class)->parameters(['' => 'receive_item']);
     });
+    Route::patch('/sales-order/{id}/close', [SalesOrderController::class, 'CloseDocument'])->name('sales-order.close');
     Route::post('/sales-order/send-supplier/{id}', [SalesOrderController::class, 'sendSupplier'])->name('sales-order.send-supplier');
     Route::post('/sales-order/change-status/{id}', [SalesOrderController::class, 'changeStatus']);
     Route::post('/sales-order/restore-multiple', [SalesOrderController::class, 'restoreMultiple']);
@@ -259,6 +262,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/sales-order/{id}/submit', [SalesOrderController::class, 'submitToPending'])->name('sales-order.submit');
     Route::resource('sales-order', SalesOrderController::class);
 
+    Route::patch('/sales-quotation/{id}/close', [SalesQuotationController::class, 'CloseDocument'])->name('sales-quotation.close');
     Route::get('/sales-quotation/print/{id}', [SalesQuotationController::class, 'print'])->name('sales-quotation.print');
     Route::get('/get-kontak/{customer_id}', [SalesQuotationController::class, 'getKontakByCustomer']);
     Route::get('/sales-quotation/sq/price-history', [SalesQuotationController::class, 'getPriceHistory']);

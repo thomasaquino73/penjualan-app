@@ -20,6 +20,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\Facades\DataTables;
 
 class SalesOrderController extends Controller
@@ -138,6 +139,10 @@ class SalesOrderController extends Controller
                         case 'cancelled':
                             $badge = 'bg-danger';
                             $text = 'Cancelled';
+                            break;
+                        case 'closed':
+                            $badge = 'bg-dark';
+                            $text = 'Closed';
                             break;
 
                         default:
@@ -397,7 +402,12 @@ class SalesOrderController extends Controller
             </a>
         ';
                     }
-
+  if ($row->status != 'closed') {
+                       $btn .= '<a class="dropdown-item"
+                href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->sales_order_code.'">
+                <i class="ti ti-lock"></i> Close SO
+             </a>';
+                    }
                     /*
                     |--------------------------------------------------------------------------
                     | 7. PRINT
@@ -1559,5 +1569,19 @@ class SalesOrderController extends Controller
 
         // kalau mau download:
         // return $pdf->download('sales-order.pdf');
+    }
+        public function CloseDocument(Request $request, $id)
+    {
+
+        try {
+            $table = SalesOrder::findOrFail($id);
+            $table->status = 'closed';
+            $table->updated_by = Auth::user()->id;
+            $table->save();
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => $e->errors(),
+            ], 422);
+        }
     }
 }

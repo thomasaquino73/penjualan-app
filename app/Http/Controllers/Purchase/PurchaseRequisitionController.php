@@ -110,7 +110,7 @@ class PurchaseRequisitionController extends Controller
                             break;
 
                         case 'closed':
-                            $badge = 'bg-success';
+                            $badge = 'bg-dark';
                             $text = 'Closed';
                             break;
 
@@ -187,11 +187,13 @@ class PurchaseRequisitionController extends Controller
                      </a>';
                     }
 
-                    if ($row->status == 'closed') {
-                        $btn .= '<span class="dropdown-item-text text-success small">
-                    <i class="ti ti-circle-check me-1"></i> Closed
-                 </span>';
+                    if ($row->status != 'closed') {
+                        $btn .= '<a class="dropdown-item"
+                href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->code.'">
+                <i class="ti ti-lock"></i> Close PR
+             </a>';
                     }
+
                     $btn .= '<a class="dropdown-item"
                 href="'.route('permintaan-pembelian.show', $row->id).'">
                 <i class="ti ti-list-details"></i> Detail
@@ -841,5 +843,19 @@ class PurchaseRequisitionController extends Controller
         $fileName = str_replace('/', '-', $detail->code).'.pdf';
 
         return $pdf->download($fileName);
+    }
+    public function CloseDocument(Request $request, $id)
+    {
+
+        try {
+            $table = PurchaseRequisition::findOrFail($id);
+            $table->status = 'closed';
+            $table->updated_by = Auth::user()->id;
+            $table->save();
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => $e->errors(),
+            ], 422);
+        }
     }
 }
