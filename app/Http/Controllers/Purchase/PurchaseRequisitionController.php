@@ -789,46 +789,46 @@ class PurchaseRequisitionController extends Controller
         }
 
         // Context SSL agar file_get_contents tidak error saat menembak API QR Code secara HTTPS
-        $qrContext = stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+        // $qrContext = stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
 
         // 2. LOGIKA QR CODE PEMBUAT (CREATED BY) - Selalu Muncul
-        $creatorName = $detail->creator->fullname ?? 'Staff Purchasing';
-        $creatorText = "DOCUMENT VALIDATION\n"
-                      ."Status: DIGITALLY SIGNED & CREATED\n"
-                      .'Doc Number: '.$detail->code."\n"
-                      .'Created By: '.$creatorName."\n"
-                      .'Date: '.($detail->date ?? date('Y-m-d'));
+        // $creatorName = $detail->creator->fullname ?? 'Staff Purchasing';
+        // $creatorText = "DOCUMENT VALIDATION\n"
+        //               ."Status: DIGITALLY SIGNED & CREATED\n"
+        //               .'Doc Number: '.$detail->code."\n"
+        //               .'Created By: '.$creatorName."\n"
+        //               .'Date: '.($detail->date ?? date('Y-m-d'));
 
-        $qrCreatorUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='.urlencode($creatorText);
+        // $qrCreatorUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='.urlencode($creatorText);
 
-        try {
-            $qrCreatorData = file_get_contents($qrCreatorUrl, false, $qrContext);
-            $qrCodeBase64 = 'data:image/png;base64,'.base64_encode($qrCreatorData);
-        } catch (\Exception $e) {
-            $qrCodeBase64 = null;
-        }
+        // try {
+        //     $qrCreatorData = file_get_contents($qrCreatorUrl, false, $qrContext);
+        //     $qrCodeBase64 = 'data:image/png;base64,'.base64_encode($qrCreatorData);
+        // } catch (\Exception $e) {
+        //     $qrCodeBase64 = null;
+        // }
 
         // 3. LOGIKA QR CODE APPROVER (APPROVED BY) - Hanya jika status sudah disetujui
-        $qrApprovalBase64 = null;
-        $approvedStatuses = ['processing', 'rejected'];
+        // $qrApprovalBase64 = null;
+        // $approvedStatuses = ['processing', 'rejected'];
 
-        if (in_array($detail->status, $approvedStatuses)) {
-            $updaterName = $detail->updater->fullname ?? 'Manager Purchasing';
-            $approvalText = "DOCUMENT VALIDATION\n"
-                          ."Status: DIGITALLY VERIFIED & APPROVED\n"
-                          .'Doc Number: '.$detail->code."\n"
-                          .'Approved By: '.$updaterName."\n"
-                          .'Approve Date: '.($detail->updated_at ? $detail->updated_at->format('Y-m-d H:i') : date('Y-m-d H:i'));
+        // if (in_array($detail->status, $approvedStatuses)) {
+        //     $updaterName = $detail->updater->fullname ?? 'Manager Purchasing';
+        //     $approvalText = "DOCUMENT VALIDATION\n"
+        //                   ."Status: DIGITALLY VERIFIED & APPROVED\n"
+        //                   .'Doc Number: '.$detail->code."\n"
+        //                   .'Approved By: '.$updaterName."\n"
+        //                   .'Approve Date: '.($detail->updated_at ? $detail->updated_at->format('Y-m-d H:i') : date('Y-m-d H:i'));
 
-            $qrApprovalUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='.urlencode($approvalText);
+        //     $qrApprovalUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='.urlencode($approvalText);
 
-            try {
-                $qrApprovalData = file_get_contents($qrApprovalUrl, false, $qrContext);
-                $qrApprovalBase64 = 'data:image/png;base64,'.base64_encode($qrApprovalData);
-            } catch (\Exception $e) {
-                $qrApprovalBase64 = null;
-            }
-        }
+        //     try {
+        //         $qrApprovalData = file_get_contents($qrApprovalUrl, false, $qrContext);
+        //         $qrApprovalBase64 = 'data:image/png;base64,'.base64_encode($qrApprovalData);
+        //     } catch (\Exception $e) {
+        //         $qrApprovalBase64 = null;
+        //     }
+        // }
 
         // 4. GENERATE PDF (Kirimkan variabel qrCodeBase64 dan qrApprovalBase64 ke view)
         $pdf = Pdf::loadView('pdf.purchase_requisition_pdf', compact('detail', 'company', 'logoBase64', 'qrCodeBase64', 'qrApprovalBase64'))

@@ -1461,33 +1461,7 @@ class PurchaseOrderController extends Controller
         }
     }
 
-    // public function restore($id)
-    // {
-    //     DB::beginTransaction();
-
-    //     try {
-    //         $permintaanpembelian = PurchaseOrder::find($id);
-    //         $permintaanpembelian->active = 1;
-    //         $permintaanpembelian->updated_by = Auth::id();
-    //         $permintaanpembelian->save();
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'redirect' => true,
-    //             'message' => 'Purchase order successfully restored.',
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'redirect' => true,
-    //             'message' => 'Purchase order successfully restored.',
-    //         ]);
-    //     }
-    // }
+   
 
     public function restore($id)
     {

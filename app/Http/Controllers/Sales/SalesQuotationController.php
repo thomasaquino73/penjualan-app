@@ -12,6 +12,7 @@ use App\Models\Setting\Company;
 use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
 use App\Notifications\SalesQuotationNotification;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -803,8 +804,39 @@ class SalesQuotationController extends Controller
         return response()->json(['success' => true, 'message' => 'Sales Quotation berhasil diproses!']);
     }
 
-    public function print(string $id)
+     public function print($id)
     {
-        //
+        $SalesQuotation = SalesQuotation::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $company = Company::first();
+        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+        $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+            }
+        }
+        $data = [
+            'model' => $SalesQuotation,
+            'company' => $company,
+            'modelDetail' => $SalesQuotation->details,
+            'logoBase64' => $logoBase64,
+        ];
+
+        $pdf = Pdf::loadView('pdf.sales_quotation_pdf', $data)
+            ->setPaper('a4', 'portrait');
+
+        // preview di browser
+        $filename = $SalesQuotation->sales_quotation_code.'-'.$SalesQuotation->customerID->nama_customer;
+
+        // replace forbidden filename chars
+        $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
+
+        return $pdf->stream($filename.'.pdf');
+
+        // kalau mau download:
+        // return $pdf->download('sales-quotation.pdf');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models\Sales;
 
+use App\Models\Sales\SalesOrderDetail;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,6 +40,6 @@ class SalesOrder extends Model
 
     public function details()
     {
-        return $this->hasMany(SalesQuotationDetail::class, 'sales_order_id');
+        return $this->hasMany(SalesOrderDetail::class, 'sales_order_id');
     }
 }

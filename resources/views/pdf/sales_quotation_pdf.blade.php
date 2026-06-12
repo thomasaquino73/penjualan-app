@@ -291,30 +291,30 @@
             <td style="padding-right: 25px;">
                 <div class="section-title">Kepada</div>
                 <div class="recipient-box">
-                    <strong>{{ $model->supplier->nama_supplier }}</strong><br>
+                    <strong>{{ $model->customerID->nama_customer }}</strong><br>
                     {{ $model->shipping_address }}
 
                 </div>
             </td>
             <td style="padding-left: 25px;">
-                <div class="po-box-title">Purchase Order</div>
+                <div class="po-box-title">Sales Quotation</div>
                 <table class="po-details-table">
                     <tr>
                         <td class="label">Nomor</td>
                         <td class="colon">:</td>
-                        <td class="value">{{ $model->code }}</td>
+                        <td class="value">{{ $model->sales_quotation_code }}</td>
                     </tr>
                     <tr>
                         <td class="label">Tanggal</td>
                         <td class="colon">:</td>
                         <td class="value">
-                            {{ date('d M Y', strtotime($model->date)) }}</td>
+                            {{ date('d M Y', strtotime($model->sales_quotation_date)) }}</td>
                     </tr>
                     <tr>
-                        <td class="label">Tanggal Kirim</td>
+                        <td class="label">Pembayaran</td>
                         <td class="colon">:</td>
                         <td class="value">
-                            {{ isset($model->tanggal_kirim) ? date('d M Y', strtotime($model->tanggal_kirim)) : '' }}
+                            {{ $model->paymentTermID ? $model->paymentTermID->nama : '-' }}
                         </td>
                     </tr>
                 </table>
