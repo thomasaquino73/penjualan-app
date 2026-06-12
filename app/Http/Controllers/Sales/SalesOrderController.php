@@ -504,6 +504,7 @@ class SalesOrderController extends Controller
         return view('sales.salesOrder.sales_order_create', $x);
     }
 
+
     public function store(SalesOrderRequest $request)
     {
         DB::beginTransaction();
@@ -514,26 +515,14 @@ class SalesOrderController extends Controller
             $itemsDetailRaw = $request->input('items_detail');
             unset($data['items_detail']);
 
-            $syaratPembayaran = SyaratPembayaran::find($request->payment_term);
-
+            // Persiapan data header Sales Order
             $data['created_by'] = Auth::id();
-            $data['updated_by'] = null;
             $data['sales_order_date'] = Carbon::parse($request->sales_order_date)->format('Y-m-d');
-            $data['salesman_id'] = $request->salesman_id;
-            $data['customer_contact_id'] = $request->customer_contact_id;
-            $data['sub_total'] = $request->sub_total;
-            $data['disc_percent'] = $request->percent;
-            $data['disc_nominal'] = $request->discount_all;
-            $data['grand_total'] = $request->total_order;
-            $data['payment_term_id'] = $request->payment_term_id;
+            $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
             $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
             $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
-            $data['address'] = $request->address;
-            $data['description'] = $request->description;
-            $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
-            $data['jenis_pengiriman'] = $request->jenis_pengiriman;
-            $data['fob_id'] = $request->fob_id;
-
+            
+            // Generate kode SO
             do {
                 $generatedCode = $this->generateNumberId();
                 $exists = SalesOrder::where('sales_order_code', $generatedCode)->exists();
@@ -544,62 +533,68 @@ class SalesOrderController extends Controller
 
             if ($itemsDetailRaw) {
                 $items = json_decode($itemsDetailRaw, true);
-                $involvedPrIds = [];
+                $involvedSqIds = [];
 
                 if (is_array($items) && count($items) > 0) {
                     foreach ($items as $item) {
-                        $sqDetailId = $item['sales_quotation_detail_id'] ?? $item['pr_detail_id'] ?? $item['detail_id'] ?? null;
+                        $sqDetailId = $item['sales_quotation_detail_id'] ?? $item['detail_id'] ?? null;
                         $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
                         $unitPrice = floatval($item['unit_price'] ?? 0);
                         $discount = floatval($item['discount'] ?? 0);
                         $amount = ($qtyInputForm * $unitPrice) - $discount;
 
-                        SalesOrderDetail::create([
-                            'sales_order_id' => $salesOrder->id,
+                        // 1. Simpan ke Sales Order Detail
+                        $soDetail = SalesOrderDetail::create([
+                            'sales_order_id'            => $salesOrder->id,
                             'sales_quotation_detail_id' => $sqDetailId,
-                            'product_id' => $item['product_id'],
-                            'qty' => $qtyInputForm,
-                            'unit_id' => $item['unit_id'],
-                            'unit_price' => $unitPrice,
-                            'discount' => $discount,
-                            'amount' => $item['amount'] ?? $amount,
-                            'active' => 1,
-                            'created_by' => Auth::id(),
-                            'created_at' => now(),
-                            'updated_at' => now(),
+                            'product_id'                => $item['product_id'],
+                            'qty'                       => $qtyInputForm,
+                            'unit_id'                   => $item['unit_id'],
+                            'unit_price'                => $unitPrice,
+                            'discount'                  => $discount,
+                            'amount'                    => $item['amount'] ?? $amount,
+                            'sq_qty'                    => $qtyInputForm, // Sinkronisasi: sq_qty di SO = qty SO
+                            'outstanding_qty'           => 0, // Karena SO adalah tahap akhir, outstanding di SO biasanya 0
+                            'status'                    => 'open',
+                            'active'                    => 1,
+                            'created_by'                => Auth::id(),
                         ]);
-                        // --- LOGIKA SINKRONISASI SO KE PR ---
-                        if ($sqDetailId) {
-                            $prDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
 
-                            if ($prDetail) {
-                                // Hitung ulang total qty yang sudah di-SO kan untuk PR detail ini
-                                $totalPoForThisItem = SalesOrderDetail::where('sales_quotation_detail_id', $sqDetailId)
+                        // 2. Sinkronisasi ke Sales Quotation Detail (PR)
+                        if ($sqDetailId) {
+                            $sqDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
+
+                            if ($sqDetail) {
+                                // Hitung total akumulasi qty yang sudah masuk SO untuk item ini
+                                $totalSoForThisItem = SalesOrderDetail::where('sales_quotation_detail_id', $sqDetailId)
                                     ->where('active', 1)
                                     ->sum('qty');
 
-                                // Update sq_qty di tabel PR Detail
+                                // Update sq_qty dan outstanding_qty di SQ Detail
+                                $newOutstanding = max(0, ($sqDetail->qty - $totalSoForThisItem));
+
                                 DB::table("sales_quotation_detail_{$currentYear}")
                                     ->where('id', $sqDetailId)
-                                    ->update(['sq_qty' => $totalPoForThisItem]);
+                                    ->update([
+                                        'sq_qty'          => $totalSoForThisItem,
+                                        'outstanding_qty' => $newOutstanding
+                                    ]);
 
-                                // Catat ID PR Master agar statusnya bisa dihitung ulang nanti
-                                if (! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
-                                    $involvedPrIds[] = $prDetail->sales_quotation_id;
+                                if (!in_array($sqDetail->sales_quotation_id, $involvedSqIds)) {
+                                    $involvedSqIds[] = $sqDetail->sales_quotation_id;
                                 }
                             }
                         }
-
                     }
 
-                    // --- OTOMASI STATUS PR MASTER ---
-                    foreach ($involvedPrIds as $prId) {
+                    // 3. Otomasi status Sales Quotation Master
+                    foreach ($involvedSqIds as $sqId) {
                         $allDetails = DB::table("sales_quotation_detail_{$currentYear}")
-                            ->where('sales_quotation_id', $prId)
+                            ->where('sales_quotation_id', $sqId)
                             ->get();
 
                         $totalRequested = $allDetails->sum('qty');
-                        $totalOrdered = $allDetails->sum('sq_qty');
+                        $totalOrdered   = $allDetails->sum('sq_qty');
 
                         if ($totalOrdered >= $totalRequested) {
                             $newStatus = 'closed';
@@ -610,7 +605,7 @@ class SalesOrderController extends Controller
                         }
 
                         DB::table("sales_quotation_{$currentYear}")
-                            ->where('id', $prId)
+                            ->where('id', $sqId)
                             ->update(['status' => $newStatus]);
                     }
                 }
@@ -620,16 +615,15 @@ class SalesOrderController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Sales Order '.$generatedCode.' berhasil disimpan.',
+                'message' => 'Sales Order ' . $generatedCode . ' berhasil disimpan.',
                 'redirect' => route('sales-order.index'),
             ], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();
-
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal menyimpan data: '.$e->getMessage(),
+                'message' => 'Gagal menyimpan data: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -735,7 +729,6 @@ class SalesOrderController extends Controller
 
     public function update(SalesOrderRequest $request, $id)
     {
-        // Mengambil data yang sudah divalidasi
         $validated = $request->validated();
         
         DB::beginTransaction();
@@ -743,13 +736,13 @@ class SalesOrderController extends Controller
         try {
             $currentYear = date('Y');
             
-            // Cek data master
+            // 1. Cek data master
             $salesOrder = DB::table("sales_order_{$currentYear}")->where('id', $id)->first();
             if (!$salesOrder) {
                 throw new \Exception("Sales Order tidak ditemukan.");
             }
 
-            // 1. UPDATE MASTER
+            // 2. UPDATE MASTER
             SalesOrder::where('id', $id)->update([
                 'customer_id'          => $request->customer_id,
                 'sales_order_code'     => $request->sales_order_code,
@@ -770,29 +763,31 @@ class SalesOrderController extends Controller
                 'updated_at'           => now(),
             ]);
 
-            // 2. DECODE ITEMS
+            // 3. DECODE ITEMS
             $items = json_decode($request->items_detail, true);
             if (!is_array($items) || count($items) == 0) {
                 throw new \Exception('Detail item tidak boleh kosong.');
             }
 
-            // 3. REVERT QTY LAMA
+            // 4. REVERT QTY LAMA (Kembalikan stok/kuota ke SQ Detail)
             $oldDetails = DB::table("sales_order_detail_{$currentYear}")->where('sales_order_id', $id)->get();
             foreach ($oldDetails as $old) {
                 if ($old->sales_quotation_detail_id) {
                     DB::table("sales_quotation_detail_{$currentYear}")
                         ->where('id', $old->sales_quotation_detail_id)
-                        ->update(['sq_qty' => DB::raw("sq_qty - {$old->qty}")]);
+                        ->update([
+                            'sq_qty' => DB::raw("sq_qty - {$old->qty}")
+                        ]);
                 }
             }
 
-            // 4. HAPUS DETAIL LAMA
+            // 5. HAPUS DETAIL LAMA
             DB::table("sales_order_detail_{$currentYear}")->where('sales_order_id', $id)->delete();
 
-            // 5. SIMPAN DETAIL BARU
+            // 6. SIMPAN DETAIL BARU
             $affectedSqIds = [];
             foreach ($items as $item) {
-                $sqDetailId = !empty($item['sales_quotation_detail_id']) && $item['sales_quotation_detail_id'] != 'null' 
+                $sqDetailId = (!empty($item['sales_quotation_detail_id']) && $item['sales_quotation_detail_id'] != 'null') 
                             ? $item['sales_quotation_detail_id'] : null;
                 $qty = floatval($item['quantity'] ?? $item['qty'] ?? 0);
 
@@ -805,6 +800,8 @@ class SalesOrderController extends Controller
                     'unit_price'                => floatval($item['unit_price'] ?? 0),
                     'discount'                  => floatval($item['discount'] ?? 0),
                     'amount'                    => $item['amount'] ?? 0,
+                    'sq_qty'                    => $qty, // Sinkronisasi: SO sudah menyerap qty ini
+                    'outstanding_qty'           => 0,    // SO adalah tahap akhir
                     'active'                    => 1,
                     'created_by'                => Auth::id(),
                     'created_at'                => now(),
@@ -819,17 +816,14 @@ class SalesOrderController extends Controller
                 }
             }
 
-            // 6. UPDATE STATUS MASTER QUOTATION
+            // 7. UPDATE STATUS MASTER QUOTATION
             $affectedMasterSqIds = [];
             foreach (array_unique($affectedSqIds) as $sqDetailId) {
                 $sqDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
                 if ($sqDetail) {
                     $outstanding = max(0, $sqDetail->qty - $sqDetail->sq_qty);
-                    // $status = ($sqDetail->sq_qty >= $sqDetail->qty) ? 'completed' : ($sqDetail->sq_qty > 0 ? 'partial' : 'open');
-                    
                     DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->update([
-                        'outstanding_qty' => $outstanding,
-                        // 'status' => $status
+                        'outstanding_qty' => $outstanding
                     ]);
                     $affectedMasterSqIds[] = $sqDetail->sales_quotation_id;
                 }
@@ -1358,71 +1352,65 @@ class SalesOrderController extends Controller
     }
 
     public function getQuotationDetail(Request $request)
-    {
-        $ids = $request->ids;
+{
+    $ids = $request->ids;
 
-        if (empty($ids)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak ada data SQ yang dipilih.',
-                'data' => [],
-            ]);
-        }
+    if (empty($ids)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Tidak ada data SQ yang dipilih.',
+            'data' => [],
+        ]);
+    }
 
-        $details = SalesQuotationDetail::with([
+    $details = SalesQuotationDetail::with([
             'produkID',
             'unitID',
             'quotation',
         ])
-            ->whereIn('sales_quotation_id', $ids)
-            ->where('active', 1)
-            ->whereHas('quotation', function ($q) {
-                $q->whereIn('status', ['processing', 'partial']);
-            })
-            ->get();
+        ->whereIn('sales_quotation_id', $ids)
+        ->where('active', 1)
+        ->whereHas('quotation', function ($q) {
+            $q->whereIn('status', ['processing', 'partial']);
+        })
+        ->get();
 
-        $formattedData = $details->map(function ($item) {
+    $formattedData = $details->map(function ($item) {
+        // LOGIKA PENENTUAN SISA:
+        // Cek apakah outstanding_qty ada (tidak null) dan bukan 0
+        $sisaQty = ($item->outstanding_qty !== null && $item->outstanding_qty > 0) 
+                   ? (float) $item->outstanding_qty 
+                   : (float) $item->qty;
 
-            return [
-                'id' => $item->id,
+        return [
+            'id' => $item->id,
+            'sales_quotation_detail_id' => $item->id,
+            'sales_quotation_id' => $item->sales_quotation_id,
+            'product_id' => $item->product_id,
+            'product_name' => $item->produkID->nama_barang ?? '',
+            'data_produk' => $item->produkID->nama_barang ?? '',
 
-                // relasi PR
-                'sales_quotation_detail_id' => $item->id,
-                'sales_quotation_id' => $item->sales_quotation_id,
+            // Gunakan $sisaQty yang sudah dihitung di atas
+            'quantity' => $sisaQty,
+            'qty' => $sisaQty,
 
-                // produk
-                'product_id' => $item->product_id,
-                'product_name' => $item->produkID->nama_barang ?? '',
-                'data_produk' => $item->produkID->nama_barang ?? '',
+            'unit_id' => $item->unit_id,
+            'unit' => $item->unitID->detail ?? '',
+            'unit_name' => $item->unitID->detail ?? '',
+            'unit_price' => $item->unit_price,
+            'discount' => $item->discount,
+            'amount' => $item->unit_price * $sisaQty, // Update amount berdasarkan sisa
+            'tax' => 0,
+            'quotation_code' => $item->quotation->sales_quotation_code ?? '',
+            'quotation_status' => $item->quotation->status ?? '',
+        ];
+    });
 
-                // qty langsung dari PR
-                'quantity' => (float) $item->qty,
-                'qty' => (float) $item->qty,
-
-                // unit
-                'unit_id' => $item->unit_id,
-                'unit' => $item->unitID->detail ?? '',
-                'unit_name' => $item->unitID->detail ?? '',
-
-                // harga default
-                'unit_price' => $item->unit_price,
-                'discount' => $item->discount,
-                'amount' => $item->amount,
-                'tax' => 0,
-
-                // informasi SQ
-                'quotation_code' => $item->quotation->sales_quotation_code ?? '',
-                // hanya status
-                'quotation_status' => $item->quotation->status ?? '',
-
-            ];
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => $formattedData,
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'data' => $formattedData,
+    ]);
+}
 
     public function submitToPending($id)
     {
