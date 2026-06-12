@@ -521,6 +521,10 @@ class SalesOrderController extends Controller
             $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
             $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
             $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
+            $data['sub_total'] = $request->sub_total;
+            $data['disc_percent'] = $request->percent;
+            $data['disc_nominal'] = $request->discount_all;
+            $data['grand_total'] = $request->total_order;
             
             // Generate kode SO
             do {

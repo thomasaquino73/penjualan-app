@@ -341,21 +341,21 @@
                                         ->unique('id');
                                 @endphp
 
-                                @foreach ($uniquePOs as $po)
+                                @foreach ($uniquePOs as $so)
                                     <div class="card col-md-12 mb-3 p-3">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
                                                 <div style="color: #007bff; font-weight: bold;">
-                                                    {{ $po->code }}
+                                                    {{ $so->sales_order_code }}
                                                 </div>
                                                 <div style="font-size: 0.9rem; color: #666;">
-                                                    {{ \Carbon\Carbon::parse($po->sales_quotation_date)->format('d/m/Y') }}
+                                                    {{ \Carbon\Carbon::parse($so->sales_order_date)->format('d/m/Y') }}
                                                 </div>
                                             </div>
 
-                                            <a href="{{ route('sales-quotation.print', $po->id) }}"
-                                                class="btn btn-sm btn-icon" data-bs-toggle="tooltip"
-                                                data-bs-placement="top" data-bs-original-title="Lihat PO">
+                                            <a href="{{ route('sales-order.print', $so->id) }}"
+                                                class="btn btn-sm btn-icon" data-bs-toggle="tooltip" target="_blank"
+                                                data-bs-placement="top" data-bs-original-title="Lihat SO">
                                                 <i class="ti ti-send"></i> </a>
                                         </div>
                                     </div>
