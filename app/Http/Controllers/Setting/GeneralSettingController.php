@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\General;
+namespace App\Http\Controllers\Setting;
 
 use App\Http\Controllers\Controller;
-use App\Models\General\Currency;
+use App\Models\Setting\Currency;
 
 class GeneralSettingController extends Controller
 {

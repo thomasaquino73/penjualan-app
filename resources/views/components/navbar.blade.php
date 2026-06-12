@@ -10,7 +10,7 @@
 
       <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
           <div class="navbar-nav align-items-center">
-              <span>Welcome, {{ Auth::user()->fullname }}</span>
+              {{-- <span>Welcome, {{ Auth::user()->fullname }}</span> --}}
           </div>
           <!-- Search -->
           {{-- <div class="navbar-nav align-items-center">
@@ -64,7 +64,7 @@
 
                           @foreach ($currencies as $currency)
                               <option value="{{ $currency->id }}" data-symbol="{{ $currency->symbol }}"
-                                  {{ isset($mataUang) && $mataUang->id == $currency->id ? 'selected' : '' }}>
+                                  {{ session('currency_id') == $currency->id ? 'selected' : '' }}>
                                   {{ $currency->code }}
                               </option>
                           @endforeach

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Setting;
+namespace App\Http\Controllers\setting;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SistemRequest;
@@ -29,7 +29,7 @@ class PengaturanSistemController extends Controller
             ],
         ];
 
-        return view('Setting.sistem.index', $x);
+        return view('setting.sistem.index', $x);
     }
 
     public function edit($id)
@@ -45,7 +45,7 @@ class PengaturanSistemController extends Controller
             ],
         ];
 
-        return view('Setting.sistem.edit', $x);
+        return view('setting.sistem.edit', $x);
     }
 
     public function store(SistemRequest $r, $id)
@@ -156,7 +156,7 @@ class PengaturanSistemController extends Controller
             ],
         ];
 
-        return view('Setting.login_background.index', $x);
+        return view('setting.login_background.index', $x);
     }
 
     public function login_background_store(Request $request)

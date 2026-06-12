@@ -44,4 +44,18 @@ class SalesQuotationDetail extends Model
         // Sesuaikan nama class Unit dengan model master unit Anda
         return $this->belongsTo(BasicCodeDetail::class, 'unit_id', 'id');
     }
+
+    public function salesOrderDetails()
+    {
+        return $this->hasMany(SalesOrderDetail::class, 'sales_quotation_detail_id');
+    }
+
+    public function quotation()
+    {
+        return $this->belongsTo(
+            SalesQuotation::class,
+            'sales_quotation_id',
+            'id'
+        );
+    }
 }

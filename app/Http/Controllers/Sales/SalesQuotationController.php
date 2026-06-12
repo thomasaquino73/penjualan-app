@@ -8,12 +8,15 @@ use App\Models\Inventory\Barang;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesQuotation;
 use App\Models\Sales\SalesQuotationDetail;
+use App\Models\Setting\Company;
 use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
+use App\Notifications\SalesQuotationNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\DataTables;
 
@@ -321,8 +324,8 @@ class SalesQuotationController extends Controller
             $data['disc_nominal'] = $request->discount_all;
             $data['grand_total'] = $request->total_order;
             $data['payment_term_id'] = $request->payment_term_id;
-            $data['kena_pajak'] = 0;
-            $data['total_termasuk_pajak'] = 0;
+             $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
+            $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
             $data['address'] = $request->address;
             $data['description'] = $request->description;
             $data['description'] = $request->description;
@@ -406,17 +409,38 @@ class SalesQuotationController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
-        //
+        $salesQuotation = SalesQuotation::with(['details.produkID', 'details.unitID', 'details.salesOrderDetails.salesOrder'])->findOrFail($id);
+        $company = Company::first();
+        $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+            }
+        }
+        $x = [
+            'title' => 'Sales Quotation New',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Sales Quotation', 'url' => ''],
+            ],
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'idNumber' => $this->generateNumberId(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
+            'salesman' => User::where('status', '<>', 0)->get(),
+            'model' => $salesQuotation,
+            'company' => $company,
+            'logoBase64' => $logoBase64,
+        ];
+
+        return view('sales.salesQuotation.sales_quotation_show', $x);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         $salesQuotation = SalesQuotation::with(['details.produkID', 'details.unitID'])->findOrFail($id);
@@ -459,6 +483,8 @@ class SalesQuotationController extends Controller
             $data['payment_term_id'] = $request->payment_term_id;
             $data['address'] = $request->address;
             $data['description'] = $request->description;
+            $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
+            $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
 
             $salesQuotation->update($data);
 
@@ -509,7 +535,7 @@ class SalesQuotationController extends Controller
         }
     }
 
-     public function destroy(Request $request, $id)
+    public function destroy(Request $request, $id)
     {
 
         try {
@@ -524,7 +550,7 @@ class SalesQuotationController extends Controller
         }
     }
 
-     public function deleteMultiple(Request $request)
+    public function deleteMultiple(Request $request)
     {
         $ids = $request->ids;
 
@@ -547,7 +573,7 @@ class SalesQuotationController extends Controller
             $userId = Auth::user()->id;
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
-            $query = SalesQuotation::where('active',  0)
+            $query = SalesQuotation::where('active', 0)
                 ->where(function ($q) use ($userId) {
                     $q->where('status', '<>', 'draft')
                         ->orWhere(function ($subQ) use ($userId) {
@@ -651,7 +677,7 @@ class SalesQuotationController extends Controller
                     // 3. Kembalikan nilai yang sudah dikonversi dan diformat
                     return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
                 })
-                 ->addColumn('action', function ($row) {
+                ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="ti ti-menu-2 ti-xs me-1"></i>
@@ -762,17 +788,17 @@ class SalesQuotationController extends Controller
         ]);
     }
 
-      public function submitToPending($id)
+    public function submitToPending($id)
     {
         $sq = SalesQuotation::findOrFail($id);
         $sq->status = 'processing';
         $sq->updated_by = Auth::id(); // Jika Anda mencatat siapa yang melakukan update terakhir
         $sq->save();
-        // $users = User::whereHas('roles.permissions', function ($q) {
-        //     $q->where('name', 'permintaan_pembelian-approval');
-        // })->get();
+        $users = User::whereHas('roles.permissions', function ($q) {
+            $q->where('name', 'sales_order-approval');
+        })->get();
         // $users = User::all();
-        // Notification::send($users, new PurchaseRequisitionNotification($pr));
+        Notification::send($users, new SalesQuotationNotification($sq));
 
         return response()->json(['success' => true, 'message' => 'Sales Quotation berhasil diproses!']);
     }

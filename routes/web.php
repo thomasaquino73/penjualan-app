@@ -23,9 +23,11 @@ use App\Http\Controllers\Setting\CashBankController;
 use App\Http\Controllers\Setting\Company\FobController;
 use App\Http\Controllers\Setting\Company\ShippingController;
 use App\Http\Controllers\Setting\Company\SyaratPembayaranController;
+use App\Http\Controllers\Setting\CompanyDeliveryAddressController;
 use App\Http\Controllers\Setting\CompanyInfoController;
 use App\Http\Controllers\Setting\CurrencyController;
 use App\Http\Controllers\Setting\ExchangeRateController;
+use App\Http\Controllers\Setting\GeneralSettingController;
 use App\Http\Controllers\Setting\PengaturanSistemController;
 use App\Http\Controllers\Setting\PermissionsController;
 use App\Http\Controllers\Setting\RolesController;
@@ -119,7 +121,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/company-info', [CompanyInfoController::class, 'index'])->name('company.info');
     Route::get('/company-info/{id}/edit', [CompanyInfoController::class, 'edit'])->name('company.edit');
     Route::put('/company-info/{id}/update', [CompanyInfoController::class, 'update'])->name('company.update');
-    Route::get('/general-setting', [PengaturanSistemController::class, 'index'])->name('general-setting.index');
+    Route::get('/general-setting', [GeneralSettingController::class, 'index'])->name('general-setting.index');
 
     Route::prefix('token')->group(function () {
         Route::post('/unlock', [IdleController::class, 'unlock'])->name('token.unlock');
@@ -179,9 +181,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/kategori-barang/delete-multiple', [KategoriBarangController::class, 'deleteMultiple']);
     Route::resource('kategori-barang', KategoriBarangController::class);
 
-
-
-
     // PENGATURAN
     Route::resource('roles', RolesController::class);
     Route::get('edit-roles', [RolesController::class, 'edit']);
@@ -204,6 +203,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('/mata-uang', CurrencyController::class);
     Route::resource('/cash-bank', CashBankController::class);
     Route::resource('/exchange-rate', ExchangeRateController::class);
+    Route::resource('/company-delivery', CompanyDeliveryAddressController::class);
     Route::post('/shipping/delete-multiple', [ShippingController::class, 'deleteMultiple']);
     Route::post('/shipping/restore-multiple', [ShippingController::class, 'restoreMultiple']);
     Route::get('/shipping/trash', [ShippingController::class, 'trash'])->name('shipping.trash');
@@ -247,11 +247,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('', ReceiveItemController::class)->parameters(['' => 'receive_item']);
     });
 
-
     Route::get('/sales-order/print/{id}', [SalesOrderController::class, 'print'])->name('sales-order.print');
-        Route::get('/sales-order/sq/price-history', [SalesOrderController::class, 'getPriceHistory']);
+    Route::get('/sales-order/sq/price-history', [SalesOrderController::class, 'getPriceHistory']);
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
-   Route::get('/sales-order/get-processing-order', [SalesOrderController::class, 'getProcessingData'])->name('sales-order.quotation.processing');
+    Route::get('/sales-order/get-processing-order', [SalesOrderController::class, 'getProcessingData'])->name('sales-order.quotation.processing');
     Route::post('/sales-order/{id}/submit', [SalesOrderController::class, 'submitToPending'])->name('sales-order.submit');
     Route::resource('sales-order', SalesOrderController::class);
 

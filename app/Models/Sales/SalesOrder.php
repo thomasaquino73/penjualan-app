@@ -2,8 +2,6 @@
 
 namespace App\Models\Sales;
 
-use App\Models\Sales\Customer;
-use App\Models\Sales\SalesQuotationDetail;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

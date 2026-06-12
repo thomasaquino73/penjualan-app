@@ -109,15 +109,16 @@
                                             <tr>
                                                 <td style="width: 50%; padding-right: 10px;">
                                                     <div class="form-group-box">
-                                                        <div class="form-label"><strong>Request Number :</strong></div>
-                                                        <div class="form-input-mock">{{ $model->code }}</div>
+                                                        <div class="form-label"><strong>SQ Number :</strong></div>
+                                                        <div class="form-input-mock">{{ $model->sales_quotation_code }}
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td style="width: 50%;">
                                                     <div class="form-group-box">
-                                                        <div class="form-label"><strong>Request Date :</strong></div>
+                                                        <div class="form-label"><strong>SQ Date :</strong></div>
                                                         <div class="form-input-mock">
-                                                            {{ Carbon\Carbon::parse($model->date)->format('d-m-Y') }}
+                                                            {{ Carbon\Carbon::parse($model->sales_quotation_date)->format('d-m-Y') }}
                                                         </div>
                                                     </div>
                                                 </td>
@@ -135,37 +136,133 @@
                                     </td>
                                 </tr>
                             </table>
-                            <table class="table table-bordered nowrap" id="table" style="width:100%">
+                            <table class="table table-bordered nowrap mt-5" id="table" style="width:100%">
                                 <thead class="border-top" style="background-color: #AEDEFC;">
-                                    <tr>
-                                        <th style="width: 5%;" class="text-center">#</th>
-                                        <th style="width: 55%;">Item</th>
-                                        <th style="width: 20%;" class="text-center">Qty</th>
-                                        <th style="width: 20%;">Unit</th>
-                                        <th style="width: 20%;">Required Date</th>
-                                        <th style="width: 20%;">Notes</th>
-                                    </tr>
+                                    <thead class="border-top" style="background-color: #AEDEFC; ">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Item</th>
+                                            <th>Qty</th>
+                                            <th>Unit</th>
+                                            <th>Unit Price</th>
+                                            <th>Disc</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
                                 </thead>
                                 <tbody>
-                                    @forelse($model->details as $index => $item)
+                                    @forelse ($model->details as $index => $item)
                                         <tr>
                                             <td class="text-center">{{ $index + 1 }}</td>
                                             <td>{{ $item->produkID->nama_barang }}</td>
                                             <td class="text-center">{{ $item->qty }}</td>
                                             <td>{{ $item->unitID->nama_unit }}</td>
-                                            <td>{{ $item->required_date ? Carbon\Carbon::parse($item->required_date)->format('Y-m-d') : 'N/A' }}
+                                            <td class="text-end">
+                                                {{ format_uang(convert_currency($item->unit_price, $model->currency_id ?? 1)) }}
                                             </td>
-                                            <td>{{ $item->notes ?? 'N/A' }}</td>
+                                            <td class="text-end">
+                                                {{ format_uang(convert_currency($item->discount, $model->currency_id ?? 1)) }}
+                                            </td>
+                                            <td class="text-end">
+                                                {{ format_uang(convert_currency($item->amount, $model->currency_id ?? 1)) }}
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center" style="color: #999; padding: 20px;">No
+                                            <td colspan="7" class="text-center" style="color: #999; padding: 20px;">No
                                                 items found in this
                                                 request.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
                             </table>
+                            <div class="row mt-5">
+                                <div class="col-md-6">
+                                    <h6><strong>Additional Information</strong></h6>
+                                    <div class="mb-3 row">
+                                        <label class="col-md-4 col-form-label">Payment Term</label>
+                                        <div class="col-md-8">
+                                            <div class="input-group input-group-merge">
+                                                <select name="payment_term_id" id="payment_term_id" class="form-control"
+                                                    disabled>
+                                                    <option></option>
+                                                    @foreach ($paymentTerm as $pay)
+                                                        <option value="{{ $pay->id }}"
+                                                            {{ $model->payment_term_id == $pay->id ? 'selected' : '' }}>
+                                                            {{ $pay->nama }}
+                                                        </option>
+                                                    @endforeach
+                                                    <option></option>
+                                                </select>
+                                            </div>
+                                            <span class="error text-danger" id="payment_term_idError"></span>
+
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <label class="col-md-4 col-form-label">Address</label>
+                                        <div class="col-md-8">
+                                            <div class="input-group input-group-merge">
+
+                                                <textarea name="address" id="address" class="form-control" placeholder="Enter address" disabled>{{ $model->address ?? '' }}</textarea>
+                                            </div>
+                                            <span class="error text-danger" id="addressError"></span>
+
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <label class="col-md-4 col-form-label">Description</label>
+                                        <div class="col-md-8">
+                                            <textarea name="description" id="description" class="form-control" rows="8" placeholder="Enter description"
+                                                disabled>{{ $model->description ?? '' }}</textarea>
+                                            <span class="error text-danger" id="descriptionError"></span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <label class="col-md-4 col-form-label">Contact</label>
+                                        <div class="col-md-8">
+                                            <div class="input-group input-group-merge">
+                                                <select name="customer_contact_id" id="customer_contact_id"
+                                                    class="form-control" disabled>
+                                                    <option></option>
+                                                </select>
+                                            </div>
+                                            <span class="error text-danger" id="customer_contact_idError"></span>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><strong>Tax Information</strong></h6>
+                                    <div class="mb-3 row">
+                                        <label class="col-md-4 col-form-label">Tax</label>
+                                        <div class="col-md-8">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <div class="form-check form-check-primary">
+                                                        <input class="form-check-input" type="checkbox" value="1"
+                                                            name="kena_pajak" id="kena_pajak"
+                                                            {{ $model->kena_pajak ? 'checked' : '' }} disabled>
+                                                        <label class="form-check-label" for="kena_pajak">Including
+                                                            Tax</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6">
+                                                    <div class="form-check form-check-primary">
+                                                        <input class="form-check-input" type="checkbox" value="1"
+                                                            name="total_termasuk_pajak" id="total_termasuk_pajak"
+                                                            {{ $model->total_termasuk_pajak ? 'checked' : '' }} disabled>
+                                                        <label class="form-check-label" for="total_termasuk_pajak">Total
+                                                            Including Tax</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="tab-pane fade" id="navs-pills-left-profile" role="tabpanel">
@@ -181,9 +278,9 @@
                                             </li>
                                             <li class="list-group-item disabled">
                                                 <span style="float: right; font-size: 0.85em; color: #6c757d;">
-                                                    Created by: {{ $item->creator->fullname ?? 'System' }} |
+                                                    Created by: {{ $model->creator->fullname ?? 'System' }} |
                                                     Created at:
-                                                    {{ $item->created_at ? $item->created_at->format('d/m/Y H:i') : '-' }}
+                                                    {{ $model->created_at ? $model->created_at->format('d/m/Y H:i') : '-' }}
                                                 </span>
                                             </li>
                                         </ul>
@@ -195,8 +292,8 @@
 
                                 @php
                                     // 1. Kumpulkan semua PO unik dari seluruh detail
-                                    $uniquePOs = $model->details->flatMap->purchaseOrderDetails
-                                        ->pluck('purchaseOrder')
+                                    $uniquePOs = $model->details->flatMap->salesOrderDetails
+                                        ->pluck('salesOrder')
                                         ->unique('id');
                                 @endphp
 
@@ -208,20 +305,20 @@
                                                     {{ $po->code }}
                                                 </div>
                                                 <div style="font-size: 0.9rem; color: #666;">
-                                                    {{ \Carbon\Carbon::parse($po->datePO)->format('d/m/Y') }}
+                                                    {{ \Carbon\Carbon::parse($po->sales_quotation_date)->format('d/m/Y') }}
                                                 </div>
                                             </div>
 
-                                            <a href="{{ route('purchase-order.print', $po->id) }}"
-                                                class="btn btn-sm btn-icon" data-bs-toggle="tooltip" data-bs-placement="top"
-                                                data-bs-original-title="Lihat PO">
+                                            <a href="{{ route('sales-quotation.print', $po->id) }}"
+                                                class="btn btn-sm btn-icon" data-bs-toggle="tooltip"
+                                                data-bs-placement="top" data-bs-original-title="Lihat PO">
                                                 <i class="ti ti-send"></i> </a>
                                         </div>
                                     </div>
                                 @endforeach
 
                                 @if ($uniquePOs->isEmpty())
-                                    <div class="text-muted italic">Belum ada PO yang dibuat.</div>
+                                    <div class="text-muted italic">Belum ada SO yang dibuat.</div>
                                 @endif
                             </div>
                         </div>
@@ -232,8 +329,8 @@
         </div>
     </div>
 @endsection
-@push('scripts')
-    <script>
-        let table = new DataTable('#table');
-    </script>
-@endpush
+{{-- @push('scripts')
+        <script>
+            let table = new DataTable('#table');
+        </script>
+    @endpush --}}

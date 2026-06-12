@@ -762,10 +762,10 @@ class PurchaseRequisitionController extends Controller
         $pr->status = 'processing';
         $pr->updated_by = auth()->id(); // Jika Anda mencatat siapa yang melakukan update terakhir
         $pr->save();
-        // $users = User::whereHas('roles.permissions', function ($q) {
-        //     $q->where('name', 'permintaan_pembelian-approval');
-        // })->get();
-        $users = User::all();
+        $users = User::whereHas('roles.permissions', function ($q) {
+            $q->where('name', 'purchase_order-approval');
+        })->get();
+        // $users = User::all();
         Notification::send($users, new PurchaseRequisitionNotification($pr));
 
         return response()->json(['success' => true, 'message' => 'Purchase Requisition berhasil diproses!']);

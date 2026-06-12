@@ -21,7 +21,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class SalesOrderController extends Controller
 {
-      public function __construct()
+    public function __construct()
     {
         $this->middleware(function ($request, $next) {
             $routeName = $request->route()->getName();
@@ -235,7 +235,7 @@ class SalesOrderController extends Controller
         return view('sales.salesOrder.sales_order_index', $x);
     }
 
-     public function bulanRomawi($bulan)
+    public function bulanRomawi($bulan)
     {
         $romawi = [
             1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',
@@ -303,7 +303,7 @@ class SalesOrderController extends Controller
         return view('sales.salesOrder.sales_order_create', $x);
     }
 
-      public function store(SalesOrderRequest $request)
+    public function store(SalesOrderRequest $request)
     {
         DB::beginTransaction();
 
@@ -444,7 +444,7 @@ class SalesOrderController extends Controller
         //
     }
 
-       public function getProcessingData()
+    public function getProcessingData()
     {
         // Mengambil data PR beserta item detailnya yang belum lunas di-PO
         $orders = SalesQuotation::with(['details' => function ($query) {
@@ -455,7 +455,8 @@ class SalesOrderController extends Controller
 
         return response()->json($orders);
     }
-     public function getPriceHistory(Request $request)
+
+    public function getPriceHistory(Request $request)
     {
         $productId = $request->get('product_id');
         $customerId = $request->get('customer_id');

@@ -198,7 +198,8 @@ class PurchaseOrderController extends Controller
                     $grandTotal = $subTotal - ($row->disc_nominal ?? 0);
 
                     // 3. Kembalikan nilai yang sudah dikonversi dan diformat
-                    return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
+                    $selectedCurrencyId = session('currency_id', 1); // Ambil dari session, default 1 (IDR)
+                    return format_uang(convert_currency($grandTotal, $selectedCurrencyId));
                 })
                 ->addColumn('supplier', function ($row) {
                     return $row->supplier->nama_supplier;
@@ -662,15 +663,12 @@ class PurchaseOrderController extends Controller
             $data['disc_nominal'] = $request->discount_all;
             $data['grand_total'] = $request->total_order;
             $data['payment_term'] = $request->payment_term;
-            $data['kena_pajak'] = 0;
-            $data['total_termasuk_pajak'] = 0;
+            $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
+            $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
             $data['shipping_address'] = $request->shipping_address;
             $data['description'] = $request->description;
             $data['datePO'] = Carbon::parse($request->datePO)->format('Y-m-d');
             $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
-            $data['total_hari'] = $syaratPembayaran->total_hari;
-            $data['total_diskon'] = $syaratPembayaran->total_diskon;
-            $data['masa_jatuh_tempo'] = $syaratPembayaran->masa_jatuh_tempo;
 
             do {
                 $generatedCode = $this->generateNumberId();
@@ -900,9 +898,6 @@ class PurchaseOrderController extends Controller
                 'disc_nominal' => $request->discount_all,
                 'grand_total' => $request->total_order,
 
-                'total_hari' => $syaratPembayaran->total_hari ?? 0,
-                'total_diskon' => $syaratPembayaran->total_diskon ?? 0,
-                'masa_jatuh_tempo' => $syaratPembayaran->masa_jatuh_tempo ?? 0,
 
                 'updated_by' => Auth::id(),
             ]);

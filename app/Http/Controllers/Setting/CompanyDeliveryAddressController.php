@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\General;
+namespace App\Http\Controllers\Setting;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CompanyDeliveryAddressRequest;
-use App\Models\Pengaturan\CompanyDeliveryAddress;
+use App\Models\Setting\CompanyDeliveryAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
