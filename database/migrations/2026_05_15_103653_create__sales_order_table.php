@@ -45,10 +45,11 @@ return new class extends Migration
             $table->date('tanggal_pengiriman')->nullable();
             $table->unsignedBigInteger('jenis_pengiriman')->nullable();
             $table->string('fob_id')->nullable();
-
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
+            $table->unsignedBigInteger('pic_by')->nullable();
+            $table->datetime('pic_at')->nullable();
             $table->timestamps();
         });
         Schema::create("sales_order_detail_{$this->year}", function (Blueprint $table) {

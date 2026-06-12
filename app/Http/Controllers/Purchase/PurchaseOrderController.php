@@ -554,94 +554,7 @@ class PurchaseOrderController extends Controller
         ], 404);
     }
 
-    // public function store(PurchaseOrderRequest $request)
-    // {
-    //     DB::beginTransaction();
-
-    //     try {
-    //         $currentYear = date('Y');
-    //         $data = $request->validated();
-    //         $itemsDetailRaw = $request->input('items_detail');
-    //         unset($data['items_detail']);
-
-    //         $syaratPembayaran = SyaratPembayaran::find($request->payment_term);
-
-    //         $data['created_by'] = Auth::id();
-    //         $data['updated_by'] = null;
-    //         $data['vehicle_id'] = $request->vehicle_id;
-    //         $data['sub_total'] = $request->sub_total;
-    //         $data['disc_percent'] = $request->percent;
-    //         $data['disc_nominal'] = $request->discount_all;
-    //         $data['grand_total'] = $request->total_order;
-    //         $data['payment_term'] = $request->payment_term;
-    //         $data['kena_pajak'] = 0;
-    //         $data['total_termasuk_pajak'] = 0;
-    //         $data['shipping_address'] = $request->shipping_address;
-    //         $data['description'] = $request->description;
-    //         $data['datePO'] = Carbon::parse($request->datePO)->format('Y-m-d');
-    //         $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
-    //         $data['total_hari'] = $syaratPembayaran->total_hari;
-    //         $data['total_diskon'] = $syaratPembayaran->total_diskon;
-    //         $data['masa_jatuh_tempo'] = $syaratPembayaran->masa_jatuh_tempo;
-
-    //         do {
-    //             $generatedCode = $this->generateNumberId();
-    //             $exists = PurchaseOrder::where('code', $generatedCode)->exists();
-    //         } while ($exists);
-
-    //         $data['code'] = $generatedCode;
-
-    //         $purchaseOrder = PurchaseOrder::create($data);
-
-    //         if ($itemsDetailRaw) {
-    //             $items = json_decode($itemsDetailRaw, true);
-
-    //             if (is_array($items) && count($items) > 0) {
-    //                 foreach ($items as $item) {
-
-    //                     // Identifikasi ID PR Detail (tetap dipertahankan untuk referensi data)
-    //                     $prDetailId = $item['purchase_requisition_detail_id'] ?? $item['pr_detail_id'] ?? $item['detail_id'] ?? null;
-    //                     $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
-    //                     $unitPrice = floatval($item['unit_price'] ?? 0);
-    //                     $discount = floatval($item['discount'] ?? 0);
-    //                     $amount = ($qtyInputForm * $unitPrice) - $discount;
-
-    //                     // Insert data barang ke detail
-    //                     PurchaseOrderDetail::create([
-    //                         'purchase_order_id' => $purchaseOrder->id,
-    //                         'purchase_requisition_detail_id' => $prDetailId,
-    //                         'product_id' => $item['product_id'],
-    //                         'qty' => $qtyInputForm,
-    //                         'unit_id' => $item['unit_id'],
-    //                         'unit_price' => $unitPrice,
-    //                         'discount' => $discount,
-    //                         'amount' => $item['amount'] ?? $amount,
-    //                         'active' => 1,
-    //                         'created_by' => Auth::id(),
-    //                         'created_at' => now(),
-    //                         'updated_at' => now(),
-    //                     ]);
-    //                 }
-    //             }
-    //         }
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'status' => 'success',
-    //             'message' => 'Purchase Order '.$generatedCode.' berhasil disimpan.',
-    //             'redirect' => route('purchase-order.index'),
-    //         ], 200);
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => 'Gagal menyimpan data: '.$e->getMessage(),
-    //         ], 500);
-    //     }
-    // }
+    
 
     public function store(PurchaseOrderRequest $request)
     {
@@ -806,7 +719,7 @@ class PurchaseOrderController extends Controller
 
                     // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
                     // Menggunakan DB::table karena tabel bersifat dinamis per tahun
-                    $totalDiambilLainnya = \DB::table("purchase_order_detail_{$year}")
+                    $totalDiambilLainnya = DB::table("purchase_order_detail_{$year}")
                         ->where('purchase_requisition_detail_id', $detail->purchase_requisition_detail_id)
                         ->where('purchase_order_id', '<>', $purchaseOrder->id) // Kecuali PO ini sendiri
                         ->where('active', 1)

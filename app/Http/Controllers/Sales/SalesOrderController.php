@@ -11,9 +11,11 @@ use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderDetail;
 use App\Models\Sales\SalesQuotation;
 use App\Models\Sales\SalesQuotationDetail;
+use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -94,27 +96,43 @@ class SalesOrderController extends Controller
                 ->addColumn('customer', function ($row) {
                     return $row->customerID->nama_customer ?? 'N/A';
                 })
-                ->addColumn('status', function ($row) {
+                 ->addColumn('status', function ($row) {
+
                     switch ($row->status) {
+
                         case 'draft':
                             $badge = 'bg-label-secondary';
                             $text = 'Draft';
                             break;
 
-                        case 'processing':
+                        case 'pending':
+                            $badge = 'bg-label-warning';
+                            $text = 'Pending Approval';
+                            break;
+
+                        case 'approved':
+                            $badge = 'bg-label-success';
+                            $text = 'Approved';
+                            break;
+
+                        case 'sent':
+                            $badge = 'bg-label-primary';
+                            $text = 'Sent To Supplier';
+                            break;
+
+                        case 'partially_received':
                             $badge = 'bg-label-info';
-                            $text = 'Processing';
+                            $text = 'Partially Received';
                             break;
 
-                            // ─── TAMBAHAN BADGE UNTUK STATUS PARTIAL ──────────────────
-                        case 'partial':
-                            $badge = 'bg-warning text-dark';
-                            $text = 'Partial PO';
-                            break;
-
-                        case 'closed':
+                        case 'completed':
                             $badge = 'bg-success';
-                            $text = 'Closed';
+                            $text = 'Completed';
+                            break;
+
+                        case 'rejected':
+                            $badge = 'bg-label-danger';
+                            $text = 'Rejected';
                             break;
 
                         case 'cancelled':
@@ -124,11 +142,53 @@ class SalesOrderController extends Controller
 
                         default:
                             $badge = 'bg-label-secondary';
-                            $text = ucfirst($row->status);
+                            $text = ucfirst(str_replace('_', ' ', $row->status));
                             break;
                     }
 
-                    return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
+                    $html = '
+                        <div class="d-flex flex-column">
+                            <span class="badge '.$badge.' text-uppercase">
+                                '.$text.'
+                            </span>
+                    ';
+
+                    // APPROVED INFO
+                    if ($row->status == 'approved' && $row->approvedBy) {
+
+                        $html .= '
+                        <small class="text-muted mt-1">
+                            Approved By : '.$row->approvedBy->fullname.'
+                        </small>
+                    ';
+                    }
+
+                    // REJECTED INFO
+                    if ($row->status == 'rejected' && $row->rejectedBy) {
+
+                        $html .= '
+                            <small class="text-muted mt-1">
+                                Rejected By : '.$row->rejectedBy->fullname.'
+                            </small>
+                        ';
+                    }
+
+                    // OUTSTANDING INFO
+                    if (
+                        in_array($row->status, ['partially_received']) &&
+                        $row->total_outstanding_qty > 0
+                    ) {
+
+                        $html .= '
+                            <small class="text-warning mt-1">
+                                Outstanding : '.number_format($row->total_outstanding_qty).'
+                            </small>
+                        ';
+                    }
+
+                    $html .= '</div>';
+
+                    return $html;
                 })
                 ->addColumn('cekbok', function ($row) {
 
@@ -148,7 +208,7 @@ class SalesOrderController extends Controller
                     return '';
                 })
                 ->addColumn('total', function ($row) {
-                    // 1. Hitung total kotor (sum amount) dari detail item PO
+                    // 1. Hitung total kotor (sum amount) dari detail item SO
                     $subTotal = SalesOrderDetail::where('sales_order_id', $row->id)
                         ->where('active', 1)
                         ->sum('amount');
@@ -161,63 +221,203 @@ class SalesOrderController extends Controller
                     return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
                 })
                 ->addColumn('action', function ($row) {
+
                     $currentUserId = Auth::user()->id;
-                    $user = Auth::user();
+                    $user = auth()->user();
 
-                    $btn = '<div class="btn-group">
-                <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown">
-                    <i class="ti ti-menu-2 ti-xs me-1"></i>
-                </button>
-                <ul class="dropdown-menu">';
+                    $btn = '
+                            <div class="btn-group">
+                                <button type="button"
+                                    class="btn btn-primary dropdown-toggle waves-effect waves-light"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <i class="ti ti-menu-2 ti-xs me-1"></i>
+                                </button>
 
-                    // ─── OWNER ACTION ─────────────────────────────
+                                <ul class="dropdown-menu">
+                        ';
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 1. OWNER ACTION
+                    |--------------------------------------------------------------------------
+                    */
+
                     if ($row->created_by == $currentUserId) {
 
+                        // SEND TO APPROVAL
                         if ($row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'" data-status="processing">
-                        <i class="ti ti-send me-1"></i> Processing Order
-                     </a>';
-                            $btn .= '<hr class="dropdown-divider">';
+
+                            $btn .= '
+                                <a class="dropdown-item btn-submit-po"
+                                    href="javascript:void(0)"
+                                    data-id="'.$row->id.'">
+
+                                    <i class="ti ti-send me-1"></i>
+                                    Send To Approval
+                                </a>
+                            ';
                         }
 
-                        // ✅ EDIT
-                        if ($user->can('sales_order-edit') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item" href="'.route('sales-order.edit', $row->id).'">
-                        <i class="far fa-edit me-1"></i> Edit
-                     </a>';
+                        // EDIT
+                        if (
+                            $user->can('sales_order-edit') &&
+                            in_array($row->status, ['draft', 'rejected'])
+                        ) {
+
+                            $btn .= '
+                                <a class="dropdown-item"
+                                    href="'.route('sales-order.edit', $row->id).'">
+
+                                    <i class="far fa-edit me-1"></i>
+                                    Edit SO
+                                </a>
+                            ';
                         }
 
-                        // ✅ DELETE
-                        if ($user->can('sales_order-delete') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
-                        data-id="'.$row->id.'" data-name="'.$row->sales_order_code.'">
-                        <i class="ti ti-trash me-1"></i> Delete
-                     </a>';
+                        // DELETE
+                        if (
+                            $user->can('sales_order-delete') &&
+                            $row->status == 'draft'
+                        ) {
+
+                            $btn .= '
+                                <a class="dropdown-item text-danger"
+                                    href="javascript:void(0)"
+                                    id="delete"
+                                    data-id="'.$row->id.'"
+                                    data-name="'.$row->sales_order_code.'">
+
+                                    <i class="ti ti-trash me-1"></i>
+                                    Delete
+                                </a>
+                            ';
                         }
                     }
 
-                    // ─── INFO JIKA SUDAH DIPROSES ─────────────────────────────
-                    if ($row->status == 'processing') {
-                        $btn .= '<a class="dropdown-item" href="'.route('sales-order.edit', $row->id).'">
-                        <i class="far fa-edit me-1"></i> Edit
-                     </a>';
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 2. APPROVAL ACTION
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $row->created_by !== $currentUserId &&
+                        $user->can('sales_order-approval')
+                    ) {
+
+                        if ($row->status == 'pending') {
+
+                            $btn .= '
+                                    <a class="dropdown-item text-success btn-approval-po"
+                                        href="javascript:void(0)"
+                                        data-status="approved"
+                                        data-id="'.$row->id.'">
+
+                                        <i class="ti ti-check me-1"></i>
+                                        Approve SO
+                                    </a>
+                                ';
+
+                            $btn .= '
+                                    <a class="dropdown-item text-danger btn-approval-po"
+                                        href="javascript:void(0)"
+                                        data-status="rejected"
+                                        data-id="'.$row->id.'">
+
+                                        <i class="ti ti-x me-1"></i>
+                                        Reject SO
+                                    </a>
+                                ';
+                        }
                     }
 
-                    if ($row->status == 'closed') {
-                        $btn .= '<span class="dropdown-item-text text-success small">
-                    <i class="ti ti-circle-check me-1"></i> Closed
-                 </span>';
-                    }
-                    $btn .= '<a class="dropdown-item"
-                            href="'.route('sales-order.show', $row->id).'">
-                            <i class="ti ti-list-details"></i> Detail
-                        </a>';
-                    $btn .= '<a class="dropdown-item" target="_blank"
-                            href="'.route('sales-order.print', $row->id).'">
-                            <i class="ti ti-printer"></i> Print
-                        </a>';
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 3. SEND TO SUPPLIER
+                    |--------------------------------------------------------------------------
+                    */
 
-                    $btn .= '</ul></div>';
+                    if (
+                        $row->status == 'approved'
+                        // $row->status == 'approved' &&
+                        // $user->can('sales_order-send-supplier')
+                    ) {
+
+                        $btn .= '
+                            <a class="dropdown-item text-info btn-send-supplier"
+                                href="javascript:void(0)"
+                                data-id="'.$row->id.'">
+
+                                <i class="ti ti-mail-fast me-1"></i>
+                                Send To Supplier
+                            </a>
+                        ';
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 4. RECEIVE ITEM
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        in_array($row->status, ['sent', 'partially_received']) &&
+                        $user->can('sales_order-receive')
+                    ) {
+
+                        $btn .= '
+            <a class="dropdown-item text-primary"
+                href="'.route('sales-order.receive', $row->id).'">
+
+                <i class="ti ti-package-import me-1"></i>
+                Receive Item
+            </a>
+        ';
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 5. CANCEL SO
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        ! in_array($row->status, ['completed', 'cancelled']) &&
+                        $user->can('sales_order-cancel')
+                    ) {
+
+                        $btn .= '
+            <a class="dropdown-item text-danger btn-cancel-po"
+                href="javascript:void(0)"
+                data-id="'.$row->id.'">
+
+                <i class="ti ti-circle-x me-1"></i>
+                Cancel SO
+            </a>
+        ';
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 7. PRINT
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $btn .= '
+        <a class="dropdown-item"
+            target="_blank"
+            href="'.route('sales-order.print', $row->id).'">
+
+            <i class="ti ti-printer me-1"></i>
+            Print / PDF
+        </a>
+            ';
+
+                    $btn .= '
+                    </ul>
+                </div>
+            ';
 
                     return $btn;
                 })
@@ -368,12 +568,12 @@ class SalesOrderController extends Controller
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
-                        // --- LOGIKA SINKRONISASI PO KE PR ---
+                        // --- LOGIKA SINKRONISASI SO KE PR ---
                         if ($sqDetailId) {
                             $prDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
 
                             if ($prDetail) {
-                                // Hitung ulang total qty yang sudah di-PO kan untuk PR detail ini
+                                // Hitung ulang total qty yang sudah di-SO kan untuk PR detail ini
                                 $totalPoForThisItem = SalesOrderDetail::where('sales_quotation_detail_id', $sqDetailId)
                                     ->where('active', 1)
                                     ->sum('qty');
@@ -447,7 +647,90 @@ class SalesOrderController extends Controller
      */
     public function edit(string $id)
     {
-        //
+         // Mengambil tahun berjalan untuk tabel dinamis
+        $year = date('Y');
+
+        // 1. Load data PO beserta relasinya
+        // Pastikan model PurchaseOrder dan Detail sudah mendukung table name dinamis jika diperlukan
+        $salesOrder = SalesOrder::with([
+            'salesQuotation',
+            'details.produkID',
+            'details.unitID',
+            'details.salesQuotationDetail.quotation',
+        ])->findOrFail($id);
+
+        // 2. Cek status PO global: Apakah mengandung minimal satu item hasil serapan PR?
+        $isFromPR = $salesOrder->details->whereNotNull('sales_quotation_detail_id')->count() > 0;
+
+        // 3. Mapping data detail
+        $detailDataMapped = $salesOrder->details->map(function ($detail) use ($salesOrder, $year) {
+
+            $quotationCode = null;
+            $sisaPr = null;
+            $kuotaAsliPr = null;
+            $totalDiambilLainnya = 0;
+
+            // Cek apakah item detail ini memiliki keterikatan dengan PR
+            if ($detail->sales_quotation_detail_id) {
+                // Ambil data referensi dari relasi
+                $prDetail = $detail->salesQuotationDetail;
+
+                if ($prDetail) {
+                    $sisaPr = (float) $prDetail->outstanding_qty;
+                    $kuotaAsliPr = (float) $prDetail->qty;
+
+                    // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
+                    // Menggunakan DB::table karena tabel bersifat dinamis per tahun
+                    $totalDiambilLainnya = DB::table("sales_order_detail_{$year}")
+                        ->where('sales_quotation_detail_id', $detail->sales_quotation_detail_id)
+                        ->where('sales_order_id', '<>', $salesOrder->id) // Kecuali PO ini sendiri
+                        ->where('active', 1)
+                        ->sum('qty');
+
+                    if ($prDetail->salesQuotation) {
+                        $quotationCode = $prDetail->salesQuotation->code;
+                    }
+                }
+            }
+
+            return [
+                'id' => $detail->id,
+                'sales_order_id' => $detail->sales_order_id,
+                'sales_quotation_detail_id' => $detail->sales_quotation_detail_id,
+                'quotation_code' => $quotationCode,
+                'product_id' => $detail->product_id,
+                'data_produk' => $detail->produkID->nama_barang ?? 'Product Not Found',
+                'quantity' => (float) $detail->qty,
+                'unit_id' => $detail->unit_id,
+                'unit' => $detail->unitID->detail ?? '-',
+                'unit_price' => (float) $detail->unit_price,
+                'discount' => (float) $detail->discount,
+                'amount' => (float) $detail->amount,
+                'tax' => (float) ($detail->tax ?? 0),
+                'sisa_pr' => $sisaPr,
+                'kuota_asli' => $kuotaAsliPr,
+                'total_diambil_lainnya' => (float) $totalDiambilLainnya, // Dikirim ke frontend
+            ];
+        });
+        $x = [
+            'title' => 'Edit Sales Order ',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Edit Sales Order', 'url' => ''],
+            ],
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'idNumber' => $this->generateNumberId(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
+            'salesman' => User::where('status', '<>', 0)->get(),
+            'shipping' => Shipping::where('status', 1)->get(),
+            'fob' => BasicCodeDetail::where('master_id', 7)->get(),
+            'model' => $salesOrder,
+            'isFromPR' => $isFromPR,
+            'jsonDetails' => $detailDataMapped,
+        ];
+
+        return view('sales.salesOrder.sales_order_edit', $x);
     }
 
     /**
@@ -463,10 +746,10 @@ class SalesOrderController extends Controller
         DB::beginTransaction();
 
         try {
-            // 1. Cari PO yang akan dihapus
+            // 1. Cari SO yang akan dihapus
             $po = SalesOrder::findOrFail($id);
 
-            // 2. Ambil detail PO untuk mendapatkan referensi PR Detail yang terkait
+            // 2. Ambil detail SO untuk mendapatkan referensi PR Detail yang terkait
             $sqDetails = SalesOrderDetail::where('sales_order_id', $po->id)->get();
             $involvedPrIds = [];
 
@@ -482,12 +765,12 @@ class SalesOrderController extends Controller
                 }
             }
 
-            // 3. Nonaktifkan PO dan Detail PO
+            // 3. Nonaktifkan SO dan Detail SO
             $po->update(['active' => 0, 'updated_by' => Auth::id()]);
             SalesOrderDetail::where('sales_order_id', $po->id)->update(['active' => 0]);
 
             // 4. Update Ulang sq_qty di setiap PR Detail yang terdampak
-            // Kita hitung ulang berdasarkan sisa PO yang masih 'active' = 1
+            // Kita hitung ulang berdasarkan sisa SO yang masih 'active' = 1
             foreach ($sqDetails as $sqDetail) {
                 if ($sqDetail->sales_quotation_detail_id) {
                     $totalRemainingPo = SalesOrderDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
@@ -522,12 +805,12 @@ class SalesOrderController extends Controller
 
             DB::commit();
 
-            return response()->json(['status' => 'success', 'message' => 'PO berhasil dibatalkan.'], 200);
+            return response()->json(['status' => 'success', 'message' => 'SO berhasil dibatalkan.'], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan PO: '.$e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan SO: '.$e->getMessage()], 500);
         }
     }
 
@@ -578,7 +861,7 @@ class SalesOrderController extends Controller
                             // ─── TAMBAHAN BADGE UNTUK STATUS PARTIAL ──────────────────
                         case 'partial':
                             $badge = 'bg-warning text-dark';
-                            $text = 'Partial PO';
+                            $text = 'Partial SO';
                             break;
 
                         case 'closed':
@@ -617,7 +900,7 @@ class SalesOrderController extends Controller
                     return '';
                 })
                 ->addColumn('total', function ($row) {
-                    // 1. Hitung total kotor (sum amount) dari detail item PO
+                    // 1. Hitung total kotor (sum amount) dari detail item SO
                     $subTotal = SalesOrderDetail::where('sales_order_id', $row->id)
                         ->where('active', 1)
                         ->sum('amount');
@@ -636,7 +919,7 @@ class SalesOrderController extends Controller
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('purchase_order-restore')) {
+                    if (auth()->user()->can('sales_order-restore')) {
                         $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
                     }
@@ -669,11 +952,11 @@ class SalesOrderController extends Controller
                 return response()->json(['success' => false, 'message' => 'Tidak ada data yang dipilih.'], 400);
             }
 
-            // 1. Ambil semua detail dari PO yang akan dihapus untuk sinkronisasi PR
+            // 1. Ambil semua detail dari SO yang akan dihapus untuk sinkronisasi PR
             $sqDetails = SalesOrderDetail::whereIn('sales_order_id', $ids)->get();
             $involvedPrIds = [];
 
-            // 2. Tandai PO dan Detail PO sebagai tidak aktif (active = 0)
+            // 2. Tandai SO dan Detail SO sebagai tidak aktif (active = 0)
             SalesOrder::whereIn('id', $ids)->update([
                 'active' => 0,
                 'updated_by' => Auth::id(),
@@ -683,7 +966,7 @@ class SalesOrderController extends Controller
             // 3. Update sq_qty di PR Detail dan kumpulkan ID PR Master
             foreach ($sqDetails as $sqDetail) {
                 if ($sqDetail->sales_quotation_detail_id) {
-                    // Hitung total dari PO yang tersisa (yang masih aktif)
+                    // Hitung total dari SO yang tersisa (yang masih aktif)
                     $totalRemainingPo = SalesOrderDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
                         ->where('active', 1)
                         ->sum('qty');
@@ -748,21 +1031,21 @@ class SalesOrderController extends Controller
         DB::beginTransaction();
 
         try {
-            // 1. Aktifkan kembali PO
+            // 1. Aktifkan kembali SO
             $po = SalesOrder::findOrFail($id);
             $po->update(['active' => 1, 'updated_by' => Auth::id()]);
 
-            // 2. Aktifkan kembali Detail PO
+            // 2. Aktifkan kembali Detail SO
             SalesOrderDetail::where('sales_order_id', $po->id)->update(['active' => 1]);
 
-            // 3. Ambil semua detail PO yang baru saja diaktifkan
+            // 3. Ambil semua detail SO yang baru saja diaktifkan
             $poDetails = SalesOrderDetail::where('sales_order_id', $po->id)->get();
             $involvedPrIds = [];
 
             // 4. Update ulang sq_qty di PR Detail
             foreach ($poDetails as $poDetail) {
                 if ($poDetail->sales_quotation_detail_id) {
-                    // Hitung total dari semua PO yang aktif
+                    // Hitung total dari semua SO yang aktif
                     $totalPoForThisItem = SalesOrderDetail::where('sales_quotation_detail_id', $poDetail->sales_quotation_detail_id)
                         ->where('active', 1)
                         ->sum('qty');
@@ -833,23 +1116,23 @@ class SalesOrderController extends Controller
                 return response()->json(['success' => false, 'message' => 'Tidak ada data yang dipilih.'], 400);
             }
 
-            // 1. Update status PO jadi aktif
+            // 1. Update status SO jadi aktif
             SalesOrder::whereIn('id', $ids)->update([
                 'active' => 1,
                 'updated_by' => Auth::id(),
             ]);
 
-            // 2. Aktifkan kembali semua detail PO yang berkaitan dengan PO-PO tersebut
+            // 2. Aktifkan kembali semua detail SO yang berkaitan dengan SO-SO tersebut
             SalesOrderDetail::whereIn('sales_order_id', $ids)->update(['active' => 1]);
 
-            // 3. Ambil semua detail PO yang baru saja diaktifkan untuk sinkronisasi
+            // 3. Ambil semua detail SO yang baru saja diaktifkan untuk sinkronisasi
             $poDetails = SalesOrderDetail::whereIn('sales_order_id', $ids)->get();
             $involvedPrIds = [];
 
             // 4. Update sq_qty di PR Detail dan kumpulkan ID PR Master
             foreach ($poDetails as $poDetail) {
                 if ($poDetail->sales_quotation_detail_id) {
-                    // Hitung total dari semua PO yang aktif
+                    // Hitung total dari semua SO yang aktif
                     $totalPoForThisItem = SalesOrderDetail::where('sales_quotation_detail_id', $poDetail->sales_quotation_detail_id)
                         ->where('active', 1)
                         ->sum('qty');
@@ -1019,5 +1302,149 @@ class SalesOrderController extends Controller
             'success' => true,
             'data' => $formattedData,
         ]);
+    }
+     public function submitToPending($id)
+    {
+        // 1. Ambil tahun berjalan secara dinamis
+        $year = date('Y');
+        $tableName = "sales_order_{$year}";
+
+        // 2. Gunakan Query Builder dengan nama tabel dinamis agar pencarian ID aman
+        $poData = DB::table($tableName)->where('id', $id)->first();
+
+        // Jika data memang benar-benar tidak ditemukan di database
+        if (! $poData) {
+            return response()->json(['success' => false, 'message' => 'Data Sales Order tidak ditemukan.'], 404);
+        }
+
+        // 3. Validasi Keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
+        if ($poData->status !== 'draft' || $poData->created_by !== Auth::user()->id) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'], 403);
+        }
+
+        // 4. Lakukan pembaruan status menggunakan Query Builder demi stabilitas tabel dinamis
+        DB::table($tableName)->where('id', $id)->update([
+            'status' => 'pending',
+            'updated_by' => Auth::user()->id,
+            'updated_at' => now(), // Mengisi timestamp bawaan laravel secara manual karena menggunakan Query Builder
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Sales Order berhasil diajukan!']);
+    }
+
+      public function changeStatus(Request $request, $id)
+    {
+        // 1. Ambil tahun berjalan secara dinamis untuk dynamic table
+        $year = date('Y');
+        $tableName = "sales_order_{$year}";
+
+        // 2. Cari data SO berdasarkan ID menggunakan Query Builder
+        $poData = DB::table($tableName)->where('id', $id)->first();
+
+        // Validasi jika data tidak ditemukan
+        if (! $poData) {
+            return response()->json(['error' => 'Data Purchase Order tidak ditemukan.'], 404);
+        }
+
+        // 3. Validasi Keamanan: Pastikan yang mengubah status BUKAN orang yang membuat dokumen (Anti Self-Approval)
+        if ($poData->created_by === Auth::user()->id) {
+            return response()->json(['error' => 'You may not approve/reject documents you create yourself!'], 403);
+        }
+
+        // 4. Validasi Input Status (Memastikan hanya menerima 'approved' atau 'rejected')
+        $statusTarget = $request->input('status');
+        if (! in_array($statusTarget, ['approved', 'rejected'])) {
+            return response()->json(['error' => 'Status target tidak valid.'], 400);
+        }
+
+        // 5. Eksekusi Update ke Database
+        DB::table($tableName)->where('id', $id)->update([
+            'status' => $statusTarget,
+            'pic_by' => Auth::id(),
+            'pic_at' => now(), // Isi timestamp manual karena menggunakan Query Builder
+        ]);
+
+        // ==========================================
+        // 5b. OTOMATISASI: Kirim dokumen hanya jika statusnya 'approved'
+        // ==========================================
+        if ($statusTarget === 'approved') {
+            try {
+                // Panggil fungsi atau service pengiriman dokumen Anda di sini.
+                // Contoh jika menggunakan Mail Laravel:
+                // Mail::to($poData->vendor_email)->send(new PurchaseOrderMail($poData));
+
+                // Atau jika menggunakan job queue (Sangat disarankan agar performa aplikasi tetap cepat):
+                // SendPurchaseOrderJob::dispatch($poData);
+
+            } catch (\Exception $e) {
+            }
+        }
+
+        // 6. Return response dengan pesan dinamis sesuai aksi (Approve / Reject)
+        $messageText = $statusTarget === 'approved' ? 'approved' : 'rejected';
+
+        return response()->json([
+            'success' => true,
+            'message' => "Purchase Order status successfully {$messageText}!",
+        ], 200);
+    }
+
+     public function sendSupplier($id)
+    {
+        $po = SalesOrder::findOrFail($id);
+
+        // VALIDASI STATUS
+        if ($po->status != 'approved') {
+
+            return response()->json([
+                'message' => 'Only approved SO can be sent.',
+            ], 422);
+        }
+
+        // UPDATE STATUS
+        $po->update([
+            'status' => 'sent',
+            'updated_by' => Auth::user()->id,
+        ]);
+
+        return response()->json([
+            'message' => 'SO successfully sent to supplier.',
+        ]);
+    }
+
+     public function print($id)
+    {
+        $salesOrder = SalesOrder::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $company = Company::first();
+        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+        $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+            }
+        }
+        $data = [
+            'model' => $salesOrder,
+            'company' => $company,
+            'modelDetail' => $salesOrder->details,
+            'logoBase64' => $logoBase64,
+        ];
+
+        $pdf = Pdf::loadView('pdf.sales_order_pdf', $data)
+            ->setPaper('a4', 'portrait');
+
+        // preview di browser
+        $filename = $salesOrder->sales_order_code.'-'.$salesOrder->customerID->nama_customer;
+
+        // replace forbidden filename chars
+        $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
+
+        return $pdf->stream($filename.'.pdf');
+
+        // kalau mau download:
+        // return $pdf->download('sales-order.pdf');
     }
 }
