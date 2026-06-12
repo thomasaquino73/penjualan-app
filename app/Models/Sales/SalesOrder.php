@@ -41,7 +41,8 @@ class SalesOrder extends Model
     {
         return $this->hasMany(SalesOrderDetail::class, 'sales_order_id');
     }
-        public function approvedBy()
+
+    public function approvedBy()
     {
         return $this->belongsTo(User::class, 'pic_by');
     }
@@ -50,10 +51,10 @@ class SalesOrder extends Model
     {
         return $this->belongsTo(User::class, 'pic_by');
     }
-     public function salesQuotation()
+
+    public function salesQuotation()
     {
         // Sesuaikan 'sales_quotation_id' dengan nama kolom foreign key yang ada di tabel SO kamu
         return $this->belongsTo(SalesQuotation::class, 'sales_quotation_id', 'id');
     }
-
 }

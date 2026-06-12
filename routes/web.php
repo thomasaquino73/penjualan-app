@@ -246,9 +246,9 @@ Route::middleware('auth')->group(function () {
     Route::prefix('receive-item')->name('receive-item.')->group(function () {
         Route::resource('', ReceiveItemController::class)->parameters(['' => 'receive_item']);
     });
-        Route::post('/sales-order/send-supplier/{id}', [SalesOrderController::class, 'sendSupplier'])->name('sales-order.send-supplier');
-        Route::post('/sales-order/change-status/{id}', [SalesOrderController::class, 'changeStatus']);
-     Route::post('/sales-order/restore-multiple', [SalesOrderController::class, 'restoreMultiple']);
+    Route::post('/sales-order/send-supplier/{id}', [SalesOrderController::class, 'sendSupplier'])->name('sales-order.send-supplier');
+    Route::post('/sales-order/change-status/{id}', [SalesOrderController::class, 'changeStatus']);
+    Route::post('/sales-order/restore-multiple', [SalesOrderController::class, 'restoreMultiple']);
     Route::put('/sales-order/restore/{id}', [SalesOrderController::class, 'restore'])->name('sales-order.restore');
     Route::post('/sales-order/delete-multiple', [SalesOrderController::class, 'deleteMultiple']);
     Route::post('/sales-order/get-quotation-detail', [SalesOrderController::class, 'getQuotationDetail'])->name('sales-order.get-quotation-detail');

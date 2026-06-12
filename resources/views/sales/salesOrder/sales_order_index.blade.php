@@ -56,9 +56,14 @@
                             <option value="" selected hidden>Select Status</option>
                             <option value="">All Status</option>
                             <option value="draft">Draft</option>
-                            <option value="processing">Processing</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
                             <option value="rejected">Rejected</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="sent">Sent</option>
+                            <option value="partially_received">Partially Received</option>
                             <option value="completed">Completed</option>
+                            <option value="closed">Closed</option>
                         </select>
                     </div>
                 </div>
@@ -283,7 +288,7 @@
                 });
             });
 
-            $(document).on('click', '.btn-submit-pr', function() {
+            $(document).on('click', '.btn-submit-po', function() {
                 let id = $(this).data('id');
                 let url = "{{ route('sales-order.submit', ':id') }}".replace(':id', id);
 

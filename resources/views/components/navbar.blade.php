@@ -143,7 +143,6 @@
                                   <li class="list-group-item list-group-item-action notification-item"
                                       data-id="{{ $notification->id }}"
                                       data-link="{{ $notification->data['link'] ?? '#' }}" style="cursor:pointer;">
-
                                       <div class="d-flex align-items-center">
                                           <div class="flex-shrink-0 me-3">
                                               <div class="avatar">
@@ -339,5 +338,133 @@
           // event ketika berubah
           window.addEventListener('online', updateConnectionStatus);
           window.addEventListener('offline', updateConnectionStatus);
+      </script>
+      <script>
+          document.addEventListener('DOMContentLoaded', function() {
+
+              // === MARK SINGLE AS READ + LINK ===
+              document.querySelectorAll('.notification-item').forEach(item => {
+                  item.addEventListener('click', function(e) {
+                      if (e.target.closest('.btn-delete')) return; // ignore delete btn
+
+                      const id = this.dataset.id;
+                      const link = this.dataset.link;
+
+                      fetch("{{ route('notifications.markAsRead') }}", {
+                              method: 'POST',
+                              headers: {
+                                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                  'Content-Type': 'application/json'
+                              },
+                              body: JSON.stringify({
+                                  id
+                              })
+                          })
+                          .then(r => r.json())
+                          .then(data => {
+                              if (data.success) {
+                                  this.classList.add('bg-light');
+                                  setTimeout(() => window.location.href = link, 200);
+                              }
+                          });
+                  });
+              });
+
+              // === MARK ALL AS READ ===
+              document.getElementById('mark-all').addEventListener('click', function() {
+                  fetch("{{ route('notifications.markAllAsRead') }}", {
+                          method: 'POST',
+                          headers: {
+                              'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                          }
+                      })
+                      .then(() => {
+                          toastr.success('All notifications marked as read.');
+                          location.reload(); // reload supaya struktur bersih dan tombol tetap muncul
+                      });
+              });
+
+              // === DELETE SINGLE NOTIFICATION ===
+              // document.querySelectorAll('.btn-delete').forEach(btn => {
+              //     btn.addEventListener('click', function(e) {
+              //         e.stopPropagation();
+              //         const item = this.closest('.read-item');
+              //         const id = item.dataset.id;
+
+              //         fetch(`/notifications/${id}`, {
+              //                 method: 'DELETE',
+              //                 headers: {
+              //                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
+              //                 }
+              //             })
+              //             .then(res => res.json())
+              //             .then(() => {
+              //                 toastr.success('Notification deleted.');
+              //                 item.remove();
+
+              //                 const readList = document.getElementById('read-list');
+              //                 if (readList.querySelectorAll('.read-item').length === 0) {
+              //                     readList.innerHTML =
+              //                         '<li class="list-group-item text-muted">No read notifications</li>';
+              //                     const deleteReadBtn = document.getElementById('delete-read');
+              //                     if (deleteReadBtn) deleteReadBtn.remove();
+              //                 }
+              //             });
+              //     });
+              // });
+
+
+
+          });
+
+          // === DELETE ALL READ ===
+          $('body').on('click', '#delete-read', function() {
+              const token = $("meta[name='csrf-token']").attr("content");
+              Swal.fire({
+                  title: 'Delete all read notifications?',
+                  text: 'This action cannot be undone.',
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonText: 'Yes, delete them!',
+                  cancelButtonText: 'Cancel',
+                  customClass: {
+                      confirmButton: 'btn btn-danger me-3 waves-effect waves-light',
+                      cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                  },
+                  buttonsStyling: false
+              }).then(result => {
+                  if (result.isConfirmed) {
+                      $.ajax({
+                          url: "{{ route('notifications.deleteRead') }}",
+                          type: "DELETE",
+                          headers: {
+                              'X-CSRF-TOKEN': token
+                          },
+                          success: function(response) {
+                              if (response.success) {
+                                  $('#read-list .read-item').fadeOut(400, function() {
+                                      $(this).remove();
+                                      if ($('#read-list .read-item')
+                                          .length === 0) {
+                                          $('#read-list').html(
+                                              '<li class="list-group-item text-muted">No read notifications</li>'
+                                          );
+                                          $('#delete-read').remove();
+                                      }
+                                  });
+                                  toastr.success('All read notifications deleted.');
+                              }
+                          },
+                          error: function() {
+                              Swal.fire({
+                                  icon: 'error',
+                                  title: 'Failed to delete',
+                                  text: 'An error occurred. Please try again later.'
+                              });
+                          }
+                      });
+                  }
+              });
+          });
       </script>
   @endpush

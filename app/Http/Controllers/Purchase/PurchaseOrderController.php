@@ -554,8 +554,6 @@ class PurchaseOrderController extends Controller
         ], 404);
     }
 
-    
-
     public function store(PurchaseOrderRequest $request)
     {
         DB::beginTransaction();

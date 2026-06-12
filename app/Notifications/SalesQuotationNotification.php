@@ -51,7 +51,7 @@ class SalesQuotationNotification extends Notification
             'avatar' => $this->salesQuotation->creator->avatar ?? asset('assets/img/avatars/1.png'),
             'title' => 'New Sales Quotation Created',
             'messages' => $this->salesQuotation->creator->fullname.
-                ' has created SQ "'.$this->salesQuotation->code.'"',
+                ' has created SQ "'.$this->salesQuotation->sales_quotation_code.'"',
             'link' => route('sales-quotation.show', $this->salesQuotation),
         ];
     }

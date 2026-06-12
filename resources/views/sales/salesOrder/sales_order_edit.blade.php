@@ -336,6 +336,77 @@
                 $("#checkAll").prop("checked", false);
             }
         });
+        $("#btnAddShipping").click(function() {
+            Swal.fire({
+                title: "Add New Shipping",
+                input: "text",
+                inputLabel: "Shipping Name",
+                inputPlaceholder: "Input shipping name...",
+
+                showCancelButton: true,
+
+                // confirmButtonColor: "#3085d6",
+                // cancelButtonColor: "#d33",
+
+                confirmButtonText: "Save",
+                cancelButtonText: "Cancel",
+                customClass: {
+                    confirmButton: "btn btn-primary me-2",
+                    cancelButton: "btn btn-danger",
+                },
+                buttonsStyling: false,
+                inputValidator: (value) => {
+                    if (!value) {
+                        return "Shipping wajib diisi";
+                    }
+                },
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{{ route('shipping.store') }}",
+                        type: "POST",
+
+                        data: {
+                            nama: result.value,
+                            _token: "{{ csrf_token() }}",
+                        },
+
+                        success: function(response) {
+                            let option = new Option(
+                                response.nama,
+                                response.id,
+                                true,
+                                true,
+                            );
+
+                            $("#jenis_pengiriman").append(option).trigger("change");
+
+                            Swal.fire({
+                                icon: "success",
+                                title: "Success",
+                                text: response.message,
+                                customClass: {
+                                    confirmButton: "btn btn-primary me-2",
+                                },
+                                buttonsStyling: false,
+                            });
+                        },
+
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "Failed save shipping",
+                                customClass: {
+                                    confirmButton: "btn btn-info",
+                                },
+                                buttonsStyling: false,
+                            });
+                        },
+                    });
+                }
+            });
+        });
 
         $(document).ready(function() {
             $(".select2-modal").each(function() {
@@ -354,6 +425,10 @@
 
             $("#payment_term_id").select2({
                 placeholder: "Select Payment Term",
+                width: "100%",
+            });
+            $("#jenis_pengiriman").select2({
+                placeholder: "Select Shipping",
                 width: "100%",
             });
 
@@ -464,43 +539,80 @@
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
                                 action: function(e, dt, node, config) {
-                                    let data = dt.row({
+                                    let rowSelected = dt.row({
                                         selected: true
-                                    }).data();
-                                    let rowIndex = dt.row({
-                                        selected: true
-                                    }).index();
+                                    });
+                                    let data = rowSelected.data();
+                                    let rowIndex = rowSelected.index();
 
+                                    // 1. TANDAI BAHWA SEDANG PROSES EDIT
+                                    window.isPopulating = true;
                                     window.isEditingMode = true;
 
-                                    // Menyimpan index baris array untuk penanda update
+                                    // 2. Setup Data Dasar
                                     $("#detail_id").val(rowIndex);
 
-                                    // --- AMANKAN DATA ID RELASI DI SINI ---
-                                    $("#modal_purchase_quotation_detail_id").val(data.detail_id ||
-                                        data.purchase_quotation_detail_id || "");
-                                    $("#modal_quotation_code").val(data.quotation_code || "");
+                                    // Ambil data untuk kalkulasi
+                                    let kuotaAwalPr = parseFloat(data.kuota_asli || 0);
+                                    let sisaPr = parseFloat(data.sisa_pr || 0);
+                                    let totalLain = parseFloat(data.total_diambil_lainnya ||
+                                        0); // Data baru dari backend
+                                    let qtySekarang = parseFloat(data.quantity || 0);
 
-                                    // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
-                                    if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
-                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
-                                    } else {
-                                        $("#quantity").removeAttr(
-                                            "data-sisa-pr"); // Jika PO bebas, hapus batasannya
-                                    }
-                                    // --------------------------------------
+                                    // 3. Update Title & UI Modal dengan informasi total serapan lain
+                                    $("#modalTitle").html(`
+                                            Edit Entry |
+                                            <span class="badge bg-primary">SQ Awal: ${kuotaAwalPr}</span>
+                                            <span class="badge bg-warning text-dark">Sudah diambil SO lain: ${totalLain}</span>
+                                        `);
 
-                                    $("#quantity").val(data.quantity);
-                                    $("#unit_id").data("pending-val", data.unit_id);
-                                    $("#product_id").val(data.product_id).trigger("change");
-                                    $("#unit_price").val(data.unit_price);
-                                    $("#discount").val(data.discount || 0);
-                                    $("#tax").val(data.tax || 0);
+                                    // 4. Bersihkan Form (Kecuali Hidden Fields)
+                                    $("#formPrDetail").find("input, select, textarea").not(
+                                        '[type="hidden"]').val('');
 
-                                    $("#modalTitle").text("Edit entry");
+                                    // 5. Isi Data ke Input Form
+                                    $("#quantity").val(qtySekarang);
+                                    $("#modal_sales_quotation_detail_id").val(data
+                                        .sales_quotation_detail_id || "");
+                                    $("#unit_price").val(parseFloat(data.unit_price || 0));
+                                    $("#discount").val(parseFloat(data.discount || 0));
+                                    $("#tax").val(parseFloat(data.tax || 0));
+
+                                    // 6. Set Validasi Maksimal di Input
+                                    // Logika: Sisa PR (outstanding) + Qty PO ini sendiri (karena qty lama akan di-overwrite)
+                                    let maxAllowed = sisaPr + qtySekarang;
+                                    $("#quantity").attr("data-max-allowed", maxAllowed);
+                                    $("#quantity").attr("placeholder", "Maksimal: " + maxAllowed);
+
+                                    // 7. Penanganan Select2 (Product & Unit)
+                                    $('#unit_id').prop("disabled", false);
+                                    $('#product_id').prop("disabled", false);
+
+                                    // Trigger Product untuk memuat daftar unit via AJAX
+                                    $("#product_id").val(data.product_id).trigger("change.select2");
+
+                                    // Delay untuk menunggu respons AJAX produk selesai
+                                    setTimeout(function() {
+                                        let $unitSelect = $('#unit_id');
+                                        $unitSelect.empty();
+
+                                        if (data.unit_id) {
+                                            let newOption = new Option(data.unit || "Unit",
+                                                data.unit_id, true, true);
+                                            $unitSelect.append(newOption).trigger(
+                                                'change.select2');
+                                        } else {
+                                            $unitSelect.val('').trigger('change.select2');
+                                        }
+
+                                        // Lepaskan flag setelah semua proses selesai
+                                        window.isPopulating = false;
+                                    }, 500);
+
+                                    // 8. Tampilkan Modal
                                     $("#btnSubmitModal").text("Update");
                                     $("#modalPrDetail").modal("show");
-                                },
+                                }
                             },
                             {
                                 text: '<i class="ti ti-trash me-1"></i> Delete',

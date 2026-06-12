@@ -96,7 +96,7 @@ class SalesOrderController extends Controller
                 ->addColumn('customer', function ($row) {
                     return $row->customerID->nama_customer ?? 'N/A';
                 })
-                 ->addColumn('status', function ($row) {
+                ->addColumn('status', function ($row) {
 
                     switch ($row->status) {
 
@@ -526,8 +526,8 @@ class SalesOrderController extends Controller
             $data['disc_nominal'] = $request->discount_all;
             $data['grand_total'] = $request->total_order;
             $data['payment_term_id'] = $request->payment_term_id;
-            $data['kena_pajak'] = 0;
-            $data['total_termasuk_pajak'] = 0;
+            $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
+            $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
             $data['address'] = $request->address;
             $data['description'] = $request->description;
             $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
@@ -647,7 +647,7 @@ class SalesOrderController extends Controller
      */
     public function edit(string $id)
     {
-         // Mengambil tahun berjalan untuk tabel dinamis
+        // Mengambil tahun berjalan untuk tabel dinamis
         $year = date('Y');
 
         // 1. Load data PO beserta relasinya
@@ -733,12 +733,133 @@ class SalesOrderController extends Controller
         return view('sales.salesOrder.sales_order_edit', $x);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(SalesOrderRequest $request, $id)
     {
-        //
+        // Mengambil data yang sudah divalidasi
+        $validated = $request->validated();
+        
+        DB::beginTransaction();
+
+        try {
+            $currentYear = date('Y');
+            
+            // Cek data master
+            $salesOrder = DB::table("sales_order_{$currentYear}")->where('id', $id)->first();
+            if (!$salesOrder) {
+                throw new \Exception("Sales Order tidak ditemukan.");
+            }
+
+            // 1. UPDATE MASTER
+            SalesOrder::where('id', $id)->update([
+                'customer_id'          => $request->customer_id,
+                'sales_order_code'     => $request->sales_order_code,
+                'salesman_id'          => $request->salesman_id,
+                'sales_order_date'     => Carbon::parse($request->sales_order_date)->format('Y-m-d'),
+                'tanggal_pengiriman'   => Carbon::parse($request->shipping_date)->format('Y-m-d'),
+                'sub_total'            => $request->sub_total,
+                'disc_percent'         => $request->percent,
+                'disc_nominal'         => $request->discount_all,
+                'grand_total'          => $request->total_order,
+                'jenis_pengiriman'     => $request->jenis_pengiriman,
+                'kena_pajak'           => $request->has('kena_pajak') ? 1 : 0,
+                'total_termasuk_pajak' => $request->has('total_termasuk_pajak') ? 1 : 0,
+                'fob_id'               => $request->fob_id,
+                'address'              => $request->address,
+                'description'          => $request->description,
+                'updated_by'           => Auth::id(),
+                'updated_at'           => now(),
+            ]);
+
+            // 2. DECODE ITEMS
+            $items = json_decode($request->items_detail, true);
+            if (!is_array($items) || count($items) == 0) {
+                throw new \Exception('Detail item tidak boleh kosong.');
+            }
+
+            // 3. REVERT QTY LAMA
+            $oldDetails = DB::table("sales_order_detail_{$currentYear}")->where('sales_order_id', $id)->get();
+            foreach ($oldDetails as $old) {
+                if ($old->sales_quotation_detail_id) {
+                    DB::table("sales_quotation_detail_{$currentYear}")
+                        ->where('id', $old->sales_quotation_detail_id)
+                        ->update(['sq_qty' => DB::raw("sq_qty - {$old->qty}")]);
+                }
+            }
+
+            // 4. HAPUS DETAIL LAMA
+            DB::table("sales_order_detail_{$currentYear}")->where('sales_order_id', $id)->delete();
+
+            // 5. SIMPAN DETAIL BARU
+            $affectedSqIds = [];
+            foreach ($items as $item) {
+                $sqDetailId = !empty($item['sales_quotation_detail_id']) && $item['sales_quotation_detail_id'] != 'null' 
+                            ? $item['sales_quotation_detail_id'] : null;
+                $qty = floatval($item['quantity'] ?? $item['qty'] ?? 0);
+
+                DB::table("sales_order_detail_{$currentYear}")->insert([
+                    'sales_order_id'            => $id,
+                    'sales_quotation_detail_id' => $sqDetailId,
+                    'product_id'                => $item['product_id'],
+                    'qty'                       => $qty,
+                    'unit_id'                   => $item['unit_id'],
+                    'unit_price'                => floatval($item['unit_price'] ?? 0),
+                    'discount'                  => floatval($item['discount'] ?? 0),
+                    'amount'                    => $item['amount'] ?? 0,
+                    'active'                    => 1,
+                    'created_by'                => Auth::id(),
+                    'created_at'                => now(),
+                    'updated_at'                => now(),
+                ]);
+
+                if ($sqDetailId) {
+                    DB::table("sales_quotation_detail_{$currentYear}")
+                        ->where('id', $sqDetailId)
+                        ->update(['sq_qty' => DB::raw("sq_qty + {$qty}")]);
+                    $affectedSqIds[] = $sqDetailId;
+                }
+            }
+
+            // 6. UPDATE STATUS MASTER QUOTATION
+            $affectedMasterSqIds = [];
+            foreach (array_unique($affectedSqIds) as $sqDetailId) {
+                $sqDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
+                if ($sqDetail) {
+                    $outstanding = max(0, $sqDetail->qty - $sqDetail->sq_qty);
+                    // $status = ($sqDetail->sq_qty >= $sqDetail->qty) ? 'completed' : ($sqDetail->sq_qty > 0 ? 'partial' : 'open');
+                    
+                    DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->update([
+                        'outstanding_qty' => $outstanding,
+                        // 'status' => $status
+                    ]);
+                    $affectedMasterSqIds[] = $sqDetail->sales_quotation_id;
+                }
+            }
+
+            foreach (array_unique($affectedMasterSqIds) as $sqId) {
+                $details = DB::table("sales_quotation_detail_{$currentYear}")->where('sales_quotation_id', $sqId)->get();
+                $allCompleted = $details->every(fn($d) => $d->sq_qty >= $d->qty);
+                $anyPartial = $details->some(fn($d) => $d->sq_qty > 0);
+
+                DB::table("sales_quotation_{$currentYear}")->where('id', $sqId)->update([
+                    'status' => $allCompleted ? 'closed' : ($anyPartial ? 'partial' : 'processing')
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Sales Order berhasil diupdate',
+                'redirect' => route('sales-order.index'),
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function destroy(Request $request, $id)
@@ -819,7 +940,6 @@ class SalesOrderController extends Controller
         if ($r->ajax()) {
             $query = SalesOrder::where('active', '0')
                 ->orderby('sales_order_code', 'desc')->get();
-            
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -1026,7 +1146,7 @@ class SalesOrderController extends Controller
         }
     }
 
-      public function restore($id)
+    public function restore($id)
     {
         DB::beginTransaction();
 
@@ -1303,7 +1423,8 @@ class SalesOrderController extends Controller
             'data' => $formattedData,
         ]);
     }
-     public function submitToPending($id)
+
+    public function submitToPending($id)
     {
         // 1. Ambil tahun berjalan secara dinamis
         $year = date('Y');
@@ -1332,7 +1453,7 @@ class SalesOrderController extends Controller
         return response()->json(['success' => true, 'message' => 'Sales Order berhasil diajukan!']);
     }
 
-      public function changeStatus(Request $request, $id)
+    public function changeStatus(Request $request, $id)
     {
         // 1. Ambil tahun berjalan secara dinamis untuk dynamic table
         $year = date('Y');
@@ -1389,7 +1510,7 @@ class SalesOrderController extends Controller
         ], 200);
     }
 
-     public function sendSupplier($id)
+    public function sendSupplier($id)
     {
         $po = SalesOrder::findOrFail($id);
 
@@ -1412,7 +1533,7 @@ class SalesOrderController extends Controller
         ]);
     }
 
-     public function print($id)
+    public function print($id)
     {
         $salesOrder = SalesOrder::with(['details.produkID', 'details.unitID'])->findOrFail($id);
         $company = Company::first();

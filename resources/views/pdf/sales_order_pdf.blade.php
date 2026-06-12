@@ -246,6 +246,17 @@
         .items-table tr {
             page-break-inside: avoid;
         }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            font-size: 7.5pt;
+            color: #999;
+            text-align: right;
+            border-top: 1px solid #eee;
+            padding-top: 5px;
+        }
     </style>
 </head>
 
@@ -328,6 +339,7 @@
                 <th style="width: 14%;">Kode Barang</th>
                 <th style="width: 40%;">Nama Barang</th>
                 <th style="width: 8%; text-align: center;">Kts.</th>
+                <th style="width: 8%; text-align: center;">Satuan</th>
                 <th style="width: 12%; text-align: right;">@Harga</th>
                 <th style="width: 12%; text-align: right;">Diskon</th>
                 <th style="width: 14%; text-align: right;">Total</th>
@@ -338,7 +350,8 @@
                 <tr>
                     <td>{{ $detail->produkID->id_barang }}</td>
                     <td>{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}</td>
-                    <td class="text-center">{{ $detail->qty }}</td>
+                    <td class="text-center">{{ rtrim(rtrim(number_format($detail->qty, 2, ',', '.'), '0'), ',') }}</td>
+                    <td class="text-center">{{ $detail->unitID->detail }}</td>
                     <td class="text-right">{{ number_format($detail->unit_price, 0, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($detail->discount, 0, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($detail->amount, 0, ',', '.') }}</td>
@@ -389,7 +402,7 @@
         <tr>
             <td class="keterangan-box">
                 @php
-                    $currencyId = session('currency_id') ?? Company::first()->default_currency_id;
+                    $currencyId = session('currency_id') ?? \App\Models\Setting\Company::first()->default_currency_id;
                     $currencyCode = \App\Models\Setting\Currency::find($currencyId)?->code ?? 'IDR';
 
                     // Gunakan nilai asli (jangan di-round agar sen tidak hilang)
@@ -447,7 +460,9 @@
             </tr>
         </table>
     </div>
-
+    <div class="footer">
+        Printed on: {{ date('Y-m-d H:i:s') }} | Confidential Document
+    </div>
 </body>
 
 </html>

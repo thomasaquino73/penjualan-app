@@ -44,7 +44,8 @@ class SalesOrderDetail extends Model
         // Sesuaikan nama class Unit dengan model master unit Anda
         return $this->belongsTo(BasicCodeDetail::class, 'unit_id', 'id');
     }
-     public function salesOrder()
+
+    public function salesOrder()
     {
         return $this->belongsTo(SalesOrder::class, 'sales_order_id');
     }

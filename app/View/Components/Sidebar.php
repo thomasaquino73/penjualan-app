@@ -55,21 +55,21 @@ class Sidebar extends Component
                 'name' => 'TRANSACTION',
                 'icon' => 'ti ti-shopping-cart',
                 'roles' => ['Super Admin'],
-                'permissions' => ['role-browse', 'permission-browse'],
+                'permissions' => ['permintaan_pembelian-browse', 'purchase_order-browse'],
                 'children' => [
                     [
                         'name' => 'Purchase Requisition',
                         'route' => 'permintaan-pembelian.index',
                         'pattern' => 'permintaan-pembelian.*',
                         'roles' => ['Super Admin'],
-                        'permissions' => ['barang-browse'],
+                        'permissions' => ['permintaan_pembelian-browse'],
                     ],
                     [
                         'name' => 'Purchase Order',
                         'route' => 'purchase-order.index',
                         'pattern' => 'purchase-order.*',
                         'roles' => ['Super Admin'],
-                        'permissions' => ['barang-browse'],
+                        'permissions' => ['purchase_order-browse'],
                     ],
                     [
                         'name' => 'Receive Item',
@@ -136,7 +136,7 @@ class Sidebar extends Component
                 'name' => 'TRANSACTION',
                 'icon' => 'ti ti-moneybag',
                 'roles' => ['Super Admin'],
-                'permissions' => ['role-browse', 'permission-browse'],
+                'permissions' => ['sales_quotation-browse', 'sales_order-browse'],
                 'children' => [
                     [
                         'name' => 'Sales Quotation',

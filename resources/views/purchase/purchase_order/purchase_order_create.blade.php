@@ -577,35 +577,7 @@
             }
         });
 
-        // $(function() {
-        //     const datePicker = flatpickr("#date", {
-        //         enableTime: false,
-        //         dateFormat: "d-m-Y",
-        //         minDate: "today",
-        //         defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
-        //     });
 
-        //     const expectedPicker = flatpickr("#expected_date", {
-        //         enableTime: false,
-        //         dateFormat: "d-m-Y",
-        //         minDate: "today",
-
-        //         onChange: function(selectedDates, dateStr) {
-        //             if (selectedDates.length > 0) {
-        //                 // set max date untuk PO Date
-        //                 datePicker.set("maxDate", selectedDates[0]);
-
-        //                 // ambil tanggal PO sekarang
-        //                 let poDate = datePicker.selectedDates[0];
-
-        //                 // kalau PO Date > Expected Date → reset
-        //                 if (poDate && poDate > selectedDates[0]) {
-        //                     datePicker.clear();
-        //                 }
-        //             }
-        //         },
-        //     });
-        // });
 
         $(document).ready(function() {
             $(".select2-modal").each(function() {
@@ -819,7 +791,7 @@
                     },
                 },
             });
-            
+
             $("#btnSubmitModal").on("click", function(e) {
                 let qtyInput = $("#quantity");
                 let currentQty = parseFloat(qtyInput.val()) || 0;

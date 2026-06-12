@@ -174,7 +174,51 @@
                                                 request.</td>
                                         </tr>
                                     @endforelse
+                                    <tr>
+                                        <td colspan="5"></td>
+                                        <td style="text-align: right !important;"><strong> Sub Total :</strong></td>
+                                        <td> {{ isset($model) ? format_uang(convert_currency($model->sub_total, $item->currency_id ?? 1)) : '' }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="5"></td>
+                                        <td style="text-align: right !important;"><strong>Discount :</strong></td>
+                                        <td> {{ isset($model) ? format_uang(convert_currency($model->disc_nominal, $item->currency_id ?? 1)) : '' }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="5"></td>
+                                        <td style="text-align: right !important;"><strong>Tax (11%) :</strong></td>
+                                        <td> {{ isset($model) ? format_uang(convert_currency($model->ppn, $item->currency_id ?? 1)) : '' }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="5"></td>
+                                        <td style="text-align: right !important;"><strong>Grand Total :</strong></td>
+                                        <td> {{ isset($model) ? format_uang(convert_currency($model->grand_total, $item->currency_id ?? 1)) : '' }}
+                                        </td>
+                                    </tr>
                                 </tbody>
+                            </table>
+                            <table class="w-100 footer-table">
+                                <tr>
+                                    <td class="keterangan-box">
+                                        @php
+                                            $currencyId =
+                                                session('currency_id') ??
+                                                \App\Models\Setting\Company::first()->default_currency_id;
+                                            $currencyCode =
+                                                \App\Models\Setting\Currency::find($currencyId)?->code ?? 'IDR';
+
+                                            // Gunakan nilai asli (jangan di-round agar sen tidak hilang)
+                                            $grandTotalConvert = convert_currency(
+                                                $model->grand_total,
+                                                $model->currency_id ?? 1,
+                                            );
+                                        @endphp
+                                        <div>Terbilang: {{ terbilang($grandTotalConvert, $currencyCode) }}</div>
+                                    </td>
+                                </tr>
                             </table>
                             <div class="row mt-5">
                                 <div class="col-md-6">

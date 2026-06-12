@@ -79,7 +79,7 @@
                 <p><strong>{{ $creator->fullname }}</strong> baru saja membuat sales quotation baru:</p>
 
                 <p style="font-size: 18px; font-weight: bold; color:#007bff;">
-                    “{{ $salesQuotation->code }}”
+                    “{{ $salesQuotation->sales_quotation_code }}”
                 </p>
 
                 <p>Silakan klik tombol di bawah untuk membuka detail sales quotationnya:</p>
