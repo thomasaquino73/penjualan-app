@@ -114,12 +114,12 @@
                                 </select>
                                 <span class="error text-danger" id="product_idError"></span>
                             </div>
-                            <div class="col-3 mb-3">
+                            <div class="col-md-3 col-sm-6 mb-3">
                                 <label class="form-label" for="quantity">Quantity</label>
                                 <input type="number" id="quantity" name="quantity" class="form-control" placeholder="0">
                                 <span class="error text-danger" id="quantityError"></span>
                             </div>
-                            <div class="col-3 mb-3">
+                            <div class="col-md-3 col-sm-6 mb-3">
                                 <label class="form-label" for="unit_id">Unit</label>
                                 <select name="unit_id" id="unit_id" class="form-select select2-modal "
                                     data-placeholder="Select Unit">
@@ -127,7 +127,7 @@
                                 </select>
                                 <span class="error text-danger" id="unit_idError"></span>
                             </div>
-                            <div class="col-6 mb-3">
+                            <div class="col-md-6 col-sm-6 mb-3">
                                 <label class="form-label" for="required_date">Required Date</label>
                                 <input type="text" id="required_date" name="required_date" class="form-control"
                                     placeholder="Select Date">

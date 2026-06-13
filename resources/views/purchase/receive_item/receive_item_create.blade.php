@@ -149,7 +149,7 @@
             </form>
         </div>
     </div>
-    @include('purchase.purchase_order.part.modals.modalPrDetail')
+    @include('purchase.receive_item.part.modalPrDetail')
     @include('purchase.purchase_order.part.modals.modalRequisitionDetail')
 @endsection
 @push('style')
@@ -264,7 +264,14 @@
         });
         let prDetailsData = [];
         $(document).ready(function() {
-
+            $(".select2-modal").each(function() {
+                var $this = $(this);
+                $this.wrap('<div class="position-relative"></div>').select2({
+                    placeholder: $this.attr("data-placeholder"),
+                    width: "100%",
+                    dropdownParent: $("#modalPrDetail"),
+                });
+            });
             $("#shipping_id").select2({
                 placeholder: "Select Shipping",
                 tags: true,
@@ -480,7 +487,85 @@
                     },
                 },
             });
+            $(document).on("change", "#product_id", function() {
+                let productId = $(this).val();
+                let unitSelect = $("#unit_id");
+                let priceInput = $("#unit_price");
+                let dropdownBtn = $("#btn-history-po");
+                let dropdownMenu = $("#po-price-dropdown-menu");
+                let helperText = $("#po-history-helper");
 
+                // Pastikan ID selector ini sesuai dengan ID Select Supplier di form utama kamu
+                let supplierId = $("#supplier_id").val();
+
+                if (!productId) {
+                    unitSelect.empty().append("<option></option>").trigger("change");
+                    priceInput.val("");
+                    dropdownBtn.prop("disabled", true);
+                    dropdownMenu.empty();
+                    helperText.text("Pilih produk untuk melacak riwayat harga beli.");
+                    return;
+                }
+
+                // Tambahan Validasi: Ingatkan user jika supplier belum dipilih
+                if (!supplierId) {
+                    alert(
+                        "Silahkan pilih Supplier terlebih dahulu pada form utama PO!",
+                    );
+                    $(this).val("").trigger("change"); // Reset pilihan produk
+                    return;
+                }
+
+                // ==========================================
+                // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
+                // ==========================================
+                $.ajax({
+                    url: `/get-units-by-product/${productId}`,
+                    type: "GET",
+                    dataType: "json",
+                    beforeSend: function() {
+                        unitSelect
+                            .html("<option>Loading units...</option>")
+                            .prop("disabled", true);
+                    },
+                    success: function(response) {
+                        unitSelect
+                            .empty()
+                            .append("<option></option>")
+                            .prop("disabled", false);
+
+                        if (response && response.length > 0) {
+                            $.each(response, function(key, item) {
+                                unitSelect.append(
+                                    `<option value="${item.id}">${item.name}</option>`,
+                                );
+                            });
+                        } else {
+                            unitSelect.append(
+                                '<option value="">No unit available</option>',
+                            );
+                        }
+
+                        unitSelect.trigger("change");
+
+                        let pendingUnitId = unitSelect.data("pending-val");
+                        if (pendingUnitId) {
+                            unitSelect.val(pendingUnitId).trigger("change");
+                            unitSelect.removeData("pending-val");
+                        }
+                    },
+                    error: function() {
+                        console.error("Gagal memuat list unit dari Controller.");
+                        unitSelect
+                            .empty()
+                            .append("<option></option>")
+                            .prop("disabled", false)
+                            .trigger("change");
+                    },
+                });
+
+
+            });
         });
     </SCript>
 @endpush

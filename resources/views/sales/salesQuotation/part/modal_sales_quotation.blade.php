@@ -22,13 +22,13 @@
                               </select>
                               <span class="error text-danger" id="product_idError"></span>
                           </div>
-                          <div class="col-6 mb-3">
+                          <div class="col-md-3 col-sm-6 mb-3">
                               <label class="form-label" for="quantity">Quantity</label>
                               <input type="number" id="quantity" name="quantity" class="form-control" placeholder="0"
                                   min="0">
                               <span class="error text-danger" id="quantityError"></span>
                           </div>
-                          <div class="col-6 mb-3">
+                          <div class="col-md-3 col-sm-6 mb-3">
                               <label class="form-label" for="unit_id">Unit</label>
                               <select name="unit_id" id="unit_id" class="form-select select2-modal "
                                   data-placeholder="Select Unit">
@@ -36,7 +36,7 @@
                               </select>
                               <span class="error text-danger" id="unit_idError"></span>
                           </div>
-                          <div class="col-6 mb-3">
+                          <div class="col-md-3 col-sm-6 mb-3">
                               <label class="form-label" for="unit_price">Unit Price</label>
                               <div class="input-group input-group-merge">
                                   <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
@@ -64,7 +64,7 @@
                               <small id="po-history-helper" class="form-text text-muted" style="font-size: 11px;">Pilih
                                   produk untuk melacak riwayat harga beli.</small>
                           </div>
-                          <div class="col-6 mb-3">
+                          <div class="col-md-3 col-sm-6 mb-3">
                               <label class="form-label" for="discount">Discount</label>
                               <input type="number" id="discount" name="discount" class="form-control" placeholder="0">
                               <span class="error text-danger" id="discountError"></span>

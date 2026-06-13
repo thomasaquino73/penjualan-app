@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Purchase;
 use App\Http\Controllers\Controller;
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
+use App\Models\Inventory\Warehouse;
 use App\Models\Purchase\ReceiveItem;
 use App\Models\Purchase\Supplier;
 use App\Models\Setting\Company;
@@ -274,6 +275,7 @@ class ReceiveItemController extends Controller
             'idNumber' => $this->generateNumberId(),
             'shipping' => Shipping::where('status', 1)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
+            'warehouse' => Warehouse::where('status', '<>', 0)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
 
         ];
