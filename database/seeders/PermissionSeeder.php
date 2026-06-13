@@ -16,6 +16,8 @@ class PermissionSeeder extends Seeder
         $modules = [
             'supplier' => ['alias' => 'Supplier', 'group' => 'Purchase'],
             'kategori_supplier' => ['alias' => 'Supplier Category', 'group' => 'Purchase'],
+            'receive_item' => ['alias' => 'Receive Item', 'group' => 'Purchase'],
+            'purchase_invoice' => ['alias' => 'Purchase Invoice', 'group' => 'Purchase'],
             'permintaan_pembelian' => [
                 'alias' => 'Purchase Requisition',
                 'group' => 'Purchase',
@@ -36,6 +38,7 @@ class PermissionSeeder extends Seeder
             ],
             'customer' => ['alias' => 'Customer', 'group' => 'Sales'],
             'kategori_customer' => ['alias' => 'Customer Category', 'group' => 'Sales'],
+            'delivery_order' => ['alias' => 'Delivery Order', 'group' => 'Sales'],
 
             'warehouse' => ['alias' => 'Warehouse', 'group' => 'Inventory'],
             'barang' => ['alias' => 'Product', 'group' => 'Inventory'],

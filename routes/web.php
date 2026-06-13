@@ -246,6 +246,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('', PurchaseOrderController::class)->parameters(['' => 'purchase_order']);
     });
     Route::prefix('receive-item')->name('receive-item.')->group(function () {
+        Route::get('/trash', [ReceiveItemController::class, 'trash'])->name('trash');
         Route::resource('', ReceiveItemController::class)->parameters(['' => 'receive_item']);
     });
     Route::patch('/sales-order/{id}/close', [SalesOrderController::class, 'CloseDocument'])->name('sales-order.close');

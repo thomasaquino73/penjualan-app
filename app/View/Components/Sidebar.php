@@ -55,7 +55,12 @@ class Sidebar extends Component
                 'name' => 'TRANSACTION',
                 'icon' => 'ti ti-shopping-cart',
                 'roles' => ['Super Admin'],
-                'permissions' => ['permintaan_pembelian-browse', 'purchase_order-browse'],
+                'permissions' => [
+                    'permintaan_pembelian-browse',
+                    'purchase_order-browse',
+                    'receive_item-browse',
+                    'purchase_invoice-browse'
+                ],
                 'children' => [
                     [
                         'name' => 'Purchase Requisition',
@@ -76,15 +81,15 @@ class Sidebar extends Component
                         'route' => 'receive-item.index',
                         'pattern' => 'receive-item.*',
                         'roles' => ['Super Admin'],
-                        'permissions' => ['barang-browse'],
+                        'permissions' => ['receive_item-browse'],
                     ],
-                    // [
-                    //     'name' => 'Purchase Invoice',
-                    //     'route' => 'customer.index',
-                    //     'pattern' => 'customer.*',
-                    //     'roles' => ['Super Admin'],
-                    //     'permissions' => ['barang-browse'],
-                    // ],
+                    [
+                        'name' => 'Purchase Invoice',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['purchase_invoice-browse'],
+                    ],
                     // [
                     //     'name' => 'Purchase Payment',
                     //     'route' => 'customer.index',
