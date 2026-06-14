@@ -15,6 +15,7 @@ use App\Models\Purchase\Supplier;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
+use App\Models\StockMutation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -368,6 +369,22 @@ class ReceiveItemController extends Controller
                                 }
                             }
                         }
+                            
+                        //  SIMPAN KE STOCK_MUTATIONS (Tabel baru untuk Laporan/Audit)
+                        StockMutation::create([
+                            'data_barang_id' => $item['product_id'],
+                            'unit_id' => $item['unit_id'],
+                            'warehouse_id' => $item['warehouse_id'] ?? null,
+                            'date_stock' => Carbon::parse($request->receive_item_date)->format('Y-m-d'),
+                            'qty_transaksi' => $qtyInputForm,
+                            'total_base_qty' => $qtyInputForm,
+                            'type' => 'in', // Karena ini input stok awal
+                            'keterangan' => 'Penerimaan Barang dari '.$ReceiveItem->supplierId->nama_supplier.', No.Dokumen : '.$request->no_dokumen,
+                            'created_by' => Auth::id(),
+                            'document_type' => 'receive_item',
+                        ]);
+
+
                     }
 
                     // --- OTOMASI STATUS PR MASTER ---
@@ -393,6 +410,8 @@ class ReceiveItemController extends Controller
                     }
                 }
             }
+
+            
 
             DB::commit();
 
