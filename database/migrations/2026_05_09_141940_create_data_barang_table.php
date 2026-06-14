@@ -32,6 +32,7 @@ return new class extends Migration
             $table->integer('primary_price')->nullable();
             $table->integer('primary_minimum_order')->nullable();
             $table->integer('primary_minimum_stock')->nullable();
+            $table->boolean('is_low_stock')->default(false);
             $table->tinyInteger('status')->default(1)->comment('0=delete, 1=active, 2=not active')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

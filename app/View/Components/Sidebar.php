@@ -59,7 +59,7 @@ class Sidebar extends Component
                     'permintaan_pembelian-browse',
                     'purchase_order-browse',
                     'receive_item-browse',
-                    'purchase_invoice-browse'
+                    'purchase_invoice-browse',
                 ],
                 'children' => [
                     [

@@ -6,6 +6,7 @@
                  <th>Item</th>
                  <th>Qty</th>
                  <th>Unit</th>
+                 <th>Warehouse</th>
              </tr>
          </thead>
      </table>

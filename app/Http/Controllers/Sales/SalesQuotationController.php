@@ -205,7 +205,7 @@ class SalesQuotationController extends Controller
                     }
 
                     if ($row->status != 'closed') {
-                       $btn .= '<a class="dropdown-item"
+                        $btn .= '<a class="dropdown-item"
                 href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->sales_quotation_code.'">
                 <i class="ti ti-lock"></i> Close SQ
              </a>';
@@ -840,7 +840,8 @@ class SalesQuotationController extends Controller
         // kalau mau download:
         // return $pdf->download('sales-quotation.pdf');
     }
-        public function CloseDocument(Request $request, $id)
+
+    public function CloseDocument(Request $request, $id)
     {
 
         try {

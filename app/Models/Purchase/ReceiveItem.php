@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReceiveItem extends Model
 {
-   use HasFactory;
+    use HasFactory;
 
     protected $table = 'receive_item';
 
@@ -35,6 +35,7 @@ class ReceiveItem extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
     public function supplierId()
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');

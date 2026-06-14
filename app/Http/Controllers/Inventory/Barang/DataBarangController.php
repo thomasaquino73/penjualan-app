@@ -52,8 +52,12 @@ class DataBarangController extends Controller
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = Barang::where('status', '<>', 0)->orderBy('id_barang', 'desc');
-
+            // $query = Barang::where('status', '<>', 0)->orderBy('id_barang', 'desc');
+            $query = Barang::where('status', '<>', 0)
+                ->withSum(['mutations as current_stock' => function ($query) {
+                    $query->select(DB::raw("SUM(CASE WHEN type = 'in' THEN total_base_qty ELSE -total_base_qty END)"));
+                }], 'total_base_qty')
+                ->orderBy('id_barang', 'desc');
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('created_at', function ($row) {
@@ -72,6 +76,15 @@ class DataBarangController extends Controller
                     }
 
                     return 'N/A';
+                })
+                ->addColumn('stok', function ($row) {
+                    $currentStock = $row->current_stock; // Memanggil accessor di atas
+                    $minStock = $row->primary_minimum_stock ?? 0;
+
+                    // Menandai warna merah jika stok <= minimum
+                    $color = ($currentStock <= $minStock) ? 'bg-danger' : 'bg-primary';
+
+                    return '<span class="badge '.$color.'">'.number_format($currentStock, 0).' '.$row->unitID->detail.'</span>';
                 })
                 ->addColumn('fotoProduk', function ($row) {
                     $avatarUrl = $row->photo_filename
@@ -140,7 +153,7 @@ class DataBarangController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'harga', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'harga', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok','stok'])
                 ->make(true);
         }
 
@@ -323,7 +336,7 @@ class DataBarangController extends Controller
                 ]);
 
                 // C. UPDATE QUANTITY DI TABEL BARANG (Total Stok Akhir)
-                $barang->increment('quantity', $total_base_qty);
+                // $barang->increment('quantity', $total_base_qty);
             }
 
             DB::commit();

@@ -283,7 +283,7 @@
                                                             <input type="text" id="contact_person"
                                                                 name="contact_person" class="form-control"
                                                                 placeholder="Enter Contact Person"
-                                                                value="{{ $kontak->contact_person }}">
+                                                                value="{{ isset($kontak) ? $kontak->contact_person : '' }}">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -295,7 +295,7 @@
                                                     <span class="input-group-text"><i class="ti ti-sitemap"></i></span>
                                                     <input type="text" id="posisi_jabatan" name="posisi_jabatan"
                                                         class="form-control" placeholder="Enter Position"
-                                                        value="{{ $kontak->posisi_jabatan }}">
+                                                        value="{{ isset($kontak) ? $kontak->posisi_jabatan : '' }}">
                                                 </div>
 
                                                 <span class="error text-danger" id="posisi_jabatanError"></span>
@@ -306,7 +306,7 @@
                                                     <span class="input-group-text"><i class="ti ti-mail"></i></span>
                                                     <input type="text" id="email_kontak" name="email_kontak"
                                                         class="form-control" placeholder="Enter Email"
-                                                        value="{{ $kontak->email_kontak }}">
+                                                        value="{{ isset($kontak) ? $kontak->email_kontak : '' }}">
                                                 </div>
 
                                                 <span class="error text-danger" id="email_kontakError"></span>
@@ -317,7 +317,7 @@
                                                     <span class="input-group-text"><i class="ti ti-phone"></i></span>
                                                     <input type="text" id="phone1_kontak" name="phone1_kontak"
                                                         class="form-control" placeholder="Enter Phone Number"
-                                                        value="{{ $kontak->phone1_kontak }}">
+                                                        value="{{ isset($kontak) ? $kontak->phone1_kontak : '' }}">
                                                 </div>
                                                 <span class="error text-danger" id="phone1_kontakError"></span>
                                             </div>
@@ -328,7 +328,7 @@
                                                     <span class="input-group-text"><i class="ti ti-phone"></i></span>
                                                     <input type="text" id="phone1_kontak" name="phone1_kontak"
                                                         class="form-control" placeholder="Enter Phone Number"
-                                                        value="{{ $kontak->phone1_kontak }}">
+                                                        value="{{ isset($kontak) ? $kontak->phone1_kontak : '' }}">
                                                 </div>
                                                 <span class="error text-danger" id="phone1_kontakError"></span>
                                             </div>
@@ -339,7 +339,7 @@
                                                     <span class="input-group-text"><i class="ti ti-printer"></i></span>
                                                     <input type="number" id="faximili_kontak" name="faximili_kontak"
                                                         class="form-control" placeholder="Enter Fax Number"
-                                                        value="{{ $kontak->faximili_kontak }}">
+                                                        value="{{ isset($kontak) ? $kontak->faximili_kontak : '' }}">
                                                 </div>
                                                 <span class="error text-danger" id="faximili_kontakError"></span>
                                             </div>
@@ -350,7 +350,7 @@
                                                     <span class="input-group-text"><i class="ti ti-globe"></i></span>
                                                     <input type="text" id="website_kontak" name="website_kontak"
                                                         class="form-control" placeholder="Enter Website"
-                                                        value="{{ $kontak->website_kontak }}">
+                                                        value="{{ isset($kontak) ? $kontak->website_kontak : '' }}">
                                                 </div>
                                                 <span class="error text-danger" id="website_kontakError"></span>
                                             </div>
@@ -360,7 +360,7 @@
                                                     <span class="input-group-text"><i class="ti ti-file-text"></i></span>
                                                     <input type="text" id="catatan" name="catatan"
                                                         class="form-control" placeholder="Enter Notes"
-                                                        value="{{ $kontak->catatan }}">
+                                                        value="{{ isset($kontak) ? $kontak->catatan : '' }}">
                                                 </div>
                                                 <span class="error text-danger" id="catatanError"></span>
                                             </div>
@@ -386,7 +386,7 @@
                                                         <option></option>
                                                         @foreach ($paymentTerm as $term)
                                                             <option value="{{ $term->id }}"
-                                                                 {{ $pembelian->payment_term == $term->id ? 'selected' : '' }}>
+                                                                {{ $pembelian?->payment_term == $term->id ? 'selected' : '' }}>
                                                                 {{ $term->nama }}
                                                             </option>
                                                         @endforeach
@@ -401,14 +401,14 @@
                                                     <span class="input-group-text">%</span>
                                                     <input type="number" id="discount" name="discount"
                                                         class="form-control" placeholder="0" min="0"
-                                                        value="{{ $pembelian->discount }}">
+                                                        value="{{ isset($pembelian) ? $pembelian->discount : '' }}">
                                                 </div>
                                                 <span class="error text-danger" id="discountError"></span>
                                             </div>
                                             <div class="col-md-12 col-sm-12 mb-3">
                                                 <label for="default_deskripsi" class="form-label">Description</label>
                                                 <textarea type="text" id="default_deskripsi" name="default_deskripsi" class="form-control"
-                                                    placeholder="Enter Description">{{ $pembelian->default_deskripsi }}</textarea>
+                                                    placeholder="Enter Description">{{ isset($pembelian) ? $pembelian->default_deskripsi : '' }}</textarea>
                                                 <span class="error text-danger" id="default_deskripsiError"></span>
                                             </div>
                                         </div>
@@ -431,7 +431,7 @@
                                                 <div class="form-check form-check-primary col-8">
                                                     <input class="form-check-input" type="checkbox" value="1"
                                                         name="default_pajak" id="default_pajak"
-                                                        {{ $pajak->default_pajak == 1 ? 'checked' : '' }}>
+                                                        {{ $pajak?->default_pajak == 1 ? 'checked' : '' }}>
                                                     <label class="form-check-label" for="default_pajak">Default Invoice
                                                         includes Tax</label>
                                                 </div>
@@ -446,17 +446,17 @@
                                                     <select name="tipe_id_pajak" id="tipe_id_pajak" class="form-select">
                                                         <option value="" selected hidden>Select Type ID Tax</option>
                                                         <option value="NIK"
-                                                            {{ $pajak->tipe_id_pajak == 'NIK' ? 'selected' : '' }}>NIK
+                                                            {{ $pajak?->tipe_id_pajak == 'NIK' ? 'selected' : '' }}>NIK
                                                         </option>
                                                         <option value="NPWP"
-                                                            {{ $pajak->tipe_id_pajak == 'NPWP' ? 'selected' : '' }}>NPWP
+                                                            {{ $pajak?->tipe_id_pajak == 'NPWP' ? 'selected' : '' }}>NPWP
                                                         </option>
                                                         <option value="Paspor"
-                                                            {{ $pajak->tipe_id_pajak == 'Paspor' ? 'selected' : '' }}>
+                                                            {{ $pajak?->tipe_id_pajak == 'Paspor' ? 'selected' : '' }}>
                                                             Paspor
                                                         </option>
                                                         <option value="Lainnya"
-                                                            {{ $pajak->tipe_id_pajak == 'Lainnya' ? 'selected' : '' }}>
+                                                            {{ $pajak?->tipe_id_pajak == 'Lainnya' ? 'selected' : '' }}>
                                                             Lainnya
                                                         </option>
                                                     </select>
@@ -472,7 +472,7 @@
                                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
                                                     <input type="text" class="form-control" id="nomor_wajib_pajak"
                                                         name="nomor_wajib_pajak" placeholder="Enter NPWP number"
-                                                        value="{{ $pajak->nomor_wajib_pajak }}">
+                                                        value="{{ isset($pajak) ? $pajak->nomor_wajib_pajak : '' }}">
                                                 </div>
 
                                             </div>
@@ -485,7 +485,7 @@
                                                     <span class="input-group-text"><i class="ti ti-user"></i></span>
                                                     <input type="text" class="form-control" id="nama_wajib_pajak"
                                                         name="nama_wajib_pajak" placeholder="Enter Taxpayer Name"
-                                                        value="{{ $pajak->nama_wajib_pajak }}">
+                                                        value="{{ isset($pajak) ? $pajak->nama_wajib_pajak : '' }}">
                                                 </div>
 
                                             </div>
@@ -498,7 +498,7 @@
                                                     <span class="input-group-text"><i class="ti ti-id-badge-2"></i></span>
                                                     <input type="text" class="form-control" id="id_tku"
                                                         name="id_tku" placeholder="Enter ID TKU"
-                                                        value="{{ $pajak->id_tku }}">
+                                                        value="{{ isset($pajak) ? $pajak->id_tku : '' }}">
                                                 </div>
 
                                             </div>
@@ -512,7 +512,7 @@
                                                 <div class="form-check form-check-primary col-8">
                                                     <input class="form-check-input" type="checkbox" value="1"
                                                         name="check_address" id="check_address"
-                                                        {{ $pajak->check_address == 1 ? 'checked' : '' }}>
+                                                        {{ $pajak?->check_address == 1 ? 'checked' : '' }}>
                                                     <label class="form-check-label" for="check_address">Tax address is
                                                         the same as payment address</label>
                                                 </div>
@@ -522,7 +522,7 @@
                                             <label class="col-sm-3 col-form-label"
                                                 for="basic-default-name">Address</label>
                                             <div class="col-sm-9">
-                                                <textarea class="form-control" id="alamat_pajak" name="alamat_pajak" placeholder="Enter Tax Address">{{ $pajak->alamat_pajak }}</textarea>
+                                                <textarea class="form-control" id="alamat_pajak" name="alamat_pajak" placeholder="Enter Tax Address">{{ isset($pajak) ? $pajak->alamat_pajak : '' }}</textarea>
                                             </div>
                                         </div>
                                         <div class="row mb-3">
@@ -532,7 +532,7 @@
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
                                                     <input type="text" class="form-control" id="kota_pajak"
                                                         name="kota_pajak" placeholder="Enter City"
-                                                        value="{{ $pajak->kota_pajak }}">
+                                                        value="{{ isset($pajak) ? $pajak->kota_pajak : '' }}">
                                                 </div>
 
                                             </div>
@@ -545,7 +545,7 @@
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
                                                     <input type="text" class="form-control" id="kodepos_pajak"
                                                         name="kodepos_pajak" placeholder="Enter Postal Code"
-                                                        value="{{ $pajak->kodepos_pajak }}">
+                                                        value="{{ isset($pajak) ? $pajak->kodepos_pajak : '' }}">
                                                 </div>
 
                                             </div>
@@ -558,7 +558,7 @@
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
                                                     <input type="text" class="form-control" id="provinsi_pajak"
                                                         name="provinsi_pajak" placeholder="Enter Province"
-                                                        value="{{ $pajak->provinsi_pajak }}">
+                                                        value="{{ isset($pajak) ? $pajak->provinsi_pajak : '' }}">
                                                 </div>
 
                                             </div>
@@ -571,7 +571,7 @@
                                                     <span class="input-group-text"><i class="ti ti-map"></i></span>
                                                     <input type="text" class="form-control" id="negara_pajak"
                                                         name="negara_pajak" placeholder="Enter Country"
-                                                        value="{{ $pajak->negara_pajak }}">
+                                                        value="{{ isset($pajak) ? $pajak->negara_pajak : '' }}">
                                                 </div>
 
                                             </div>

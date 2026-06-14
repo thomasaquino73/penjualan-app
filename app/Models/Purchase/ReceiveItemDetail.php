@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReceiveItemDetail extends Model
 {
-     use HasFactory;
+    use HasFactory;
 
     protected $table = 'receive_item_detail';
 
@@ -26,7 +26,8 @@ class ReceiveItemDetail extends Model
         $year = date('Y');
         $this->table = "receive_item_detail_{$year}";
     }
-        public function produkID()
+
+    public function produkID()
     {
         return $this->belongsTo(Barang::class, 'product_id', 'id');
     }
@@ -36,9 +37,9 @@ class ReceiveItemDetail extends Model
         // Sesuaikan nama class Unit dengan model master unit Anda
         return $this->belongsTo(BasicCodeDetail::class, 'unit_id', 'id');
     }
+
     public function receiveItem()
     {
         return $this->belongsTo(ReceiveItem::class, 'receive_item_id');
     }
-
 }

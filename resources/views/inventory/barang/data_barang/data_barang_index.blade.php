@@ -23,7 +23,7 @@
 
             <div class="col-12 col-lg-5">
                 <div
-                    class="d-flex flex-column flex-md-row gap-2 
+                    class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
 
                     @canany(['barang-create'])
@@ -67,7 +67,7 @@
                         <th>Product Code</th>
                         <th>Product Name</th>
                         <th>Product Type</th>
-                        {{-- <th>Stock</th> --}}
+                        <th>Stock</th>
                         <th>Status</th>
                         <th>Created</th>
                         <th>Updated</th>
@@ -125,12 +125,12 @@
                     {
                         data: 'nama_barang',
                     },
-                     {
+                    {
                         data: 'productType',
                     },
-                    // {
-                    //     data: 'harga',
-                    // },
+                    {
+                        data: 'stok',
+                    },
                     {
                         data: 'status',
                     },

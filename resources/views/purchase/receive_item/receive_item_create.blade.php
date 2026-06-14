@@ -34,7 +34,7 @@
 
         </div>
         <div class="card-body table-responsive p-3">
-            <form action="{{ route('purchase-order.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
+            <form action="{{ route('receive-item.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
                 @csrf
                 <div class="row mb-5">
 
@@ -49,7 +49,11 @@
                                             data-placeholder="Select Supplier">
                                             <option></option>
                                             @foreach ($supplier as $supp)
-                                                <option value="{{ $supp->id }}" data-alamat="{{ $supp->alamat }}">
+                                                <option value="{{ $supp->id }}"
+                                                    data-alamat="{{ $supp->alamat_pembayaran }}"
+                                                    data-kota="{{ $supp->kota }}" data-kodepos="{{ $supp->kodepos }}"
+                                                    data-provinsi="{{ $supp->provinsi }}"
+                                                    data-negara="{{ $supp->negara }}">
                                                     [{{ $supp->id_supplier }}] {{ $supp->nama_supplier }}
                                                 </option>
                                             @endforeach
@@ -162,7 +166,7 @@
 
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
-    <SCript>
+    <script>
         $("#btnAddShipping").click(function() {
             Swal.fire({
                 title: "Add New Shipping",
@@ -347,6 +351,10 @@
                     },
                     {
                         data: "unit",
+                        className: "text-center"
+                    },
+                    {
+                        data: "warehouse",
                         className: "text-center"
                     },
 
@@ -566,6 +574,270 @@
 
 
             });
+
+            $('#supplier_id').on('change', function() {
+                // Ambil element option yang sedang dipilih
+                var selectedOption = $(this).find(':selected');
+
+                // Ambil data dari atribut data-*
+                var alamat = selectedOption.data('alamat');
+                var kota = selectedOption.data('kota');
+                var kodepos = selectedOption.data('kodepos');
+                var provinsi = selectedOption.data('provinsi');
+                var negara = selectedOption.data('negara');
+
+                // Gabungkan menjadi satu string untuk ditampilkan di textarea
+                // Anda bisa menyesuaikan format penulisan alamat di sini
+                var fullAddress = `${alamat}, ${kota}, ${provinsi}, ${negara}, ${kodepos}`;
+
+                // Masukkan ke dalam textarea
+                $('#address').val(fullAddress);
+            });
+            $("#btnSubmitModal").on("click", function(e) {
+                let qtyInput = $("#quantity");
+                let currentQty = parseFloat(qtyInput.val()) || 0;
+
+                // Ambil batas sisa PR dari atribut input modal
+                let maxPrLimit = qtyInput.attr("data-sisa-pr");
+
+                // JIKA BERDASARKAN PR (maxPrLimit terdefinisi dan tidak kosong)
+                if (maxPrLimit !== undefined && maxPrLimit !== null && maxPrLimit !== '') {
+                    maxPrLimit = parseFloat(maxPrLimit);
+
+                    if (currentQty > maxPrLimit) {
+                        e.preventDefault(); // Hentikan proses simpan/update ke array
+
+                        Swal.fire({
+                            icon: "warning",
+                            title: "Melebihi Sisa PR",
+                            text: `Kuantitas item ini tidak boleh melebihi sisa PO (Maksimal sisa: ${maxPrLimit}).`,
+                            customClass: {
+                                confirmButton: "btn btn-warning"
+                            },
+                            buttonsStyling: false
+                        });
+
+                        qtyInput.val(maxPrLimit); // Otomatis reset input ke angka maksimal
+                        return false;
+                    }
+                }
+
+                // JIKA PO BEBAS (maxPrLimit tidak ada), AKAN LOLOS TANPA VALIDASI MAKSIMAL
+            });
+            $("#formPrDetail").on("submit", function(e) {
+                e.preventDefault();
+
+                let productId = $("#product_id").val();
+                let productName = $("#product_id option:selected").text();
+                let quantity = parseFloat($("#quantity").val()) || 0;
+                let unitId = $("#unit_id").val();
+                let unitName = $("#unit_id option:selected").text();
+                let warehouseId = $("#warehouse_id").val();
+                let warehouseName = $("#warehouse_id option:selected").text();
+                let detailId = $("#detail_id")
+                    .val(); // Ini adalah index row array (kosong jika barang baru)
+                // 1. Validasi Input Wajib
+                if (!productId || quantity <= 0 || !unitId) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Oops...",
+                        text: "Please fill all required fields! (Product, Valid Quantity, and Unit)",
+                        customClass: {
+                            confirmButton: "btn btn-danger",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return false;
+                }
+
+                // 2. Validasi Duplikasi Produk
+                let isDuplicate = false;
+                if (prDetailsData && prDetailsData.length > 0) {
+                    for (let i = 0; i < prDetailsData.length; i++) {
+                        if (prDetailsData[i].product_id == productId) {
+                            if (detailId === "") {
+                                // Jika tambah baru dan produk sudah ada di tabel
+                                isDuplicate = true;
+                                break;
+                            } else if (detailId !== "" && i != detailId) {
+                                // Jika sedang edit, tapi produk diubah ke produk lain yang sudah ada di tabel
+                                isDuplicate = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (isDuplicate) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Product Already Exists!",
+                        html: `The product <b>"${productName}"</b> is already registered.<br>Please edit the item if you want to change it.`,
+                        customClass: {
+                            confirmButton: "btn btn-danger",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return false;
+                }
+
+
+                let itemData = {
+                    product_id: productId,
+                    data_produk: productName,
+                    quantity: quantity,
+                    unit_id: unitId,
+                    unit: unitName,
+                    warehouse_id: warehouseId,
+                    warehouse: warehouseName,
+                };
+
+                // 5. Logika Penyimpanan Berdasarkan 2 Cara Pengisian PO
+                if (detailId === "") {
+                    // --- CARA A: PO ISI SENDIRI (TAMBAH BARU MANUAL) ---
+                    prDetailsData.push(itemData);
+                } else {
+                    // --- CARA B: AMBIL DARI PR & EDIT DATA ---
+                    // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
+                    // Properti bawaan PR seperti 'requisition_code' & 'purchase_requisition_detail_id' 
+                    // akan otomatis aman dan dipertahankan.
+                    prDetailsData[detailId] = {
+                        ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)
+                        ...itemData // Update dengan data baru dari form modal
+                    };
+                }
+
+                // 6. Refresh Tampilan & Hitung Total Akhir PO
+                table.clear().rows.add(prDetailsData).draw();
+                // Tutup Modal Form Detail
+                $("#modalPrDetail").modal("hide");
+            });
+
+            // SIMPAN DATA SEMUA
+            let saveAndNew = false;
+            let activeBtn = null;
+
+            $(document).on("click", '.card-footer button[type="submit"]', function() {
+                saveAndNew = $(this).data("save-and-new");
+                activeBtn = $(this);
+            });
+
+            $("#postForm").on("submit", function(e) {
+                e.preventDefault();
+
+                let form = this;
+                let formData = new FormData(form);
+
+                if (!activeBtn) {
+                    activeBtn = $("#postForm").find(
+                        'button[data-save-and-new="false"]',
+                    );
+                    saveAndNew = false;
+                }
+                // START LOADING
+                activeBtn.html(
+                    '<i class="fa fa-spin fa-spinner me-1"></i> Checking...',
+                );
+                $(".card-footer button").prop("disabled", true);
+
+                if (
+                    typeof prDetailsData === "undefined" ||
+                    prDetailsData.length === 0
+                ) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Empty Items",
+                        text: "Please add at least one item detail to the table before saving.",
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn btn-primary waves-effect waves-light",
+                        },
+                        buttonsStyling: false,
+                    }).then(() => {
+                        // AFTER MODAL CLOSED
+                        let closeBtn = $("#postForm").find(
+                            'button[data-save-and-new="false"]',
+                        );
+                        let newBtn = $("#postForm").find(
+                            'button[data-save-and-new="true"]',
+                        );
+
+                        closeBtn.html(
+                            '<i class="fa fa-upload me-1"></i> Save and Close',
+                        );
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
+                        );
+
+                        $(".card-footer button").prop("disabled", false);
+                    });
+
+                    return false;
+                }
+
+                formData.append("save_and_new", saveAndNew ? 1 : 0);
+                formData.append("items_detail", JSON.stringify(prDetailsData));
+
+                $.ajax({
+                    url: $(form).attr("action"),
+                    method: $(form).attr("method"),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    beforeSend: function() {
+                        activeBtn.html(
+                            '<i class="fa fa-spin fa-spinner me-1"></i> Sending...',
+                        );
+                        $(".card-footer button").prop("disabled", true);
+                    },
+                    complete: function() {
+                        let closeBtn = $("#postForm").find(
+                            'button[data-save-and-new="false"]',
+                        );
+                        let newBtn = $("#postForm").find(
+                            'button[data-save-and-new="true"]',
+                        );
+                        closeBtn.html(
+                            '<i class="fa fa-upload me-1"></i> Save and Close',
+                        );
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
+                        );
+                        $(".card-footer button").prop("disabled", false);
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Data Created Successfully",
+                            text: response.message,
+                            customClass: {
+                                confirmButton: "btn btn-primary waves-effect waves-light",
+                            },
+                            buttonsStyling: false,
+                        }).then(() => {
+                            window.location.href = response.redirect;
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Failed to Create Data",
+                            text: xhr.responseJSON.message ||
+                                "Please check your data again.",
+                            customClass: {
+                                confirmButton: "btn btn-primary waves-effect waves-light",
+                            },
+                            buttonsStyling: false,
+                        });
+
+                        let errors = xhr.responseJSON.errors || {};
+                        $.each(errors, function(key, value) {
+                            $(`#${key}Error`).text(value[0]);
+                        });
+                    },
+                });
+            });
         });
-    </SCript>
+    </script>
 @endpush

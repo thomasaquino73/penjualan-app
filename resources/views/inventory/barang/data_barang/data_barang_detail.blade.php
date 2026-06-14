@@ -100,8 +100,9 @@
                                                 </td>
                                             </tr>
                                             <tr class="align-middle">
-                                                <th class="ps-4 py-3 text-muted fw-normal">Inventory Type</th>
-                                                <td class="fw-medium text-dark ps-2">{{ $detail->typeID->detail ?? '-' }}
+                                                <th class="ps-4 py-3 text-muted fw-normal">Minimun Stock</th>
+                                                <td class="fw-medium text-dark ps-2">
+                                                    {{ $detail->primary_minimum_stock ?? '-' }}
                                                 </td>
                                             </tr>
                                             <tr>

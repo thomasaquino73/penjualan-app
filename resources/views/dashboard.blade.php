@@ -641,163 +641,91 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between">
-                    <div class="card-title m-0 me-2">
-                        <h5 class="m-0 me-2">Minimum Stock</h5>
-                        <small class="text-muted">Counter May 2026</small>
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn p-0" type="button" id="employeeList" data-bs-toggle="dropdown"
-                            aria-haspopup="true" aria-expanded="false">
-                            <i class="ti ti-dots-vertical ti-sm text-muted"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="employeeList">
-                            <a class="dropdown-item" href="javascript:void(0);">Download</a>
-                            <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
-                            <a class="dropdown-item" href="javascript:void(0);">Share</a>
-                        </div>
-                    </div>
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between">
+                <div class="card-title m-0 me-2">
+                    <h5 class="m-0 me-2">Minimum Stock</h5>
+                    <small class="text-muted">
+                        {{ now()->translatedFormat('F Y') }}
+                    </small>
                 </div>
-                <div class="card-body">
-                    <ul class="p-0 m-0">
-                        <li class="d-flex mb-4 pb-1 align-items-center">
-                            <img src="../../assets/img/icons/brands/chrome.png" alt="Chrome" height="28"
-                                class="me-3 rounded">
-                            <div class="d-flex w-100 align-items-center gap-2">
-                                <div class="d-flex justify-content-between flex-grow-1 flex-wrap">
-                                    <div>
-                                        <h6 class="mb-0">Google Chrome</h6>
-                                    </div>
 
-                                    <div class="user-progress d-flex align-items-center gap-2">
-                                        <h6 class="mb-0">90.4%</h6>
-                                    </div>
-                                </div>
-                                <div class="chart-progress" data-color="secondary" data-series="85"></div>
-                            </div>
-                        </li>
-                        <li class="d-flex mb-4 pb-1 align-items-center">
-                            <img src="../../assets/img/icons/brands/safari.png" alt="Safari" height="28"
-                                class="me-3 rounded">
-                            <div class="d-flex w-100 align-items-center gap-2">
-                                <div class="d-flex justify-content-between flex-grow-1 flex-wrap">
-                                    <div>
-                                        <h6 class="mb-0">Apple Safari</h6>
-                                    </div>
-                                    <div class="user-progress d-flex align-items-center gap-2">
-                                        <h6 class="mb-0">70.6%</h6>
-                                    </div>
-                                </div>
-                                <div class="chart-progress" data-color="success" data-series="70"></div>
-                            </div>
-                        </li>
-                        <li class="d-flex mb-4 pb-1 align-items-center">
-                            <img src="../../assets/img/icons/brands/firefox.png" alt="Firefox" height="28"
-                                class="me-3 rounded">
-                            <div class="d-flex w-100 align-items-center gap-2">
-                                <div class="d-flex justify-content-between flex-grow-1 flex-wrap">
-                                    <div>
-                                        <h6 class="mb-0">Mozilla Firefox</h6>
-                                    </div>
-                                    <div class="user-progress d-flex align-items-center gap-2">
-                                        <h6 class="mb-0">35.5%</h6>
-                                    </div>
-                                </div>
-                                <div class="chart-progress" data-color="primary" data-series="25"></div>
-                            </div>
-                        </li>
-                        <li class="d-flex mb-4 pb-1 align-items-center">
-                            <img src="../../assets/img/icons/brands/opera.png" alt="Opera" height="28"
-                                class="me-3 rounded">
-                            <div class="d-flex w-100 align-items-center gap-2">
-                                <div class="d-flex justify-content-between flex-grow-1 flex-wrap">
-                                    <div>
-                                        <h6 class="mb-0">Opera Mini</h6>
-                                    </div>
+                <div class="dropdown">
+                    <button class="btn p-0" type="button" data-bs-toggle="dropdown">
+                        <i class="ti ti-dots-vertical ti-sm text-muted"></i>
+                    </button>
 
-                                    <div class="user-progress d-flex align-items-center gap-2">
-                                        <h6 class="mb-0">80.0%</h6>
-                                    </div>
-                                </div>
-                                <div class="chart-progress" data-color="danger" data-series="75"></div>
-                            </div>
-                        </li>
-                        <li class="d-flex mb-4 pb-1 align-items-center">
-                            <img src="../../assets/img/icons/brands/edge.png" alt="Edge" height="28"
-                                class="me-3 rounded">
-                            <div class="d-flex w-100 align-items-center gap-2">
-                                <div class="d-flex justify-content-between flex-grow-1 flex-wrap">
-                                    <div>
-                                        <h6 class="mb-0">Internet Explorer</h6>
-                                    </div>
-                                    <div class="user-progress d-flex align-items-center gap-2">
-                                        <h6 class="mb-0">62.2%</h6>
-                                    </div>
-                                </div>
-                                <div class="chart-progress" data-color="info" data-series="60"></div>
-                            </div>
-                        </li>
-                        <li class="d-flex align-items-center">
-                            <img src="../../assets/img/icons/brands/brave.png" alt="Brave" height="28"
-                                class="me-3 rounded">
-                            <div class="d-flex w-100 align-items-center gap-2">
-                                <div class="d-flex justify-content-between flex-grow-1 flex-wrap">
-                                    <div>
-                                        <h6 class="mb-0">Brave</h6>
-                                    </div>
-                                    <div class="user-progress d-flex align-items-center gap-2">
-                                        <h6 class="mb-0">46.3%</h6>
-                                    </div>
-                                </div>
-                                <div class="chart-progress" data-color="warning" data-series="45"></div>
-                            </div>
-                        </li>
-                    </ul>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="{{ route('data-barang.index') }}">
+                            View All
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-xl-8 col-sm-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between pb-0">
-                    <div class="card-title mb-0">
-                        <h5 class="mb-0">Best Sellers</h5>
-                        <small class="text-muted">Last 7 Days</small>
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn p-0" type="button" id="supportTrackerMenu" data-bs-toggle="dropdown"
-                            aria-haspopup="true" aria-expanded="false">
-                            <i class="ti ti-dots-vertical ti-sm text-muted"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="supportTrackerMenu">
-                            <a class="dropdown-item" href="{{ route('data-barang.index') }}">View More</a>
+
+            <div class="card-body">
+
+                @if ($minStock->count() > 0)
+                    <ul class="p-0 m-0">
+                        @foreach ($minStock as $item)
+                            @php
+                                $minStockQty = $item->primary_minimum_stock ?? 0;
+                                $currentStock = $item->current_stock ?? 0;
+                                $percentage = $minStockQty > 0 ? round(($currentStock / $minStockQty) * 100) : 0;
+                                $percentage = min(100, max(0, $percentage));
+                                $shortage = max(0, $minStockQty - $currentStock);
+                            @endphp
+
+                            <li class="d-flex mb-4 pb-1 align-items-center">
+                                <div class="avatar avatar-sm me-3">
+                                    <img src="{{ !empty($item->photo_filename) ? asset($item->photo_filename) : asset('image/no-images.jpg') }}"
+                                        alt="{{ $item->nama_barang }}" class="rounded"
+                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+
+                                <div class="d-flex w-100 align-items-center gap-2">
+                                    <div class="d-flex justify-content-between flex-grow-1 flex-wrap">
+                                        <div>
+                                            <h6 class="mb-0">{{ $item->nama_barang }}</h6>
+                                            <small class="text-muted">
+                                                {{ $item->id_barang }}
+                                            </small>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-2">
+                                            <span class="badge bg-danger"> <small class=" text-white">
+                                                    Stok: <strong>{{ number_format($currentStock, 0) }}</strong> /
+                                                    Min: <strong>{{ number_format($minStockQty, 0) }}</strong>
+                                                </small></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="chart-progress" data-color="danger" data-series="{{ $percentage }}">
+                                    </div>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <div class="text-center py-5">
+
+                        <div class="avatar avatar-xl mx-auto mb-3">
+                            <span class="avatar-initial rounded bg-label-success">
+                                <i class="ti ti-check fs-2"></i>
+                            </span>
                         </div>
+
+                        <h6 class="mb-1 text-success">
+                            Semua stok aman
+                        </h6>
+
+                        <small class="text-muted">
+                            Tidak ada barang yang berada di bawah minimum stock bulan ini.
+                        </small>
+
                     </div>
-                </div>
-                <div class="card-body table-responsive card-datatable">
-                    <table class="table display no-wrap">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Product Code</th>
-                                <th>Product Name</th>
-                                <th>Category</th>
-                                <th>Price</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                @endif
+
             </div>
         </div>
     </div>
@@ -805,27 +733,27 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
-            var options = {
-                chart: {
-                    type: 'line',
-                    height: 100,
-                    sparkline: {
-                        enabled: true // 🔥 ini bikin mini chart seperti di gambar kamu
-                    }
-                },
-                series: [{
-                    name: 'Profit',
-                    data: [10, 40, 20, 60, 40, 80]
-                }],
-                stroke: {
-                    width: 2,
-                    curve: 'smooth'
-                },
-                colors: ['#00cfe8'],
-                tooltip: {
-                    enabled: true
+        var options = {
+            chart: {
+                type: 'line',
+                height: 100,
+                sparkline: {
+                    enabled: true // 🔥 ini bikin mini chart seperti di gambar kamu
                 }
-            };
+            },
+            series: [{
+                name: 'Profit',
+                data: [10, 40, 20, 60, 40, 80]
+            }],
+            stroke: {
+                width: 2,
+                curve: 'smooth'
+            },
+            colors: ['#00cfe8'],
+            tooltip: {
+                enabled: true
+            }
+        };
 
         var chart = new ApexCharts(document.querySelector("#profitChart"), options);
         chart.render();

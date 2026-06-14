@@ -619,8 +619,8 @@
                 flatpickr("#date_stock", {
                     enableTime: false,
                     dateFormat: "d-m-Y",
-                    minDate: "today",
-                    defaultDate: new Date()
+                    // minDate: "today",
+                    // defaultDate: new Date()
                 });
             });
 
@@ -851,5 +851,4 @@
             });
         });
     </script>
-    
 @endpush

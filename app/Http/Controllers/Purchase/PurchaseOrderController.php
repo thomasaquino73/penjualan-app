@@ -403,7 +403,7 @@ class PurchaseOrderController extends Controller
             </a>
         ';
                     }
-  if ($row->status != 'closed') {
+                    if ($row->status != 'closed') {
                         $btn .= '<a class="dropdown-item"
                 href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->code.'">
                 <i class="ti ti-lock"></i> Close PO
@@ -1790,6 +1790,7 @@ class PurchaseOrderController extends Controller
             'data' => $formattedData,
         ]);
     }
+
     public function CloseDocument(Request $request, $id)
     {
 

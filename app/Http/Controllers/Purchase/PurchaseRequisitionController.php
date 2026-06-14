@@ -844,6 +844,7 @@ class PurchaseRequisitionController extends Controller
 
         return $pdf->download($fileName);
     }
+
     public function CloseDocument(Request $request, $id)
     {
 

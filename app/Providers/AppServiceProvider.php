@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Models\PengaturanSistem;
 use App\Models\Setting\Company;
 use App\Models\Setting\Currency;
+use App\Models\StockMutation;
+use App\Observers\StockMutationObserver;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -25,12 +27,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        StockMutation::observe(StockMutationObserver::class);
         Paginator::useBootstrapFive();
 
         // Menggunakan '*' tidak masalah asal query-nya di-cache atau dibungkus singleton,
         // namun alternatif terbaik agar tidak membebani memori adalah mengambil data global sekali saja di sini.
         View::composer('*', function ($view) {
-
             // 1. Ambil data company sekalian dengan defaultCurrency-nya (Eager Loading)
             $company = Company::with('defaultCurrency')->first();
 

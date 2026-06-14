@@ -82,4 +82,12 @@ class Barang extends Model
             ->limit(5)             // Ambil 5 harga unik terakhir saja
             ->pluck('unit_price'); // Mengubah hasil query langsung menjadi array [50000, 48000, ...]
     }
+
+    public function getCurrentStockAttribute()
+    {
+        // Menggunakan relasi 'mutations' yang sudah Anda buat
+        return $this->mutations()
+            ->selectRaw("SUM(CASE WHEN type = 'in' THEN total_base_qty ELSE -total_base_qty END) as total")
+            ->value('total') ?? 0;
+    }
 }

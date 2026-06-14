@@ -3,16 +3,22 @@
 namespace App\Http\Controllers\Purchase;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ReceiveItemRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\Warehouse;
+use App\Models\Purchase\PurchaseOrder;
+use App\Models\Purchase\PurchaseOrderDetail;
 use App\Models\Purchase\ReceiveItem;
+use App\Models\Purchase\ReceiveItemDetail;
 use App\Models\Purchase\Supplier;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
+use App\Models\Setting\SyaratPembayaran;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class ReceiveItemController extends Controller
@@ -84,7 +90,10 @@ class ReceiveItemController extends Controller
                     return 'N/A';
                 })
                 ->addColumn('date', function ($row) {
-                    return $row->date ? Carbon::parse($row->receive_item_date)->format('d M Y') : 'N/A';
+                    return $row->receive_item_date ? Carbon::parse($row->receive_item_date)->format('d M Y') : 'N/A';
+                })
+                ->addColumn('supplier', function ($row) {
+                    return $row->supplier_id ? $row->supplierId->nama_supplier : 'N/A';
                 })
                 ->addColumn('status', function ($row) {
                     switch ($row->status) {
@@ -125,7 +134,7 @@ class ReceiveItemController extends Controller
                 ->addColumn('cekbok', function ($row) {
 
                     if (
-                        auth()->user()->can('purchase_requisition-delete') &&
+                        auth()->user()->can('purchase_order-delete') &&
                         $row->status === 'draft'
                     ) {
                         return '
@@ -154,7 +163,7 @@ class ReceiveItemController extends Controller
 
                         if ($row->status == 'draft') {
                             $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'" data-status="processing">
-                        <i class="ti ti-send me-1"></i> Processing Requisition
+                        <i class="ti ti-send me-1"></i> Processing Order
                      </a>';
                             $btn .= '<hr class="dropdown-divider">';
                         }
@@ -169,7 +178,7 @@ class ReceiveItemController extends Controller
                         // ✅ DELETE
                         if ($user->can('permintaan_pembelian-delete') && $row->status == 'draft') {
                             $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
-                        data-id="'.$row->id.'" data-name="'.$row->code.'">
+                        data-id="'.$row->id.'" data-name="'.$row->receive_item_code.'">
                         <i class="ti ti-trash me-1"></i> Delete
                      </a>';
                         }
@@ -202,7 +211,7 @@ class ReceiveItemController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'date'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'date','supplier'])
                 ->make(true);
         }
 
@@ -216,7 +225,8 @@ class ReceiveItemController extends Controller
 
         return view('purchase.receive_item.receive_item_index', $x);
     }
-     public function bulanRomawi($bulan)
+
+    public function bulanRomawi($bulan)
     {
         $romawi = [
             1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',
@@ -262,8 +272,9 @@ class ReceiveItemController extends Controller
 
         return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
     }
+
     public function create()
-     {
+    {
         $x = [
             'title' => 'Receive Item New',
             'breadcrumb' => [
@@ -281,5 +292,196 @@ class ReceiveItemController extends Controller
         ];
 
         return view('purchase.receive_item.receive_item_create', $x);
+    }
+    public function store(ReceiveItemRequest $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $currentYear = date('Y');
+            $data = $request->validated();
+            $itemsDetailRaw = $request->input('items_detail');
+            unset($data['items_detail']);
+
+            $syaratPembayaran = SyaratPembayaran::find($request->payment_term);
+
+            $data['created_by'] = Auth::id();
+            $data['updated_by'] = null;
+            $data['receive_item_code'] = $request->receive_item_code;
+            $data['receive_item_date'] = Carbon::parse($request->receive_item_date)->format('Y-m-d');
+            $data['supplier_id'] = $request->supplier_id;
+            $data['no_dokumen'] = $request->no_dokumen;
+            $data['address'] = $request->address;
+            $data['description'] = $request->description;
+            $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
+            $data['shipping_id'] = $request->shipping_id;
+            $data['fob_id'] = $request->fob_id;
+
+            do {
+                $generatedCode = $this->generateNumberId();
+                $exists = ReceiveItem::where('receive_item_code', $generatedCode)->exists();
+            } while ($exists);
+
+            $data['receive_item_code'] = $generatedCode;
+            $ReceiveItem = ReceiveItem::create($data);
+
+            if ($itemsDetailRaw) {
+                $items = json_decode($itemsDetailRaw, true);
+                $involvedPrIds = [];
+
+                if (is_array($items) && count($items) > 0) {
+                    foreach ($items as $item) {
+                        $prDetailId = $item['purchase_order_detail_id'] ?? $item['pr_detail_id'] ?? $item['detail_id'] ?? null;
+                        $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
+
+                        ReceiveItemDetail::create([
+                            'receive_item_id' => $ReceiveItem->id,
+                            'purchase_order_detail_id' => $prDetailId,
+                            'product_id' => $item['product_id'],
+                            'qty' => $qtyInputForm,
+                            'unit_id' => $item['unit_id'],
+                            'warehouse_id' => $item['warehouse_id'],
+                            'active' => 1,
+                            // 'created_by' => Auth::id(),
+                            // 'created_at' => now(),
+                            // 'updated_at' => now(),
+                        ]);
+
+                        // --- LOGIKA SINKRONISASI DOKUMEN SEBELUMNYA ---
+                        if ($prDetailId) {
+                            $prDetail = DB::table("purchase_order_detail_{$currentYear}")->where('id', $prDetailId)->first();
+
+                            if ($prDetail) {
+                                // Hitung ulang total qty yang sudah di-PO kan untuk PR detail ini
+                                $totalPoForThisItem = ReceiveItemDetail::where('purchase_order_detail_id', $prDetailId)
+                                    ->where('active', 1)
+                                    ->sum('qty');
+
+                                // Update received_qty di tabel PR Detail
+                                DB::table("purchase_order_detail_{$currentYear}")
+                                    ->where('id', $prDetailId)
+                                    ->update(['received_qty' => $totalPoForThisItem]);
+
+                                // Catat ID PR Master agar statusnya bisa dihitung ulang nanti
+                                if (! in_array($prDetail->purchase_order_id, $involvedPrIds)) {
+                                    $involvedPrIds[] = $prDetail->purchase_order_id;
+                                }
+                            }
+                        }
+                    }
+
+                    // --- OTOMASI STATUS PR MASTER ---
+                    foreach ($involvedPrIds as $prId) {
+                        $allDetails = DB::table("purchase_order_detail_{$currentYear}")
+                            ->where('purchase_order_id', $prId)
+                            ->get();
+
+                        $totalRequested = $allDetails->sum('qty');
+                        $totalOrdered = $allDetails->sum('received_qty');
+
+                        if ($totalOrdered >= $totalRequested) {
+                            $newStatus = 'closed';
+                        } elseif ($totalOrdered > 0) {
+                            $newStatus = 'partial';
+                        } else {
+                            $newStatus = 'processing';
+                        }
+
+                        DB::table("purchase_order_{$currentYear}")
+                            ->where('id', $prId)
+                            ->update(['status' => $newStatus]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Receive Item '.$generatedCode.' berhasil disimpan.',
+                'redirect' => route('receive-item.index'),
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan data: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        DB::beginTransaction();
+
+        try {
+            // 1. Cari PO yang akan dihapus
+            $po = ReceiveItem::findOrFail($id);
+
+            // 2. Ambil detail PO untuk mendapatkan referensi PR Detail yang terkait
+            $poDetails = ReceiveItemDetail::where('receive_item_id', $po->id)->get();
+            $involvedPrIds = [];
+
+            foreach ($poDetails as $poDetail) {
+                if ($poDetail->purchase_order_detail_id) {
+                    // Catat ID PR Master-nya
+                    $prDetail = PurchaseOrderDetail::where('id', $poDetail->purchase_order_detail_id)
+                        ->first();
+
+                    if ($prDetail && ! in_array($prDetail->receive_item_id, $involvedPrIds)) {
+                        $involvedPrIds[] = $prDetail->receive_item_id;
+                    }
+                }
+            }
+
+            // 3. Nonaktifkan PO dan Detail PO
+            $po->update(['active' => 0, 'updated_by' => Auth::id()]);
+            ReceiveItemDetail::where('receive_item_id', $po->id)->update(['active' => 0]);
+
+            // 4. Update Ulang received_qty di setiap PR Detail yang terdampak
+            // Kita hitung ulang berdasarkan sisa PO yang masih 'active' = 1
+            foreach ($poDetails as $poDetail) {
+                if ($poDetail->purchase_order_detail_id) {
+                    $totalRemainingPo = ReceiveItemDetail::where('purchase_order_detail_id', $poDetail->purchase_order_detail_id)
+                        ->where('active', 1)
+                        ->sum('qty');
+
+                    DB::table('purchase_order_detail_'.date('Y'))
+                        ->where('id', $poDetail->purchase_order_detail_id)
+                        ->update(['received_qty' => $totalRemainingPo]);
+                }
+            }
+
+            // 5. Update Status PR Master
+            foreach ($involvedPrIds as $prId) {
+                $allDetails = PurchaseOrderDetail::where('purchase_order_id', $prId)
+                    ->get();
+
+                $totalRequested = $allDetails->sum('qty');
+                $totalOrdered = $allDetails->sum('received_qty');
+
+                if ($totalOrdered >= $totalRequested) {
+                    $status = 'closed';
+                } elseif ($totalOrdered > 0) {
+                    $status = 'partial';
+                } else {
+                    $status = 'processing';
+                }
+
+                PurchaseOrder::where('id', $prId)
+                    ->update(['status' => $status]);
+            }
+
+            DB::commit();
+
+            return response()->json(['status' => 'success', 'message' => 'RI berhasil dibatalkan.'], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan RI: '.$e->getMessage()], 500);
+        }
     }
 }
