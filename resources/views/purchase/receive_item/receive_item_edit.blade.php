@@ -193,8 +193,8 @@
         ];
         let poIsFromPR = {{ $isFromPR ? 'true' : 'false' }};
         if (poIsFromPR) {
-            // Jika PO ini dari PR, mungkin kamu mau mendisable tombol "REQUISITION" di atas agar user tidak tambah PR lain
-            $(".btn-success").html('<i class="ti ti-link"></i> Linked to PR').prop('disabled', true);
+            // Jika PO ini dari PO, mungkin kamu mau mendisable tombol "REQUISITION" di atas agar user tidak tambah PR lain
+            $(".btn-success").html('<i class="ti ti-link"></i> Linked to PO').prop('disabled', true);
         }
         $("#btnAddShipping").click(function() {
             Swal.fire({
@@ -274,7 +274,7 @@
                 // defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
             });
 
-            const expectedPicker = flatpickr("#tanggal_kirim", {
+            const expectedDate = flatpickr("#tanggal_kirim", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
                 minDate: "today",
@@ -363,7 +363,7 @@
                     {
                         data: "data_produk",
                         render: function(data, type, row) {
-                            // Menampilkan kode referensi PR di bawah nama produk jika ada
+                            // Menampilkan kode referensi PO di bawah nama produk jika ada
                             if (row.requisition_code) {
                                 return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.requisition_code}</small>`;
                             }
@@ -670,7 +670,7 @@
 
                         Swal.fire({
                             icon: "warning",
-                            title: "Melebihi Sisa PR",
+                            title: "Melebihi Sisa PO",
                             text: `Kuantitas item ini tidak boleh melebihi sisa PO (Maksimal sisa: ${maxPrLimit}).`,
                             customClass: {
                                 confirmButton: "btn btn-warning"
@@ -758,12 +758,12 @@
                     // --- CARA A: PO ISI SENDIRI (TAMBAH BARU MANUAL) ---
                     prDetailsData.push(itemData);
                 } else {
-                    // --- CARA B: AMBIL DARI PR & EDIT DATA ---
+                    // --- CARA B: AMBIL DARI PO & EDIT DATA ---
                     // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
-                    // Properti bawaan PR seperti 'requisition_code' & 'purchase_requisition_detail_id'
+                    // Properti bawaan PO seperti 'requisition_code' & 'purchase_requisition_detail_id'
                     // akan otomatis aman dan dipertahankan.
                     prDetailsData[detailId] = {
-                        ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)
+                        ...prDetailsData[detailId], // Pertahankan data lama (Ref PO)
                         ...itemData // Update dengan data baru dari form modal
                     };
                 }
@@ -901,7 +901,7 @@
             });
 
             // ==========================================
-            // 1. EVENT KLIK UNTUK MEMBUKA MODAL PR
+            // 1. EVENT KLIK UNTUK MEMBUKA MODAL PO
             // ==========================================
             $("#showModalpr").on("click", function(e) {
                 e.preventDefault();
@@ -933,7 +933,7 @@
                 );
                 $("#modalOrderDetail").modal("show");
 
-                // Ambil data PR berstatus processing
+                // Ambil data PO berstatus processing
                 $.ajax({
                     url: "{{ route('receive-item.po.processing') }}",
                     type: "GET",
@@ -950,7 +950,7 @@
                                     .toLocaleDateString(
                                         "id-ID");
 
-                                // Tambahkan baris PR ke tabel modal
+                                // Tambahkan baris PO ke tabel modal
                                 tbody.append(`
                             <tr>
                                 <td>
@@ -994,7 +994,7 @@
             $("#btnSubmitSelected").on("click", function() {
                 let checkedBoxes = $(".checkItem:checked");
 
-                // 1. Validasi jika tidak ada PR yang dicentang
+                // 1. Validasi jika tidak ada PO yang dicentang
                 if (checkedBoxes.length === 0) {
                     Swal.fire({
                         icon: "warning",

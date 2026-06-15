@@ -992,12 +992,15 @@
 
                                     // 5. Looping data response backend untuk dimasukkan ke array DataTables
                                     response.data.forEach(function(item) {
-                                        let qtyAwal = parseFloat(item.qty || 0);
-                                        let sudahPO = parseFloat(item
-                                            .received_qty || 0);
-                                        let sisaPr = qtyAwal - sudahPO;
+                                        // let qtyAwal = parseFloat(item.qty || 0);
+                                        // let sudahPO = parseFloat(item
+                                        //     .received_qty || 0);
+                                        let sisaPr = parseFloat(item.quantity ||
+                                            0);
 
-                                        if (sisaPr <= 0) return;
+                                        if (sisaPr <= 0) {
+                                            return; // Jika sisa habis, jangan masukkan ke list
+                                        }
 
                                         prDetailsData.push({
                                             detail_id: item.id,
@@ -1007,7 +1010,9 @@
                                             // Pastikan key ini ada agar render di DataTable tidak error
                                             requisition_code: item
                                                 .order_code,
+                                            // quantity: sisaPr,
                                             quantity: sisaPr,
+                                            sisa_pr: sisaPr,
                                             unit_id: item.unit_id,
                                             unit: item.unit_name,
                                             warehouse_id: null,

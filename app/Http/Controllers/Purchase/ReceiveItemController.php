@@ -432,35 +432,47 @@ class ReceiveItemController extends Controller
             ->where('active', 1)
             ->whereHas('purchaseOrder', function ($q) {
                 // Sesuaikan dengan status yang valid di database Anda
-                $q->whereIn('status', ['approved', 'partially_received']);
+                $q->whereIn('status', ['approved', 'partial']);
             })
             ->get();
 
         $formattedData = $details->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'product_id' => $item->product_id,
-                'product_name' => $item->produkID->nama_barang ?? '-',
-                'qty' => (float) $item->qty,
-                'received_qty' => (float) ($item->received_qty ?? 0),
-                'unit_id' => $item->unit_id,
-                'unit_name' => $item->unitID->detail ?? '-',
+        // 1. Ambil nilai dasar
+        $totalQty = (float) ($item->qty ?? 0);
+        $receivedQty = (float) ($item->received_qty ?? 0);
 
-                // Perbaikan di sini: gunakan 'purchaseOrder' sesuai dengan relasi 'with'
-                'order_code' => $item->purchaseOrder->code ?? '',
-                'pr_status' => $item->purchaseOrder->status ?? '',
+        // 2. Hitung sisa yang benar
+        $sisaQty = $totalQty - $receivedQty;
 
-                // Jika warehouse ada di detail, tambahkan di sini
-                'warehouse_id' => '',
-                'warehouse' => '-', // Sesuaikan dengan relasi jika ada
-            ];
-        });
-        //    dd($details);
+        // 3. Jika sisa 0 atau kurang, item ini tidak perlu diproses lagi
+        if ($sisaQty <= 0) {
+            return null;
+        }
 
-        return response()->json([
-            'success' => true,
-            'data' => $formattedData,
-        ]);
+        return [
+            'id' => $item->id,
+            'product_id' => $item->product_id,
+            'product_name' => $item->produkID->nama_barang ?? '-',
+            
+            // Gunakan hasil perhitungan sisa yang benar
+            'quantity' => $sisaQty,
+            'qty' => $sisaQty,
+            
+            'received_qty' => $receivedQty,
+            'unit_id' => $item->unit_id,
+            'unit_name' => $item->unitID->detail ?? '-',
+            'order_code' => $item->purchaseOrder->code ?? '',
+            'pr_status' => $item->purchaseOrder->status ?? '',
+            'warehouse_id' => '',
+            'warehouse' => '-',
+        ];
+        })->filter()->values();
+            //    dd($details);
+
+            return response()->json([
+                'success' => true,
+                'data' => $formattedData,
+            ]);
     }
 
     public function getProcessingData(Request $request)
@@ -472,13 +484,13 @@ class ReceiveItemController extends Controller
         ])
             ->where('supplier_id', $request->supplier_id)
         // ->whereNotIn('status', ['draft', 'closed', 'completed'])
-            ->where('status', ['approved'])
+            ->whereIn('status', ['approved','partial'])
             ->get();
 
         return response()->json($orders);
     }
 
-   public function edit(string $id)
+    public function edit(string $id)
     {
         $year = date('Y');
 
