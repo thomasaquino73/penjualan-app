@@ -111,7 +111,7 @@ class PurchaseOrderController extends Controller
                             $text = 'Sent To Supplier';
                             break;
 
-                        case 'partially_received':
+                        case 'partial':
                             $badge = 'bg-label-info';
                             $text = 'Partially Received';
                             break;
