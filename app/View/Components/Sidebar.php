@@ -247,6 +247,16 @@ class Sidebar extends Component
                 'permissions' => ['warehouse-browse'],
             ],
             [
+                'type' => 'single',
+                'name' => 'Item Transfers',
+                'route' => 'warehouse.index',
+                'icon' => 'ti ti-forklift',
+                'pattern' => 'warehouse.*',
+                'active' => true,
+                'roles' => ['Super Admin'],
+                'permissions' => ['warehouse-browse'],
+            ],
+            [
                 'type' => 'section',
                 'label' => 'REPORTS',
                 'roles' => ['Super Admin'],

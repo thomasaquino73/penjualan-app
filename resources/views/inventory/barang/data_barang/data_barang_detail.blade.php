@@ -89,12 +89,6 @@
                                                 </td>
                                             </tr>
                                             <tr class="align-middle">
-                                                <th class="ps-4 py-3 text-muted fw-normal">Warehouse Location</th>
-                                                <td class="fw-medium text-dark ps-2">
-                                                    {{ $detail->warehouseID->nama_gudang ?? '-' }}
-                                                </td>
-                                            </tr>
-                                            <tr class="align-middle">
                                                 <th class="ps-4 py-3 text-muted fw-normal">Primary Unit</th>
                                                 <td class="fw-medium text-dark ps-2">{{ $detail->unitID->detail ?? '-' }}
                                                 </td>
@@ -255,7 +249,7 @@
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="navs-top-home" role="tabpanel">
-                                <table class="table table-hover mb-0" id='table_history'>
+                                <table class="table table-hover mb-0" id="table_history">
                                     <thead>
                                         <tr class="bg-light">
                                             <th class="ps-4 py-3 text-muted fw-bold" width="5%">No</th>
@@ -268,45 +262,65 @@
                                             <th class="py-3 text-muted fw-bold text-end">Running Balance</th>
                                         </tr>
                                     </thead>
+
                                     <tbody>
                                         @forelse($mutations as $index => $stock)
                                             <tr class="align-middle">
-                                                <td class="ps-4 py-3 fw-medium">{{ $index + 1 }}</td>
+
+                                                <td class="ps-4 py-3 fw-medium">
+                                                    {{ $index + 1 }}
+                                                </td>
+
                                                 <td class="py-3 text-dark">
                                                     {{ $stock->created_at ? $stock->created_at->translatedFormat('d M Y H:i') : '-' }}
                                                 </td>
+
                                                 <td class="py-3 text-dark">
                                                     {{ $stock->keterangan ?? '-' }}
                                                 </td>
+
                                                 <td class="py-3">
                                                     <span
                                                         class="badge {{ $stock->type == 'in' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} fw-bold">
                                                         {{ strtoupper($stock->type) }}
                                                     </span>
                                                 </td>
+
+                                                {{-- Qty transaksi asli --}}
                                                 <td class="py-3 text-end">
-                                                    <span class="fw-bold text-success">
-                                                        {{ $stock->type == 'in' ? number_format($stock->total_base_qty, 0, ',', '.') : '' }}
-                                                    </span>
+                                                    @if ($stock->type == 'in')
+                                                        <span class="fw-bold text-success">
+                                                            {{ number_format($stock->qty_transaksi, 0, ',', '.') }}
+                                                        </span>
+                                                    @endif
                                                 </td>
 
+                                                {{-- Qty transaksi asli --}}
                                                 <td class="py-3 text-end">
-                                                    <span class="fw-bold text-danger">
-                                                        {{ $stock->type == 'out' ? number_format($stock->total_base_qty, 0, ',', '.') : '' }}
-                                                    </span>
+                                                    @if ($stock->type == 'out')
+                                                        <span class="fw-bold text-danger">
+                                                            {{ number_format($stock->qty_transaksi, 0, ',', '.') }}
+                                                        </span>
+                                                    @endif
                                                 </td>
+
+                                                {{-- Unit transaksi --}}
                                                 <td class="py-3 text-end fw-bold text-primary">
                                                     {{ $stock->unitID->detail ?? 'N/A' }}
                                                 </td>
+
+                                                {{-- Saldo selalu base unit --}}
                                                 <td class="py-3 text-end fw-bold text-primary">
                                                     {{ number_format($stock->saldo_akhir, 0, ',', '.') }}
+                                                    <small class="text-muted">
+                                                        {{ $detail->unitID->detail ?? '' }}
+                                                    </small>
                                                 </td>
-
 
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="5" class="text-center py-4 text-muted italic">
+                                                <td colspan="8" class="text-center py-4 text-muted">
                                                     <i class="ti ti-clipboard-list d-block mb-2 fs-3"></i>
                                                     No stock movement history data found.
                                                 </td>
@@ -331,24 +345,49 @@
                                     </div>
                                 </div>
 
-                                <table class="table table-hover mb-0" id='table_warehouse'>
+                                <table class="table table-hover mb-0" id="table_warehouse">
                                     <thead>
                                         <tr class="bg-light">
-                                            <th class="ps-4 py-3 text-muted fw-bold">Warehouse</th>
-                                            <th class="py-3 text-muted fw-bold" width="5%">Balance</th>
+                                            <th class="ps-4 py-3 text-muted fw-bold">
+                                                Warehouse
+                                            </th>
+
+                                            <th class="py-3 text-muted fw-bold text-end">
+                                                Balance
+                                            </th>
                                         </tr>
                                     </thead>
+
                                     <tbody>
-                                        @foreach ($warehouseHistory as $history)
+
+                                        @forelse ($warehouseHistory as $history)
                                             <tr>
-                                                <td class="ps-4 py-3">{{ $history['warehouse_name'] ?? 'N/A' }}</td>
+
+                                                <td class="ps-4 py-3">
+                                                    {{ $history['warehouse_name'] ?? 'N/A' }}
+                                                </td>
 
                                                 <td class="py-3 text-end fw-bold text-primary">
+
                                                     {{ number_format($history['total_qty'], 0, ',', '.') }}
-                                                    <small class="text-muted">{{ $history['unit_name'] ?? 'N/A' }}</small>
+
+                                                    <small class="text-muted">
+                                                        {{ $detail->unitID->detail ?? '' }}
+                                                    </small>
+
+                                                </td>
+
+                                            </tr>
+
+                                        @empty
+
+                                            <tr>
+                                                <td colspan="2" class="text-center py-4 text-muted">
+                                                    No warehouse stock found.
                                                 </td>
                                             </tr>
-                                        @endforeach
+                                        @endforelse
+
                                     </tbody>
                                 </table>
                             </div>
@@ -404,7 +443,15 @@
 @endsection
 @push('scripts')
     <script>
-        let table_history = new DataTable('#table_history');
+        let table_history = new DataTable('#table_history', {
+            // Menambahkan opsi untuk menangani baris kosong
+            "columnDefs": [{
+                "targets": "_all",
+                "defaultContent": ""
+            }],
+            // Jika masih error, tambahkan ini untuk mematikan validasi kolom
+            "ordering": false
+        });
         let table_warehouse = new DataTable('#table_warehouse');
         document.addEventListener('DOMContentLoaded', function() {
             flatpickr("#search_date", {

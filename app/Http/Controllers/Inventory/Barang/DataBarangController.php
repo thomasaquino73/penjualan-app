@@ -120,9 +120,6 @@ class DataBarangController extends Controller
                 ->addColumn('kategori', function ($row) {
                     return $row->kategoriID->detail;
                 })
-                ->addColumn('gudang', function ($row) {
-                    return $row->warehouseID->nama_gudang;
-                })
                 ->addColumn('harga', function ($row) {
                     return format_uang(convert_currency($row->price, $row->currency_id ?? 1));
                 })
@@ -154,7 +151,7 @@ class DataBarangController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'harga', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok', 'stok'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'harga', 'status', 'kategori', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok', 'stok'])
                 ->make(true);
         }
 
@@ -408,81 +405,161 @@ class DataBarangController extends Controller
     }
 
     private function getWarehouse($data_barang_id)
-    {
-        $date = request('date');
-        $warehouse_id = request('warehouse_id');
+{
+    $date = request('date');
+    $warehouse_id = request('warehouse_id');
 
-        $query = StockMutation::query()
-            ->with(['unitID', 'warehouseID'])
-            ->select(
-                'warehouse_id', 'unit_id',
-                DB::raw("COALESCE(SUM(CASE WHEN type = 'in' THEN total_base_qty WHEN type = 'out' THEN -total_base_qty ELSE 0 END), 0) as total_qty")
-            )
-            ->where('data_barang_id', $data_barang_id);
+    $query = StockMutation::query()
+        ->with('warehouseID')
+        ->select(
+            'warehouse_id',
+            DB::raw("
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN type = 'in'
+                            THEN total_base_qty
+                            WHEN type = 'out'
+                            THEN -total_base_qty
+                            ELSE 0
+                        END
+                    ),
+                0) as total_qty
+            ")
+        )
+        ->where('data_barang_id', $data_barang_id);
 
-        // Filter Tanggal yang Aman
-        if (! empty($date)) {
-            try {
-                // Konversi d-m-Y ke Y-m-d untuk SQL
-                $formattedDate = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
+    if (!empty($date)) {
 
-                $query->where(function ($q) use ($formattedDate) {
-                    $q->where('date_stock', '<=', $formattedDate)
-                        ->orWhereNull('date_stock'); // Penting untuk stok lama/awal
-                });
-            } catch (\Exception $e) {
-                // Jika input date rusak, abaikan filter
-            }
+        try {
+
+            $formattedDate = Carbon::createFromFormat(
+                'd-m-Y',
+                $date
+            )->format('Y-m-d');
+
+            $query->where(function ($q) use ($formattedDate) {
+
+                $q->whereDate(
+                    'date_stock',
+                    '<=',
+                    $formattedDate
+                )
+                ->orWhereNull('date_stock');
+            });
+
+        } catch (\Exception $e) {
         }
+    }
 
-        if (! empty($warehouse_id)) {
-            $query->where('warehouse_id', $warehouse_id);
-        }
+    if (!empty($warehouse_id)) {
 
-        return $query->groupBy('warehouse_id', 'unit_id')->get()->map(function ($item) {
+        $query->where(
+            'warehouse_id',
+            $warehouse_id
+        );
+    }
+
+    return $query
+        ->groupBy('warehouse_id')
+        ->havingRaw('total_qty <> 0')
+        ->get()
+        ->map(function ($item) {
+
             return [
-                'warehouse_id' => $item->warehouse_id,
-                'warehouse_name' => optional($item->warehouseID)->nama_gudang ?? '-',
-                'unit_id' => $item->unit_id,
-                'unit_name' => optional($item->unitID)->detail ?? '-',
-                'total_qty' => (float) $item->total_qty,
+                'warehouse_id'   => $item->warehouse_id,
+                'warehouse_name' => optional(
+                    $item->warehouseID
+                )->nama_gudang ?? '-',
+
+                'total_qty'      => (float) $item->total_qty,
             ];
         });
-    }
+}
 
     private function getMutation($data_barang_id)
-    {
-        // $date = request('date');
+{
+    $date = request('date');
 
-        $query = StockMutation::with('unitID', 'warehouseID')
-            ->where('data_barang_id', $data_barang_id)
-            ->orderBy('date_stock', 'asc'); // 🔥 WAJIB ASC
+    $query = StockMutation::with([
+            'unitID',
+            'warehouseID'
+        ])
+        ->where(
+            'data_barang_id',
+            $data_barang_id
+        )
+        ->orderBy(
+            'date_stock',
+            'asc'
+        )
+        ->orderBy(
+            'id',
+            'asc'
+        );
 
-        // if ($date && \Carbon\Carbon::hasFormat($date, 'd-m-Y')) {
-        //     $dateFormatted = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
-        //     $query->where('date_stock', '<=', $dateFormatted . ' 23:59:59');
-        // }
+    if (!empty($date)) {
 
-        $mutations = $query->get();
+        try {
 
-        // ✅ HITUNG RUNNING BALANCE (ASC)
-        $runningBalance = 0;
+            $formattedDate = Carbon::createFromFormat(
+                'd-m-Y',
+                $date
+            )->format('Y-m-d');
 
-        foreach ($mutations as $mutation) {
-            $qty = (float) $mutation->total_base_qty;
+            $query->whereDate(
+                'date_stock',
+                '<=',
+                $formattedDate
+            );
 
-            if ($mutation->type === 'in') {
-                $runningBalance += $qty;
-            } else {
-                $runningBalance -= $qty;
-            }
+        } catch (\Exception $e) {
+        }
+    }
 
-            $mutation->saldo_akhir = $runningBalance;
+    $mutations = $query->get();
+
+    $runningBalance = 0;
+
+    foreach ($mutations as $mutation) {
+
+        $baseQty = (float) $mutation->total_base_qty;
+
+        if ($mutation->type === 'in') {
+
+            $runningBalance += $baseQty;
+
+        } else {
+
+            $runningBalance -= $baseQty;
         }
 
-        // 🔥 BALIK KE DESC BUAT TAMPILAN
-        return $mutations->sortByDesc('date_stock')->values();
+        $mutation->saldo_akhir = $runningBalance;
+
+        /*
+         * Qty transaksi asli
+         * contoh:
+         * 20 PCS
+         * 25 Pack
+         */
+        $mutation->qty_display = (float) $mutation->qty_transaksi;
+
+        /*
+         * Qty setelah konversi ke base unit
+         * contoh:
+         * 20 PCS
+         * 300 PCS
+         */
+        $mutation->base_qty_display = $baseQty;
     }
+
+    return $mutations
+        ->sortByDesc(function ($item) {
+
+            return $item->date_stock.'-'.$item->id;
+        })
+        ->values();
+}
 
     public function edit(string $id)
     {
@@ -555,7 +632,7 @@ class DataBarangController extends Controller
 
             // 3. Update database
             // Menggunakan transaction agar lebih aman
-            \DB::transaction(function () use ($barang, $request, $newConversions) {
+            DB::transaction(function () use ($barang, $request, $newConversions) {
                 // Hapus data lama
                 DataBarangConversion::where('data_barang_id', $barang->id)->delete();
 
@@ -753,9 +830,7 @@ class DataBarangController extends Controller
                 ->addColumn('kategori', function ($row) {
                     return $row->kategoriID->detail;
                 })
-                ->addColumn('gudang', function ($row) {
-                    return $row->warehouseID->nama_gudang;
-                })
+
                 // ->addColumn('tipePersediaan', function ($row) {
                 //     return $row->typeID->detail;
                 // })
@@ -773,7 +848,7 @@ class DataBarangController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'kategori', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok'])
                 ->make(true);
         }
 

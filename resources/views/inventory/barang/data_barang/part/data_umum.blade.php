@@ -90,7 +90,7 @@
 
                            <span class="error text-danger" id="kategori_idError"></span>
                        </div>
-                       <div class="col-md-12 mb-3">
+                       {{-- <div class="col-md-12 mb-3">
                            <label class="form-label">Warehouse<small class="text-danger">*</small></label>
                            <div class="input-group input-group-merge">
                                <span class="input-group-text"> <i class="ti ti-building-warehouse"></i>
@@ -105,7 +105,7 @@
                                </select>
                            </div>
                            <span class="error text-danger" id="gudang_idError"></span>
-                       </div>
+                       </div> --}}
                        <div class="col-md-12 mb-3">
                            <label class="form-label">Unit<small class="text-danger">*</small></label>
                            <div class="input-group input-group-merge">

@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('barcode')->unique()->nullable();
             $table->string('nama_barang');
             $table->unsignedBigInteger('kategori_id');
-            $table->unsignedBigInteger('gudang_id');
             $table->unsignedBigInteger('tipe_persediaan_id')->nullable();
             $table->unsignedBigInteger('unit_id');
             $table->enum('product_type', ['supply', 'non_supply'])->default('supply');
@@ -83,7 +82,7 @@ return new class extends Migration
 
             // Tambahkan kolom ini untuk melacak siapa yang melakukan transaksi
             $table->string('document_number')->nullable(); // Nomor dokumen (misal: RI-001, DO-999)
-            $table->enum('document_type', ['receive_item', 'delivery_order', 'initial_stock', 'adjustment'])->default('initial_stock');
+            $table->enum('document_type', ['receive_item', 'delivery_order', 'initial_stock', 'adjustment','item_transfer'])->default('initial_stock');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
