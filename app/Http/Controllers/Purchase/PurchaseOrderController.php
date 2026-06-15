@@ -675,10 +675,14 @@ class PurchaseOrderController extends Controller
 
             DB::commit();
 
+            $redirectUrl = $request->save_and_new == 1
+                ? route('purchase-order.create') // Kembali kosongkan form untuk input data PR baru lagi
+                : route('purchase-order.index');  // Selesai dan kembali ke tabel index utama
+
             return response()->json([
-                'status' => 'success',
-                'message' => 'Purchase Order '.$generatedCode.' berhasil disimpan.',
-                'redirect' => route('purchase-order.index'),
+                'success' => true,
+                'message' => 'Purchase Order saved successfully!',
+                'redirect' => $redirectUrl,
             ], 200);
 
         } catch (\Exception $e) {

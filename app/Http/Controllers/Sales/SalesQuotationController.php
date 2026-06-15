@@ -395,10 +395,15 @@ class SalesQuotationController extends Controller
 
             DB::commit();
 
+
+            $redirectUrl = $request->save_and_new == 1
+                ? route('sales-quotation.create') // Kembali kosongkan form untuk input data PR baru lagi
+                : route('sales-quotation.index');  // Selesai dan kembali ke tabel index utama
+
             return response()->json([
-                'status' => 'success',
-                'message' => 'Sales Quotation '.$generatedCode.' berhasil disimpan.',
-                'redirect' => route('sales-quotation.index'),
+                'success' => true,
+                'message' => 'Sales Quotation saved successfully!',
+                'redirect' => $redirectUrl,
             ], 200);
 
         } catch (\Exception $e) {

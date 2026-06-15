@@ -415,10 +415,14 @@ class ReceiveItemController extends Controller
 
             DB::commit();
 
+             $redirectUrl = $request->save_and_new == 1
+                ? route('receive-item.create') // Kembali kosongkan form untuk input data PR baru lagi
+                : route('receive-item.index');  // Selesai dan kembali ke tabel index utama
+
             return response()->json([
-                'status' => 'success',
-                'message' => 'Receive Item '.$generatedCode.' berhasil disimpan.',
-                'redirect' => route('receive-item.index'),
+                'success' => true,
+                'message' => 'Receive Item saved successfully!',
+                'redirect' => $redirectUrl,
             ], 200);
 
         } catch (\Exception $e) {

@@ -626,10 +626,14 @@ class SalesOrderController extends Controller
 
             DB::commit();
 
+            $redirectUrl = $request->save_and_new == 1
+                ? route('sales-order.create') // Kembali kosongkan form untuk input data PR baru lagi
+                : route('sales-order.index');  // Selesai dan kembali ke tabel index utama
+
             return response()->json([
-                'status' => 'success',
-                'message' => 'Sales Order '.$generatedCode.' berhasil disimpan.',
-                'redirect' => route('sales-order.index'),
+                'success' => true,
+                'message' => 'Sales Order saved successfully!',
+                'redirect' => $redirectUrl,
             ], 200);
 
         } catch (\Exception $e) {
