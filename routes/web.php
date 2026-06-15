@@ -246,6 +246,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('', PurchaseOrderController::class)->parameters(['' => 'purchase_order']);
     });
     Route::prefix('receive-item')->name('receive-item.')->group(function () {
+        Route::post('/get-order-detail', [ReceiveItemController::class, 'getOrderDetail'])->name('get-order-detail');
+        Route::get('/get-processing-po', [ReceiveItemController::class, 'getProcessingData'])->name('po.processing');
         Route::get('/trash', [ReceiveItemController::class, 'trash'])->name('trash');
         Route::resource('', ReceiveItemController::class)->parameters(['' => 'receive_item']);
     });

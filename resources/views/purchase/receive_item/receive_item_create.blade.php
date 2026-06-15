@@ -154,7 +154,7 @@
         </div>
     </div>
     @include('purchase.receive_item.part.modalPrDetail')
-    @include('purchase.purchase_order.part.modals.modalRequisitionDetail')
+    @include('purchase.receive_item.part.modalOrderDetail')
 @endsection
 @push('style')
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
@@ -429,9 +429,9 @@
                                     $("#quantity").val(data.quantity);
                                     $("#unit_id").data("pending-val", data.unit_id);
                                     $("#product_id").val(data.product_id).trigger("change");
-                                    $("#unit_price").val(data.unit_price);
-                                    $("#discount").val(data.discount || 0);
-                                    $("#tax").val(data.tax || 0);
+                                    // $("#unit_price").val(data.unit_price);
+                                    // $("#discount").val(data.discount || 0);
+                                    // $("#tax").val(data.tax || 0);
 
                                     $("#modalTitle").text("Edit entry");
                                     $("#btnSubmitModal").text("Update");
@@ -467,8 +467,6 @@
                                         if (result.isConfirmed) {
                                             prDetailsData.splice(rowIndex, 1);
                                             dt.clear().rows.add(prDetailsData).draw();
-                                            calculateGrandTotal();
-                                            calculateTotalOrder();
                                             toastr.success(
                                                 "Deleted Data Successfully",
                                                 "", {
@@ -699,7 +697,7 @@
                 } else {
                     // --- CARA B: AMBIL DARI PR & EDIT DATA ---
                     // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
-                    // Properti bawaan PR seperti 'requisition_code' & 'purchase_requisition_detail_id' 
+                    // Properti bawaan PR seperti 'requisition_code' & 'purchase_requisition_detail_id'
                     // akan otomatis aman dan dipertahankan.
                     prDetailsData[detailId] = {
                         ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)
@@ -836,6 +834,234 @@
                             $(`#${key}Error`).text(value[0]);
                         });
                     },
+                });
+            });
+
+            // ==========================================
+            // 1. EVENT KLIK UNTUK MEMBUKA MODAL PR
+            // ==========================================
+            $("#showModalpr").on("click", function(e) {
+                e.preventDefault();
+
+                let tbody = $("#requisitionTableBody");
+                var supplierId = $("#supplier_id").val();
+
+                // Validasi wajib pilih supplier dulu
+                if (!supplierId || supplierId === "") {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Warning!",
+                        text: "Please select Supplier first before adding new data.",
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn btn-danger",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return false;
+                }
+
+                // Reset checkbox 'Check All' menjadi tidak tercentang saat modal dibuka
+                $("#checkAll").prop("checked", false);
+
+                tbody.html(
+                    '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>',
+                );
+                $("#modalOrderDetail").modal("show");
+
+                // Ambil data PR berstatus processing
+                $.ajax({
+                    url: "{{ route('receive-item.po.processing') }}",
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        supplier_id: supplierId
+                    },
+                    success: function(response) {
+                        tbody.empty();
+
+                        if (response && response.length > 0) {
+                            $.each(response, function(key, item) {
+                                let dateFormatted = new Date(item.created_at)
+                                    .toLocaleDateString(
+                                        "id-ID");
+
+                                // Tambahkan baris PR ke tabel modal
+                                tbody.append(`
+                            <tr>
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input checkItem" type="checkbox" value="${item.id}">
+                                    </div>
+                                </td>
+                                <td><strong>${item.code}</strong></td>
+                                <td>${dateFormatted}</td>
+                            </tr>
+                        `);
+                            });
+                        } else {
+                            tbody.html(
+                                '<tr><td colspan="3" class="text-center text-muted">No processing data found.</td></tr>',
+                            );
+                        }
+                    },
+                    error: function(xhr) {
+                        tbody.html(
+                            '<tr><td colspan="3" class="text-center text-danger">Failed to fetch data.</td></tr>',
+                        );
+                    },
+                });
+            });
+            //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
+            $("#checkAll").on("change", function() {
+                // Jika checkAll dicentang, semua .checkItem ikut dicentang, begitu sebaliknya
+                $(".checkItem").prop("checked", $(this).prop("checked"));
+            });
+
+            // Jika salah satu item diuncheck secara manual, matikan checkAll di atas head tabel
+            $(document).on("change", ".checkItem", function() {
+                if ($(".checkItem:checked").length === $(".checkItem").length) {
+                    $("#checkAll").prop("checked", true);
+                } else {
+                    $("#checkAll").prop("checked", false);
+                }
+            });
+
+            $("#btnSubmitSelected").on("click", function() {
+                let checkedBoxes = $(".checkItem:checked");
+
+                // 1. Validasi jika tidak ada PR yang dicentang
+                if (checkedBoxes.length === 0) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Peringatan",
+                        text: "Silakan pilih minimal satu data po!",
+                        customClass: {
+                            confirmButton: "btn btn-danger",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return;
+                }
+
+                // 2. Ambil ID requisition yang dicentang
+                let ids = [];
+                checkedBoxes.each(function() {
+                    ids.push($(this).val());
+                });
+
+                // 3. Tampilkan konfirmasi SweetAlert sebelum memproses
+                Swal.fire({
+                    title: "Proses data terpilih?",
+                    text: `Anda memilih ${checkedBoxes.length} data untuk dimasukkan ke tabel.`,
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonText: "Ya, Masukkan!",
+                    cancelButtonText: "Batal",
+                    customClass: {
+                        confirmButton: "btn btn-primary",
+                        cancelButton: "btn btn-secondary",
+                    },
+                    buttonsStyling: false,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        // 4. Kirim request AJAX ke backend
+                        $.ajax({
+                            url: "{{ route('receive-item.get-order-detail') }}",
+                            type: "POST",
+                            data: {
+                                ids: ids,
+                                _token: "{{ csrf_token() }}"
+                            },
+                            beforeSend: function() {
+                                $("#btnSubmitSelected")
+                                    .html(
+                                        '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
+                                    )
+                                    .prop("disabled", true);
+                            },
+                            success: function(response) {
+                                if (response.success) {
+
+                                    // Bersihkan atau siapkan array penampung global jika belum didefinisikan sebelumnya
+                                    if (typeof prDetailsData === 'undefined') {
+                                        window.prDetailsData = [];
+                                    }
+
+                                    // 5. Looping data response backend untuk dimasukkan ke array DataTables
+                                    response.data.forEach(function(item) {
+                                        let qtyAwal = parseFloat(item.qty || 0);
+                                        let sudahPO = parseFloat(item
+                                            .received_qty || 0);
+                                        let sisaPr = qtyAwal - sudahPO;
+
+                                        if (sisaPr <= 0) return;
+
+                                        prDetailsData.push({
+                                            detail_id: item.id,
+                                            product_id: item.product_id,
+                                            data_produk: item
+                                                .product_name,
+                                            // Pastikan key ini ada agar render di DataTable tidak error
+                                            requisition_code: item
+                                                .order_code,
+                                            quantity: sisaPr,
+                                            unit_id: item.unit_id,
+                                            unit: item.unit_name,
+                                            warehouse_id: null,
+                                            warehouse: '-', // Sesuaikan dengan controller Anda
+
+                                            quotation_code: item
+                                                .quotation_code
+                                        });
+                                    });
+
+                                    // Refresh Tabel
+                                    let table = $('#table').DataTable();
+                                    table.clear().rows.add(prDetailsData).draw();
+
+                                    // 7. Hitung ulang total matematika PO
+                                    // if (typeof calculateGrandTotal === "function") {
+                                    //     calculateGrandTotal();
+                                    // }
+                                    // if (typeof calculateTotalOrder === "function") {
+                                    //     calculateTotalOrder();
+                                    // }
+
+                                    // 8. Tutup Modal Requisition
+                                    $("#modalOrderDetail").modal("hide");
+
+                                    // 9. Beri feedback sukses ke user
+                                    Swal.fire({
+                                        icon: "success",
+                                        title: "Success",
+                                        text: "Data order berhasil dimasukkan.",
+                                        customClass: {
+                                            confirmButton: "btn btn-primary",
+                                        },
+                                        buttonsStyling: false,
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Error",
+                                    text: "Terjadi kesalahan saat mengambil data.",
+                                });
+                            },
+                            complete: function() {
+                                // Kembalikan kondisi tombol submit ke semula
+                                $("#btnSubmitSelected")
+                                    .html(
+                                        '<i class="ti ti-check me-1"></i> Process Selected'
+                                    )
+                                    .prop("disabled", false);
+                            }
+                        });
+                    }
                 });
             });
         });

@@ -59,13 +59,13 @@ class ReceiveItemController extends Controller
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
             $query = ReceiveItem::where('active', '<>', 0)
-                ->where(function ($q) use ($userId) {
-                    $q->where('status', '<>', 'draft')
-                        ->orWhere(function ($subQ) use ($userId) {
-                            $subQ->where('status', 'draft')
-                                ->where('created_by', $userId);
-                        });
-                })
+                // ->where(function ($q) use ($userId) {
+                //     $q->where('status', '<>', 'draft')
+                //         ->orWhere(function ($subQ) use ($userId) {
+                //             $subQ->where('status', 'draft')
+                //                 ->where('created_by', $userId);
+                //         });
+                // })
                 ->orderby('receive_item_code', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);
@@ -369,7 +369,7 @@ class ReceiveItemController extends Controller
                                 }
                             }
                         }
-                            
+
                         //  SIMPAN KE STOCK_MUTATIONS (Tabel baru untuk Laporan/Audit)
                         StockMutation::create([
                             'data_barang_id' => $item['product_id'],
@@ -411,7 +411,7 @@ class ReceiveItemController extends Controller
                 }
             }
 
-            
+
 
             DB::commit();
 
@@ -430,6 +430,74 @@ class ReceiveItemController extends Controller
             ], 500);
         }
     }
+
+    public function getOrderDetail(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data PO yang dipilih.',
+                'data' => [],
+            ]);
+        }
+
+        $details = PurchaseOrderDetail::with([
+            'produkID',
+            'unitID',
+            'purchaseOrder',
+        ])
+            ->whereIn('purchase_order_id', $ids)
+            ->where('active', 1)
+           ->whereHas('purchaseOrder', function ($q) {
+                // Sesuaikan dengan status yang valid di database Anda
+                $q->whereIn('status', ['approved', 'partially_received']);
+            })
+            ->get();
+
+        $formattedData = $details->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->produkID->nama_barang ?? '-',
+                'qty' => (float) $item->qty,
+                'received_qty' => (float) ($item->received_qty ?? 0),
+                'unit_id' => $item->unit_id,
+                'unit_name' => $item->unitID->detail ?? '-',
+
+                // Perbaikan di sini: gunakan 'purchaseOrder' sesuai dengan relasi 'with'
+                'order_code' => $item->purchaseOrder->code ?? '',
+                'pr_status' => $item->purchaseOrder->status ?? '',
+
+                // Jika warehouse ada di detail, tambahkan di sini
+                'warehouse_id' => '',
+                'warehouse' =>  '-' // Sesuaikan dengan relasi jika ada
+            ];
+        });
+                        //    dd($details);
+
+        return response()->json([
+            'success' => true,
+            'data' => $formattedData,
+        ]);
+    }
+
+     public function getProcessingData(Request $request)
+    {
+        $orders = PurchaseOrder::with([
+            'details' => function ($query) {
+                $query->whereColumn('received_qty', '<', 'qty');
+            },
+        ])
+            ->where('supplier_id',$request->supplier_id)
+        ->whereNotIn('status', ['draft', 'closed', 'completed'])
+            ->get();
+        return response()->json($orders);
+    }
+    public function show($id)
+    {}
+
 
     public function destroy(Request $request, $id)
     {
