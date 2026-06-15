@@ -27,12 +27,11 @@ return new class extends Migration
             $table->unsignedBigInteger('shipping_id');
             $table->string('fob_id');
             $table->enum('status', [
-                'draft',
                 'processing',
                 'partial',
                 'closed',
                 'done',
-            ])->default('draft');
+            ])->default('processing');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

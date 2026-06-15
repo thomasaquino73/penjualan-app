@@ -4,6 +4,7 @@ namespace App\Models\Purchase;
 
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
+use App\Models\Inventory\Warehouse;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -34,12 +35,21 @@ class ReceiveItemDetail extends Model
 
     public function unitID()
     {
-        // Sesuaikan nama class Unit dengan model master unit Anda
         return $this->belongsTo(BasicCodeDetail::class, 'unit_id', 'id');
+    }
+
+    public function warehouseID()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id', 'id');
     }
 
     public function receiveItem()
     {
         return $this->belongsTo(ReceiveItem::class, 'receive_item_id');
+    }
+
+    public function purchaseOrderDetail()
+    {
+        return $this->belongsTo(PurchaseOrderDetail::class, 'purchase_order_detail_id', 'id');
     }
 }

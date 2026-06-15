@@ -395,7 +395,6 @@ class SalesQuotationController extends Controller
 
             DB::commit();
 
-
             $redirectUrl = $request->save_and_new == 1
                 ? route('sales-quotation.create') // Kembali kosongkan form untuk input data PR baru lagi
                 : route('sales-quotation.index');  // Selesai dan kembali ke tabel index utama

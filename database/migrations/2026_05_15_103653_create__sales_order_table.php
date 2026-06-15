@@ -33,7 +33,7 @@ return new class extends Migration
                 'approved',            // Sudah approve
                 'rejected',            // Ditolak
                 'sent',                // Sudah dikirim ke supplier
-                'partially_received',  // Barang diterima sebagian
+                'partial',  // Barang diterima sebagian
                 'completed',           // Semua barang diterima
                 'closed',           // Dibatalkan
             ])->default('draft');

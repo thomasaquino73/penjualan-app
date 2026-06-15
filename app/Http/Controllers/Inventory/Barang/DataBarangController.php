@@ -58,6 +58,7 @@ class DataBarangController extends Controller
                     $query->select(DB::raw("SUM(CASE WHEN type = 'in' THEN total_base_qty ELSE -total_base_qty END)"));
                 }], 'total_base_qty')
                 ->orderBy('id_barang', 'desc');
+
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('created_at', function ($row) {
@@ -153,7 +154,7 @@ class DataBarangController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'harga', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok','stok'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'harga', 'status', 'kategori', 'gudang', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok', 'stok'])
                 ->make(true);
         }
 

@@ -40,4 +40,14 @@ class ReceiveItem extends Model
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
     }
+
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id', 'id');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(ReceiveItemDetail::class, 'receive_item_id');
+    }
 }

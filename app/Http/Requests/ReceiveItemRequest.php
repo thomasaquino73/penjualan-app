@@ -27,7 +27,8 @@ class ReceiveItemRequest extends FormRequest
             'supplier_id' => 'required',
             'receive_item_date' => 'required|date',
             'no_dokumen' => 'required|string',
-            'tanggal_kirim' => 'nullable|date',
+            'tanggal_kirim' => 'required|date',
+            // 'shiping_id' => 'required',
             'description' => 'nullable|string',
             'items_detail' => 'required',
         ];
@@ -36,12 +37,14 @@ class ReceiveItemRequest extends FormRequest
     public function message(): array
     {
         return [
-            'supplier_id.required' => 'Customer is required',
+            'supplier_id.required' => 'Supplier is required',
             'receive_item_code.required' => 'RI Number is required',
             'receive_item_code.unique' => 'RI Number has already been taken',
             'receive_item_date.required' => 'Date is required',
             'receive_item_date.date' => 'Date must be a valid date',
+            'tanggal_kirim.required' => 'Shipping date is required',
             'tanggal_kirim.date' => 'Shipping date must be a valid date',
+            // 'shiping_id.required' => 'Shipping is required',
             'items_detail.required' => 'Items detail is required',
             'no_dokumen.required' => 'Document Number is required',
         ];
