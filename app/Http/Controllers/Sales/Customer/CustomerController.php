@@ -96,6 +96,9 @@ class CustomerController extends Controller
                                 data-name="'.$row->nama.'"
                                 ><i class="ti ti-trash"></i> Delete</a>';
                     }
+                    $btn .= '<a class="dropdown-item" href="'.route('customer.show', $row->id).'"
+                             
+                                ><i class="ti ti-list-details"></i> Detail</a>';
 
                     return $btn;
                 })

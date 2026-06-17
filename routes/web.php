@@ -7,6 +7,7 @@ use App\Http\Controllers\GuestEmailVerificationController;
 use App\Http\Controllers\Inventory\Barang\DataBarangController;
 use App\Http\Controllers\Inventory\Barang\KategoriBarangController;
 use App\Http\Controllers\Inventory\Barang\SatuanBarangController;
+use App\Http\Controllers\Inventory\ItemTransferController;
 use App\Http\Controllers\Inventory\WarehouseController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
@@ -276,6 +277,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/sales-quotation/delete-multiple', [SalesQuotationController::class, 'deleteMultiple']);
     Route::get('/sales-quotation/trash', [SalesQuotationController::class, 'trash'])->name('sales-quotation.trash');
     Route::resource('sales-quotation', SalesQuotationController::class);
+
+    Route::resource('item-transfer', ItemTransferController::class);
 });
 
 Route::fallback(function () {

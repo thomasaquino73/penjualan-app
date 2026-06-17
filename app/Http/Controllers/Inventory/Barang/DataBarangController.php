@@ -405,15 +405,15 @@ class DataBarangController extends Controller
     }
 
     private function getWarehouse($data_barang_id)
-{
-    $date = request('date');
-    $warehouse_id = request('warehouse_id');
+    {
+        $date = request('date');
+        $warehouse_id = request('warehouse_id');
 
-    $query = StockMutation::query()
-        ->with('warehouseID')
-        ->select(
-            'warehouse_id',
-            DB::raw("
+        $query = StockMutation::query()
+            ->with('warehouseID')
+            ->select(
+                'warehouse_id',
+                DB::raw("
                 COALESCE(
                     SUM(
                         CASE
@@ -426,140 +426,140 @@ class DataBarangController extends Controller
                     ),
                 0) as total_qty
             ")
-        )
-        ->where('data_barang_id', $data_barang_id);
+            )
+            ->where('data_barang_id', $data_barang_id);
 
-    if (!empty($date)) {
+        if (! empty($date)) {
 
-        try {
+            try {
 
-            $formattedDate = Carbon::createFromFormat(
-                'd-m-Y',
-                $date
-            )->format('Y-m-d');
+                $formattedDate = Carbon::createFromFormat(
+                    'd-m-Y',
+                    $date
+                )->format('Y-m-d');
 
-            $query->where(function ($q) use ($formattedDate) {
+                $query->where(function ($q) use ($formattedDate) {
 
-                $q->whereDate(
+                    $q->whereDate(
+                        'date_stock',
+                        '<=',
+                        $formattedDate
+                    )
+                        ->orWhereNull('date_stock');
+                });
+
+            } catch (\Exception $e) {
+            }
+        }
+
+        if (! empty($warehouse_id)) {
+
+            $query->where(
+                'warehouse_id',
+                $warehouse_id
+            );
+        }
+
+        return $query
+            ->groupBy('warehouse_id')
+            ->havingRaw('total_qty <> 0')
+            ->get()
+            ->map(function ($item) {
+
+                return [
+                    'warehouse_id' => $item->warehouse_id,
+                    'warehouse_name' => optional(
+                        $item->warehouseID
+                    )->nama_gudang ?? '-',
+
+                    'total_qty' => (float) $item->total_qty,
+                ];
+            });
+    }
+
+    private function getMutation($data_barang_id)
+    {
+        $date = request('date');
+
+        $query = StockMutation::with([
+            'unitID',
+            'warehouseID',
+        ])
+            ->where(
+                'data_barang_id',
+                $data_barang_id
+            )
+            ->orderBy(
+                'date_stock',
+                'asc'
+            )
+            ->orderBy(
+                'id',
+                'asc'
+            );
+
+        if (! empty($date)) {
+
+            try {
+
+                $formattedDate = Carbon::createFromFormat(
+                    'd-m-Y',
+                    $date
+                )->format('Y-m-d');
+
+                $query->whereDate(
                     'date_stock',
                     '<=',
                     $formattedDate
-                )
-                ->orWhereNull('date_stock');
-            });
+                );
 
-        } catch (\Exception $e) {
-        }
-    }
-
-    if (!empty($warehouse_id)) {
-
-        $query->where(
-            'warehouse_id',
-            $warehouse_id
-        );
-    }
-
-    return $query
-        ->groupBy('warehouse_id')
-        ->havingRaw('total_qty <> 0')
-        ->get()
-        ->map(function ($item) {
-
-            return [
-                'warehouse_id'   => $item->warehouse_id,
-                'warehouse_name' => optional(
-                    $item->warehouseID
-                )->nama_gudang ?? '-',
-
-                'total_qty'      => (float) $item->total_qty,
-            ];
-        });
-}
-
-    private function getMutation($data_barang_id)
-{
-    $date = request('date');
-
-    $query = StockMutation::with([
-            'unitID',
-            'warehouseID'
-        ])
-        ->where(
-            'data_barang_id',
-            $data_barang_id
-        )
-        ->orderBy(
-            'date_stock',
-            'asc'
-        )
-        ->orderBy(
-            'id',
-            'asc'
-        );
-
-    if (!empty($date)) {
-
-        try {
-
-            $formattedDate = Carbon::createFromFormat(
-                'd-m-Y',
-                $date
-            )->format('Y-m-d');
-
-            $query->whereDate(
-                'date_stock',
-                '<=',
-                $formattedDate
-            );
-
-        } catch (\Exception $e) {
-        }
-    }
-
-    $mutations = $query->get();
-
-    $runningBalance = 0;
-
-    foreach ($mutations as $mutation) {
-
-        $baseQty = (float) $mutation->total_base_qty;
-
-        if ($mutation->type === 'in') {
-
-            $runningBalance += $baseQty;
-
-        } else {
-
-            $runningBalance -= $baseQty;
+            } catch (\Exception $e) {
+            }
         }
 
-        $mutation->saldo_akhir = $runningBalance;
+        $mutations = $query->get();
 
-        /*
-         * Qty transaksi asli
-         * contoh:
-         * 20 PCS
-         * 25 Pack
-         */
-        $mutation->qty_display = (float) $mutation->qty_transaksi;
+        $runningBalance = 0;
 
-        /*
-         * Qty setelah konversi ke base unit
-         * contoh:
-         * 20 PCS
-         * 300 PCS
-         */
-        $mutation->base_qty_display = $baseQty;
+        foreach ($mutations as $mutation) {
+
+            $baseQty = (float) $mutation->total_base_qty;
+
+            if ($mutation->type === 'in') {
+
+                $runningBalance += $baseQty;
+
+            } else {
+
+                $runningBalance -= $baseQty;
+            }
+
+            $mutation->saldo_akhir = $runningBalance;
+
+            /*
+             * Qty transaksi asli
+             * contoh:
+             * 20 PCS
+             * 25 Pack
+             */
+            $mutation->qty_display = (float) $mutation->qty_transaksi;
+
+            /*
+             * Qty setelah konversi ke base unit
+             * contoh:
+             * 20 PCS
+             * 300 PCS
+             */
+            $mutation->base_qty_display = $baseQty;
+        }
+
+        return $mutations
+            ->sortByDesc(function ($item) {
+
+                return $item->date_stock.'-'.$item->id;
+            })
+            ->values();
     }
-
-    return $mutations
-        ->sortByDesc(function ($item) {
-
-            return $item->date_stock.'-'.$item->id;
-        })
-        ->values();
-}
 
     public function edit(string $id)
     {

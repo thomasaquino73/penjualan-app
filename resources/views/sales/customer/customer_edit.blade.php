@@ -517,6 +517,16 @@
                                                     <label class="form-check-label" for="check_address">Tax address is
                                                         the same as billing address</label>
                                                 </div>
+                                                <input type="hidden" id="old_alamat_pajak"
+                                                    value="{{ optional($pajak)->alamat_pajak }}">
+                                                <input type="hidden" id="old_kota_pajak"
+                                                    value="{{ optional($pajak)->kota_pajak }}">
+                                                <input type="hidden" id="old_kodepos_pajak"
+                                                    value="{{ optional($pajak)->kodepos_pajak }}">
+                                                <input type="hidden" id="old_provinsi_pajak"
+                                                    value="{{ optional($pajak)->provinsi_pajak }}">
+                                                <input type="hidden" id="old_negara_pajak"
+                                                    value="{{ optional($pajak)->negara_pajak }}">
                                             </div>
                                         </div>
                                         <div class="row mb-3">
@@ -688,8 +698,13 @@
                 else {
 
                     $('#alamat_pajak, #kota_pajak, #kodepos_pajak, #provinsi_pajak, #negara_pajak')
-                        .prop('readonly', false)
-                        .val('');
+                        .prop('readonly', false);
+
+                    $('#alamat_pajak').val($('#old_alamat_pajak').val());
+                    $('#kota_pajak').val($('#old_kota_pajak').val());
+                    $('#kodepos_pajak').val($('#old_kodepos_pajak').val());
+                    $('#provinsi_pajak').val($('#old_provinsi_pajak').val());
+                    $('#negara_pajak').val($('#old_negara_pajak').val());
                 }
             }
 

@@ -23,7 +23,7 @@
 
             <div class="col-12 col-lg-5">
                 <div
-                    class="d-flex flex-column flex-md-row gap-2 
+                    class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
 
                     @canany(['kategori_barang-create'])

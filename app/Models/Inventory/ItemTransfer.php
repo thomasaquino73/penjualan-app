@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ItemTransfer extends Model
 {
-      use HasFactory;
+    use HasFactory;
 
     protected $table = 'item_transfer';
 

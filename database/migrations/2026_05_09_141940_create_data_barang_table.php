@@ -82,7 +82,7 @@ return new class extends Migration
 
             // Tambahkan kolom ini untuk melacak siapa yang melakukan transaksi
             $table->string('document_number')->nullable(); // Nomor dokumen (misal: RI-001, DO-999)
-            $table->enum('document_type', ['receive_item', 'delivery_order', 'initial_stock', 'adjustment','item_transfer'])->default('initial_stock');
+            $table->enum('document_type', ['receive_item', 'delivery_order', 'initial_stock', 'adjustment', 'item_transfer'])->default('initial_stock');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();

@@ -3,8 +3,8 @@
 namespace App\Observers;
 
 use App\Models\Inventory\Barang;
-use App\Models\Inventory\StockBalance;
 use App\Models\Inventory\DataBarangConversion;
+use App\Models\Inventory\StockBalance;
 use App\Models\StockMutation;
 
 class StockMutationObserver
@@ -42,11 +42,11 @@ class StockMutationObserver
                     'data_barang_id',
                     $barangId
                 )
-                ->where(
-                    'from_unit_id',
-                    $mutation->unit_id
-                )
-                ->first();
+                    ->where(
+                        'from_unit_id',
+                        $mutation->unit_id
+                    )
+                    ->first();
 
                 $rate = $conversion->qty ?? 1;
 
@@ -57,7 +57,7 @@ class StockMutationObserver
                 $qtyBase *= -1;
             }
 
-            if (!isset($warehouseStocks[$mutation->warehouse_id])) {
+            if (! isset($warehouseStocks[$mutation->warehouse_id])) {
                 $warehouseStocks[$mutation->warehouse_id] = 0;
             }
 
@@ -74,8 +74,8 @@ class StockMutationObserver
 
             StockBalance::create([
                 'data_barang_id' => $barangId,
-                'warehouse_id'   => $warehouseId,
-                'qty'            => $qty,
+                'warehouse_id' => $warehouseId,
+                'qty' => $qty,
             ]);
         }
 
@@ -84,8 +84,8 @@ class StockMutationObserver
         if ($barang) {
 
             $barang->update([
-                'quantity'      => $totalStock,
-                'is_low_stock'  => $totalStock <= ($barang->primary_minimum_stock ?? 0),
+                'quantity' => $totalStock,
+                'is_low_stock' => $totalStock <= ($barang->primary_minimum_stock ?? 0),
             ]);
         }
     }

@@ -437,42 +437,42 @@ class ReceiveItemController extends Controller
             ->get();
 
         $formattedData = $details->map(function ($item) {
-        // 1. Ambil nilai dasar
-        $totalQty = (float) ($item->qty ?? 0);
-        $receivedQty = (float) ($item->received_qty ?? 0);
+            // 1. Ambil nilai dasar
+            $totalQty = (float) ($item->qty ?? 0);
+            $receivedQty = (float) ($item->received_qty ?? 0);
 
-        // 2. Hitung sisa yang benar
-        $sisaQty = $totalQty - $receivedQty;
+            // 2. Hitung sisa yang benar
+            $sisaQty = $totalQty - $receivedQty;
 
-        // 3. Jika sisa 0 atau kurang, item ini tidak perlu diproses lagi
-        if ($sisaQty <= 0) {
-            return null;
-        }
+            // 3. Jika sisa 0 atau kurang, item ini tidak perlu diproses lagi
+            if ($sisaQty <= 0) {
+                return null;
+            }
 
-        return [
-            'id' => $item->id,
-            'product_id' => $item->product_id,
-            'product_name' => $item->produkID->nama_barang ?? '-',
-            
-            // Gunakan hasil perhitungan sisa yang benar
-            'quantity' => $sisaQty,
-            'qty' => $sisaQty,
-            
-            'received_qty' => $receivedQty,
-            'unit_id' => $item->unit_id,
-            'unit_name' => $item->unitID->detail ?? '-',
-            'order_code' => $item->purchaseOrder->code ?? '',
-            'pr_status' => $item->purchaseOrder->status ?? '',
-            'warehouse_id' => '',
-            'warehouse' => '-',
-        ];
+            return [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->produkID->nama_barang ?? '-',
+
+                // Gunakan hasil perhitungan sisa yang benar
+                'quantity' => $sisaQty,
+                'qty' => $sisaQty,
+
+                'received_qty' => $receivedQty,
+                'unit_id' => $item->unit_id,
+                'unit_name' => $item->unitID->detail ?? '-',
+                'order_code' => $item->purchaseOrder->code ?? '',
+                'pr_status' => $item->purchaseOrder->status ?? '',
+                'warehouse_id' => '',
+                'warehouse' => '-',
+            ];
         })->filter()->values();
-            //    dd($details);
+        //    dd($details);
 
-            return response()->json([
-                'success' => true,
-                'data' => $formattedData,
-            ]);
+        return response()->json([
+            'success' => true,
+            'data' => $formattedData,
+        ]);
     }
 
     public function getProcessingData(Request $request)
@@ -484,7 +484,7 @@ class ReceiveItemController extends Controller
         ])
             ->where('supplier_id', $request->supplier_id)
         // ->whereNotIn('status', ['draft', 'closed', 'completed'])
-            ->whereIn('status', ['approved','partial'])
+            ->whereIn('status', ['approved', 'partial'])
             ->get();
 
         return response()->json($orders);
@@ -500,7 +500,7 @@ class ReceiveItemController extends Controller
             'details.produkID',
             'details.unitID',
             'details.warehouseID',
-            'details.purchaseOrderDetail.purchaseOrder'
+            'details.purchaseOrderDetail.purchaseOrder',
         ])->findOrFail($id);
 
         // 2. Cek status: Apakah mengandung minimal satu item hasil serapan PO?
@@ -520,7 +520,7 @@ class ReceiveItemController extends Controller
                 if ($poDetail) {
                     $kuotaAsliPo = (float) $poDetail->qty;
                     $sisaPo = (float) $poDetail->outstanding_qty;
-                    
+
                     // Menghitung berapa banyak yang sudah diambil oleh dokumen Receive Item LAINNYA
                     // Mengambil dari tabel detail penerimaan (bukan dari PO Detail lagi)
                     $totalDiambilLainnya = DB::table("receive_item_detail_{$year}")
@@ -575,6 +575,7 @@ class ReceiveItemController extends Controller
 
         return view('purchase.receive_item.receive_item_edit', $x);
     }
+
     public function update(ReceiveItemRequest $request, $id)
     {
         DB::beginTransaction();
@@ -686,7 +687,7 @@ class ReceiveItemController extends Controller
 
             DB::commit();
 
-           return response()->json([
+            return response()->json([
                 'status' => 'success',
                 'title' => 'Success',
                 'message' => 'Receive Item berhasil diupdate',

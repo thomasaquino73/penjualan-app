@@ -26,6 +26,10 @@ return new class extends Migration
             $table->dateTime('tanggal_kirim');
             $table->unsignedBigInteger('shipping_id');
             $table->string('fob_id');
+            $table->decimal('sub_total', 18, 2)->default(0)->nullable();
+            $table->decimal('disc_percent', 5, 2)->default(0)->nullable();
+            $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();
+            $table->decimal('grand_total', 18, 2)->default(0)->nullable();
             $table->enum('status', [
                 'processing',
                 'partial',

@@ -82,7 +82,7 @@ class SupplierController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                       <i class="ti ti-menu-2 ti-xs me-1"></i> 
+                       <i class="ti ti-menu-2 ti-xs me-1"></i>
                       </button>
                       <ul class="dropdown-menu" style="">';
 
@@ -97,6 +97,9 @@ class SupplierController extends Controller
                                 data-name="'.$row->nama.'"
                                 ><i class="ti ti-trash"></i> Delete</a>';
                     }
+                    $btn .= '<a class="dropdown-item" href="'.route('supplier.show', $row->id).'"
+                             
+                                ><i class="ti ti-list-details"></i> Detail</a>';
 
                     return $btn;
                 })
@@ -263,9 +266,47 @@ class SupplierController extends Controller
 
     }
 
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        // supplier utama
+        $supplier = DB::table('supplier')->where('id', $id)->first();
+
+        // relasi
+        $kontak = DB::table('supplier_kontak')->where('supplier_id', $id)->first();
+        $pajak = DB::table('supplier_pajak')->where('supplier_id', $id)->first();
+        $pembelian = DB::table('supplier_pembelian')->where('supplier_id', $id)->first();
+        $rekening = DB::table('supplier_rekening as sr')
+            ->leftJoin('basic_code_detail as bcd', function ($join) {
+                $join->on('sr.nama_bank', '=', 'bcd.id')
+                    ->where('bcd.master_id', 5); // kategori BANK
+            })
+            ->where('sr.supplier_id', $id)
+            ->select(
+                'sr.*',
+                DB::raw("CONCAT(bcd.detail, ' - ', bcd.description) as nama_bank_text")
+            )
+            ->get();
+        $x = [
+            'title' => 'Detail Supplier ',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Detail Supplier ', 'url' => ''],
+            ],
+            'idNumber' => $this->generateNumberId(),
+
+            'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
+            'databank' => BasicCodeDetail::where('master_id', 5)->get(),
+            'kategoriPemasok' => BasicCodeDetail::where('master_id', 8)->get(),
+
+            // kirim data
+            'supplier' => $supplier,
+            'kontak' => $kontak,
+            'pajak' => $pajak,
+            'pembelian' => $pembelian,
+            'rekening' => $rekening,
+        ];
+
+        return view('purchase.supplier.supplier_show', $x);
     }
 
     public function edit($id)
@@ -550,7 +591,7 @@ class SupplierController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                       <i class="ti ti-menu-2 ti-xs me-1"></i> 
+                       <i class="ti ti-menu-2 ti-xs me-1"></i>
                       </button>
                       <ul class="dropdown-menu" style="">';
 

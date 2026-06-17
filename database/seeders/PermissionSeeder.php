@@ -36,6 +36,11 @@ class PermissionSeeder extends Seeder
                 'group' => 'Sales',
                 'actions' => array_merge($defaultActions, ['approval']), // default + approval
             ],
+            'item_transfer' => [
+                'alias' => 'Item Transfer',
+                'group' => 'Sales',
+                'actions' => array_merge($defaultActions, ['approval']), // default + approval
+            ],
             'customer' => ['alias' => 'Customer', 'group' => 'Sales'],
             'kategori_customer' => ['alias' => 'Customer Category', 'group' => 'Sales'],
             'delivery_order' => ['alias' => 'Delivery Order', 'group' => 'Sales'],

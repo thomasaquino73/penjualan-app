@@ -516,6 +516,16 @@
                                                     <label class="form-check-label" for="check_address">Tax address is
                                                         the same as payment address</label>
                                                 </div>
+                                                <input type="hidden" id="old_alamat_pajak"
+                                                    value="{{ optional($pajak)->alamat_pajak }}">
+                                                <input type="hidden" id="old_kota_pajak"
+                                                    value="{{ optional($pajak)->kota_pajak }}">
+                                                <input type="hidden" id="old_kodepos_pajak"
+                                                    value="{{ optional($pajak)->kodepos_pajak }}">
+                                                <input type="hidden" id="old_provinsi_pajak"
+                                                    value="{{ optional($pajak)->provinsi_pajak }}">
+                                                <input type="hidden" id="old_negara_pajak"
+                                                    value="{{ optional($pajak)->negara_pajak }}">
                                             </div>
                                         </div>
                                         <div class="row mb-3">
@@ -593,7 +603,6 @@
                 </div>
         </form>
     </div>
-
     </div>
 
     <div class="modal fade" id="modalPrDetail">
@@ -701,8 +710,13 @@
                 else {
 
                     $('#alamat_pajak, #kota_pajak, #kodepos_pajak, #provinsi_pajak, #negara_pajak')
-                        .prop('readonly', false)
-                        .val('');
+                        .prop('readonly', true);
+
+                    $('#alamat_pajak').val($('#alamat_pembayaran').val());
+                    $('#kota_pajak').val($('#kota').val());
+                    $('#kodepos_pajak').val($('#kodepos').val());
+                    $('#provinsi_pajak').val($('#provinsi').val());
+                    $('#negara_pajak').val($('#negara').val());
                 }
             }
 

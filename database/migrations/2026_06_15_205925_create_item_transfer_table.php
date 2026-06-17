@@ -26,9 +26,11 @@ return new class extends Migration
                 'pending',
                 'approved',
                 'completed',
-                'cancelled'
+                'cancelled',
             ])->default('draft');
-
+            $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
         });
 
@@ -51,13 +53,13 @@ return new class extends Migration
             $table->unsignedBigInteger('data_barang_id');
             $table->unsignedBigInteger('warehouse_id');
 
-            $table->decimal('qty',15,4)->default(0);
+            $table->decimal('qty', 15, 4)->default(0);
 
             $table->timestamps();
 
             $table->unique([
                 'data_barang_id',
-                'warehouse_id'
+                'warehouse_id',
             ]);
         });
     }

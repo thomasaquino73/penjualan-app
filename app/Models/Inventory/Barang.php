@@ -90,6 +90,4 @@ class Barang extends Model
             ->selectRaw("SUM(CASE WHEN type = 'in' THEN total_base_qty ELSE -total_base_qty END) as total")
             ->value('total') ?? 0;
     }
-
-    
 }
