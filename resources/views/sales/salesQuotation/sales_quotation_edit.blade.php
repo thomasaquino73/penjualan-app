@@ -821,6 +821,11 @@
                         });
                     },
                     error: function(xhr) {
+                        resetValidation();
+                        let errors = xhr.responseJSON?.errors;
+                        $.each(errors, function(key, value) {
+                            displayFieldError(key, value[0]);
+                        });
                         Swal.fire({
                             icon: "error",
                             title: "Failed to Create Data",
@@ -830,11 +835,6 @@
                                 confirmButton: "btn btn-primary waves-effect waves-light",
                             },
                             buttonsStyling: false,
-                        });
-
-                        let errors = xhr.responseJSON.errors || {};
-                        $.each(errors, function(key, value) {
-                            $(`#${key}Error`).text(value[0]);
                         });
                     },
                 });

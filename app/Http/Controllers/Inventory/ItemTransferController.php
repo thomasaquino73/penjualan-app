@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ItemTransferRequest;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\ItemTransfer;
 use App\Models\Inventory\Warehouse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class ItemTransferController extends Controller
@@ -37,7 +40,30 @@ class ItemTransferController extends Controller
                     return 'N/A';
                 })
                 ->addColumn('transfer_date', function ($row) {
-                    return Carbon::parse($row->transfer_date)->parse('d-m-Y');
+                    return Carbon::parse($row->transfer_date)->format('d-m-Y');
+                })
+                ->addColumn('from_warehouse', function ($row) {
+                    return $row->fromWarehouse->nama_gudang;
+                })
+                ->addColumn('to_warehouse', function ($row) {
+                    return $row->toWarehouse->nama_gudang;
+                })
+                ->addColumn('cekbok', function ($row) {
+
+                    if (
+                        auth()->user()->can('item_transfer-delete') &&
+                        $row->status === 'draft'
+                    ) {
+                        return '
+                            <div class="form-check form-check-primary">
+                                <input class="form-check-input checkItem"
+                                    type="checkbox"
+                                    value="'.$row->id.'">
+                            </div>
+                        ';
+                    }
+
+                    return '';
                 })
                 ->addColumn('status', function ($row) {
 
@@ -113,7 +139,7 @@ class ItemTransferController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'transfer_date'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'transfer_date','from_warehouse','to_warehouse'])
                 ->make(true);
         }
 
@@ -145,7 +171,7 @@ class ItemTransferController extends Controller
         $month = $this->bulanRomawi(date('n'));
 
         // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
-        $last = ItemTransfer::where('transfer_code', 'like', "PO/$year/$month/%")
+        $last = ItemTransfer::where('transfer_code', 'like', "IT/$year/$month/%")
             ->orderBy('id', 'desc')
             ->first();
 
@@ -195,9 +221,28 @@ class ItemTransferController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(ItemTransferRequest $r)
     {
-        //
+          DB::beginTransaction();
+         
+        try {
+            $data = $r->except('save_and_new','items_detail');
+            $data['transfer_date'] = Carbon::parse($r->transfer_date)->format('Y-m-d');
+            $data['created_by'] = Auth::id();
+            $ItemTransfer = ItemTransfer::create($data);
+              DB::commit();
+              return response()->json([
+            'status' => 'success',
+            'message' => 'Data created successfully',
+            'redirect' => route('item-transfer.index') // Sesuaikan route
+        ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan data: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

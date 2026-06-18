@@ -108,16 +108,16 @@
                         data: 'transfer_date',
                     },
                     {
-                        data: 'transfer_code',
+                        data: 'to_warehouse',
                     },
                     {
-                        data: 'transfer_code',
-                    },
-                    {
-                        data: 'transfer_code',
+                        data: 'from_warehouse',
                     },
                     {
                         data: 'description',
+                    },
+                    {
+                        data: 'status',
                     },
                     {
                         data: 'created_at',

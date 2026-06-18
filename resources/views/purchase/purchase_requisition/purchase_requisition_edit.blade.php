@@ -571,6 +571,10 @@
 
                     error: function(xhr) {
                         resetValidation();
+                        let errors = xhr.responseJSON?.errors;
+                        $.each(errors, function(key, value) {
+                            displayFieldError(key, value[0]);
+                        });
 
                         Swal.fire({
                             icon: 'error',
@@ -583,12 +587,6 @@
                                 confirmButton: 'btn btn-primary waves-effect waves-light'
                             },
                             buttonsStyling: false
-                        });
-
-                        let errors = xhr.responseJSON?.errors;
-
-                        $.each(errors, function(key, value) {
-                            displayFieldError(key, value[0]);
                         });
                     }
                 });

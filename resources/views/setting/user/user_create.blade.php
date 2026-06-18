@@ -229,7 +229,7 @@
 
                         Swal.fire({
                             icon: 'error',
-                            title: 'Failed to Update Data',
+                            title: 'Failed to Create Data',
                             text: 'Please check your input and try again.',
                             showClass: {
                                 popup: 'animate__animated animate__bounceIn'

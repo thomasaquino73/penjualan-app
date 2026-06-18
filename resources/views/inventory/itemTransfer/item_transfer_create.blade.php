@@ -30,22 +30,20 @@
 
         </div>
         <div class="card-body table-responsive p-3">
-            <form action="{{ route('permintaan-pembelian.store') }}" method="POST" id="postForm"
-                enctype="multipart/form-data">
+            <form action="{{ route('item-transfer.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
                 @csrf
                 <div class="row mb-5">
                     <div class="col-md-6">
                         <div class="row">
                             <div class="col-6 mb-3">
                                 <label class="form-label">Number<small class="text-danger">*</small> </label>
-                                <input type="text" name="code" id="code" class="form-control"
+                                <input type="text" name="transfer_code" id="transfer_code" class="form-control"
                                     value="{{ $idNumber }}">
-                                <span class="error text-danger" id="codeError"></span>
+                                <span class="error text-danger" id="transfer_codeError"></span>
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="form-label">Date<small class="text-danger">*</small> </label>
-                                <input type="text" name="transfer_date" id="transfer_date" class="form-control"
-                                    value="">
+                                <input type="text" name="transfer_date" id="transfer_date" class="form-control">
                                 <span class="error text-danger" id="transfer_dateError"></span>
                             </div>
                             <div class="col-6 mb-3">
@@ -227,6 +225,39 @@
                                 text: '<i class="ti ti-plus me-1"></i> New',
                                 className: 'btn btn-primary btn-sm me-2',
                                 action: function(e, dt, node, config) {
+                                    var fromWarehouseId = $("#from_warehouse_id").val();
+                                    var toWarehouseId = $("#to_warehouse_id").val();
+
+                                    if (!fromWarehouseId || !toWarehouseId) {
+                                        Swal.fire({
+                                            icon: "warning",
+                                            title: "Warning!",
+                                            text: "Please select Warehouse first.",
+                                            confirmButtonColor: "#3085d6",
+                                            confirmButtonText: "OK",
+                                            customClass: {
+                                                confirmButton: "btn btn-danger",
+                                            },
+                                            buttonsStyling: false,
+                                        });
+                                        return false;
+                                    }
+
+                                    // Validasi warehouse tidak boleh sama
+                                    if (fromWarehouseId === toWarehouseId) {
+                                        Swal.fire({
+                                            icon: "warning",
+                                            title: "Warning!",
+                                            text: "From Warehouse and To Warehouse cannot be the same.",
+                                            confirmButtonColor: "#3085d6",
+                                            confirmButtonText: "OK",
+                                            customClass: {
+                                                confirmButton: "btn btn-danger",
+                                            },
+                                            buttonsStyling: false,
+                                        });
+                                        return false;
+                                    }
                                     $('#formPrDetail')[0].reset();
                                     $('#detail_id').val('');
 
@@ -364,7 +395,7 @@
                 });
             });
 
-             $('#formPrDetail').on('submit', function(e) {
+            $('#formPrDetail').on('submit', function(e) {
                 e.preventDefault();
 
                 let productId = $('#product_id').val();
@@ -442,6 +473,110 @@
                 // Tutup modal secara aman
                 $('#modalPrDetail').modal('hide');
             });
+
+            let saveAndNew = false;
+            let activeBtn = null;
+
+            $(document).on("click", '.card-footer button[type="submit"]', function() {
+                saveAndNew = $(this).data("save-and-new");
+                activeBtn = $(this);
+            });
+
+
+            $("#postForm").on("submit", function(e) {
+                e.preventDefault();
+
+                // 1. Tangkap tombol yang ditekan (lebih akurat)
+                let submitter = e.originalEvent.submitter;
+                let saveAndNew = $(submitter).data("save-and-new") === true;
+                let btnTextOriginal = $(submitter).html();
+
+                // 2. Validasi awal (Frontend)
+                if (typeof prDetailsData === "undefined" || prDetailsData.length === 0) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Empty Items",
+                        text: "Please add at least one item detail to the table before saving.",
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn btn-primary waves-effect waves-light",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return false;
+                }
+
+                // Pindahkan pengecekan warehouse ke sini!
+                if ($("#from_warehouse_id").val() === $("#to_warehouse_id").val()) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Warning!",
+                        text: "Warehouse cannot be the same.",
+                        customClass: {
+                            confirmButton: "btn btn-primary waves-effect waves-light",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return false;
+                }
+
+                let formData = new FormData(this);
+                formData.append("save_and_new", saveAndNew ? 1 : 0);
+                formData.append("items_detail", JSON.stringify(prDetailsData));
+
+                $.ajax({
+                    url: $(this).attr("action"),
+                    method: $(this).attr("method"),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    beforeSend: function() {
+                        $(submitter).html(
+                                '<i class="fa fa-spin fa-spinner me-1"></i> Processing...')
+                            .prop("disabled", true);
+                        $(".card-footer button").prop("disabled", true);
+                    },
+                    complete: function() {
+                        // Kembalikan teks asli ke tombol yang diklik
+                        // $(submitter).html(btnTextOriginal).prop("disabled", false);
+                        $(".card-footer button").prop("disabled", false);
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                                icon: "success",
+                                title: "Success",
+                                text: response.message,
+                                customClass: {
+                                    confirmButton: "btn btn-primary waves-effect waves-light",
+                                },
+                                buttonsStyling: false,
+                            })
+                            .then(() => {
+                                window.location.href = response.redirect;
+                            });
+                    },
+                    error: function(xhr) {
+                        resetValidation();
+                        let errors = xhr.responseJSON?.errors;
+                        $.each(errors, function(key, value) {
+                            displayFieldError(key, value[0]);
+                        });
+                        Swal.fire({
+                            icon: "error",
+                            title: "Failed",
+                            text: xhr.responseJSON?.message || "Error",
+                            customClass: {
+                                confirmButton: "btn btn-primary waves-effect waves-light",
+                            },
+                            buttonsStyling: false,
+                        });
+
+                    }
+                });
+            });
+
+
         });
     </script>
 @endpush

@@ -44,7 +44,7 @@
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="form-label">Request Date<small class="text-danger">*</small> </label>
-                                <input type="text" name="date" id="date" class="form-control" value="">
+                                <input type="text" name="date" id="date" class="form-control">
                                 <span class="error text-danger" id="dateError"></span>
                             </div>
                         </div>
@@ -484,6 +484,11 @@
                         });
                     },
                     error: function(xhr) {
+                        resetValidation();
+                        let errors = xhr.responseJSON?.errors;
+                        $.each(errors, function(key, value) {
+                            displayFieldError(key, value[0]);
+                        });
                         Swal.fire({
                             icon: 'error',
                             title: 'Failed to Create Data',
@@ -495,10 +500,7 @@
                             buttonsStyling: false
                         });
 
-                        let errors = xhr.responseJSON.errors || {};
-                        $.each(errors, function(key, value) {
-                            $(`#${key}Error`).text(value[0]);
-                        });
+
                     }
                 });
             });
