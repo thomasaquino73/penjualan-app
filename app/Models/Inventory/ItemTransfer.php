@@ -18,6 +18,10 @@ class ItemTransfer extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+    public function pic()
+    {
+        return $this->belongsTo(User::class, 'pic_by');
+    }
 
     public function updater()
     {

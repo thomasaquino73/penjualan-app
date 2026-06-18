@@ -9,7 +9,9 @@ use App\Models\Inventory\ItemTransfer;
 use App\Models\Inventory\ItemTransferDetail;
 use App\Models\Inventory\StockBalance;
 use App\Models\Inventory\Warehouse;
+use App\Models\Setting\Company;
 use App\Models\StockMutation;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -232,31 +234,6 @@ class ItemTransferController extends Controller
                                 ';
                         }
                     }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | 3. SEND TO SUPPLIER
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        $row->status == 'approved'
-                        // $row->status == 'approved' &&
-                        // $user->can('item_transfer-send-supplier')
-                    ) {
-
-                        $btn .= '
-                            <a class="dropdown-item text-info btn-send-supplier"
-                                href="javascript:void(0)"
-                                data-id="'.$row->id.'">
-
-                                <i class="ti ti-mail-fast me-1"></i>
-                                Send To Supplier
-                            </a>
-                        ';
-                    }
-
-
 
                     /*
                     |--------------------------------------------------------------------------
@@ -736,4 +713,37 @@ class ItemTransferController extends Controller
         ], 500);
     }
 }
+
+public function print($id)
+    {
+          $itemTransfer = ItemTransfer::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $company = Company::first();
+        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+        $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+            }
+        }
+        $data = [
+            'model' => $itemTransfer,
+            'company' => $company,
+            'modelDetail' => $itemTransfer->details,
+            'logoBase64' => $logoBase64,
+        ];
+
+        $pdf = Pdf::loadView('pdf.item_transfer_pdf', $data)
+            ->setPaper('a4', 'portrait');
+
+        // preview di browser
+        $filename = $itemTransfer->transfer_code;
+
+        // replace forbidden filename chars
+        $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
+
+        return $pdf->stream($filename.'.pdf');
+    }
 }

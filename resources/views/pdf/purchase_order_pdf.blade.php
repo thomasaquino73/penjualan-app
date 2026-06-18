@@ -338,7 +338,7 @@
                 <tr>
                     <td>{{ $detail->produkID->id_barang }}</td>
                     <td>{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}</td>
-                    <td class="text-center">{{ $detail->qty }}</td>
+                    <td class="text-center">{{ rtrim(rtrim(number_format($detail->qty, 2, ',', '.'), '0'), ',') }}</td>
                     <td class="text-right">{{ number_format($detail->unit_price, 0, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($detail->discount, 0, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($detail->amount, 0, ',', '.') }}</td>
