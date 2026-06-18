@@ -328,7 +328,7 @@ class DataBarangController extends Controller
                     'qty_transaksi' => $qty_input,
                     'total_base_qty' => $total_base_qty,
                     'type' => 'in', // Karena ini input stok awal
-                    'keterangan' => 'Stok Awal dari Form Tambah Barang',
+                    'keterangan' => 'Stok Awal',
                     'created_by' => Auth::id(),
                     'document_type' => 'initial_stock',
                 ]);
@@ -715,7 +715,7 @@ class DataBarangController extends Controller
                     'qty_transaksi' => $qty_input,
                     'total_base_qty' => $total_base_qty,
                     'type' => 'in',
-                    'keterangan' => 'Update stok awal melalui Form Edit Barang',
+                    'keterangan' => 'Stok Awal',
                     'document_type' => 'initial_stock',
                     'updated_by' => Auth::id(),
                 ]);

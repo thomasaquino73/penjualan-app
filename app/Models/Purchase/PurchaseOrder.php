@@ -2,6 +2,7 @@
 
 namespace App\Models\Purchase;
 
+use App\Models\Setting\CashBank;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
@@ -67,6 +68,11 @@ class PurchaseOrder extends Model
     public function ship()
     {
         return $this->belongsTo(Shipping::class, 'vehicle_id');
+    }
+
+     public function bankID()
+    {
+        return $this->belongsTo(CashBank::class, 'bank_id');
     }
 
     public function purchaseRequisition()

@@ -173,7 +173,7 @@ class ItemTransferController extends Controller
                                     href="'.route('item-transfer.edit', $row->id).'">
 
                                     <i class="far fa-edit me-1"></i>
-                                    Edit SO
+                                    Edit
                                 </a>
                             ';
                         }
@@ -218,7 +218,7 @@ class ItemTransferController extends Controller
                                         data-id="'.$row->id.'">
 
                                         <i class="ti ti-check me-1"></i>
-                                        Approve SO
+                                        Approve 
                                     </a>
                                 ';
 
@@ -229,7 +229,7 @@ class ItemTransferController extends Controller
                                         data-id="'.$row->id.'">
 
                                         <i class="ti ti-x me-1"></i>
-                                        Reject SO
+                                        Reject 
                                     </a>
                                 ';
                         }
@@ -237,7 +237,7 @@ class ItemTransferController extends Controller
 
                     /*
                     |--------------------------------------------------------------------------
-                    | 5. CANCEL SO
+                    | 5. CANCEL 
                     |--------------------------------------------------------------------------
                     */
 
@@ -252,7 +252,7 @@ class ItemTransferController extends Controller
                             data-id="'.$row->id.'">
 
                             <i class="ti ti-circle-x me-1"></i>
-                            Cancel SO
+                            Cancel
                         </a>
                     ';
                     }
@@ -714,7 +714,7 @@ class ItemTransferController extends Controller
     }
 }
 
-public function print($id)
+    public function print($id)
     {
           $itemTransfer = ItemTransfer::with(['details.produkID', 'details.unitID'])->findOrFail($id);
         $company = Company::first();
@@ -728,11 +728,33 @@ public function print($id)
                 $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
             }
         }
+
+         // Stamp Approved
+        $approvedStampBase64 = null;
+        $approvedPath = public_path('image/stamps/approved.png');
+
+        if (file_exists($approvedPath)) {
+            $approvedStampBase64 =
+                'data:image/png;base64,' .
+                base64_encode(file_get_contents($approvedPath));
+        }
+
+        // Stamp Rejected
+        $rejectedStampBase64 = null;
+        $rejectedPath = public_path('image/stamps/rejected.png');
+
+        if (file_exists($rejectedPath)) {
+            $rejectedStampBase64 =
+                'data:image/png;base64,' .
+                base64_encode(file_get_contents($rejectedPath));
+        }
         $data = [
             'model' => $itemTransfer,
             'company' => $company,
             'modelDetail' => $itemTransfer->details,
             'logoBase64' => $logoBase64,
+            'approvedStampBase64' => $approvedStampBase64,
+            'rejectedStampBase64' => $rejectedStampBase64,
         ];
 
         $pdf = Pdf::loadView('pdf.item_transfer_pdf', $data)

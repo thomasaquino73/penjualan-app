@@ -11,6 +11,7 @@ use App\Http\Controllers\Inventory\ItemTransferController;
 use App\Http\Controllers\Inventory\WarehouseController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Purchase\PurchaseInvoiceController;
 use App\Http\Controllers\Purchase\PurchaseOrderController;
 use App\Http\Controllers\Purchase\PurchaseRequisitionController;
 use App\Http\Controllers\Purchase\ReceiveItemController;
@@ -228,6 +229,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('permintaan-pembelian', PurchaseRequisitionController::class);
 
     Route::prefix('purchase-order')->name('purchase-order.')->group(function () {
+        Route::get('/{id}/rekening', [PurchaseOrderController::class, 'getRekening'])->name('getRekening');
         Route::patch('/{id}/close', [PurchaseOrderController::class, 'CloseDocument'])->name('close');
         Route::get('/trash', [PurchaseOrderController::class, 'trash'])->name('trash');
         Route::post('/delete-multiple', [PurchaseOrderController::class, 'deleteMultiple']);
@@ -253,6 +255,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/trash', [ReceiveItemController::class, 'trash'])->name('trash');
         Route::resource('', ReceiveItemController::class)->parameters(['' => 'receive_item']);
     });
+
+    Route::prefix('purchase-invoice')->name('purchase-invoice.')->group(function () {
+        Route::post('/{id}/submit', [PurchaseInvoiceController::class, 'submitToPending'])->name('submit');
+        Route::get('/trash', [PurchaseInvoiceController::class, 'trash'])->name('trash');
+        Route::resource('', PurchaseInvoiceController::class)->parameters(['' => 'purchase_invoice']);
+    });
+
     Route::patch('/sales-order/{id}/close', [SalesOrderController::class, 'CloseDocument'])->name('sales-order.close');
     Route::post('/sales-order/send-supplier/{id}', [SalesOrderController::class, 'sendSupplier'])->name('sales-order.send-supplier');
     Route::post('/sales-order/change-status/{id}', [SalesOrderController::class, 'changeStatus']);

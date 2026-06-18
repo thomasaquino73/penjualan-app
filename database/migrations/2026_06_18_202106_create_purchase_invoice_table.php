@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    protected string $year;
+   protected string $year;
 
     public function __construct()
     {
@@ -15,7 +15,7 @@ return new class extends Migration
 
     public function up(): void
     {
-        Schema::create("purchase_order_{$this->year}", function (Blueprint $table) {
+        Schema::create("purchase_invoice_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->bigInteger('supplier_id');
             $table->string('code');
@@ -23,29 +23,23 @@ return new class extends Migration
             $table->date('tanggal_kirim')->nullable();
             $table->bigInteger('vehicle_id')->nullable();
             $table->bigInteger('payment_term')->nullable();
-            $table->bigInteger('bank_id')->nullable();
             $table->string('shipping_address')->nullable();
             $table->string('description')->nullable();
             $table->boolean('kena_pajak')->default(1)->comment('kena pajak atau tidak')->nullable();
             $table->boolean('total_termasuk_pajak')->default(1)->comment('harga total termasuk pajak')->nullable();
             $table->string('fob_id')->nullable();
+            $table->string('no_faktur')->nullable();
             $table->decimal('sub_total', 18, 2)->default(0)->nullable();
             $table->decimal('disc_percent', 5, 2)->default(0)->nullable();
             $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();
             $table->decimal('grand_total', 18, 2)->default(0)->nullable();
-            // $table->bigInteger('total_hari')->nullable();
-            // $table->bigInteger('total_diskon')->nullable();
-            // $table->bigInteger('masa_jatuh_tempo')->nullable();
             $table->enum('status', [
-                'draft',               // Baru dibuat
-                'pending',             // Menunggu approval
-                'approved',            // Sudah approve
-                'rejected',            // Ditolak
-                'sent',                // Sudah dikirim ke supplier
-                'partially_received',  // Barang diterima sebagian
-                'completed',           // Semua barang diterima
-                'closed',           // Dibatalkan
-            ])->default('draft');
+                'unpaid',               
+                'partially_paid',  
+                'paid',      
+                'overdue',       
+                'closed',          
+            ])->default('unpaid');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
@@ -53,9 +47,9 @@ return new class extends Migration
             $table->datetime('pic_at')->nullable();
             $table->timestamps();
         });
-        Schema::create("purchase_order_detail_{$this->year}", function (Blueprint $table) {
+        Schema::create("purchase_invoice_detail_{$this->year}", function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('purchase_order_id');
+            $table->bigInteger('purchase_invoice_id');
             $table->bigInteger('product_id');
             $table->decimal('qty', 18, 4);
             $table->bigInteger('unit_id');
@@ -82,7 +76,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists("purchase_order_{$this->year}");
-        Schema::dropIfExists("purchase_order_detail_{$this->year}");
+        Schema::dropIfExists("purchase_invoice_{$this->year}");
+        Schema::dropIfExists("purchase_invoice_detail_{$this->year}");
     }
 };

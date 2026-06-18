@@ -633,7 +633,9 @@
                 let warehouseId = $("#warehouse_id").val();
                 let warehouseName = $("#warehouse_id option:selected").text();
                 let detailId = $("#detail_id")
-                    .val(); // Ini adalah index row array (kosong jika barang baru)
+                    .val();
+                let unitPrice = parseFloat($("#unit_price").val()) || 0;
+                let discount = parseFloat($("#discount").val()) || 0;
                 // 1. Validasi Input Wajib
                 if (!productId || quantity <= 0 || !unitId) {
                     Swal.fire({

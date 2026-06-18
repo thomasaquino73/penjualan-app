@@ -1809,4 +1809,26 @@ class PurchaseOrderController extends Controller
             ], 422);
         }
     }
+
+    public function getRekening($supplierId)
+    {
+        $rekening = DB::table('supplier_rekening')
+            ->leftJoin(
+                'basic_code_detail',
+                'supplier_rekening.nama_bank',
+                '=',
+                'basic_code_detail.id'
+            )
+            ->select(
+                'supplier_rekening.id',
+                'supplier_rekening.nama_bank as bank_id',
+                'supplier_rekening.nomor_rekening',
+                'supplier_rekening.nama_rekening',
+                 'basic_code_detail.detail as bank_name'
+            )
+            ->where('supplier_rekening.supplier_id', $supplierId)
+            ->get();
+
+        return response()->json($rekening);
+    }
 }

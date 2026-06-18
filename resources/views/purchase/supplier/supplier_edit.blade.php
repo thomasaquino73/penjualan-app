@@ -605,7 +605,7 @@
     </div>
     </div>
 
-    <div class="modal fade" id="modalPrDetail">
+    <div class="modal fade" id="modalRekeningBank">
         <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header">
@@ -659,6 +659,7 @@
         let prDetailsData = [
             @foreach ($rekening as $rek)
                 {
+                    bank_id: "{{ $rek->nama_bank }}",
                     nama_bank: "{{ $rek->nama_bank_text }}",
                     nomor_rekening: "{{ $rek->nomor_rekening }}",
                     nama_rekening: "{{ $rek->nama_rekening }}"
@@ -755,7 +756,7 @@
                 let rekeningData = [];
                 $('.rekening-item').each(function() {
                     rekeningData.push({
-                        nama_bank: $(this).find('.nama_bank').val(),
+                        nama_bank: $(this).find('.bank_id').val(),
                         nomor_rekening: $(this).find('.nomor_rekening').val(),
                         nama_rekening: $(this).find('.nama_rekening').val()
                     });
@@ -868,10 +869,11 @@
                                     }
 
                                     $('#formPrDetail')[0].reset();
+                                    $('#nama_bank').val('').trigger('change');
                                     $('#detail_id').val('');
                                     $('#modalTitle').text('Create new entry');
                                     $('#btnSubmitModal').text('Create');
-                                    $('#modalPrDetail').modal('show');
+                                    $('#modalRekeningBank').modal('show');
                                 }
                             },
                             {
@@ -879,29 +881,28 @@
                                 className: 'btn btn-warning btn-sm me-2',
                                 extend: 'selectedSingle',
                                 action: function(e, dt, node, config) {
+
                                     let data = dt.row({
                                         selected: true
                                     }).data();
                                     let rowIndex = dt.row({
                                         selected: true
                                     }).index();
+                                    console.log(data);
 
-                                    // 1. Set penanda bahwa ini adalah mode EDIT
                                     window.isEditingMode = true;
 
                                     $('#detail_id').val(rowIndex);
-                                    $('#quantity').val(data.quantity);
-                                    $('#unit_id').data('pending-val', data.unit_id);
 
-                                    // 2. Set value produk dan trigger change
-                                    $('#product_id').val(data.product_id).trigger('change');
+                                    // Isi data ke modal
+                                    $('#nama_bank').val(data.bank_id).trigger('change');
+                                    $('#nama_rekening').val(data.nama_rekening);
+                                    $('#nomor_rekening').val(data.nomor_rekening);
 
-                                    // 3. Set harga unit price asli dari tabel data
-                                    $('#unit_price').val(data.unit_price);
-                                    $('#discount').val(data.discount || 0); // Jika ada diskon
-                                    $('#modalTitle').text('Edit entry');
+                                    $('#modalTitle').text('Edit Entry');
                                     $('#btnSubmitModal').text('Update');
-                                    $('#modalPrDetail').modal('show');
+
+                                    $('#modalRekeningBank').modal('show');
                                 }
                             },
                             {
@@ -966,60 +967,10 @@
                 $this.wrap('<div class="position-relative"></div>').select2({
                     placeholder: $this.attr('data-placeholder'),
                     width: '100%',
-                    dropdownParent: $('#modalPrDetail')
+                    dropdownParent: $('#modalRekeningBank')
                 });
             });
-            $('#showModalpr').on('click', function(e) {
-                e.preventDefault();
 
-                let tbody = $('#requisitionTableBody');
-
-                // Reset checkbox 'Check All' menjadi tidak tercentang saat modal dibuka
-                $('#checkAll').prop('checked', false);
-
-                tbody.html(
-                    '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>'
-                );
-                $('#modalRequisitionDetail').modal('show');
-
-                $.ajax({
-                    url: "{{ route('purchase-order.requisitions.processing') }}",
-                    type: "GET",
-                    dataType: "json",
-                    success: function(response) {
-                        tbody.empty();
-
-                        if (response && response.length > 0) {
-                            $.each(response, function(key, item) {
-                                let dateFormatted = new Date(item.created_at)
-                                    .toLocaleDateString('id-ID');
-
-                                // Tambahkan checkbox dengan class 'checkItem' dan value berupa ID data
-                                tbody.append(`
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input class="form-check-input checkItem" type="checkbox" value="${item.id}">
-                                    </div>
-                                </td>
-                                <td><strong>${item.code}</strong></td>
-                                <td>${dateFormatted}</td>
-                            </tr>
-                        `);
-                            });
-                        } else {
-                            tbody.html(
-                                '<tr><td colspan="3" class="text-center text-muted">No processing data found.</td></tr>'
-                            );
-                        }
-                    },
-                    error: function(xhr) {
-                        tbody.html(
-                            '<tr><td colspan="3" class="text-center text-danger">Failed to fetch data.</td></tr>'
-                        );
-                    }
-                });
-            });
 
             $('#formPrDetail').on('submit', function(e) {
                 e.preventDefault();
@@ -1072,11 +1023,12 @@
                     return false;
                 }
                 let itemData = {
-                    'nama_bank': namaBank,
+                    bank_id: BankID,
+                    nama_bank: namaBank,
                     'nomor_rekening': nomorRekening,
                     'nama_rekening': namaRekening
                 };
-
+                console.log(prDetailsData);
                 if (detailId === '') {
                     prDetailsData.push(itemData);
                 } else {
@@ -1084,7 +1036,7 @@
                 }
 
                 table.clear().rows.add(prDetailsData).draw();
-                $('#modalPrDetail').modal('hide');
+                $('#modalRekeningBank').modal('hide');
             });
 
         });

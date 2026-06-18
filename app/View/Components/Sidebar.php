@@ -85,8 +85,8 @@ class Sidebar extends Component
                     ],
                     [
                         'name' => 'Purchase Invoice',
-                        'route' => 'customer.index',
-                        'pattern' => 'customer.*',
+                        'route' => 'purchase-invoice.index',
+                        'pattern' => 'purchase-invoice.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['purchase_invoice-browse'],
                     ],

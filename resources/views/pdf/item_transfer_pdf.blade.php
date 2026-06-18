@@ -4,7 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <title>Purchase Requisition - {{ $model->transfer_code }}</title>
+
     <style>
+        /* watermark */
+        .watermark {
+            position: fixed;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-20deg);
+            opacity: 0.12;
+            z-index: -1;
+        }
+
+        .watermark img {
+            width: 320px;
+            height: auto;
+        }
+
+        /* watermark */
+
         @page {
             size: A4 landscape;
             margin: 15mm;
@@ -201,7 +219,17 @@
 </head>
 
 <body>
+    @if ($model->status == 'approved' && $approvedStampBase64)
+        <div class="watermark">
+            <img src="{{ $approvedStampBase64 }}">
+        </div>
+    @endif
 
+    @if ($model->status == 'rejected' && $rejectedStampBase64)
+        <div class="watermark">
+            <img src="{{ $rejectedStampBase64 }}">
+        </div>
+    @endif
     <table class="top-layout">
         <tr>
             <td style="width: 50%;">
@@ -238,13 +266,13 @@
                     <tr>
                         <td style="width: 50%; padding-right: 10px;">
                             <div class="form-group-box">
-                                <div class="form-label">Request Number</div>
+                                <div class="form-label">Number</div>
                                 <div class="form-input-mock">{{ $model->transfer_code }}</div>
                             </div>
                         </td>
                         <td style="width: 50%;">
                             <div class="form-group-box">
-                                <div class="form-label">Request Date</div>
+                                <div class="form-label">Date</div>
                                 <div class="form-input-mock">{{ $model->transfer_date ?? date('Y-m-d') }}</div>
                             </div>
                         </td>
@@ -345,16 +373,17 @@
                     </div>
                 </div>
             </td>
-            <td class="signature-box" style="width: 25%; padding: 8px; vertical-align: top;">
-                <div
-                    style="border: 1px solid #ddd; background-color: #fafafa; padding: 10px; border-radius: 6px; text-align: center;">
-                    <div class="signature-title"
-                        style="margin-bottom: 5px; font-size: 8.5pt; font-weight: bold; color: #555;">
-                        Approved By:
-                    </div>
+            @if ($model->status == 'approved')
+                <td class="signature-box" style="width: 25%; padding: 8px; vertical-align: top;">
+                    <div
+                        style="border: 1px solid #ddd; background-color: #fafafa; padding: 10px; border-radius: 6px; text-align: center;">
+                        <div class="signature-title"
+                            style="margin-bottom: 5px; font-size: 8.5pt; font-weight: bold; color: #555;">
+                            Approved By:
+                        </div>
 
-                    <div class="signature-space" style="height: 70px; margin-bottom: 5px; text-align: center;">
-                        {{-- @if (isset($qrCodeBase64) && $qrCodeBase64 != null)
+                        <div class="signature-space" style="height: 70px; margin-bottom: 5px; text-align: center;">
+                            {{-- @if (isset($qrCodeBase64) && $qrCodeBase64 != null)
                             <img src="{{ $qrCodeBase64 }}" style="width: 60px; height: 60px; display: inline-block;">
                         @else
                             <div
@@ -362,22 +391,60 @@
                                 [QR CODE]
                             </div>
                         @endif --}}
+                        </div>
+
+
+
+                        <div class="signature-name"
+                            style="font-size: 9pt; color: #111; font-weight: bold;height: 17px;">
+                            {{ $model->pic->fullname ?? '-' }}
+
+                        </div>
+                        <div class="signature-line"
+                            style="width: 90%; border-bottom: 1px solid #999; margin: 0 auto 4px auto;"></div>
+                        <div class="signature-role"
+                            style="  font-weight: bold; text-transform: uppercase; text-align:left; ">
+                            <small> date:</small>
+                        </div>
                     </div>
+                </td>
+            @else
+                <td class="signature-box" style="width: 25%; padding: 8px; vertical-align: top;">
+                    <div
+                        style="border: 1px solid #ddd; background-color: #fafafa; padding: 10px; border-radius: 6px; text-align: center;">
+                        <div class="signature-title"
+                            style="margin-bottom: 5px; font-size: 8.5pt; font-weight: bold; color: #555;">
+                            Rejected By:
+                        </div>
+
+                        <div class="signature-space" style="height: 70px; margin-bottom: 5px; text-align: center;">
+                            {{-- @if (isset($qrCodeBase64) && $qrCodeBase64 != null)
+                            <img src="{{ $qrCodeBase64 }}" style="width: 60px; height: 60px; display: inline-block;">
+                        @else
+                            <div
+                                style="font-size: 7pt; color: #777; border: 1px dashed #ccc; width: 60px; height: 60px; line-height: 60px; margin: 0 auto; background: #fff;">
+                                [QR CODE]
+                            </div>
+                        @endif --}}
+                        </div>
 
 
 
-                    <div class="signature-name" style="font-size: 9pt; color: #111; font-weight: bold;height: 17px;">
-                        {{ $model->pic->fullname ?? '-' }}
+                        <div class="signature-name"
+                            style="font-size: 9pt; color: #111; font-weight: bold;height: 17px;">
+                            {{ $model->pic->fullname ?? '-' }}
 
+                        </div>
+                        <div class="signature-line"
+                            style="width: 90%; border-bottom: 1px solid #999; margin: 0 auto 4px auto;"></div>
+                        <div class="signature-role"
+                            style="  font-weight: bold; text-transform: uppercase; text-align:left; ">
+                            <small> date:</small>
+                        </div>
                     </div>
-                    <div class="signature-line"
-                        style="width: 90%; border-bottom: 1px solid #999; margin: 0 auto 4px auto;"></div>
-                    <div class="signature-role"
-                        style="  font-weight: bold; text-transform: uppercase; text-align:left; ">
-                        <small> date:</small>
-                    </div>
-                </div>
-            </td>
+                </td>
+            @endif
+
         </tr>
     </table>
 

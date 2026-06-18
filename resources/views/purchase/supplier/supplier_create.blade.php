@@ -537,7 +537,7 @@
 
     </div>
 
-    <div class="modal fade" id="modalPrDetail">
+    <div class="modal fade" id="modalRekeningBank">
         <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header">
@@ -662,7 +662,7 @@
                 let rekeningData = [];
                 $('.rekening-item').each(function() {
                     rekeningData.push({
-                        nama_bank: $(this).find('.nama_bank').val(),
+                        nama_bank: $(this).find('.bank_id').val(),
                         nomor_rekening: $(this).find('.nomor_rekening').val(),
                         nama_rekening: $(this).find('.nama_rekening').val()
                     });
@@ -775,10 +775,12 @@
                                     }
 
                                     $('#formPrDetail')[0].reset();
+                                    $('#nama_bank').val('').trigger('change');
+
                                     $('#detail_id').val('');
                                     $('#modalTitle').text('Create new entry');
                                     $('#btnSubmitModal').text('Create');
-                                    $('#modalPrDetail').modal('show');
+                                    $('#modalRekeningBank').modal('show');
                                 }
                             },
                             {
@@ -786,6 +788,7 @@
                                 className: 'btn btn-warning btn-sm me-2',
                                 extend: 'selectedSingle',
                                 action: function(e, dt, node, config) {
+
                                     let data = dt.row({
                                         selected: true
                                     }).data();
@@ -793,22 +796,19 @@
                                         selected: true
                                     }).index();
 
-                                    // 1. Set penanda bahwa ini adalah mode EDIT
                                     window.isEditingMode = true;
 
                                     $('#detail_id').val(rowIndex);
-                                    $('#quantity').val(data.quantity);
-                                    $('#unit_id').data('pending-val', data.unit_id);
 
-                                    // 2. Set value produk dan trigger change
-                                    $('#product_id').val(data.product_id).trigger('change');
+                                    // Isi data ke modal
+                                    $('#nama_bank').val(data.bank_id).trigger('change');
+                                    $('#nama_rekening').val(data.nama_rekening);
+                                    $('#nomor_rekening').val(data.nomor_rekening);
 
-                                    // 3. Set harga unit price asli dari tabel data
-                                    $('#unit_price').val(data.unit_price);
-                                    $('#discount').val(data.discount || 0); // Jika ada diskon
-                                    $('#modalTitle').text('Edit entry');
+                                    $('#modalTitle').text('Edit Entry');
                                     $('#btnSubmitModal').text('Update');
-                                    $('#modalPrDetail').modal('show');
+
+                                    $('#modalRekeningBank').modal('show');
                                 }
                             },
                             {
@@ -873,7 +873,7 @@
                 $this.wrap('<div class="position-relative"></div>').select2({
                     placeholder: $this.attr('data-placeholder'),
                     width: '100%',
-                    dropdownParent: $('#modalPrDetail')
+                    dropdownParent: $('#modalRekeningBank')
                 });
             });
             $('#showModalpr').on('click', function(e) {
@@ -992,7 +992,7 @@
                 }
 
                 table.clear().rows.add(prDetailsData).draw();
-                $('#modalPrDetail').modal('hide');
+                $('#modalRekeningBank').modal('hide');
             });
 
         });

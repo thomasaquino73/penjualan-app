@@ -251,9 +251,9 @@
                                     <tbody>
                                         @forelse($rekening as $rek)
                                             <tr>
-                                                <td>{{ $rek->nama_bank }}</td>
                                                 <td>{{ $rek->nomor_rekening }}</td>
                                                 <td>{{ $rek->nama_rekening }}</td>
+                                                <td>{{ $rek->nama_bank }}</td>
                                             </tr>
                                         @empty
                                             <tr>

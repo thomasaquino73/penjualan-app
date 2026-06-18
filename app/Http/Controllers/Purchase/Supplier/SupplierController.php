@@ -435,7 +435,7 @@ class SupplierController extends Controller
                     $idsFromRequest = [];
 
                     foreach ($items as $item) {
-
+                    //  dd($item);
                         // ✅ UPDATE kalau ada ID
                         if (! empty($item['id'])) {
 
