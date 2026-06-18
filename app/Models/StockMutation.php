@@ -28,6 +28,14 @@ class StockMutation extends Model
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
+    public function fromWarehouse()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
+    }
+    public function toWarehouse()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
+    }
 
     public function unitID()
     {

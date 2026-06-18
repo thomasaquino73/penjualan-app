@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ItemTransferRequest;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\ItemTransfer;
+use App\Models\Inventory\ItemTransferDetail;
+use App\Models\Inventory\StockBalance;
 use App\Models\Inventory\Warehouse;
+use App\Models\StockMutation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -119,27 +122,187 @@ class ItemTransferController extends Controller
                 })
 
                 ->addColumn('action', function ($row) {
-                    $btn = '<div class="btn-group">
-                      <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                       <i class="ti ti-menu-2 ti-xs me-1"></i>
-                      </button>
-                      <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('item_transfer-edit')) {
-                        $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
-                            data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
+                    $currentUserId = Auth::user()->id;
+                    $user = auth()->user();
+
+                    $btn = '
+                            <div class="btn-group">
+                                <button type="button"
+                                    class="btn btn-primary dropdown-toggle waves-effect waves-light"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <i class="ti ti-menu-2 ti-xs me-1"></i>
+                                </button>
+
+                                <ul class="dropdown-menu">
+                        ';
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 1. OWNER ACTION
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if ($row->created_by == $currentUserId) {
+
+                        // SEND TO APPROVAL
+                        if ($row->status == 'draft') {
+
+                            $btn .= '
+                                <a class="dropdown-item btn-submit"
+                                    href="javascript:void(0)"
+                                    data-id="'.$row->id.'">
+
+                                    <i class="ti ti-send me-1"></i>
+                                    Send To Approval
+                                </a>
+                            ';
+                        }
+
+                        // EDIT
+                        if (
+                            $user->can('item_transfer-edit') &&
+                            in_array($row->status, ['draft', 'rejected'])
+                        ) {
+
+                            $btn .= '
+                                <a class="dropdown-item"
+                                    href="'.route('item-transfer.edit', $row->id).'">
+
+                                    <i class="far fa-edit me-1"></i>
+                                    Edit SO
+                                </a>
+                            ';
+                        }
+
+                        // DELETE
+                        if (
+                            $user->can('item_transfer-delete') &&
+                            $row->status == 'draft'
+                        ) {
+
+                            $btn .= '
+                                <a class="dropdown-item text-danger"
+                                    href="javascript:void(0)"
+                                    id="delete"
+                                    data-id="'.$row->id.'"
+                                    data-name="'.$row->item_transfer_code.'">
+
+                                    <i class="ti ti-trash me-1"></i>
+                                    Delete
+                                </a>
+                            ';
+                        }
                     }
 
-                    if (auth()->user()->can('item_transfer-delete')) {
-                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
-                                data-id="'.$row->id.'"
-                                data-name="'.$row->nama_gudang.'"
-                                ><i class="ti ti-trash"></i> Delete</a>';
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 2. APPROVAL ACTION
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $row->created_by !== $currentUserId &&
+                        $user->can('item_transfer-approval')
+                    ) {
+
+                        if ($row->status == 'pending') {
+
+                            $btn .= '
+                                    <a class="dropdown-item text-success btn-approval"
+                                        href="javascript:void(0)"
+                                        data-status="approved"
+                                        data-id="'.$row->id.'">
+
+                                        <i class="ti ti-check me-1"></i>
+                                        Approve SO
+                                    </a>
+                                ';
+
+                            $btn .= '
+                                    <a class="dropdown-item text-danger btn-approval"
+                                        href="javascript:void(0)"
+                                        data-status="rejected"
+                                        data-id="'.$row->id.'">
+
+                                        <i class="ti ti-x me-1"></i>
+                                        Reject SO
+                                    </a>
+                                ';
+                        }
                     }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 3. SEND TO SUPPLIER
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $row->status == 'approved'
+                        // $row->status == 'approved' &&
+                        // $user->can('item_transfer-send-supplier')
+                    ) {
+
+                        $btn .= '
+                            <a class="dropdown-item text-info btn-send-supplier"
+                                href="javascript:void(0)"
+                                data-id="'.$row->id.'">
+
+                                <i class="ti ti-mail-fast me-1"></i>
+                                Send To Supplier
+                            </a>
+                        ';
+                    }
+
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 5. CANCEL SO
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        ! in_array($row->status, ['completed']) &&
+                        $user->can('item_transfer-cancel')
+                    ) {
+
+                        $btn .= '
+                        <a class="dropdown-item text-danger btn-cancel-po"
+                            href="javascript:void(0)"
+                            data-id="'.$row->id.'">
+
+                            <i class="ti ti-circle-x me-1"></i>
+                            Cancel SO
+                        </a>
+                    ';
+                    }
+                    /*
+                    |--------------------------------------------------------------------------
+                    | 7. PRINT
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $btn .= '
+                    <a class="dropdown-item"
+                        target="_blank"
+                        href="'.route('item-transfer.print', $row->id).'">
+
+                        <i class="ti ti-printer me-1"></i>
+                        Print / PDF
+                    </a>
+                        ';
+
+                    $btn .= '
+                    </ul>
+                </div>
+            ';
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'transfer_date','from_warehouse','to_warehouse'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'transfer_date', 'from_warehouse', 'to_warehouse'])
                 ->make(true);
         }
 
@@ -218,26 +381,131 @@ class ItemTransferController extends Controller
         return view('inventory.itemTransfer.item_transfer_create', $x);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(ItemTransferRequest $r)
     {
-          DB::beginTransaction();
-         
+        DB::beginTransaction();
+
         try {
-            $data = $r->except('save_and_new','items_detail');
+            $data = $r->except('save_and_new', 'items_detail');
+            $itemsDetailRaw = $r->input('items_detail');
+            unset($data['items_detail']);
+            do {
+                $generatedCode = $this->generateNumberId();
+                $exists = ItemTransfer::where('transfer_code', $generatedCode)->exists();
+            } while ($exists);
+            $data['transfer_code'] = $generatedCode;
             $data['transfer_date'] = Carbon::parse($r->transfer_date)->format('Y-m-d');
             $data['created_by'] = Auth::id();
-            $ItemTransfer = ItemTransfer::create($data);
-              DB::commit();
-              return response()->json([
-            'status' => 'success',
-            'message' => 'Data created successfully',
-            'redirect' => route('item-transfer.index') // Sesuaikan route
-        ], 200);
+            $itemTransfer = ItemTransfer::create($data);
+            if ($itemsDetailRaw) {
+
+                $items = json_decode($itemsDetailRaw, true);
+
+                if (is_array($items) && count($items) > 0) {
+
+                    foreach ($items as $item) {
+
+                        $qty = $item['quantity'] ?? $item['qty'];
+                        $fromgudang = Warehouse::find($r->from_warehouse_id);
+                        $fromnamaGudang = $fromgudang ? $fromgudang->nama_gudang : 'Unknown';
+                        $togudang = Warehouse::find($r->to_warehouse_id);
+                        $tonamaGudang = $togudang ? $togudang->nama_gudang : 'Unknown';
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Transfer Detail
+                        |--------------------------------------------------------------------------
+                        */
+                        ItemTransferDetail::create([
+                            'item_transfer_id' => $itemTransfer->id,
+                            'data_barang_id' => $item['product_id'],
+                            'qty' => $qty,
+                            'unit_id' => $item['unit_id'],
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Stock Mutation OUT
+                        |--------------------------------------------------------------------------
+                        */
+                        // StockMutation::create([
+                        //     'data_barang_id' => $item['product_id'],
+                        //     'unit_id' => $item['unit_id'],
+                        //     'warehouse_id' => $r->from_warehouse_id,
+                        //     'date_stock' => Carbon::parse($r->transfer_date)->format('Y-m-d'),
+                        //     'qty_transaksi' => $qty,
+                        //     'total_base_qty' => $qty,
+                        //     'type' => 'out',
+                        //     'document_number' => $itemTransfer->transfer_code,
+                        //     'document_type' => 'item_transfer',
+                        //     // 'item_transfer_id' => $itemTransfer->id,
+                        //     'keterangan' => 'Keluar barang dari : '.$fromnamaGudang.' menuju '.$tonamaGudang,
+                        //     'created_by' => Auth::id(),
+                        // ]);
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Stock Mutation IN
+                        |--------------------------------------------------------------------------
+                        */
+                        // StockMutation::create([
+                        //     'data_barang_id' => $item['product_id'],
+                        //     'unit_id' => $item['unit_id'],
+                        //     'warehouse_id' => $r->to_warehouse_id,
+                        //      'date_stock' => Carbon::parse($r->transfer_date)->format('Y-m-d'),
+                        //     'qty_transaksi' => $qty,
+                        //     'total_base_qty' => $qty,
+                        //     'type' => 'in',
+                        //     'document_number' => $itemTransfer->transfer_code,
+                        //     'document_type' => 'item_transfer',
+                        //     // 'item_transfer_id' => $itemTransfer->id,
+                        //     'keterangan' => 'Masuk barang dari : '.$fromnamaGudang.' menuju '.$tonamaGudang,
+                        //     'created_by' => Auth::id(),
+                        // ]);
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Kurangi Stock Balance Gudang Asal
+                        |--------------------------------------------------------------------------
+                        */
+                        // StockBalance::where([
+                        //     'data_barang_id' => $item['product_id'],
+                        //     'warehouse_id' => $r->from_warehouse_id,
+                        // ])->decrement('qty', $qty);
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Tambah Stock Balance Gudang Tujuan
+                        |--------------------------------------------------------------------------
+                        */
+                        // StockBalance::updateOrCreate(
+                        //     [
+                        //         'data_barang_id' => $item['product_id'],
+                        //         'warehouse_id' => $r->to_warehouse_id,
+                        //     ],
+                        //     [
+                        //         'qty' => 0,
+                        //     ]
+                        // );
+
+                        // StockBalance::where([
+                        //     'data_barang_id' => $item['product_id'],
+                        //     'warehouse_id' => $r->to_warehouse_id,
+                        // ])->increment('qty', $qty);
+                    }
+                }
+            }
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data created successfully',
+                'redirect' => route('item-transfer.index'), // Sesuaikan route
+            ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Gagal menyimpan data: '.$e->getMessage(),
@@ -276,4 +544,196 @@ class ItemTransferController extends Controller
     {
         //
     }
+
+     public function submitToPending($id)
+    {
+        // 1. Ambil tahun berjalan secara dinamis
+        $tableName = "item_transfer";
+
+        // 2. Gunakan Query Builder dengan nama tabel dinamis agar pencarian ID aman
+        $poData = DB::table($tableName)->where('id', $id)->first();
+
+        // Jika data memang benar-benar tidak ditemukan di database
+        if (! $poData) {
+            return response()->json(['success' => false, 'message' => 'Data Sales Order tidak ditemukan.'], 404);
+        }
+
+        // 3. Validasi Keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
+        if ($poData->status !== 'draft' || $poData->created_by !== Auth::user()->id) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'], 403);
+        }
+
+        // 4. Lakukan pembaruan status menggunakan Query Builder demi stabilitas tabel dinamis
+        DB::table($tableName)->where('id', $id)->update([
+            'status' => 'pending',
+            'updated_by' => Auth::user()->id,
+            'updated_at' => now(), // Mengisi timestamp bawaan laravel secara manual karena menggunakan Query Builder
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Item Transfer berhasil diajukan!']);
+    }
+
+    public function changeStatus(Request $request, $id)
+{
+    DB::beginTransaction();
+
+    try {
+
+        $transfer = ItemTransfer::with('details')->find($id);
+
+        if (! $transfer) {
+            return response()->json([
+                'error' => 'Data Item Transfer tidak ditemukan.'
+            ], 404);
+        }
+
+        if ($transfer->created_by === Auth::id()) {
+            return response()->json([
+                'error' => 'You may not approve/reject documents you create yourself!'
+            ], 403);
+        }
+
+        if ($transfer->status === 'approved') {
+            return response()->json([
+                'error' => 'Document already approved.'
+            ], 400);
+        }
+
+        $statusTarget = $request->status;
+
+        if (! in_array($statusTarget, ['approved', 'rejected'])) {
+            return response()->json([
+                'error' => 'Status target tidak valid.'
+            ], 400);
+        }
+
+        $transfer->update([
+            'status' => $statusTarget,
+            'pic_by' => Auth::id(),
+            'pic_at' => now(),
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Jalankan perpindahan stock hanya saat APPROVED
+        |--------------------------------------------------------------------------
+        */
+        if ($statusTarget === 'approved') {
+
+            $fromGudang = Warehouse::find($transfer->from_warehouse_id);
+            $toGudang   = Warehouse::find($transfer->to_warehouse_id);
+
+            foreach ($transfer->details as $detail) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Cek stok gudang asal
+                |--------------------------------------------------------------------------
+                */
+                $stock = StockBalance::where([
+                    'product_id' => $detail->data_barang_id,
+                    'warehouse_id' => $transfer->from_warehouse_id,
+                ])->first();
+                // dd([
+                //     'product_id' => $detail->data_barang_id,
+                //     'warehouse_id' => $transfer->from_warehouse_id,
+                //     'stock_balance' => $stock,
+                //     'qty_transfer' => $detail->qty,
+                // ]);
+                if (!$stock || $stock->qty < $detail->qty) {
+                    throw new \Exception(
+                        'Stock tidak mencukupi untuk barang ID '.$detail->product_id
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Mutation OUT
+                |--------------------------------------------------------------------------
+                */
+                StockMutation::create([
+                    'data_barang_id' => $detail->data_barang_id,
+                    'unit_id' => $detail->unit_id,
+                    'warehouse_id' => $transfer->from_warehouse_id,
+                    'date_stock' => $transfer->transfer_date,
+                    'qty_transaksi' => $detail->qty,
+                    'total_base_qty' => $detail->qty,
+                    'type' => 'out',
+                    'document_number' => $transfer->transfer_code,
+                    'document_type' => 'item_transfer',
+                    'keterangan' => 'Keluar barang dari : '
+                        .$fromGudang->nama_gudang
+                        .' menuju '
+                        .$toGudang->nama_gudang,
+                    'created_by' => Auth::id(),
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Mutation IN
+                |--------------------------------------------------------------------------
+                */
+                StockMutation::create([
+                    'data_barang_id' => $detail->data_barang_id,
+                    'unit_id' => $detail->unit_id,
+                    'warehouse_id' => $transfer->to_warehouse_id,
+                    'date_stock' => $transfer->transfer_date,
+                    'qty_transaksi' => $detail->qty,
+                    'total_base_qty' => $detail->qty,
+                    'type' => 'in',
+                    'document_number' => $transfer->transfer_code,
+                    'document_type' => 'item_transfer',
+                    'keterangan' => 'Masuk barang dari : '
+                        .$fromGudang->nama_gudang
+                        .' menuju '
+                        .$toGudang->nama_gudang,
+                    'created_by' => Auth::id(),
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Kurangi stok gudang asal
+                |--------------------------------------------------------------------------
+                */
+                $stock->decrement('qty', $detail->qty);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Tambah stok gudang tujuan
+                |--------------------------------------------------------------------------
+                */
+                StockBalance::updateOrCreate(
+                    [
+                        'product_id' => $detail->data_barang_id,
+                        'warehouse_id' => $transfer->to_warehouse_id,
+                    ],
+                    [
+                        'qty' => 0,
+                    ]
+                );
+
+                StockBalance::where([
+                    'product_id' => $detail->data_barang_id,
+                    'warehouse_id' => $transfer->to_warehouse_id,
+                ])->increment('qty', $detail->qty);
+            }
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Item Transfer status successfully {$statusTarget}!"
+        ]);
+
+    } catch (\Exception $e) {
+
+        DB::rollBack();
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
 }

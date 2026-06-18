@@ -26,11 +26,13 @@ return new class extends Migration
                 'pending',
                 'approved',
                 'completed',
-                'cancelled',
+                'rejected',
             ])->default('draft');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
+            $table->unsignedBigInteger('pic_by')->nullable();
+            $table->datetime('pic_at')->nullable();
             $table->timestamps();
         });
 
@@ -40,17 +42,14 @@ return new class extends Migration
             $table->unsignedBigInteger('item_transfer_id');
             $table->unsignedBigInteger('data_barang_id');
             $table->unsignedBigInteger('unit_id');
-
             $table->decimal('qty', 15, 4);
-            $table->decimal('base_qty', 15, 4);
-
             $table->timestamps();
         });
 
         Schema::create('stock_balance', function (Blueprint $table) {
             $table->id();
 
-            $table->unsignedBigInteger('data_barang_id');
+            $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('warehouse_id');
 
             $table->decimal('qty', 15, 4)->default(0);
@@ -58,7 +57,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique([
-                'data_barang_id',
+                'product_id',
                 'warehouse_id',
             ]);
         });

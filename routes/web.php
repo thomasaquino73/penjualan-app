@@ -278,6 +278,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales-quotation/trash', [SalesQuotationController::class, 'trash'])->name('sales-quotation.trash');
     Route::resource('sales-quotation', SalesQuotationController::class);
 
+    Route::post('/item-transfer/change-status/{id}', [ItemTransferController::class, 'changeStatus']);
+    Route::get('/item-transfer/print/{id}', [ItemTransferController::class, 'print'])->name('item-transfer.print');
+    Route::post('/item-transfer/{id}/submit', [ItemTransferController::class, 'submitToPending'])->name('item-transfer.submit');
     Route::resource('item-transfer', ItemTransferController::class);
 });
 

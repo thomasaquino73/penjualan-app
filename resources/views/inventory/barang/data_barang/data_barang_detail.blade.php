@@ -254,8 +254,9 @@
                                         <tr class="bg-light">
                                             <th class="ps-4 py-3 text-muted fw-bold" width="5%">No</th>
                                             <th class="py-3 text-muted fw-bold">Date</th>
+                                            <th class="py-3 text-muted fw-bold">Document Number</th>
+                                            <th class="py-3 text-muted fw-bold">Document Type</th>
                                             <th class="py-3 text-muted fw-bold">Description</th>
-                                            <th class="py-3 text-muted fw-bold">Type</th>
                                             <th class="py-3 text-muted fw-bold text-end">In</th>
                                             <th class="py-3 text-muted fw-bold text-end">Out</th>
                                             <th class="py-3 text-muted fw-bold text-end">Units</th>
@@ -274,19 +275,50 @@
                                                 <td class="py-3 text-dark">
                                                     {{ $stock->created_at ? $stock->created_at->translatedFormat('d M Y H:i') : '-' }}
                                                 </td>
-
-                                                <td class="py-3 text-dark">
-                                                    {{ $stock->keterangan ?? '-' }}
-                                                </td>
-
                                                 <td class="py-3">
-                                                    <span
-                                                        class="badge {{ $stock->type == 'in' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} fw-bold">
-                                                        {{ strtoupper($stock->type) }}
-                                                    </span>
+                                                    {{ $stock->document_number ?? '-' }}
                                                 </td>
 
                                                 {{-- Qty transaksi asli --}}
+                                                <td class="py-3 text-end">
+                                                    @php
+                                                        $statuses = [
+                                                            'initial_stock' => [
+                                                                'label' => 'Initial Stock',
+                                                                'class' => 'text-success',
+                                                            ],
+                                                            'receive_item' => [
+                                                                'label' => 'Receive Item',
+                                                                'class' => 'text-primary',
+                                                            ],
+                                                            'delivery_order' => [
+                                                                'label' => 'Delivery Order',
+                                                                'class' => 'text-warning',
+                                                            ],
+                                                            'adjustment' => [
+                                                                'label' => 'Adjustment',
+                                                                'class' => 'text-info',
+                                                            ],
+                                                            'item_transfer' => [
+                                                                'label' => 'Item Transfer',
+                                                                'class' => 'text-secondary',
+                                                            ],
+                                                        ];
+
+                                                        $type = $stock->document_type ?? 'initial_stock';
+                                                        $status = $statuses[$type] ?? [
+                                                            'label' => $type,
+                                                            'class' => 'text-dark',
+                                                        ];
+                                                    @endphp
+
+                                                    <span class="fw-bold {{ $status['class'] }}">
+                                                        {{ $status['label'] }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 text-dark">
+                                                    {{ $stock->keterangan ?? '-' }}
+                                                </td>
                                                 <td class="py-3 text-end">
                                                     @if ($stock->type == 'in')
                                                         <span class="fw-bold text-success">

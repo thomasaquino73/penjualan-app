@@ -13,6 +13,7 @@ class ItemTransfer extends Model
     protected $table = 'item_transfer';
 
     protected $guarded = [];
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -22,12 +23,21 @@ class ItemTransfer extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
     public function fromWarehouse()
     {
         return $this->belongsTo(Warehouse::class, 'from_warehouse_id');
     }
+
     public function toWarehouse()
     {
         return $this->belongsTo(Warehouse::class, 'to_warehouse_id');
+    }
+    public function details()
+    {
+        return $this->hasMany(
+            ItemTransferDetail::class,
+            'item_transfer_id'
+        );
     }
 }

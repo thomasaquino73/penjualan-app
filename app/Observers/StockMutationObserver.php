@@ -21,7 +21,7 @@ class StockMutationObserver
 
     private function recalculateStock(int $barangId): void
     {
-        StockBalance::where('data_barang_id', $barangId)->delete();
+        StockBalance::where('product_id', $barangId)->delete();
 
         $mutations = StockMutation::where('data_barang_id', $barangId)
             ->get();
@@ -73,7 +73,7 @@ class StockMutationObserver
             }
 
             StockBalance::create([
-                'data_barang_id' => $barangId,
+                'product_id' => $barangId,
                 'warehouse_id' => $warehouseId,
                 'qty' => $qty,
             ]);
