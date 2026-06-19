@@ -2,6 +2,7 @@
 
 namespace App\Models\Purchase;
 
+use App\Models\BasicCodeDetail;
 use App\Models\Setting\CashBank;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,5 +25,6 @@ class Supplier extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
-    
+
+
 }

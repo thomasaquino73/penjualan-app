@@ -253,7 +253,7 @@
                                             <tr>
                                                 <td>{{ $rek->nomor_rekening }}</td>
                                                 <td>{{ $rek->nama_rekening }}</td>
-                                                <td>{{ $rek->nama_bank }}</td>
+                                                <td>{{ $rek->nama_bank_text }}</td>
                                             </tr>
                                         @empty
                                             <tr>
