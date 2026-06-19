@@ -2,15 +2,13 @@
 
 namespace App\Models\Purchase;
 
-use App\Models\Purchase\PurchaseInvoiceDetail;
-use App\Models\Purchase\Supplier;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PurchaseInvoice extends Model
 {
-   use HasFactory;
+    use HasFactory;
 
     protected $table = 'purchase_invoice';
 

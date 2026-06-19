@@ -237,7 +237,7 @@ class ItemTransferController extends Controller
 
                     /*
                     |--------------------------------------------------------------------------
-                    | 5. CANCEL 
+                    | 5. CANCEL
                     |--------------------------------------------------------------------------
                     */
 
@@ -522,10 +522,10 @@ class ItemTransferController extends Controller
         //
     }
 
-     public function submitToPending($id)
+    public function submitToPending($id)
     {
         // 1. Ambil tahun berjalan secara dinamis
-        $tableName = "item_transfer";
+        $tableName = 'item_transfer';
 
         // 2. Gunakan Query Builder dengan nama tabel dinamis agar pencarian ID aman
         $poData = DB::table($tableName)->where('id', $id)->first();
@@ -551,172 +551,172 @@ class ItemTransferController extends Controller
     }
 
     public function changeStatus(Request $request, $id)
-{
-    DB::beginTransaction();
+    {
+        DB::beginTransaction();
 
-    try {
+        try {
 
-        $transfer = ItemTransfer::with('details')->find($id);
+            $transfer = ItemTransfer::with('details')->find($id);
 
-        if (! $transfer) {
-            return response()->json([
-                'error' => 'Data Item Transfer tidak ditemukan.'
-            ], 404);
-        }
+            if (! $transfer) {
+                return response()->json([
+                    'error' => 'Data Item Transfer tidak ditemukan.',
+                ], 404);
+            }
 
-        if ($transfer->created_by === Auth::id()) {
-            return response()->json([
-                'error' => 'You may not approve/reject documents you create yourself!'
-            ], 403);
-        }
+            if ($transfer->created_by === Auth::id()) {
+                return response()->json([
+                    'error' => 'You may not approve/reject documents you create yourself!',
+                ], 403);
+            }
 
-        if ($transfer->status === 'approved') {
-            return response()->json([
-                'error' => 'Document already approved.'
-            ], 400);
-        }
+            if ($transfer->status === 'approved') {
+                return response()->json([
+                    'error' => 'Document already approved.',
+                ], 400);
+            }
 
-        $statusTarget = $request->status;
+            $statusTarget = $request->status;
 
-        if (! in_array($statusTarget, ['approved', 'rejected'])) {
-            return response()->json([
-                'error' => 'Status target tidak valid.'
-            ], 400);
-        }
+            if (! in_array($statusTarget, ['approved', 'rejected'])) {
+                return response()->json([
+                    'error' => 'Status target tidak valid.',
+                ], 400);
+            }
 
-        $transfer->update([
-            'status' => $statusTarget,
-            'pic_by' => Auth::id(),
-            'pic_at' => now(),
-        ]);
+            $transfer->update([
+                'status' => $statusTarget,
+                'pic_by' => Auth::id(),
+                'pic_at' => now(),
+            ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Jalankan perpindahan stock hanya saat APPROVED
-        |--------------------------------------------------------------------------
-        */
-        if ($statusTarget === 'approved') {
+            /*
+            |--------------------------------------------------------------------------
+            | Jalankan perpindahan stock hanya saat APPROVED
+            |--------------------------------------------------------------------------
+            */
+            if ($statusTarget === 'approved') {
 
-            $fromGudang = Warehouse::find($transfer->from_warehouse_id);
-            $toGudang   = Warehouse::find($transfer->to_warehouse_id);
+                $fromGudang = Warehouse::find($transfer->from_warehouse_id);
+                $toGudang = Warehouse::find($transfer->to_warehouse_id);
 
-            foreach ($transfer->details as $detail) {
+                foreach ($transfer->details as $detail) {
 
-                /*
-                |--------------------------------------------------------------------------
-                | Cek stok gudang asal
-                |--------------------------------------------------------------------------
-                */
-                $stock = StockBalance::where([
-                    'product_id' => $detail->data_barang_id,
-                    'warehouse_id' => $transfer->from_warehouse_id,
-                ])->first();
-                // dd([
-                //     'product_id' => $detail->data_barang_id,
-                //     'warehouse_id' => $transfer->from_warehouse_id,
-                //     'stock_balance' => $stock,
-                //     'qty_transfer' => $detail->qty,
-                // ]);
-                if (!$stock || $stock->qty < $detail->qty) {
-                    throw new \Exception(
-                        'Stock tidak mencukupi untuk barang ID '.$detail->product_id
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Cek stok gudang asal
+                    |--------------------------------------------------------------------------
+                    */
+                    $stock = StockBalance::where([
+                        'product_id' => $detail->data_barang_id,
+                        'warehouse_id' => $transfer->from_warehouse_id,
+                    ])->first();
+                    // dd([
+                    //     'product_id' => $detail->data_barang_id,
+                    //     'warehouse_id' => $transfer->from_warehouse_id,
+                    //     'stock_balance' => $stock,
+                    //     'qty_transfer' => $detail->qty,
+                    // ]);
+                    if (! $stock || $stock->qty < $detail->qty) {
+                        throw new \Exception(
+                            'Stock tidak mencukupi untuk barang ID '.$detail->product_id
+                        );
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Mutation OUT
+                    |--------------------------------------------------------------------------
+                    */
+                    StockMutation::create([
+                        'data_barang_id' => $detail->data_barang_id,
+                        'unit_id' => $detail->unit_id,
+                        'warehouse_id' => $transfer->from_warehouse_id,
+                        'date_stock' => $transfer->transfer_date,
+                        'qty_transaksi' => $detail->qty,
+                        'total_base_qty' => $detail->qty,
+                        'type' => 'out',
+                        'document_number' => $transfer->transfer_code,
+                        'document_type' => 'item_transfer',
+                        'keterangan' => 'Keluar barang dari : '
+                            .$fromGudang->nama_gudang
+                            .' menuju '
+                            .$toGudang->nama_gudang,
+                        'created_by' => Auth::id(),
+                    ]);
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Mutation IN
+                    |--------------------------------------------------------------------------
+                    */
+                    StockMutation::create([
+                        'data_barang_id' => $detail->data_barang_id,
+                        'unit_id' => $detail->unit_id,
+                        'warehouse_id' => $transfer->to_warehouse_id,
+                        'date_stock' => $transfer->transfer_date,
+                        'qty_transaksi' => $detail->qty,
+                        'total_base_qty' => $detail->qty,
+                        'type' => 'in',
+                        'document_number' => $transfer->transfer_code,
+                        'document_type' => 'item_transfer',
+                        'keterangan' => 'Masuk barang dari : '
+                            .$fromGudang->nama_gudang
+                            .' menuju '
+                            .$toGudang->nama_gudang,
+                        'created_by' => Auth::id(),
+                    ]);
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Kurangi stok gudang asal
+                    |--------------------------------------------------------------------------
+                    */
+                    $stock->decrement('qty', $detail->qty);
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Tambah stok gudang tujuan
+                    |--------------------------------------------------------------------------
+                    */
+                    StockBalance::updateOrCreate(
+                        [
+                            'product_id' => $detail->data_barang_id,
+                            'warehouse_id' => $transfer->to_warehouse_id,
+                        ],
+                        [
+                            'qty' => 0,
+                        ]
                     );
-                }
 
-                /*
-                |--------------------------------------------------------------------------
-                | Mutation OUT
-                |--------------------------------------------------------------------------
-                */
-                StockMutation::create([
-                    'data_barang_id' => $detail->data_barang_id,
-                    'unit_id' => $detail->unit_id,
-                    'warehouse_id' => $transfer->from_warehouse_id,
-                    'date_stock' => $transfer->transfer_date,
-                    'qty_transaksi' => $detail->qty,
-                    'total_base_qty' => $detail->qty,
-                    'type' => 'out',
-                    'document_number' => $transfer->transfer_code,
-                    'document_type' => 'item_transfer',
-                    'keterangan' => 'Keluar barang dari : '
-                        .$fromGudang->nama_gudang
-                        .' menuju '
-                        .$toGudang->nama_gudang,
-                    'created_by' => Auth::id(),
-                ]);
-
-                /*
-                |--------------------------------------------------------------------------
-                | Mutation IN
-                |--------------------------------------------------------------------------
-                */
-                StockMutation::create([
-                    'data_barang_id' => $detail->data_barang_id,
-                    'unit_id' => $detail->unit_id,
-                    'warehouse_id' => $transfer->to_warehouse_id,
-                    'date_stock' => $transfer->transfer_date,
-                    'qty_transaksi' => $detail->qty,
-                    'total_base_qty' => $detail->qty,
-                    'type' => 'in',
-                    'document_number' => $transfer->transfer_code,
-                    'document_type' => 'item_transfer',
-                    'keterangan' => 'Masuk barang dari : '
-                        .$fromGudang->nama_gudang
-                        .' menuju '
-                        .$toGudang->nama_gudang,
-                    'created_by' => Auth::id(),
-                ]);
-
-                /*
-                |--------------------------------------------------------------------------
-                | Kurangi stok gudang asal
-                |--------------------------------------------------------------------------
-                */
-                $stock->decrement('qty', $detail->qty);
-
-                /*
-                |--------------------------------------------------------------------------
-                | Tambah stok gudang tujuan
-                |--------------------------------------------------------------------------
-                */
-                StockBalance::updateOrCreate(
-                    [
+                    StockBalance::where([
                         'product_id' => $detail->data_barang_id,
                         'warehouse_id' => $transfer->to_warehouse_id,
-                    ],
-                    [
-                        'qty' => 0,
-                    ]
-                );
-
-                StockBalance::where([
-                    'product_id' => $detail->data_barang_id,
-                    'warehouse_id' => $transfer->to_warehouse_id,
-                ])->increment('qty', $detail->qty);
+                    ])->increment('qty', $detail->qty);
+                }
             }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Item Transfer status successfully {$statusTarget}!",
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => "Item Transfer status successfully {$statusTarget}!"
-        ]);
-
-    } catch (\Exception $e) {
-
-        DB::rollBack();
-
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
     }
-}
 
     public function print($id)
     {
-          $itemTransfer = ItemTransfer::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $itemTransfer = ItemTransfer::with(['details.produkID', 'details.unitID'])->findOrFail($id);
         $company = Company::first();
         // 1. LOGIKA LOGO PERUSAHAAN (Base64)
         $logoBase64 = null;
@@ -729,13 +729,13 @@ class ItemTransferController extends Controller
             }
         }
 
-         // Stamp Approved
+        // Stamp Approved
         $approvedStampBase64 = null;
         $approvedPath = public_path('image/stamps/approved.png');
 
         if (file_exists($approvedPath)) {
             $approvedStampBase64 =
-                'data:image/png;base64,' .
+                'data:image/png;base64,'.
                 base64_encode(file_get_contents($approvedPath));
         }
 
@@ -745,7 +745,7 @@ class ItemTransferController extends Controller
 
         if (file_exists($rejectedPath)) {
             $rejectedStampBase64 =
-                'data:image/png;base64,' .
+                'data:image/png;base64,'.
                 base64_encode(file_get_contents($rejectedPath));
         }
         $data = [

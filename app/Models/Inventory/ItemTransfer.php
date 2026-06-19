@@ -18,6 +18,7 @@ class ItemTransfer extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
     public function pic()
     {
         return $this->belongsTo(User::class, 'pic_by');
@@ -37,6 +38,7 @@ class ItemTransfer extends Model
     {
         return $this->belongsTo(Warehouse::class, 'to_warehouse_id');
     }
+
     public function details()
     {
         return $this->hasMany(

@@ -1824,7 +1824,7 @@ class PurchaseOrderController extends Controller
                 'supplier_rekening.nama_bank as bank_id',
                 'supplier_rekening.nomor_rekening',
                 'supplier_rekening.nama_rekening',
-                 'basic_code_detail.detail as bank_name'
+                'basic_code_detail.detail as bank_name'
             )
             ->where('supplier_rekening.supplier_id', $supplierId)
             ->get();

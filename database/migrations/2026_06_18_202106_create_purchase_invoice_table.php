@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-   protected string $year;
+    protected string $year;
 
     public function __construct()
     {
@@ -34,11 +34,11 @@ return new class extends Migration
             $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();
             $table->decimal('grand_total', 18, 2)->default(0)->nullable();
             $table->enum('status', [
-                'unpaid',               
-                'partially_paid',  
-                'paid',      
-                'overdue',       
-                'closed',          
+                'unpaid',
+                'partially_paid',
+                'paid',
+                'overdue',
+                'closed',
             ])->default('unpaid');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();

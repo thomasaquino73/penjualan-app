@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuestEmailVerificationController;
+use App\Http\Controllers\Inventory\Barang\BrandController;
 use App\Http\Controllers\Inventory\Barang\DataBarangController;
 use App\Http\Controllers\Inventory\Barang\KategoriBarangController;
 use App\Http\Controllers\Inventory\Barang\SatuanBarangController;
@@ -179,6 +180,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/satuan-barang/delete-multiple', [SatuanBarangController::class, 'deleteMultiple']);
     Route::resource('satuan-barang', SatuanBarangController::class);
+
+    Route::post('/brand/delete-multiple', [BrandController::class, 'deleteMultiple']);
+    Route::resource('brand', BrandController::class);
 
     Route::post('/kategori-barang/delete-multiple', [KategoriBarangController::class, 'deleteMultiple']);
     Route::resource('kategori-barang', KategoriBarangController::class);

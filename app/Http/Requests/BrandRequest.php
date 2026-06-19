@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class KategoriBarangRequest extends FormRequest
+class BrandRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,7 +22,7 @@ class KategoriBarangRequest extends FormRequest
         return [
             'detail' => [
                 'required',
-                // Rule::unique('basic_code_detail', 'detail')->ignore($id, 'id'),
+                Rule::unique('basic_code_detail', 'detail')->ignore($id, 'id'),
             ],
             'description' => [
                 'nullable',
@@ -34,8 +34,8 @@ class KategoriBarangRequest extends FormRequest
     public function message(): array
     {
         return [
-            'detail.required' => 'Categories Name is required',
-            'detail.unique' => 'Categories Name already exists',
+            'detail.required' => 'Unit Name is required',
+            'detail.unique' => 'Unit Name already exists',
         ];
     }
 }

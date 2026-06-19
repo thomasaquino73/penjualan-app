@@ -1,119 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8">
-    <title>Item Detail - {{ $barang->nama_barang }}</title>
+    <meta charset="utf-8">
+    <title>{{ $title ?? 'Detail Barang' }}</title>
+
     <style>
-        @page {
-            size: A4;
-            margin: 20mm;
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 11px;
+            color: #333;
         }
 
-        body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 10pt;
-            color: #333;
-            line-height: 1.5;
+        h2 {
             margin: 0;
-            padding: 0;
         }
 
         .header {
-            border-bottom: 2px solid #2c3e50;
-            padding-bottom: 10px;
+            text-align: center;
             margin-bottom: 20px;
         }
 
-        .company-name {
-            font-size: 18pt;
-            font-weight: bold;
-            color: #2c3e50;
-            text-transform: uppercase;
+        .box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
         }
 
-        .doc-title {
-            font-size: 14pt;
-            color: #7f8c8d;
-            margin-top: 5px;
-        }
-
-        .info-grid {
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
-        .info-grid td {
-            padding: 8px 5px;
-            vertical-align: top;
-            border-bottom: 1px solid #f2f2f2;
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            font-size: 11px;
         }
 
-        .label {
-            font-weight: bold;
-            color: #555;
-            width: 30%;
+        th {
+            background: #f2f2f2;
+            text-align: left;
         }
 
-        .value {
-            width: 70%;
-        }
-
-        /* Status Badge Styling */
-        .status-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 4px;
-            font-size: 9pt;
-            font-weight: bold;
-            color: white;
-        }
-
-        .bg-success {
-            background-color: #27ae60;
-        }
-
-        /* Active */
-        .bg-warning {
-            background-color: #f39c12;
-        }
-
-        /* Not Active */
-        .bg-danger {
-            background-color: #e74c3c;
-        }
-
-        /* Deleted */
-
-        .price-section {
-            margin-top: 30px;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-        }
-
-        .total-box {
+        .text-right {
             text-align: right;
-            margin-top: 10px;
-            font-size: 12pt;
         }
 
-        .total-amount {
-            font-size: 16pt;
-            font-weight: bold;
-            color: #c0392b;
-        }
-
-        .footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            font-size: 8pt;
-            color: #95a5a6;
+        .text-center {
             text-align: center;
-            border-top: 1px solid #eee;
-            padding-top: 5px;
+        }
+
+        .title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .badge {
+            padding: 2px 6px;
+            font-size: 10px;
+            color: #fff;
+            border-radius: 3px;
+        }
+
+        .green {
+            background: #28a745;
+        }
+
+        .blue {
+            background: #007bff;
+        }
+
+        .orange {
+            background: #fd7e14;
+        }
+
+        .gray {
+            background: #6c757d;
+        }
+
+        .red {
+            background: #dc3545;
+        }
+
+        img {
+            max-height: 120px;
         }
     </style>
 </head>
@@ -121,72 +99,173 @@
 <body>
 
     <div class="header">
-        <div class="company-name">Inventory Management System</div>
-        <div class="doc-title">Item Detail Report</div>
+        <div class="title">{{ $detail->nama_barang }}</div>
+        <div class="subtitle">Kode: {{ $detail->id_barang }}</div>
     </div>
 
-    <table class="info-grid">
-        <tr>
-            <td class="label">Item Code</td>
-            <td class="value">: {{ $barang->id_barang }}</td>
-        </tr>
-        <tr>
-            <td class="label">Item Name</td>
-            <td class="value">: <strong>{{ $barang->nama_barang }}</strong></td>
-        </tr>
-        <tr>
-            <td class="label">Product Type</td>
-            <td class="value">: {{ ucfirst(str_replace('_', ' ', $barang->product_type)) }}</td>
-        </tr>
-        <tr>
-            <td class="label">Unit of Measure</td>
-            <td class="value">: {{ $barang->unit_id }}</td>
-        </tr>
-        <tr>
-            <td class="label">Registration Date</td>
-            <td class="value">: {{ $barang->date ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="label">Status</td>
-            <td class="value">:
-                @if ($barang->status == 1)
-                    <span class="status-badge bg-success">Active</span>
-                @elseif($barang->status == 2)
-                    <span class="status-badge bg-warning">Inactive</span>
-                @else
-                    <span class="status-badge bg-danger">Deleted</span>
-                @endif
-            </td>
-        </tr>
-        <tr>
-            <td class="label">Description</td>
-            <td class="value">: {{ $barang->keterangan ?? 'No description available' }}</td>
-        </tr>
-    </table>
-
-    <div class="price-section">
-        <table style="width: 100%;">
+    {{-- ================= HEADER INFO ================= --}}
+    <div class="box">
+        <table>
             <tr>
-                <td style="width: 50%;">
-                    <div style="font-weight: bold; color: #7f8c8d; margin-bottom: 5px;">Stock Quantity</div>
-                    <div style="font-size: 14pt;">{{ number_format($barang->quantity ?? 0) }}</div>
+                <td width="20%">
+                    <img src="{{ public_path($detail->photo_filename ?? 'image/no-images.jpg') }}">
                 </td>
-                <td style="width: 50%; text-align: right;">
-                    <div style="font-weight: bold; color: #7f8c8d; margin-bottom: 5px;">Unit Price</div>
-                    <div style="font-size: 14pt;">${{ number_format($barang->price ?? 0, 2) }}</div>
+                <td>
+                    <b>Type:</b> {{ ucfirst($detail->product_type) }} <br>
+                    <b>Category:</b> {{ $detail->kategoriID->detail ?? '-' }} <br>
+                    <b>Unit:</b> {{ $detail->unitID->detail ?? '-' }} <br>
+                    <b>Min Stock:</b> {{ $detail->primary_minimum_stock ?? '-' }} <br>
+                    <b>Price:</b>
+                    {{ $detail->primary_price
+                        ? format_uang(convert_currency($detail->primary_price, $detail->currency_id ?? 1))
+                        : '-' }}
+                </td>
+                <td width="20%" style="text-align: center; vertical-align: middle;">
+                    @if (!empty($detail->id_barang))
+                        {{-- Milon Barcode langsung merender gambar --}}
+                        <img src="data:image/png;base64,{{ DNS1D::getBarcodePNG($detail->id_barang, 'C128', 1.5, 40) }}"
+                            alt="barcode" />
+                        <br>
+                        <span style="font-size: 10px;">{{ $detail->id_barang }}</span>
+                    @else
+                        <span style="color: grey;">-</span>
+                    @endif
                 </td>
             </tr>
         </table>
 
-        <div class="total-box">
-            <hr style="border: 0; border-top: 1px solid #ddd;">
-            <div>Total Inventory Value (Final Result)</div>
-            <div class="total-amount">${{ number_format($barang->hasil_akhir ?? 0, 2) }}</div>
-        </div>
+        <p>
+            <b>Description:</b><br>
+            {{ $detail->keterangan ?? '-' }}
+        </p>
     </div>
 
-    <div class="footer">
-        Printed on: {{ date('M d, Y H:i:s') }} | This is a system-generated document.
+    {{-- ================= UNIT CONVERSION ================= --}}
+    <div class="box">
+        <h4>Unit Conversion</h4>
+
+        <table>
+            <tr>
+                <th>No</th>
+                <th>From</th>
+                <th class="text-center">=</th>
+                <th>Result</th>
+            </tr>
+
+            @forelse($unitConversion as $i => $conv)
+                <tr>
+                    <td>{{ $i + 1 }}</td>
+                    <td>1 {{ $conv->fromUnitID->detail ?? '-' }}</td>
+                    <td class="text-center">=</td>
+                    <td>
+                        {{ number_format($conv->qty, 0) }}
+                        {{ $conv->toUnitID->detail ?? '-' }}
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="4" class="text-center">No conversion data</td>
+                </tr>
+            @endforelse
+        </table>
+    </div>
+
+    {{-- ================= VARIANTS ================= --}}
+    <div class="box">
+        <h4>Variants</h4>
+
+        <table>
+            <tr>
+                <th>No</th>
+                <th>Variant</th>
+                <th>Specifications</th>
+            </tr>
+
+            @forelse($detail->variants as $i => $variant)
+                <tr>
+                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $variant->variant_name }}</td>
+                    <td>
+                        @if (!empty($variant->specifications))
+                            @foreach ($variant->specifications as $k => $v)
+                                {{ $k }}: {{ $v }}<br>
+                            @endforeach
+                        @else
+                            -
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="3" class="text-center">No variant</td>
+                </tr>
+            @endforelse
+        </table>
+    </div>
+
+    {{-- ================= STOCK HISTORY ================= --}}
+    <div class="box">
+        <h4>Stock Movement History</h4>
+
+        <table>
+            <tr>
+                <th>No</th>
+                <th>Date</th>
+                <th>Doc</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th class="text-right">In</th>
+                <th class="text-right">Out</th>
+                <th class="text-right">Balance</th>
+            </tr>
+
+            @foreach ($mutations as $i => $stock)
+                <tr>
+                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $stock->created_at?->format('d-m-Y H:i') }}</td>
+                    <td>{{ $stock->document_number }}</td>
+                    <td>{{ $stock->document_type }}</td>
+                    <td>{{ $stock->keterangan }}</td>
+
+                    <td class="text-right">
+                        @if ($stock->type == 'in')
+                            {{ number_format($stock->qty_transaksi) }}
+                        @endif
+                    </td>
+
+                    <td class="text-right">
+                        @if ($stock->type == 'out')
+                            {{ number_format($stock->qty_transaksi) }}
+                        @endif
+                    </td>
+
+                    <td class="text-right">
+                        {{ number_format($stock->saldo_akhir) }}
+                    </td>
+                </tr>
+            @endforeach
+        </table>
+    </div>
+
+    {{-- ================= WAREHOUSE ================= --}}
+    <div class="box">
+        <h4>Warehouse Stock</h4>
+
+        <table>
+            <tr>
+                <th>Warehouse</th>
+                <th class="text-right">Qty</th>
+            </tr>
+
+            @foreach ($warehouseHistory as $wh)
+                <tr>
+                    <td>{{ $wh['warehouse_name'] ?? '-' }}</td>
+                    <td class="text-right">
+                        {{ number_format($wh['total_qty'] ?? 0) }}
+                    </td>
+                </tr>
+            @endforeach
+        </table>
     </div>
 
 </body>

@@ -1,20 +1,20 @@
 @extends('layouts.app')
+@section('title', $title)
 @section('konten')
-    <h4>
-        <span class="text-muted fw-light">
+    <h4><span class="text-muted fw-light">
             @foreach ($breadcrumb as $key => $item)
                 @if (!empty($item['url']))
                     <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
                 @else
                     {{ $item['label'] }}
                 @endif
+
                 @if (!$loop->last)
                     /
                 @endif
             @endforeach
         </span>
     </h4>
-
     <div class="card">
         <div
             class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
@@ -23,68 +23,27 @@
 
             <div class="col-12 col-lg-5">
                 <div
-                    class="d-flex flex-column flex-md-row gap-2
+                    class="d-flex flex-column flex-md-row gap-2 
                     justify-content-start justify-content-lg-end">
 
-                    @canany(['barang-create'])
-                        <a href="{{ route('data-barang.create') }}" class="btn btn-sm btn-primary ">
+                    @canany(['brand-create'])
+                        <button id="create" class="btn  btn-sm btn-primary">
                             <i class="ti ti-plus me-1"></i> Add Data
-                        </a>
+                        </button>
                     @endcanany
-
-                    @canany(['barang-trash'])
-                        <a href="{{ route('data-barang.trash') }}" class="btn btn-sm btn-secondary ">
-                            <i class="ti ti-trash me-1"></i>Trash Bin
-                        </a>
-                    @endcanany
-
-                    @canany(['barang-delete'])
-                        <button id="deleteSelected" class="btn btn-sm btn-danger ">
+                    @canany(['brand-delete'])
+                        <button id="deleteSelected" class="btn btn-danger btn-sm">
                             <i class="ti ti-trash me-1"></i> Delete Selected
                         </button>
                     @endcanany
-                    <a href="{{ route('data-barang.print_all') }}" target="_blank" class="btn btn-sm btn-info ">
-                        <i class="ti ti-printer me-1"></i> Print All
-                    </a>
 
                 </div>
             </div>
 
         </div>
-
-        <div class="card-datatable table-responsive p-3">
-            <div class="col-12 col-lg-6">
-                <div class="row g-2 align-items-center">
-
-                    <!-- Status -->
-                    <div class="col-md">
-                        <select class="form-select select2" id="selectFilter" data-placeholder="Choose category...">
-                            <option></option>
-                            @foreach ($kategori as $item)
-                                <option value="{{ $item->id }}">{{ $item->detail }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md">
-                        <select class="form-select select2" id="selectBrand" data-placeholder="Choose brand...">
-                            <option></option>
-                            @foreach ($brand as $brands)
-                                <option value="{{ $brands->id }}">{{ $brands->detail }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Reset button -->
-                    <div class="col-md-auto">
-                        <button class="btn btn-outline-secondary w-100" id="resetFilter">
-                            <i class="ti ti-refresh me-1"></i> Reset
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-            <table class="display responsive nowrap" id="table">
-                <thead class="border-top" style="background-color: #AEDEFC; ">
+        <div class="card-datatable table-responsive" style="padding: 20px">
+            <table class="table" id="table">
+                <thead style="background-color: #AEDEFC; ">
                     <tr>
                         <th>
                             <div class="form-check form-check-primary mt-3">
@@ -92,15 +51,8 @@
                             </div>
                         </th>
                         <th>#</th>
-                        {{-- <th>Picture</th>
-                        <th>Barcode</th> --}}
-                        <th>Product Code</th>
-                        <th>Category</th>
-                        <th>Product Name</th>
-                        <th>Price</th>
-                        <th>Brand</th>
-                        <th>Stock</th>
-                        <th>Status</th>
+                        <th>Name</th>
+                        <th>Description</th>
                         <th>Created</th>
                         <th>Updated</th>
                         <th>Action</th>
@@ -111,6 +63,48 @@
     </div>
 @endsection
 @push('scripts')
+    <div class="modal fade" id="modals" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered1 modal-simple ">
+            <div class="modal-content p-3 p-md-5">
+                <div class="modal-body">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="text-center mb-4">
+                        <h3 class="mb-2" id="modal-title"></h3>
+                    </div>
+                    <form id="postForm" name="postForm" method="POST" action="{{ route('brand.store') }}">
+                        @csrf
+                        <input type="text" name="id" id="id" hidden>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label w-100" for="detail">Brand Name</label>
+                                <div class="input-group input-group-merge">
+                                    <input id="detail" name="detail" class="form-control credit-card-mask"
+                                        type="text" placeholder="Enter Brand Name" />
+                                </div>
+                                <span class="error text-danger" id="detailError"></span>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label w-100" for="description">Description</label>
+                                <div class="input-group input-group-merge">
+                                    <input id="description" name="description" class="form-control credit-card-mask"
+                                        type="text" placeholder="Enter Description" />
+                                </div>
+                                <span class="error text-danger" id="descriptionError"></span>
+                            </div>
+                        </div>
+                        <div class="col-12 text-center">
+                            <button type="submit" id="savedata" name="savedata" class="btn btn-primary me-sm-3 me-1">
+                            </button>
+                    </form>
+                    <button type="reset" class="btn btn-label-secondary btn-reset" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        Cancel
+                    </button>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <script>
         $(document).ready(function() {
             $('#checkAll').on('click', function() {
@@ -124,7 +118,6 @@
                     $('.checkItem:checked').length === $('.checkItem').length
                 );
             });
-            var groupColumn = 3;
             var table = new DataTable('#table', {
                 processing: true,
                 serverSide: true,
@@ -133,81 +126,24 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                columnDefs: [{
-                    visible: false,
-                    targets: groupColumn
-                }],
-                order: [
-                    [groupColumn, 'asc']
-                ],
-                drawCallback: function(settings) {
-                    var api = this.api();
-                    var rows = api.rows({
-                        page: 'current'
-                    }).nodes();
-                    var last = null;
-
-                    api.column(groupColumn, {
-                            page: 'current'
-                        })
-                        .data()
-                        .each(function(group, i) {
-                            if (last !== group) {
-                                $(rows)
-                                    .eq(i)
-                                    .before(
-                                        '<tr class="group"><td colspan="11">' +
-                                        group +
-                                        '</td></tr>'
-                                    );
-
-                                last = group;
-                            }
-                        });
-                },
-                // ajax: '{{ route('data-barang.index') }}',
-                ajax: {
-                    url: '{{ route('data-barang.index') }}',
-                    data: function(d) {
-                        d.kategori_id = $('#selectFilter').val();
-                        d.brand_id = $('#selectBrand').val();
-                    }
-                },
+                ajax: '{{ route('brand.index') }}',
                 columns: [{
                         data: 'cekbok',
                         name: 'cekbok',
                         orderable: false,
                         searchable: false
-                    },
-                    {
+                    }, {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
                         orderable: false,
                         searchable: false
                     },
-
                     {
-                        data: 'id_barang',
+                        data: 'detail',
                     },
                     {
-                        data: 'kategori',
+                        data: 'description',
                     },
-                    {
-                        data: 'nama_barang',
-                    },
-                    {
-                        data: 'harga',
-                    },
-                    {
-                        data: 'brand',
-                    },
-                    {
-                        data: 'stok',
-                    },
-                    {
-                        data: 'status',
-                    },
-
                     {
                         data: 'created_at',
                     },
@@ -222,17 +158,99 @@
                     },
                 ]
             });
-            $('#selectFilter').on('change', function() {
-                table.ajax.reload();
+            $('#create').click(function() {
+                $('#modals').modal('show');
+                $('#savedata').html('<i class="fa fa-save me-1"></i>Save changes');
+                $('#modal-title').html('Add Brand');
+                $('#postForm').trigger('reset');
+                $('#id').val('');
+                resetValidation();
             });
-            $('#selectBrand').on('change', function() {
-                table.ajax.reload();
+            $('#postForm').on('submit', function(e) {
+                e.preventDefault();
+                var form = this;
+                $.ajax({
+                    url: $(form).attr('action'),
+                    method: $(form).attr('method'),
+                    data: new FormData(form),
+                    processData: false,
+                    contentType: false,
+                    datatype: 'json',
+                    beforeSend: function(e) {
+                        $('#savedata').html(
+                            '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
+                    },
+                    complete: function(e) {
+                        $('#savedata').html(' <i class="fa fa-save me-1"></i> Save changes');
+                    },
+                    success: function(response) {
+                        $('#modals').modal('hide');
+                        table.draw();
+                        Swal.fire({
+                            icon: 'success',
+                            title: response.action === 'create' ?
+                                'Created Data Successfully' :
+                                'Updated Data Successfully',
+                            text: response.message,
+                            showClass: {
+                                popup: 'animate__animated animate__bounceIn'
+                            },
+                            customClass: {
+                                confirmButton: 'btn btn-primary waves-effect waves-light'
+                            },
+                            buttonsStyling: false
+                        });
+
+                    },
+                    error: function(xhr) {
+                        resetValidation();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Please check your data again.',
+                            showClass: {
+                                popup: 'animate__animated animate__bounceIn'
+                            },
+                            customClass: {
+                                confirmButton: 'btn btn-primary waves-effect waves-light'
+                            },
+                            buttonsStyling: false
+                        });
+                        let errors = xhr.responseJSON.errors;
+
+                        $.each(errors, function(key, value) {
+                            // For other fields, display individual field errors if any
+                            displayFieldError(key, value[0]);
+                        });
+                    }
+                });
+
+
             });
-            $('#resetFilter').on('click', function() {
-                $('#selectFilter').val(null).trigger('change');
-                $('#selectBrand').val(null).trigger('change');
-                table.ajax.reload(); // reload datatable
+            $('body').on('click', '.editPost', function(a) {
+                $('#modals').modal('show');
+                $('#savedata').html('Save changes');
+                resetValidation();
+
+                var id = $(this).data('id');
+                console.log(id);
+                $.ajax({
+                    type: "GET",
+                    url: "{{ url('brand') }}/" + id + "/edit",
+                    data: {
+                        id: id
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        $('#modal-title').html('Edit Brand');
+                        $('#id').val(data.id);
+                        $('#detail').val(data.detail);
+                        $('#description').val(data.description);
+                        resetValidation();
+                    }
+                });
             });
+
             $('body').on('click', '#delete', function() {
                 let id = $(this).data('id');
                 let name = $(this).data('name');
@@ -253,7 +271,7 @@
                 }).then(function(result) {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/data-barang/${id}`,
+                            url: `/brand/${id}`,
                             type: "DELETE",
                             cache: false,
                             data: {
@@ -268,11 +286,19 @@
                                     positionClass: 'toast-top-right',
                                 });
                             },
-                            error: function(jqXHR, textStatus, errorThrown) {
+                            error: function(jqXHR) {
+                                let message =
+                                    "Something went wrong"; // Fallback jika respon kosong
+
+                                if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                                    // Mengambil pesan spesifik dari Controller Anda
+                                    message = jqXHR.responseJSON.message;
+                                }
+
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Failed to delete',
-                                    text: 'An error occurred. Please try again later.',
+                                    text: message, // Pesan otomatis berubah sesuai kondisi di Controller
                                     timer: 5000,
                                     customClass: {
                                         confirmButton: 'btn btn-info waves-effect waves-light'
@@ -330,7 +356,7 @@
 
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: '/data-barang/delete-multiple',
+                            url: '/brand/delete-multiple',
                             type: 'POST',
                             data: {
                                 ids: ids,
@@ -345,13 +371,14 @@
                                 });
                                 $('#table').DataTable().ajax.reload();
                             },
-
                             error: function() {
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error!',
                                     text: 'Failed to delete data.',
-                                    timer: 5000,
+                                    showClass: {
+                                        popup: 'animate__animated animate__bounceIn'
+                                    },
                                     customClass: {
                                         confirmButton: 'btn btn-primary waves-effect waves-light'
                                     },

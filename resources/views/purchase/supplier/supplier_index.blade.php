@@ -23,7 +23,7 @@
 
             <div class="col-12 col-lg-5">
                 <div
-                    class="d-flex flex-column flex-md-row gap-2 
+                    class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
 
                     @canany(['supplier-create'])
@@ -119,7 +119,7 @@
                         data: 'phone_1',
                     },
                     {
-                        data: 'alamat_pembayaran',
+                        data: 'alamatBayar',
                     },
 
                     {

@@ -37,6 +37,11 @@ class Barang extends Model
         return $this->belongsTo(Warehouse::class, 'gudang_id');
     }
 
+    public function brandID()
+    {
+        return $this->belongsTo(BasicCodeDetail::class, 'brand_id');
+    }
+
     public function typeID()
     {
         return $this->belongsTo(BasicCodeDetail::class, 'tipe_persediaan_id');

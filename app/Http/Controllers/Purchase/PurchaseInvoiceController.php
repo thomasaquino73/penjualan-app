@@ -44,7 +44,8 @@ class PurchaseInvoiceController extends Controller
             return $next($request);
         });
     }
-     public function index(Request $r)
+
+    public function index(Request $r)
     {
         if ($r->ajax()) {
             $userId = Auth::user()->id;
@@ -411,7 +412,7 @@ class PurchaseInvoiceController extends Controller
         return view('purchase.purchase_invoice.purchase_invoice_index', $x);
     }
 
-     public function bulanRomawi($bulan)
+    public function bulanRomawi($bulan)
     {
         $romawi = [
             1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',
@@ -457,6 +458,7 @@ class PurchaseInvoiceController extends Controller
 
         return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
     }
+
     public function create()
     {
         $x = [

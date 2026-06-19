@@ -49,6 +49,7 @@ class PermissionSeeder extends Seeder
             'barang' => ['alias' => 'Product', 'group' => 'Inventory'],
             'kategori_barang' => ['alias' => 'Product Category', 'group' => 'Inventory'],
             'satuan_barang' => ['alias' => 'Unit', 'group' => 'Inventory'],
+            'brand' => ['alias' => 'Brands', 'group' => 'Inventory'],
 
             'role' => ['alias' => 'Role', 'group' => 'Setting'],
             'user' => ['alias' => 'User', 'group' => 'Setting'],

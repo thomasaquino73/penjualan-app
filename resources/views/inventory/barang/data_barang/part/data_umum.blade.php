@@ -122,6 +122,22 @@
 
                            <span class="error text-danger" id="unit_idError"></span>
                        </div>
+                       <div class="col-md-12 mb-3">
+                           <label class="form-label">Brand<small class="text-danger">*</small></label>
+                           <div class="input-group input-group-merge">
+                               <span class="input-group-text"> <i class="ti ti-medal"></i>
+                               </span>
+                               <select name="brand_id" id="brand_id" class="form-select select2 "
+                                   data-placeholder="Select Brand">
+                                   <option></option>
+                                   @foreach ($brand as $brands)
+                                       <option value="{{ $brands->id }}">{{ $brands->detail }}</option>
+                                   @endforeach
+                               </select>
+                           </div>
+
+                           <span class="error text-danger" id="brand_idError"></span>
+                       </div>
                    </div>
                </div>
            </div>

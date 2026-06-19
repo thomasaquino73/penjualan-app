@@ -62,6 +62,11 @@ class BasicCodeMasterSeeder extends Seeder
                 'detail' => 'Kategori Penjualan',
                 'description' => 'Daftar Kategori Penjualan',
             ],
+            [
+                'id' => '11',
+                'detail' => 'Brand',
+                'description' => 'Daftar Merk Barang',
+            ],
 
         ]);
 

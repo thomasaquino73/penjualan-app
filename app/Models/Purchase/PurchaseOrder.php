@@ -70,7 +70,7 @@ class PurchaseOrder extends Model
         return $this->belongsTo(Shipping::class, 'vehicle_id');
     }
 
-     public function bankID()
+    public function bankID()
     {
         return $this->belongsTo(CashBank::class, 'bank_id');
     }

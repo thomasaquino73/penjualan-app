@@ -73,6 +73,13 @@ class SupplierController extends Controller
                         return '<span class="badge bg-danger">Not Active</span>';
                     }
                 })
+                ->addColumn('alamatBayar', function ($row) {
+                    if (! empty($row->alamat_pembayaran)) {
+                        return $row->alamat_pembayaran.'<br><small class="text-muted"> Kab/kota :'.$row->kota.','.$row->provinsi.','.$row->negara.'('.$row->kodepos.')'.'</small>';
+                    } else {
+
+                    }
+                })
                 ->addColumn('cekbok', function ($row) {
                     return '   <div class="form-check form-check-primary mt-3">
                                 <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
@@ -98,12 +105,12 @@ class SupplierController extends Controller
                                 ><i class="ti ti-trash"></i> Delete</a>';
                     }
                     $btn .= '<a class="dropdown-item" href="'.route('supplier.show', $row->id).'"
-                             
+
                                 ><i class="ti ti-list-details"></i> Detail</a>';
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'alamatBayar'])
                 ->make(true);
         }
 
@@ -435,7 +442,7 @@ class SupplierController extends Controller
                     $idsFromRequest = [];
 
                     foreach ($items as $item) {
-                    //  dd($item);
+                        //  dd($item);
                         // ✅ UPDATE kalau ada ID
                         if (! empty($item['id'])) {
 

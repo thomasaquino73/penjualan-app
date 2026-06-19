@@ -18,7 +18,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Yajra\DataTables\DataTables;
+use Intervention\Image\Laravel\Facades\Image;
+use Yajra\DataTables\Facades\DataTables;
 
 class DataBarangController extends Controller
 {
@@ -53,11 +54,32 @@ class DataBarangController extends Controller
     {
         if ($r->ajax()) {
             // $query = Barang::where('status', '<>', 0)->orderBy('id_barang', 'desc');
+            // $query = Barang::where('status', '<>', 0)
+            //     ->withSum(['mutations as current_stock' => function ($query) {
+            //         $query->select(DB::raw("SUM(CASE WHEN type = 'in' THEN total_base_qty ELSE -total_base_qty END)"));
+            //     }], 'total_base_qty')
+            //     ->orderBy('id_barang', 'desc');
             $query = Barang::where('status', '<>', 0)
                 ->withSum(['mutations as current_stock' => function ($query) {
-                    $query->select(DB::raw("SUM(CASE WHEN type = 'in' THEN total_base_qty ELSE -total_base_qty END)"));
+                    $query->select(DB::raw("
+                            SUM(
+                                CASE
+                                    WHEN type = 'in' THEN total_base_qty
+                                    ELSE -total_base_qty
+                                END
+                            )
+                        "));
                 }], 'total_base_qty')
-                ->orderBy('id_barang', 'desc');
+                ->orderBy(
+                    BasicCodeDetail::select('detail')
+                        ->whereColumn('basic_code_detail.id', 'data_barang.kategori_id')
+                );
+            if ($r->kategori_id) {
+                $query->where('kategori_id', $r->kategori_id);
+            }
+            if ($r->brand_id) {
+                $query->where('brand_id', $r->brand_id);
+            }
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -104,6 +126,9 @@ class DataBarangController extends Controller
                         return '<span class="badge bg-danger">Not Active</span>';
                     }
                 })
+                ->addColumn('brand', function ($row) {
+                    return $row->brandID?->detail ?? 'No Brand';
+                })
                 ->addColumn('productType', function ($row) {
                     if ($row->product_type == 'supply') {
                         return '<span class="badge bg-success">Supply</span>';
@@ -121,7 +146,7 @@ class DataBarangController extends Controller
                     return $row->kategoriID->detail;
                 })
                 ->addColumn('harga', function ($row) {
-                    return format_uang(convert_currency($row->price, $row->currency_id ?? 1));
+                    return format_uang(convert_currency($row->primary_price, $row->currency_id ?? 1));
                 })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
@@ -151,7 +176,7 @@ class DataBarangController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'harga', 'status', 'kategori', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok', 'stok'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'harga', 'status', 'kategori', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok', 'stok', 'brand'])
                 ->make(true);
         }
 
@@ -161,6 +186,8 @@ class DataBarangController extends Controller
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Product', 'url' => ''],
             ],
+            'kategori' => BasicCodeDetail::where('master_id', 1)->get(),
+            'brand' => BasicCodeDetail::where('master_id', 11)->get(),
 
         ];
 
@@ -221,9 +248,41 @@ class DataBarangController extends Controller
             'unit' => BasicCodeDetail::where('master_id', 2)->get(),
             'supplier' => Supplier::where('status', 1)->get(),
             'warehouses' => Warehouse::where('status', 1)->get(),
+            'brand' => BasicCodeDetail::where('master_id', 11)->get(),
         ]);
     }
+    // protected function uploadAvatar($avatar)
+    // {
+    //     // 1. Baca gambar asli
+    //     $img = Image::read($avatar->getRealPath());
 
+    //     // 2. Tambahkan Watermark dengan pengecekan file
+    //     $watermarkPath = public_path('image/logo/watermark.png');
+    //     if (file_exists($watermarkPath)) {
+    //         // opsional: resize watermark agar tidak terlalu besar
+    //         $watermark = Image::read($watermarkPath);
+    //         $watermark->scale(width: 200);
+
+    //         $img->place($watermark, 'bottom-right', 10, 10);
+    //     }
+
+    //     // 3. Tentukan nama dan lokasi
+    //     $name = uniqid() . time();
+    //     $extension = $avatar->getClientOriginalExtension();
+    //     $filename = $name . '.' . $extension;
+    //     $destination = public_path('image/foto_produk');
+
+    //     // 4. Pastikan folder tujuan ada
+    //     if (!file_exists($destination)) {
+    //         mkdir($destination, 0775, true);
+    //     }
+
+    //     // 5. Simpan hasil gambar
+    //     $img->save($destination . '/' . $filename);
+
+    //     // 6. Kembalikan path untuk disimpan ke database
+    //     return 'image/foto_produk/' . $filename;
+    // }
     private function uploadAvatar($avatar)
     {
         $name = uniqid().time();
@@ -358,9 +417,6 @@ class DataBarangController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         // 1. Ambil detail barang dengan relasi yang diperlukan
@@ -589,6 +645,7 @@ class DataBarangController extends Controller
             'sub_unit' => $unit,
             'warehouses' => $warehouses,
             'detail' => $idDetail,
+            'brand' => BasicCodeDetail::where('master_id', 11)->get(),
         ]);
     }
 
@@ -908,23 +965,55 @@ class DataBarangController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function getCurrentStockAttribute()
+    {
+        return $this->mutations()
+            ->selectRaw("SUM(CASE WHEN type = 'in' THEN total_base_qty ELSE -total_base_qty END) as total")
+            ->value('total') ?? 0;
+    }
+
     public function print($id)
     {
-        $barang = Barang::findOrFail($id);
+        $barang = Barang::with([
+            'kategoriID',
+            'unitID',
+            'variants',
+            'conversions.fromUnitID',
+            'conversions.toUnitID',
+            'mutations',
+        ])->findOrFail($id);
 
-        $pdf = Pdf::loadView('pdf.barang_pdf', compact('barang'));
+        $pdf = Pdf::loadView('pdf.barang_pdf', [
+            'detail' => $barang,
+            'unitConversion' => $barang->conversions,
+            'mutations' => $barang->mutations,
+            'warehouseHistory' => [], // isi kalau sudah ada query grouping
+            'title' => 'Detail Barang',
+        ]);
 
         return $pdf->stream('barang.pdf');
-        // kalau mau download → ->download('barang.pdf');
     }
 
     public function print_all()
     {
-        $barangs = Barang::all();
+        $stock = DB::table('stock_mutations')
+            ->selectRaw("
+                data_barang_id,
+                SUM(CASE WHEN type = 'in' THEN total_base_qty ELSE -total_base_qty END) as stock
+            ")
+            ->groupBy('data_barang_id');
+
+        $barangs = Barang::where('status', '<>', 0)
+            ->leftJoinSub($stock, 'stock', function ($join) {
+                $join->on('data_barang.id', '=', 'stock.data_barang_id');
+            })
+            ->with(['kategoriID', 'unitID', 'brandID', 'typeID'])
+            ->select('data_barang.*')
+            ->addSelect(DB::raw('COALESCE(stock.stock,0) as current_stock'))
+            ->get();
 
         $pdf = Pdf::loadView('pdf.barang_all_pdf', compact('barangs'));
 
         return $pdf->stream('barang_all.pdf');
-        // kalau mau download → ->download('barang.pdf');
     }
 }

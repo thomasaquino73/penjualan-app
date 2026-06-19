@@ -21,7 +21,7 @@
         td {
             text-align: left;
             border: 1px solid #ddd;
-            padding-left:2px;
+            padding-left: 2px;
         }
 
         /* header semua tengah */
@@ -53,7 +53,6 @@
 <body>
 
     <h2>Product List</h2>
-
     <table>
         <thead>
             <tr>
@@ -61,20 +60,22 @@
                 <th>Product Code</th>
                 <th>Product Name</th>
                 <th>Price</th>
-                <th>Product Type</th>
-                <th>Inventory Type</th>
+                <th>Category</th>
+                <th>Stock</th>
             </tr>
         </thead>
         <tbody>
-
             @foreach ($barangs as $index => $item)
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $item->id_barang }}</td>
                     <td>{{ $item->nama_barang }}</td>
-                    <td>{{ number_format($item->price, 0, ',', '.') }}</td>
-                    <td>{{ $item->product_type }}</td>
-                    <td>{{ $item->typeID->detail }}</td>
+                    <td>{{ format_uang(convert_currency($item->primary_price, $item->currency_id ?? 1)) }}</td>
+                    <td>{{ $item->kategoriID?->detail ?? '-' }}</td>
+                    <td>
+                        {{ number_format($item->current_stock, 0) }}
+                        {{ $item->unitID?->detail ?? '-' }}
+                    </td>
                 </tr>
             @endforeach
         </tbody>

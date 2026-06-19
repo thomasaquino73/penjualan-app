@@ -3,19 +3,18 @@
 namespace App\Models\Inventory;
 
 use App\Models\BasicCodeDetail;
-use App\Models\Inventory\Barang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ItemTransferDetail extends Model
 {
-      use HasFactory;
+    use HasFactory;
 
     protected $table = 'item_transfer_detail';
 
     protected $guarded = [];
-    
-      public function produkID()
+
+    public function produkID()
     {
         return $this->belongsTo(Barang::class, 'data_barang_id', 'id');
     }

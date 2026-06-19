@@ -4,7 +4,6 @@ namespace App\Models\Purchase;
 
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
-use App\Models\Purchase\PurchaseOrder;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

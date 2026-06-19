@@ -233,6 +233,13 @@ class Sidebar extends Component
                         'roles' => ['Super Admin'],
                         'permissions' => ['satuan_barang-browse'],
                     ],
+                    [
+                        'name' => 'Brands',
+                        'route' => 'brand.index',
+                        'pattern' => 'brand.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['brand-browse'],
+                    ],
 
                 ],
             ],
