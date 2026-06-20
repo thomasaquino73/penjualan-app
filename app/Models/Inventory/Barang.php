@@ -4,6 +4,7 @@ namespace App\Models\Inventory;
 
 use App\Models\BasicCodeDetail;
 use App\Models\Purchase\PurchaseOrderDetail;
+use App\Models\Setting\Company;
 use App\Models\StockMutation;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -90,9 +91,29 @@ class Barang extends Model
 
     public function getCurrentStockAttribute()
     {
-        // Menggunakan relasi 'mutations' yang sudah Anda buat
+        $cutOffDate = Company::value('cut_off_date');
+
         return $this->mutations()
-            ->selectRaw("SUM(CASE WHEN type = 'in' THEN total_base_qty ELSE -total_base_qty END) as total")
+            ->when($cutOffDate, function ($q) use ($cutOffDate) {
+                $q->whereDate('date_stock', '>=', $cutOffDate);
+            })
+            ->selectRaw("
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN type = 'in'
+                            THEN total_base_qty
+                            ELSE -total_base_qty
+                        END
+                    ),
+                0
+                ) as total
+            ")
             ->value('total') ?? 0;
+    }
+
+    public function stockBalances()
+    {
+        return $this->hasMany(StockBalance::class, 'product_id');
     }
 }

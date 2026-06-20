@@ -102,7 +102,35 @@
         <div class="title">{{ $detail->nama_barang }}</div>
         <div class="subtitle">Kode: {{ $detail->id_barang }}</div>
     </div>
+    {{-- ================= STOCK SUMMARY ================= --}}
+    <div class="box">
+        <h4>Stock Summary</h4>
 
+        <table>
+            <tr>
+                <th width="30%">Cut Off Date</th>
+                <td>
+                    {{ $cutOffDate ? \Carbon\Carbon::parse($cutOffDate)->format('d-m-Y') : '-' }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Opening Balance</th>
+                <td>
+                    {{ number_format($openingBalance, 0) }}
+                    {{ $detail->unitID->detail ?? '' }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Current Stock</th>
+                <td>
+                    {{ number_format($currentStock, 0) }}
+                    {{ $detail->unitID->detail ?? '' }}
+                </td>
+            </tr>
+        </table>
+    </div>
     {{-- ================= HEADER INFO ================= --}}
     <div class="box">
         <table>
@@ -208,42 +236,86 @@
         <h4>Stock Movement History</h4>
 
         <table>
-            <tr>
-                <th>No</th>
-                <th>Date</th>
-                <th>Doc</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th class="text-right">In</th>
-                <th class="text-right">Out</th>
-                <th class="text-right">Balance</th>
-            </tr>
-
-            @foreach ($mutations as $i => $stock)
+            <thead>
                 <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td>{{ $stock->created_at?->format('d-m-Y H:i') }}</td>
-                    <td>{{ $stock->document_number }}</td>
-                    <td>{{ $stock->document_type }}</td>
-                    <td>{{ $stock->keterangan }}</td>
+                    <th width="5%">No</th>
+                    <th width="12%">Date</th>
+                    <th width="12%">Document</th>
+                    <th width="12%">Type</th>
+                    <th>Description</th>
+                    <th width="10%" class="text-right">In</th>
+                    <th width="10%" class="text-right">Out</th>
+                    <th width="12%" class="text-right">Balance</th>
+                </tr>
+            </thead>
 
-                    <td class="text-right">
-                        @if ($stock->type == 'in')
-                            {{ number_format($stock->qty_transaksi) }}
-                        @endif
+            <tbody>
+
+                {{-- OPENING BALANCE --}}
+                <tr style="background:#f3f3f3;font-weight:bold;">
+                    <td>-</td>
+                    <td>
+                        {{ $cutOffDate ? \Carbon\Carbon::parse($cutOffDate)->format('d-m-Y') : '-' }}
                     </td>
-
+                    <td>CUT-OFF</td>
+                    <td>OPENING</td>
+                    <td>Opening Balance</td>
+                    <td class="text-right">-</td>
+                    <td class="text-right">-</td>
                     <td class="text-right">
-                        @if ($stock->type == 'out')
-                            {{ number_format($stock->qty_transaksi) }}
-                        @endif
-                    </td>
-
-                    <td class="text-right">
-                        {{ number_format($stock->saldo_akhir) }}
+                        {{ number_format($openingBalance, 0) }}
                     </td>
                 </tr>
-            @endforeach
+
+                @forelse($mutations as $i => $stock)
+                    <tr>
+                        <td>{{ $i + 1 }}</td>
+
+                        <td>
+                            {{ $stock->date_stock ? \Carbon\Carbon::parse($stock->date_stock)->format('d-m-Y') : '-' }}
+                        </td>
+
+                        <td>
+                            {{ $stock->document_number ?? '-' }}
+                        </td>
+
+                        <td>
+                            {{ strtoupper($stock->document_type ?? '-') }}
+                        </td>
+
+                        <td>
+                            {{ $stock->keterangan ?? '-' }}
+                        </td>
+
+                        <td class="text-right">
+                            @if ($stock->type == 'in')
+                                {{ number_format($stock->qty_transaksi, 0) }}
+                            @else
+                                -
+                            @endif
+                        </td>
+
+                        <td class="text-right">
+                            @if ($stock->type == 'out')
+                                {{ number_format($stock->qty_transaksi, 0) }}
+                            @else
+                                -
+                            @endif
+                        </td>
+
+                        <td class="text-right">
+                            {{ number_format($stock->saldo_akhir, 0) }}
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            No stock movement after cut off date
+                        </td>
+                    </tr>
+                @endforelse
+
+            </tbody>
         </table>
     </div>
 
@@ -252,22 +324,51 @@
         <h4>Warehouse Stock</h4>
 
         <table>
-            <tr>
-                <th>Warehouse</th>
-                <th class="text-right">Qty</th>
-            </tr>
-
-            @foreach ($warehouseHistory as $wh)
+            <thead>
                 <tr>
-                    <td>{{ $wh['warehouse_name'] ?? '-' }}</td>
+                    <th width="70%">Warehouse</th>
+                    <th width="30%" class="text-right">Qty</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @php
+                    $grandTotal = 0;
+                @endphp
+
+                @forelse($warehouseHistory as $wh)
+                    @php
+                        $grandTotal += $wh['total_qty'];
+                    @endphp
+
+                    <tr>
+                        <td>{{ $wh['warehouse_name'] ?? '-' }}</td>
+
+                        <td class="text-right">
+                            {{ number_format($wh['total_qty'] ?? 0, 0) }}
+                        </td>
+                    </tr>
+
+                @empty
+
+                    <tr>
+                        <td colspan="2" class="text-center">
+                            No warehouse stock data
+                        </td>
+                    </tr>
+                @endforelse
+
+                <tr style="font-weight:bold;background:#f3f3f3;">
+                    <td>TOTAL</td>
                     <td class="text-right">
-                        {{ number_format($wh['total_qty'] ?? 0) }}
+                        {{ number_format($grandTotal, 0) }}
                     </td>
                 </tr>
-            @endforeach
+
+            </tbody>
         </table>
     </div>
-
 </body>
 
 </html>

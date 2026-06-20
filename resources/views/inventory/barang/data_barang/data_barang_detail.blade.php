@@ -271,7 +271,7 @@
                                             </td>
 
                                             <td class="py-3 text-dark">
-                                                {{ $stock->created_at ? $stock->created_at->translatedFormat('d M Y H:i') : '-' }}
+                                                {{ $stock->date_stock ? Carbon\Carbon::parse($stock->date_stock)->translatedFormat('d M Y ') : '-' }}
                                             </td>
                                             <td class="py-3">
                                                 {{ $stock->document_number ?? '-' }}
@@ -429,7 +429,70 @@
         </div>
     </div>
     {{-- END TAMBAHAN BARU --}}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3 border-bottom border-light">
+            <h5 class="card-title mb-0 fw-bold">
+                <i class="ti ti-package me-2 text-success"></i>
+                Current Stock Information
+            </h5>
+        </div>
 
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <small class="text-muted d-block">
+                            Opening Balance
+                        </small>
+
+                        <h3 class="fw-bold text-secondary mb-0">
+                            {{ number_format($openingBalance, 0, ',', '.') }}
+                        </h3>
+
+                        <small>
+                            {{ $detail->unitID->detail ?? '' }}
+                        </small>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+
+                        <small class="text-muted d-block">
+                            Cut Off Date
+                        </small>
+
+                        <h5 class="fw-bold text-info mb-0">
+                            {{ $cutOffDate ? \Carbon\Carbon::parse($cutOffDate)->format('d-m-Y') : '-' }}
+                        </h5>
+
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center bg-light">
+
+                        <small class="text-muted d-block">
+                            Current Stock
+                        </small>
+
+                        <h2 class="fw-bold text-success mb-0">
+                            {{ number_format($currentStock, 0, ',', '.') }}
+                        </h2>
+
+                        <small>
+                            {{ $detail->unitID->detail ?? '' }}
+                        </small>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
     <style>
         /* Modern UI Customizations */
         .breadcrumb-item+.breadcrumb-item::before {

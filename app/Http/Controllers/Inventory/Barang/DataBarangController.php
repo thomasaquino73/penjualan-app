@@ -54,31 +54,48 @@ class DataBarangController extends Controller
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            // $query = Barang::where('status', '<>', 0)->orderBy('id_barang', 'desc');
-            // $query = Barang::where('status', '<>', 0)
-            //     ->withSum(['mutations as current_stock' => function ($query) {
-            //         $query->select(DB::raw("SUM(CASE WHEN type = 'in' THEN total_base_qty ELSE -total_base_qty END)"));
-            //     }], 'total_base_qty')
-            //     ->orderBy('id_barang', 'desc');
-            $query = Barang::where('status', '<>', 0)
-                ->withSum(['mutations as current_stock' => function ($query) {
-                    $query->select(DB::raw("
-                            SUM(
-                                CASE
-                                    WHEN type = 'in' THEN total_base_qty
-                                    ELSE -total_base_qty
-                                END
-                            )
-                        "));
-                }], 'total_base_qty')
-                ->orderBy(
-                    BasicCodeDetail::select('detail')
-                        ->whereColumn('basic_code_detail.id', 'data_barang.kategori_id')
-                );
-            if ($r->kategori_id) {
+            $cutOffDate = Company::value('cut_off_date');
+            // dd($cutOffDate);
+            $query = Barang::query()
+            ->where('status', '<>', 0)
+            ->join('basic_code_detail as kategori', 'kategori.id', '=', 'data_barang.kategori_id')
+    ->addSelect('data_barang.*')
+                ->addSelect([
+                    'current_stock' => StockMutation::query()
+                        ->selectRaw("
+                            COALESCE(
+                                SUM(
+                                    CASE
+                                        WHEN type = 'in'
+                                        THEN total_base_qty
+                                        ELSE -total_base_qty
+                                    END
+                                ),
+                            0)
+                        ")
+                        ->whereColumn(
+                            'stock_mutations.data_barang_id',
+                            'data_barang.id'
+                        )
+                        ->whereDate(
+                            'date_stock',
+                            '>=',
+                            $cutOffDate
+                        ),
+                ])
+                ->with([
+                    'kategoriID',
+                    'unitID',
+                    'brandID',
+                    'typeID'
+                ])
+                ->orderBy('kategori.detail')
+                ->orderBy('nama_barang');
+            if ($r->filled('kategori_id')) {
                 $query->where('kategori_id', $r->kategori_id);
             }
-            if ($r->brand_id) {
+
+            if ($r->filled('brand_id')) {
                 $query->where('brand_id', $r->brand_id);
             }
 
@@ -86,113 +103,189 @@ class DataBarangController extends Controller
                 ->addIndexColumn()
                 ->addColumn('created_at', function ($row) {
                     return $row->created_at
-                        ? (($row->creator->fullname ?? 'Unknown')).
-                        ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
+                        ? ($row->creator->fullname ?? 'Unknown')
+                            .'<br><small class="text-muted">'
+                            .$row->created_at->diffForHumans()
+                            .'</small>'
                         : 'N/A';
                 })
                 ->addColumn('updated_at', function ($row) {
-                    if ($row->updated_at) {
-                        $updaterName = $row->updater->fullname ?? 'Unknown';
-                        $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
-
-                        return $updaterName.
-                            ' <br><small class="text-muted">'.$timeAgo.'</small>';
+                    if (! $row->updated_at) {
+                        return 'N/A';
                     }
+                    $updaterName = $row->updater->fullname ?? 'Unknown';
+                    $timeAgo = $updaterName !== 'Unknown'
+                        ? $row->updated_at->diffForHumans()
+                        : 'N/A';
 
-                    return 'N/A';
+                    return $updaterName
+                        .'<br><small class="text-muted">'
+                        .$timeAgo
+                        .'</small>';
                 })
                 ->addColumn('stok', function ($row) {
-                    $currentStock = $row->current_stock; // Memanggil accessor di atas
-                    $minStock = $row->primary_minimum_stock ?? 0;
+                    $currentStock = (float) ($row->current_stock ?? 0);
+                    $minStock = (float) ($row->primary_minimum_stock ?? 0);
+                    $color = $currentStock <= $minStock
+                        ? 'bg-danger'
+                        : 'bg-primary';
 
-                    // Menandai warna merah jika stok <= minimum
-                    $color = ($currentStock <= $minStock) ? 'bg-danger' : 'bg-primary';
-
-                    return '<span class="badge '.$color.'">'.number_format($currentStock, 0).' '.$row->unitID->detail.'</span>';
+                    return '<span class="badge '.$color.'">'
+                        .number_format($currentStock, 0)
+                        .' '.($row->unitID?->detail ?? '')
+                        .'</span>';
                 })
                 ->addColumn('fotoProduk', function ($row) {
                     $avatarUrl = $row->photo_filename
-                         ? asset($row->photo_filename)
-                         : asset('image/no-images.jpg');
+                        ? asset($row->photo_filename)
+                        : asset('image/no-images.jpg');
 
-                    return '<img class="avatar avatar-md rounded-circle me-2 avatar-online detail"
-                                src="'.$avatarUrl.'"
-                                alt="Foto Produk"  data-gambar="'.asset($row->photo_filename).'"
-                                data-alias="'.$row->nama_barang.'">';
+                    return '
+                    <img
+                        class="avatar avatar-md rounded-circle me-2 avatar-online detail"
+                        src="'.$avatarUrl.'"
+                        alt="Foto Produk"
+                        data-gambar="'.$avatarUrl.'"
+                        data-alias="'.$row->nama_barang.'">
+                ';
                 })
                 ->addColumn('status', function ($row) {
-                    if ($row->status == 2) {
-                        return '<span class="badge bg-info">Active</span>';
-                    } else {
-                        return '<span class="badge bg-danger">Not Active</span>';
-                    }
+                    return $row->status == 2
+                        ? '<span class="badge bg-info">Active</span>'
+                        : '<span class="badge bg-danger">Not Active</span>';
                 })
                 ->addColumn('brand', function ($row) {
                     return $row->brandID?->detail ?? 'No Brand';
                 })
                 ->addColumn('productType', function ($row) {
-                    if ($row->product_type == 'supply') {
-                        return '<span class="badge bg-success">Supply</span>';
-                    } else {
-                        return '<span class="badge bg-secondary">Non Supply</span>';
-                    }
+                    return $row->product_type == 'supply'
+                        ? '<span class="badge bg-success">Supply</span>'
+                        : '<span class="badge bg-secondary">Non Supply</span>';
                 })
                 ->addColumn('cekbok', function ($row) {
-                    return '   <div class="form-check form-check-primary mt-3">
-                                <input class="form-check-input checkItem" type="checkbox" value="'.$row->id.'"
-                                    >
-                            </div>';
+                    return '
+                    <div class="form-check form-check-primary mt-3">
+                        <input
+                            class="form-check-input checkItem"
+                            type="checkbox"
+                            value="'.$row->id.'">
+                    </div>
+                ';
                 })
                 ->addColumn('kategori', function ($row) {
-                    return $row->kategoriID->detail;
+                    return $row->kategoriID?->detail ?? '-';
                 })
                 ->addColumn('harga', function ($row) {
-                    return format_uang(convert_currency($row->primary_price, $row->currency_id ?? 1));
+                    return format_uang(
+                        convert_currency(
+                            $row->primary_price,
+                            $row->currency_id ?? 1
+                        )
+                    );
                 })
                 ->addColumn('action', function ($row) {
-                    $btn = '<div class="btn-group">
-                      <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                    $btn = '
+                <div class="btn-group">
+                    <button
+                        type="button"
+                        class="btn btn-primary dropdown-toggle waves-effect waves-light"
+                        data-bs-toggle="dropdown">
                         <i class="ti ti-menu-2 ti-xs me-1"></i>
-                      </button>
-                      <ul class="dropdown-menu" style="">';
+                    </button>
+
+                    <ul class="dropdown-menu">
+                ';
 
                     if (auth()->user()->can('barang-edit')) {
-                        $btn .= '<a class="dropdown-item editPost" href="'.route('data-barang.edit', $row->id).'"
-                            data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
+
+                        $btn .= '
+                        <a
+                            class="dropdown-item editPost"
+                            href="'.route('data-barang.edit', $row->id).'">
+                            <i class="far fa-edit"></i> Edit
+                        </a>
+                    ';
                     }
+
                     if (auth()->user()->can('barang-read')) {
-                        $btn .= '<a class="dropdown-item " href="'.route('data-barang.show', $row->id).'"
-                            data-id="'.$row->id.'"> <i class="ti ti-list-details"></i> Detail</a>';
+
+                        $btn .= '
+                        <a
+                            class="dropdown-item"
+                            href="'.route('data-barang.show', $row->id).'">
+                            <i class="ti ti-list-details"></i> Detail
+                        </a>
+                    ';
                     }
 
                     if (auth()->user()->can('barang-delete')) {
-                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
-                                data-id="'.$row->id.'"
-                                data-name="'.$row->nama_barang.'"
-                                ><i class="ti ti-trash"></i> Delete</a>';
+
+                        $btn .= '
+                        <a
+                            class="dropdown-item"
+                            href="javascript:void(0)"
+                            id="delete"
+                            data-id="'.$row->id.'"
+                            data-name="'.$row->nama_barang.'">
+                            <i class="ti ti-trash"></i> Delete
+                        </a>
+                    ';
                     }
-                    $btn .= '<a class="dropdown-item" href="'.route('data-barang.print', $row->id).'" target="_blank">
-                                    <i class="ti ti-printer"></i> Print
-                                </a>';
+
+                    $btn .= '
+                    <a
+                        class="dropdown-item"
+                        href="'.route('data-barang.print', $row->id).'"
+                        target="_blank">
+                        <i class="ti ti-printer"></i> Print
+                    </a>
+                ';
+
+                    $btn .= '
+                    </ul>
+                </div>
+                ';
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'harga', 'status', 'kategori', 'tipePersediaan', 'fotoProduk', 'productType', 'cekbok', 'stok', 'brand'])
+
+                ->rawColumns([
+                    'action',
+                    'created_at',
+                    'updated_at',
+                    'harga',
+                    'status',
+                    'kategori',
+                    'fotoProduk',
+                    'productType',
+                    'cekbok',
+                    'stok',
+                    'brand',
+                ])
+
                 ->make(true);
         }
 
         $x = [
             'title' => 'Product List',
             'breadcrumb' => [
-                ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Product', 'url' => ''],
+                [
+                    'label' => 'Dashboard',
+                    'url' => route('dashboard'),
+                ],
+                [
+                    'label' => 'Product',
+                    'url' => '',
+                ],
             ],
             'kategori' => BasicCodeDetail::where('master_id', 1)->get(),
             'brand' => BasicCodeDetail::where('master_id', 11)->get(),
-
         ];
 
-        return view('inventory.barang.data_barang.data_barang_index', $x);
+        return view(
+            'inventory.barang.data_barang.data_barang_index',
+            $x
+        );
     }
 
     private function generateProductId()
@@ -419,47 +512,96 @@ class DataBarangController extends Controller
     }
 
     public function show(string $id)
-    {
-        // 1. Ambil detail barang dengan relasi yang diperlukan
-        // Kita tambahkan 'mutations' (pastikan Anda sudah mendefinisikan relasi 'mutations' di Model Barang)
-        $idDetail = Barang::with([
-            'variants',
-            'stockHistories.warehouseID',
-            'stockHistories.unitID',
-            'mutations', // Relasi ke model StockMutation
-        ])->findOrFail($id);
+{
+    $idDetail = Barang::with([
+        'variants',
+        'stockHistories.warehouseID',
+        'stockHistories.unitID',
+        'mutations.unitID',
+    ])->findOrFail($id);
 
-        // 2. Hitung Saldo Berjalan (Running Balance) dari tabel mutasi
-        // $mutations = $idDetail->mutations()->orderBy('created_at', 'asc')->get();
+    $cutOffDate = Company::value('cut_off_date');
 
-        // $runningBalance = 0;
-        // foreach ($mutations as $mutation) {
-        //     if ($mutation->type == 'in') {
-        //         $runningBalance += $mutation->total_base_qty;
-        //     } else {
-        //         $runningBalance -= $mutation->total_base_qty;
-        //     }
-        //     $mutation->saldo_akhir = $runningBalance;
-        // }
+    /*
+    |--------------------------------------------------------------------------
+    | OPENING BALANCE
+    |--------------------------------------------------------------------------
+    */
+   $openingBalance = 0;
 
-        // 3. Ambil konversi satuan
-        $unitConversion = DataBarangConversion::where('data_barang_id', $idDetail->id)
-            ->where('qty', '>', 0)
-            ->get();
+    /*
+    |--------------------------------------------------------------------------
+    | MUTASI SETELAH CUT OFF
+    |--------------------------------------------------------------------------
+    */
+    $mutations = $idDetail->mutations()
+        ->when($cutOffDate, function ($q) use ($cutOffDate) {
+            $q->whereDate('date_stock', '>=', $cutOffDate);
+        })
+        ->orderBy('date_stock')
+        ->orderBy('id')
+        ->get();
 
-        return view('inventory.barang.data_barang.data_barang_detail', [
+    /*
+    |--------------------------------------------------------------------------
+    | RUNNING BALANCE
+    |--------------------------------------------------------------------------
+    */
+    $saldo = $openingBalance;
+
+    foreach ($mutations as $mutation) {
+
+        if ($mutation->type == 'in') {
+            $saldo += $mutation->total_base_qty;
+        } else {
+            $saldo -= $mutation->total_base_qty;
+        }
+
+        $mutation->saldo_akhir = $saldo;
+    }
+
+    $currentStock = $saldo;
+
+    /*
+    |--------------------------------------------------------------------------
+    | UNIT CONVERSION
+    |--------------------------------------------------------------------------
+    */
+    $unitConversion = DataBarangConversion::where(
+        'data_barang_id',
+        $idDetail->id
+    )
+        ->where('qty', '>', 0)
+        ->get();
+
+    return view(
+        'inventory.barang.data_barang.data_barang_detail',
+        [
             'title' => 'Detail Product',
+
             'breadcrumb' => [
-                ['label' => 'Product', 'url' => route('data-barang.index')],
-                ['label' => 'Detail Product', 'url' => ''],
+                [
+                    'label' => 'Product',
+                    'url' => route('data-barang.index'),
+                ],
+                [
+                    'label' => 'Detail Product',
+                    'url' => '',
+                ],
             ],
+
             'detail' => $idDetail,
-            'mutations' => $this->getMutation($idDetail->id),
+            'mutations' => $mutations,
             'unitConversion' => $unitConversion,
             'stok' => $unitConversion,
             'warehouseHistory' => $this->getWarehouse($idDetail->id),
-        ]);
-    }
+
+            'cutOffDate' => $cutOffDate,
+            'openingBalance' => $openingBalance,
+            'currentStock' => $currentStock,
+        ]
+    );
+}
 
     private function getWarehouse($data_barang_id)
     {
@@ -984,12 +1126,117 @@ class DataBarangController extends Controller
             'mutations',
         ])->findOrFail($id);
 
+        $cutOffDate = Company::value('cut_off_date');
+
+        /*
+        |--------------------------------------------------------------------------
+        | SALDO AWAL (SAMPAI CUT OFF)
+        |--------------------------------------------------------------------------
+        */
+        // $openingBalance = $barang->mutations()
+        //     ->when($cutOffDate, function ($q) use ($cutOffDate) {
+        //         $q->whereDate('date_stock', '>=', $cutOffDate);
+        //     })
+        //     ->selectRaw("
+        //         COALESCE(
+        //             SUM(
+        //                 CASE
+        //                     WHEN type = 'in'
+        //                     THEN total_base_qty
+        //                     ELSE -total_base_qty
+        //                 END
+        //             ),
+        //         0) as total
+        //     ")
+        //     ->value('total') ?? 0;
+
+        /*
+|--------------------------------------------------------------------------
+| OPENING BALANCE
+|--------------------------------------------------------------------------
+*/
+        $openingBalance = 0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | MUTASI SETELAH CUT OFF
+        |--------------------------------------------------------------------------
+        */
+        $mutations = $barang->mutations()
+            ->when($cutOffDate, function ($q) use ($cutOffDate) {
+                $q->whereDate('date_stock', '>', $cutOffDate);
+            })
+            ->orderBy('date_stock')
+            ->orderBy('id')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | RUNNING BALANCE
+        |--------------------------------------------------------------------------
+        */
+        $saldo = $openingBalance;
+
+        $mutations->transform(function ($item) use (&$saldo) {
+
+            $qty = $item->total_base_qty;
+
+            if ($item->type == 'in') {
+                $saldo += $qty;
+            } else {
+                $saldo -= $qty;
+            }
+
+            $item->saldo_akhir = $saldo;
+
+            return $item;
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | STOCK PER GUDANG
+        |--------------------------------------------------------------------------
+        */
+        $warehouseHistory = $barang->mutations()
+            ->when($cutOffDate, function ($q) use ($cutOffDate) {
+                $q->whereDate('date_stock', '>=', $cutOffDate);
+            })
+            ->selectRaw("
+        warehouse_id,
+        SUM(
+            CASE
+                WHEN type='in'
+                THEN total_base_qty
+                ELSE -total_base_qty
+            END
+        ) as total_qty
+    ")
+            ->groupBy('warehouse_id')
+            ->with('warehouseID')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'warehouse_name' => $item->warehouseID->nama_gudang ?? '-',
+                    'total_qty' => $item->total_qty,
+                ];
+            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | STOK SAAT INI
+        |--------------------------------------------------------------------------
+        */
+        $currentStock = $saldo;
+
         $pdf = Pdf::loadView('pdf.barang_pdf', [
+            'title' => 'Detail Barang',
             'detail' => $barang,
             'unitConversion' => $barang->conversions,
-            'mutations' => $barang->mutations,
-            'warehouseHistory' => [], // isi kalau sudah ada query grouping
-            'title' => 'Detail Barang',
+            'mutations' => $mutations,
+            'warehouseHistory' => $warehouseHistory,
+            'cutOffDate' => $cutOffDate,
+            'openingBalance' => $openingBalance,
+            'currentStock' => $currentStock,
         ]);
 
         return $pdf->stream('barang.pdf');
@@ -1000,25 +1247,89 @@ class DataBarangController extends Controller
         ini_set('memory_limit', '1024M');
         set_time_limit(300);
 
+        $cutOffDate = Company::value('cut_off_date');
+
+        /*
+        |--------------------------------------------------------------------------
+        | STOCK BERDASARKAN CUT OFF DATE
+        |--------------------------------------------------------------------------
+        */
         $stock = DB::table('stock_mutations')
             ->selectRaw("
-                data_barang_id,
-                SUM(CASE WHEN type = 'in' THEN total_base_qty ELSE -total_base_qty END) as stock
-            ")
+            data_barang_id,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN type = 'in'
+                        THEN total_base_qty
+                        ELSE -total_base_qty
+                    END
+                ),
+            0) as stock
+        ")
+            ->when($cutOffDate, function ($q) use ($cutOffDate) {
+                $q->whereDate('date_stock', '>=', $cutOffDate);
+            })
             ->groupBy('data_barang_id');
 
-        $barangs = Barang::where('status', '<>', 0)
+        /*
+        |--------------------------------------------------------------------------
+        | DATA BARANG
+        |--------------------------------------------------------------------------
+        */
+        $barangs = Barang::query()
+            ->where('status', '<>', 0)
+
             ->leftJoinSub($stock, 'stock', function ($join) {
-                $join->on('data_barang.id', '=', 'stock.data_barang_id');
+                $join->on(
+                    'data_barang.id',
+                    '=',
+                    'stock.data_barang_id'
+                );
             })
-            ->with(['kategoriID','unitID','brandID','typeID'])
-            ->select('data_barang.*')
-            ->addSelect(DB::raw('COALESCE(stock.stock,0) as current_stock'))
-            ->join('basic_code_detail', 'basic_code_detail.id', '=', 'data_barang.kategori_id')
+
+            ->join(
+                'basic_code_detail',
+                'basic_code_detail.id',
+                '=',
+                'data_barang.kategori_id'
+            )
+
+            ->with([
+                'kategoriID',
+                'unitID',
+                'brandID',
+                'typeID',
+            ])
+
+            ->select([
+                'data_barang.*',
+            ])
+
+            ->addSelect(DB::raw('
+            COALESCE(stock.stock, 0) as current_stock
+        '))
+
             ->orderBy('basic_code_detail.detail')
+            ->orderBy('data_barang.nama_barang')
+
             ->get();
 
-        $pdf = Pdf::loadView('pdf.barang_all_pdf', compact('barangs'));
+        /*
+        |--------------------------------------------------------------------------
+        | PDF
+        |--------------------------------------------------------------------------
+        */
+        $pdf = Pdf::loadView(
+            'pdf.barang_all_pdf',
+            [
+                'barangs' => $barangs,
+                'cutOffDate' => $cutOffDate,
+            ]
+        );
+
+        $pdf->setPaper('a4', 'landscape');
 
         return $pdf->stream('barang_all.pdf');
     }
@@ -1030,7 +1341,7 @@ class DataBarangController extends Controller
             ->first();
 
         return response()->json([
-            'qty' => $balance?->qty ?? 0
+            'qty' => $balance?->qty ?? 0,
         ]);
     }
 }
