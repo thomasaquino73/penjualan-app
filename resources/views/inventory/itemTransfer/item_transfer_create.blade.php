@@ -81,7 +81,7 @@
 
                 </div>
                 <div class="divider divider-dashed">
-                    <div class="divider-text">Purchase Requisition Detail</div>
+                    <div class="divider-text">Item Transfer Detail</div>
                 </div>
 
                 <div class="row mt-3">
@@ -147,6 +147,12 @@
                                 </select>
                                 <span class="error text-danger" id="unit_idError"></span>
                             </div>
+                            <div class="col-md-6 col-sm-12 mb-3">
+                                <label class="form-label" for="available_stok">Available Stock</label>
+                                <input type="number" id="available_stok" name="available_stok" class="form-control"
+                                    readonly>
+                                <span class="error text-danger" id="available_stokError"></span>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -189,6 +195,39 @@
                 });
             });
 
+            function loadAvailableStock() {
+
+                let productId = $('#product_id').val();
+                let warehouseId = $('#from_warehouse_id').val();
+                let cutoffDate = $('#cutoff_date').val();
+
+                if (!productId || !warehouseId) {
+                    $('#available_stok').val('');
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ route('item-transfer.wh.get-stock') }}",
+                    type: "GET",
+                    data: {
+                        product_id: productId,
+                        warehouse_id: warehouseId,
+                        cutoff_date: cutoffDate
+                    },
+                    success: function(res) {
+                        let stock = Number(res.stock);
+                        $('#available_stok').val(stock);
+
+                        $('#modalTitle').text(
+                            `Create new entry (Available Stock: ${stock} ${res.unit})`
+                        );
+                    }
+                });
+            }
+
+            $('#product_id').on('change', loadAvailableStock);
+            $('#from_warehouse_id').on('change', loadAvailableStock);
+            $('#cutoff_date').on('change', loadAvailableStock);
             let prDetailsData = [];
             let table = new DataTable('#table', {
                 processing: true,
@@ -403,6 +442,7 @@
                 let unitId = $('#unit_id').val();
                 let unitName = $('#unit_id option:selected').text();
                 let quantity = parseFloat($('#quantity').val()) || 0;
+                let availableStock = parseFloat($('#available_stok').val()) || 0;
                 let requiredDate = $('#required_date').val();
                 let notes = $('#notes').val();
                 let detailId = $('#detail_id').val();
@@ -421,15 +461,41 @@
                     return false;
                 }
 
+                // Validasi stok tersedia
+                if (quantity > availableStock) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Insufficient Stock!',
+                        html: `
+                Requested quantity <b>${quantity}</b> exceeds
+                available stock <b>${availableStock}</b>.
+            `,
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+
+                    $('#quantity').focus();
+                    return false;
+                }
+
                 // Validasi Duplikasi Produk
                 let isDuplicate = false;
+
                 if (prDetailsData && prDetailsData.length > 0) {
                     for (let i = 0; i < prDetailsData.length; i++) {
+
                         if (prDetailsData[i].product_id == productId) {
+
+                            // Mode Create
                             if (detailId === '') {
                                 isDuplicate = true;
                                 break;
-                            } else if (detailId !== '' && i != detailId) {
+                            }
+
+                            // Mode Edit
+                            if (detailId !== '' && parseInt(i) !== parseInt(detailId)) {
                                 isDuplicate = true;
                                 break;
                             }
@@ -450,28 +516,47 @@
                     return false;
                 }
 
-                // Susun Object Data Baru sesuai Kolom Tabel Anda sekarang
+                // Susun Object Data
                 let itemData = {
-                    'product_id': productId,
-                    'data_produk': productName,
-                    'quantity': quantity,
-                    'unit_id': unitId,
-                    'unit': unitName,
-                    'required_date': requiredDate,
-                    'notes': notes
+                    product_id: productId,
+                    data_produk: productName,
+                    quantity: quantity,
+                    unit_id: unitId,
+                    unit: unitName,
+                    required_date: requiredDate,
+                    notes: notes
                 };
 
+                // Create / Update
                 if (detailId === '') {
                     prDetailsData.push(itemData);
                 } else {
                     prDetailsData[detailId] = itemData;
                 }
 
-                // Bersihkan tabel lama, masukkan array baru, gambar ulang tabel
-                table.clear().rows.add(prDetailsData).draw();
+                // Refresh DataTable
+                table.clear();
+                table.rows.add(prDetailsData);
+                table.draw();
 
-                // Tutup modal secara aman
+                // Reset Form
+                $('#formPrDetail')[0].reset();
+                $('#detail_id').val('');
+                $('#product_id').val(null).trigger('change');
+                $('#unit_id').empty().trigger('change');
+                $('#available_stok').val('');
+
+                // Tutup Modal
                 $('#modalPrDetail').modal('hide');
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: detailId === '' ?
+                        'Item added successfully.' : 'Item updated successfully.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
             });
 
             let saveAndNew = false;

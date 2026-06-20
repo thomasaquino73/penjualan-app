@@ -292,6 +292,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales-quotation/trash', [SalesQuotationController::class, 'trash'])->name('sales-quotation.trash');
     Route::resource('sales-quotation', SalesQuotationController::class);
 
+    Route::get('/item-transfer/wh/get-stock', [ItemTransferController::class, 'getStock'])->name('item-transfer.wh.get-stock');
     Route::post('/item-transfer/change-status/{id}', [ItemTransferController::class, 'changeStatus']);
     Route::get('/item-transfer/print/{id}', [ItemTransferController::class, 'print'])->name('item-transfer.print');
     Route::post('/item-transfer/{id}/submit', [ItemTransferController::class, 'submitToPending'])->name('item-transfer.submit');

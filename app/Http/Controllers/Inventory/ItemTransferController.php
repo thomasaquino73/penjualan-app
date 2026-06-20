@@ -406,70 +406,70 @@ class ItemTransferController extends Controller
                         | Stock Mutation OUT
                         |--------------------------------------------------------------------------
                         */
-                        // StockMutation::create([
-                        //     'data_barang_id' => $item['product_id'],
-                        //     'unit_id' => $item['unit_id'],
-                        //     'warehouse_id' => $r->from_warehouse_id,
-                        //     'date_stock' => Carbon::parse($r->transfer_date)->format('Y-m-d'),
-                        //     'qty_transaksi' => $qty,
-                        //     'total_base_qty' => $qty,
-                        //     'type' => 'out',
-                        //     'document_number' => $itemTransfer->transfer_code,
-                        //     'document_type' => 'item_transfer',
-                        //     // 'item_transfer_id' => $itemTransfer->id,
-                        //     'keterangan' => 'Keluar barang dari : '.$fromnamaGudang.' menuju '.$tonamaGudang,
-                        //     'created_by' => Auth::id(),
-                        // ]);
+                        StockMutation::create([
+                            'data_barang_id' => $item['product_id'],
+                            'unit_id' => $item['unit_id'],
+                            'warehouse_id' => $r->from_warehouse_id,
+                            'date_stock' => Carbon::parse($r->transfer_date)->format('Y-m-d'),
+                            'qty_transaksi' => $qty,
+                            'total_base_qty' => $qty,
+                            'type' => 'out',
+                            'document_number' => $itemTransfer->transfer_code,
+                            'document_type' => 'item_transfer',
+                            // 'item_transfer_id' => $itemTransfer->id,
+                            'keterangan' => 'Keluar barang dari : '.$fromnamaGudang.' menuju '.$tonamaGudang,
+                            'created_by' => Auth::id(),
+                        ]);
 
                         /*
                         |--------------------------------------------------------------------------
                         | Stock Mutation IN
                         |--------------------------------------------------------------------------
                         */
-                        // StockMutation::create([
-                        //     'data_barang_id' => $item['product_id'],
-                        //     'unit_id' => $item['unit_id'],
-                        //     'warehouse_id' => $r->to_warehouse_id,
-                        //      'date_stock' => Carbon::parse($r->transfer_date)->format('Y-m-d'),
-                        //     'qty_transaksi' => $qty,
-                        //     'total_base_qty' => $qty,
-                        //     'type' => 'in',
-                        //     'document_number' => $itemTransfer->transfer_code,
-                        //     'document_type' => 'item_transfer',
-                        //     // 'item_transfer_id' => $itemTransfer->id,
-                        //     'keterangan' => 'Masuk barang dari : '.$fromnamaGudang.' menuju '.$tonamaGudang,
-                        //     'created_by' => Auth::id(),
-                        // ]);
+                        StockMutation::create([
+                            'data_barang_id' => $item['product_id'],
+                            'unit_id' => $item['unit_id'],
+                            'warehouse_id' => $r->to_warehouse_id,
+                             'date_stock' => Carbon::parse($r->transfer_date)->format('Y-m-d'),
+                            'qty_transaksi' => $qty,
+                            'total_base_qty' => $qty,
+                            'type' => 'in',
+                            'document_number' => $itemTransfer->transfer_code,
+                            'document_type' => 'item_transfer',
+                            // 'item_transfer_id' => $itemTransfer->id,
+                            'keterangan' => 'Masuk barang dari : '.$fromnamaGudang.' menuju '.$tonamaGudang,
+                            'created_by' => Auth::id(),
+                        ]);
 
                         /*
                         |--------------------------------------------------------------------------
                         | Kurangi Stock Balance Gudang Asal
                         |--------------------------------------------------------------------------
                         */
-                        // StockBalance::where([
-                        //     'data_barang_id' => $item['product_id'],
-                        //     'warehouse_id' => $r->from_warehouse_id,
-                        // ])->decrement('qty', $qty);
+                        StockBalance::where([
+                            'product_id' => $item['product_id'],
+                            'warehouse_id' => $r->from_warehouse_id,
+                        ])->decrement('qty', $qty);
 
                         /*
                         |--------------------------------------------------------------------------
                         | Tambah Stock Balance Gudang Tujuan
                         |--------------------------------------------------------------------------
                         */
-                        // StockBalance::updateOrCreate(
-                        //     [
-                        //         'data_barang_id' => $item['product_id'],
-                        //         'warehouse_id' => $r->to_warehouse_id,
-                        //     ],
-                        //     [
-                        //         'qty' => 0,
-                        //     ]
-                        // );
+                        StockBalance::updateOrCreate(
+                            [
+                                'product_id' => $item['product_id'],
+                                'warehouse_id' => $r->to_warehouse_id,
+                            ],
+                            [
+                                'qty' => 0,
+                            ]
+                        );
 
-                        // StockBalance::where([
-                        //     'data_barang_id' => $item['product_id'],
-                        //     'warehouse_id' => $r->to_warehouse_id,
-                        // ])->increment('qty', $qty);
+                        StockBalance::where([
+                            'product_id' => $item['product_id'],
+                            'warehouse_id' => $r->to_warehouse_id,
+                        ])->increment('qty', $qty);
                     }
                 }
             }
@@ -502,8 +502,29 @@ class ItemTransferController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
-    {
-        //
+     {
+        $itemTransfer = ItemTransfer::with([
+        'fromWarehouse',
+        'toWarehouse',
+        'pic',
+        'details',
+        'details.produkID',
+        'details.unitID'
+    ])->findOrFail($id);
+        $x = [
+            'title' => 'Item Transfer New',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Item Transfer', 'url' => ''],
+            ],
+            'idNumber' => $this->generateNumberId(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'fromWarehouse' => Warehouse::where('status', '<>', 0)->get(),
+            'toWarehouse' => Warehouse::where('status', '<>', 0)->get(),
+             'model' => $itemTransfer,
+        ];
+
+        return view('inventory.itemTransfer.item_transfer_edit', $x);
     }
 
     /**
@@ -768,4 +789,51 @@ class ItemTransferController extends Controller
 
         return $pdf->stream($filename.'.pdf');
     }
+
+    public function realStock($productId, $warehouseId, $cutoffDate = null)
+{
+    $barang = Barang::findOrFail($productId);
+
+    return $barang->mutations()
+        ->where('warehouse_id', $warehouseId)
+        ->when($cutoffDate, function ($q) use ($cutoffDate) {
+            $q->whereDate('date_stock', '<=', $cutoffDate);
+        })
+        ->selectRaw("
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN type = 'in'
+                        THEN total_base_qty
+                        ELSE -total_base_qty
+                    END
+                ),
+                0
+            ) as total
+        ")
+        ->value('total');
+}
+
+public function getStock(Request $request)
+{
+    $request->validate([
+        'product_id'   => 'required|integer',
+        'warehouse_id' => 'required|integer',
+    ]);
+
+    $stock = $this->realStock(
+        $request->product_id,
+        $request->warehouse_id,
+        $request->cutoff_date
+    );
+
+    $barang = Barang::with('unitID')
+        ->find($request->product_id);
+
+    return response()->json([
+        'success' => true,
+        'stock'   => $stock,
+        'unit'    => $barang?->unitID?->detail ?? '',
+    ]);
+}
 }
