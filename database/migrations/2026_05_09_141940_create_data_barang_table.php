@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('kategori_id');
             $table->unsignedBigInteger('tipe_persediaan_id')->nullable();
             $table->unsignedBigInteger('unit_id');
-            $table->unsignedBigInteger('brand_id');
+            $table->unsignedBigInteger('brand_id')->nullable();
             $table->enum('product_type', ['supply', 'non_supply'])->default('supply');
             $table->string('keterangan')->nullable();
             $table->bigInteger('quantity')->nullable();

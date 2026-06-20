@@ -169,6 +169,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/warehouse/restore/{id}', [WarehouseController::class, 'restore'])->name('warehouse.restore');
     Route::resource('warehouse', WarehouseController::class);
 
+    Route::get('/stock-balance/{product}/{warehouse}', [DataBarangController::class, 'getStockBalance']);
     Route::get('/data-barang/print-all', [DataBarangController::class, 'print_all'])->name('data-barang.print_all');
     Route::get('/data-barang/print/{id}', [DataBarangController::class, 'print'])->name('data-barang.print');
     Route::post('/data-barang/delete-multiple', [DataBarangController::class, 'deleteMultiple']);

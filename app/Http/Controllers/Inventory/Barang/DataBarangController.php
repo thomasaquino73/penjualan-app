@@ -8,6 +8,7 @@ use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\DataBarangStok;
+use App\Models\Inventory\StockBalance;
 use App\Models\Inventory\Warehouse;
 use App\Models\Purchase\Supplier;
 use App\Models\Setting\Company;
@@ -996,6 +997,9 @@ class DataBarangController extends Controller
 
     public function print_all()
     {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
+
         $stock = DB::table('stock_mutations')
             ->selectRaw("
                 data_barang_id,
@@ -1007,13 +1011,26 @@ class DataBarangController extends Controller
             ->leftJoinSub($stock, 'stock', function ($join) {
                 $join->on('data_barang.id', '=', 'stock.data_barang_id');
             })
-            ->with(['kategoriID', 'unitID', 'brandID', 'typeID'])
+            ->with(['kategoriID','unitID','brandID','typeID'])
             ->select('data_barang.*')
             ->addSelect(DB::raw('COALESCE(stock.stock,0) as current_stock'))
+            ->join('basic_code_detail', 'basic_code_detail.id', '=', 'data_barang.kategori_id')
+            ->orderBy('basic_code_detail.detail')
             ->get();
 
         $pdf = Pdf::loadView('pdf.barang_all_pdf', compact('barangs'));
 
         return $pdf->stream('barang_all.pdf');
+    }
+
+    public function getStockBalance($productId, $warehouseId)
+    {
+        $balance = StockBalance::where('product_id', $productId)
+            ->where('warehouse_id', $warehouseId)
+            ->first();
+
+        return response()->json([
+            'qty' => $balance?->qty ?? 0
+        ]);
     }
 }

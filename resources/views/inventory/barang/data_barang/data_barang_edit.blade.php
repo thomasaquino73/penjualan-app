@@ -175,6 +175,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">Create new entry</h5>
+                    <small class="text-primary fw-bold" id="stockBalanceInfo"></small>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="formPrDetailStock">
@@ -281,47 +282,14 @@
 
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
-    {{-- <script>
-        const radioSupply = document.getElementById('radioSupply');
-        const radioNonSupply = document.getElementById('radioNonSupply');
-        const stockTab = document.getElementById('stockTab');
-        const barcodeField = document.getElementById('barcodeField');
 
-        function toggleStockTab() {
-            if (radioNonSupply.checked) {
-                // sembunyikan
-                stockTab.style.display = 'none';
-                barcodeField.style.display = 'none';
-
-                // optional: clear value barcode biar aman
-                document.getElementById('barcode').value = '';
-
-                // pindah tab biar ga blank
-                const firstTab = document.querySelector('.nav-link');
-                if (firstTab) {
-                    new bootstrap.Tab(firstTab).show();
-                }
-
-            } else {
-                // tampilkan
-                stockTab.style.display = 'block';
-                barcodeField.style.display = 'block';
-            }
-        }
-
-        // run awal
-        toggleStockTab();
-
-        // listener
-        radioSupply.addEventListener('change', toggleStockTab);
-        radioNonSupply.addEventListener('change', toggleStockTab);
-    </script> --}}
     <script>
+        let currentStockBalance = 0;
         let prDetailsData = [
             @if (isset($detail) && $detail->stockHistories)
                 @foreach ($detail->stockHistories as $stock)
                     {
-                        // Ambil ID Gudang langsung dari property atau dari relasi
+                        'product_id': '{{ $detail->id }}',
                         'date_stock': '{{ Carbon\Carbon::parse($stock->date_stock)->format('d-m-Y') }}',
                         'warehouse_id': '{{ $stock->warehouse_id }}',
 
@@ -940,6 +908,7 @@
                     dropdownParent: $('#modalPrDetail'),
                 });
             });
+
             let table = new DataTable('#table', {
                 processing: true,
                 serverSide: false,
@@ -986,6 +955,7 @@
 
                                     $('#formPrDetailStock')[0].reset();
                                     $('#detail_id').val('');
+                                    $('#stockBalanceInfo').text('');
                                     $('#modalTitle').text('Create new entry');
                                     $('#btnSubmitModal').text('Create');
                                     $('#modalPrDetail').modal('show');
@@ -1002,9 +972,9 @@
                                     let rowIndex = dt.row({
                                         selected: true
                                     }).index();
-
                                     window.isEditingMode = true;
-
+                                    currentProductId = {{ $detail->id }};
+                                    console.log(data);
                                     // 1. Set index baris ke input hidden
                                     $('#detail_id').val(rowIndex);
 
@@ -1019,9 +989,18 @@
 
                                     // 4. Set Dropdown Warehouse
                                     if ($('#warehouse_id').length) {
-                                        $('#warehouse_id').val(data.warehouse_id).trigger('change');
+                                        $('#warehouse_id')
+                                            .val(data.warehouse_id)
+                                            .trigger('change');
+                                        $.get(
+                                            `/stock-balance/${currentProductId}/${data.warehouse_id}`,
+                                            function(res) {
+                                                $('#stockBalanceInfo').html(
+                                                    `Warehouse Stock : ${parseFloat(res.qty || 0).toLocaleString()}`
+                                                );
+                                            }
+                                        );
                                     }
-
                                     // 5. Set Dropdown Unit (Menyesuaikan id="unit_id_modals" di modal kamu)
                                     if ($('#unit_id_modals').length) {
                                         $('#unit_id_modals').val(data.stok_unit_id).trigger(
@@ -1092,8 +1071,27 @@
                     }
                 }
             });
+            $('#warehouse_id').on('change', function() {
+
+                let warehouseId = $(this).val();
+                currentProductId = {{ $detail->id }};
+
+                $.get(
+                    `/stock-balance/${currentProductId}/${warehouseId}`,
+                    function(res) {
+
+                        $('#stockBalanceInfo').html(
+                            `Warehouse Stock : ${parseFloat(res.qty).toLocaleString()}`
+                        );
+
+                    }
+                );
+
+            });
+
             $('#formPrDetailStock').on('submit', function(e) {
                 e.preventDefault();
+                let productID = $('#product_id').val();
                 let warehouseID = $('#warehouse_id').val();
                 let warehouseName = $('#warehouse_id option:selected').text();
                 let quantity = parseFloat($('#quantity').val()) || 0;
@@ -1143,6 +1141,7 @@
                     return;
                 }
                 let itemData = {
+                    'product_id': productID,
                     'date_stock': date,
                     'warehouse_name': warehouseName,
                     'warehouse_id': warehouseID,
