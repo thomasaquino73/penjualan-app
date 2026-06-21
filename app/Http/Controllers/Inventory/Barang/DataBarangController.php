@@ -61,7 +61,7 @@ class DataBarangController extends Controller
                 ->join('basic_code_detail as kategori', 'kategori.id', '=', 'data_barang.kategori_id')
                 ->addSelect('data_barang.*')
                 ->addSelect([
-                    'current_stock' => StockMutation::query()
+                  'current_stock' => StockMutation::query()
                         ->selectRaw("
                             COALESCE(
                                 SUM(
@@ -77,11 +77,9 @@ class DataBarangController extends Controller
                             'stock_mutations.data_barang_id',
                             'data_barang.id'
                         )
-                        ->whereDate(
-                            'date_stock',
-                            '>=',
-                            $cutOffDate
-                        ),
+                        ->when($cutOffDate, function ($q) use ($cutOffDate) {
+                            $q->whereDate('date_stock', '>=', $cutOffDate);
+                        }),
                 ])
                 ->with([
                     'kategoriID',

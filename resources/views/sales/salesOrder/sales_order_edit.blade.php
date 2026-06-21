@@ -64,7 +64,7 @@
 
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label">SQ Number <small class="text-danger">*</small> </label>
+                                <label class="form-label">SO Number <small class="text-danger">*</small> </label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
                                     <input type="text" name="sales_order_code" id="sales_order_code" class="form-control"
@@ -80,7 +80,7 @@
                         <div class="row">
 
                             <div class="col-6 mb-3">
-                                <label class="form-label">SQ Date<small class="text-danger">*</small> </label>
+                                <label class="form-label">Date<small class="text-danger">*</small> </label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
                                     <input type="text" name="sales_order_date" id="sales_order_date" class="form-control"
@@ -1275,7 +1275,7 @@
                 } else {
                     // --- CARA B: AMBIL DARI PR & EDIT DATA ---
                     // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
-                    // Properti bawaan PR seperti 'quotation_code' & 'purchase_quotation_detail_id' 
+                    // Properti bawaan PR seperti 'quotation_code' & 'purchase_quotation_detail_id'
                     // akan otomatis aman dan dipertahankan.
                     prDetailsData[detailId] = {
                         ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)

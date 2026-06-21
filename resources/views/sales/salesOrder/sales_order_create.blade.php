@@ -61,7 +61,7 @@
 
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label">SQ Number <small class="text-danger">*</small> </label>
+                                <label class="form-label">SO Number <small class="text-danger">*</small> </label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
                                     <input type="text" name="sales_order_code" id="sales_order_code" class="form-control"
@@ -77,7 +77,7 @@
                         <div class="row">
 
                             <div class="col-6 mb-3">
-                                <label class="form-label">SQ Date<small class="text-danger">*</small> </label>
+                                <label class="form-label">Date<small class="text-danger">*</small> </label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
                                     <input type="text" name="sales_order_date" id="sales_order_date" class="form-control"
@@ -662,7 +662,7 @@
                 // Tambahan Validasi: Ingatkan user jika customer belum dipilih
                 if (!customerId) {
                     alert(
-                        "Silahkan pilih Customer terlebih dahulu pada form utama SQ!",
+                        "Silahkan pilih Customer terlebih dahulu pada form utama SO!",
                     );
                     $(this).val("").trigger("change"); // Reset pilihan produk
                     return;
@@ -803,7 +803,7 @@
                             helperText
                                 .attr("class", "form-text text-muted")
                                 .text(
-                                    "Belum ada riwayat SQ dengan customer ini. Silahkan isi harga manual.",
+                                    "Belum ada riwayat SO dengan customer ini. Silahkan isi harga manual.",
                                 );
                             dropdownBtn.prop("disabled", true);
                             if (priceInput.val() === "") {
@@ -1121,7 +1121,7 @@
                 } else {
                     // --- CARA B: AMBIL DARI PR & EDIT DATA ---
                     // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
-                    // Properti bawaan PR seperti 'quotation_code' & 'purchase_quotation_detail_id' 
+                    // Properti bawaan PR seperti 'quotation_code' & 'purchase_quotation_detail_id'
                     // akan otomatis aman dan dipertahankan.
                     prDetailsData[detailId] = {
                         ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)

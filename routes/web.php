@@ -299,6 +299,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/item-transfer/{id}/submit', [ItemTransferController::class, 'submitToPending'])->name('item-transfer.submit');
     Route::resource('item-transfer', ItemTransferController::class);
 
+    Route::get('/delivery-order/trash', [DeliveryOrderController::class, 'trash'])->name('delivery-order.trash');
     Route::resource('delivery-order', DeliveryOrderController::class);
 
     });
