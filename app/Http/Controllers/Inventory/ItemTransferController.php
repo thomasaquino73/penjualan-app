@@ -23,7 +23,15 @@ class ItemTransferController extends Controller
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = ItemTransfer::where('status', '<>', 0)->get();
+            $userId = Auth::user()->id;
+            $query = ItemTransfer::where('status', '<>', 0) ->where(function ($q) use ($userId) {
+                    $q->where('status', '<>', 'draft')
+                        ->orWhere(function ($subQ) use ($userId) {
+                            $subQ->where('status', 'draft')
+                                ->where('created_by', $userId);
+                        });
+                })
+                ->orderby('transfer_code', 'desc');
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -218,7 +226,7 @@ class ItemTransferController extends Controller
                                         data-id="'.$row->id.'">
 
                                         <i class="ti ti-check me-1"></i>
-                                        Approve 
+                                        Approve
                                     </a>
                                 ';
 
@@ -229,7 +237,7 @@ class ItemTransferController extends Controller
                                         data-id="'.$row->id.'">
 
                                         <i class="ti ti-x me-1"></i>
-                                        Reject 
+                                        Reject
                                     </a>
                                 ';
                         }
@@ -406,70 +414,70 @@ class ItemTransferController extends Controller
                         | Stock Mutation OUT
                         |--------------------------------------------------------------------------
                         */
-                        StockMutation::create([
-                            'data_barang_id' => $item['product_id'],
-                            'unit_id' => $item['unit_id'],
-                            'warehouse_id' => $r->from_warehouse_id,
-                            'date_stock' => Carbon::parse($r->transfer_date)->format('Y-m-d'),
-                            'qty_transaksi' => $qty,
-                            'total_base_qty' => $qty,
-                            'type' => 'out',
-                            'document_number' => $itemTransfer->transfer_code,
-                            'document_type' => 'item_transfer',
-                            // 'item_transfer_id' => $itemTransfer->id,
-                            'keterangan' => 'Keluar barang dari : '.$fromnamaGudang.' menuju '.$tonamaGudang,
-                            'created_by' => Auth::id(),
-                        ]);
+                        // StockMutation::create([
+                        //     'data_barang_id' => $item['product_id'],
+                        //     'unit_id' => $item['unit_id'],
+                        //     'warehouse_id' => $r->from_warehouse_id,
+                        //     'date_stock' => Carbon::parse($r->transfer_date)->format('Y-m-d'),
+                        //     'qty_transaksi' => $qty,
+                        //     'total_base_qty' => $qty,
+                        //     'type' => 'out',
+                        //     'document_number' => $itemTransfer->transfer_code,
+                        //     'document_type' => 'item_transfer',
+                        //     // 'item_transfer_id' => $itemTransfer->id,
+                        //     'keterangan' => 'Keluar barang dari : '.$fromnamaGudang.' menuju '.$tonamaGudang,
+                        //     'created_by' => Auth::id(),
+                        // ]);
 
                         /*
                         |--------------------------------------------------------------------------
                         | Stock Mutation IN
                         |--------------------------------------------------------------------------
                         */
-                        StockMutation::create([
-                            'data_barang_id' => $item['product_id'],
-                            'unit_id' => $item['unit_id'],
-                            'warehouse_id' => $r->to_warehouse_id,
-                             'date_stock' => Carbon::parse($r->transfer_date)->format('Y-m-d'),
-                            'qty_transaksi' => $qty,
-                            'total_base_qty' => $qty,
-                            'type' => 'in',
-                            'document_number' => $itemTransfer->transfer_code,
-                            'document_type' => 'item_transfer',
-                            // 'item_transfer_id' => $itemTransfer->id,
-                            'keterangan' => 'Masuk barang dari : '.$fromnamaGudang.' menuju '.$tonamaGudang,
-                            'created_by' => Auth::id(),
-                        ]);
+                        // StockMutation::create([
+                        //     'data_barang_id' => $item['product_id'],
+                        //     'unit_id' => $item['unit_id'],
+                        //     'warehouse_id' => $r->to_warehouse_id,
+                        //     'date_stock' => Carbon::parse($r->transfer_date)->format('Y-m-d'),
+                        //     'qty_transaksi' => $qty,
+                        //     'total_base_qty' => $qty,
+                        //     'type' => 'in',
+                        //     'document_number' => $itemTransfer->transfer_code,
+                        //     'document_type' => 'item_transfer',
+                        //     // 'item_transfer_id' => $itemTransfer->id,
+                        //     'keterangan' => 'Masuk barang dari : '.$fromnamaGudang.' menuju '.$tonamaGudang,
+                        //     'created_by' => Auth::id(),
+                        // ]);
 
                         /*
                         |--------------------------------------------------------------------------
                         | Kurangi Stock Balance Gudang Asal
                         |--------------------------------------------------------------------------
                         */
-                        StockBalance::where([
-                            'product_id' => $item['product_id'],
-                            'warehouse_id' => $r->from_warehouse_id,
-                        ])->decrement('qty', $qty);
+                        // StockBalance::where([
+                        //     'product_id' => $item['product_id'],
+                        //     'warehouse_id' => $r->from_warehouse_id,
+                        // ])->decrement('qty', $qty);
 
                         /*
                         |--------------------------------------------------------------------------
                         | Tambah Stock Balance Gudang Tujuan
                         |--------------------------------------------------------------------------
                         */
-                        StockBalance::updateOrCreate(
-                            [
-                                'product_id' => $item['product_id'],
-                                'warehouse_id' => $r->to_warehouse_id,
-                            ],
-                            [
-                                'qty' => 0,
-                            ]
-                        );
+                        // StockBalance::updateOrCreate(
+                        //     [
+                        //         'product_id' => $item['product_id'],
+                        //         'warehouse_id' => $r->to_warehouse_id,
+                        //     ],
+                        //     [
+                        //         'qty' => 0,
+                        //     ]
+                        // );
 
-                        StockBalance::where([
-                            'product_id' => $item['product_id'],
-                            'warehouse_id' => $r->to_warehouse_id,
-                        ])->increment('qty', $qty);
+                        // StockBalance::where([
+                        //     'product_id' => $item['product_id'],
+                        //     'warehouse_id' => $r->to_warehouse_id,
+                        // ])->increment('qty', $qty);
                     }
                 }
             }
@@ -502,37 +510,239 @@ class ItemTransferController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
-     {
+    {
         $itemTransfer = ItemTransfer::with([
-        'fromWarehouse',
-        'toWarehouse',
-        'pic',
-        'details',
-        'details.produkID',
-        'details.unitID'
-    ])->findOrFail($id);
+            'fromWarehouse',
+            'toWarehouse',
+            'pic',
+            'details',
+            'details.produkID',
+            'details.unitID',
+        ])->findOrFail($id);
         $x = [
-            'title' => 'Item Transfer New',
+            'title' => 'Edit Item Transfer ',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Item Transfer', 'url' => ''],
+                ['label' => 'Edit Item Transfer', 'url' => ''],
             ],
             'idNumber' => $this->generateNumberId(),
             'product' => Barang::where('status', '<>', 0)->get(),
             'fromWarehouse' => Warehouse::where('status', '<>', 0)->get(),
             'toWarehouse' => Warehouse::where('status', '<>', 0)->get(),
-             'model' => $itemTransfer,
+            'model' => $itemTransfer,
         ];
 
         return view('inventory.itemTransfer.item_transfer_edit', $x);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(ItemTransferRequest $r, string $id)
     {
-        //
+        DB::beginTransaction();
+
+        try {
+
+            $itemTransfer = ItemTransfer::findOrFail($id);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Rollback Stock Lama
+            |--------------------------------------------------------------------------
+            // */
+            // $oldDetails = ItemTransferDetail::where('item_transfer_id', $itemTransfer->id)->get();
+
+            // foreach ($oldDetails as $detail) {
+
+            //     // Kembalikan stok ke gudang asal lama
+            //     StockBalance::updateOrCreate(
+            //         [
+            //             'product_id' => $detail->data_barang_id,
+            //             'warehouse_id' => $itemTransfer->from_warehouse_id,
+            //         ],
+            //         ['qty' => 0]
+            //     );
+
+            //     StockBalance::where([
+            //         'product_id' => $detail->data_barang_id,
+            //         'warehouse_id' => $itemTransfer->from_warehouse_id,
+            //     ])->increment('qty', $detail->qty);
+
+            //     // Kurangi stok dari gudang tujuan lama
+            //     StockBalance::where([
+            //         'product_id' => $detail->data_barang_id,
+            //         'warehouse_id' => $itemTransfer->to_warehouse_id,
+            //     ])->decrement('qty', $detail->qty);
+            // }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Hapus Mutation Lama
+            |--------------------------------------------------------------------------
+            */
+            // StockMutation::where('document_type', 'item_transfer')
+            //     ->where('document_number', $itemTransfer->transfer_code)
+            //     ->delete();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Hapus Detail Lama
+            |--------------------------------------------------------------------------
+            */
+            ItemTransferDetail::where('item_transfer_id', $itemTransfer->id)->delete();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Update Header
+            |--------------------------------------------------------------------------
+            */
+            $data = $r->except('save_and_new', 'items_detail');
+
+            $data['transfer_date'] = Carbon::parse(
+                $r->transfer_date
+            )->format('Y-m-d');
+
+            $data['updated_by'] = Auth::id();
+
+            $itemTransfer->update($data);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Simpan Detail Baru
+            |--------------------------------------------------------------------------
+            */
+            $itemsDetailRaw = $r->input('items_detail');
+
+            if ($itemsDetailRaw) {
+
+                $items = json_decode($itemsDetailRaw, true);
+
+                if (is_array($items) && count($items) > 0) {
+
+                    $fromGudang = Warehouse::find($r->from_warehouse_id);
+                    $toGudang = Warehouse::find($r->to_warehouse_id);
+
+                    $fromNamaGudang = $fromGudang?->nama_gudang ?? 'Unknown';
+                    $toNamaGudang = $toGudang?->nama_gudang ?? 'Unknown';
+
+                    foreach ($items as $item) {
+
+                        $qty = $item['quantity'] ?? $item['qty'];
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Detail
+                        |--------------------------------------------------------------------------
+                        */
+                        ItemTransferDetail::create([
+                            'item_transfer_id' => $itemTransfer->id,
+                            'data_barang_id' => $item['product_id'],
+                            'qty' => $qty,
+                            'unit_id' => $item['unit_id'],
+                        ]);
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Mutation OUT
+                        |--------------------------------------------------------------------------
+                        */
+                        // StockMutation::create([
+                        //     'data_barang_id' => $item['product_id'],
+                        //     'unit_id' => $item['unit_id'],
+                        //     'warehouse_id' => $r->from_warehouse_id,
+                        //     'date_stock' => Carbon::parse($r->transfer_date)->format('Y-m-d'),
+                        //     'qty_transaksi' => $qty,
+                        //     'total_base_qty' => $qty,
+                        //     'type' => 'out',
+                        //     'document_number' => $itemTransfer->transfer_code,
+                        //     'document_type' => 'item_transfer',
+                        //     'keterangan' => 'Keluar barang dari : '.
+                        //         $fromNamaGudang.
+                        //         ' menuju '.
+                        //         $toNamaGudang,
+                        //     'created_by' => Auth::id(),
+                        // ]);
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Mutation IN
+                        |--------------------------------------------------------------------------
+                        */
+                        // StockMutation::create([
+                        //     'data_barang_id' => $item['product_id'],
+                        //     'unit_id' => $item['unit_id'],
+                        //     'warehouse_id' => $r->to_warehouse_id,
+                        //     'date_stock' => Carbon::parse($r->transfer_date)->format('Y-m-d'),
+                        //     'qty_transaksi' => $qty,
+                        //     'total_base_qty' => $qty,
+                        //     'type' => 'in',
+                        //     'document_number' => $itemTransfer->transfer_code,
+                        //     'document_type' => 'item_transfer',
+                        //     'keterangan' => 'Masuk barang dari : '.
+                        //         $fromNamaGudang.
+                        //         ' menuju '.
+                        //         $toNamaGudang,
+                        //     'created_by' => Auth::id(),
+                        // ]);
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Stock Balance Gudang Asal
+                        |--------------------------------------------------------------------------
+                        */
+                        // StockBalance::updateOrCreate(
+                        //     [
+                        //         'product_id' => $item['product_id'],
+                        //         'warehouse_id' => $r->from_warehouse_id,
+                        //     ],
+                        //     [
+                        //         'qty' => 0,
+                        //     ]
+                        // );
+
+                        // StockBalance::where([
+                        //     'product_id' => $item['product_id'],
+                        //     'warehouse_id' => $r->from_warehouse_id,
+                        // ])->decrement('qty', $qty);
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Stock Balance Gudang Tujuan
+                        |--------------------------------------------------------------------------
+                        */
+                        // StockBalance::updateOrCreate(
+                        //     [
+                        //         'product_id' => $item['product_id'],
+                        //         'warehouse_id' => $r->to_warehouse_id,
+                        //     ],
+                        //     [
+                        //         'qty' => 0,
+                        //     ]
+                        // );
+
+                        // StockBalance::where([
+                        //     'product_id' => $item['product_id'],
+                        //     'warehouse_id' => $r->to_warehouse_id,
+                        // ])->increment('qty', $qty);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data updated successfully',
+                'redirect' => route('item-transfer.index'),
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengupdate data : '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -791,15 +1001,15 @@ class ItemTransferController extends Controller
     }
 
     public function realStock($productId, $warehouseId, $cutoffDate = null)
-{
-    $barang = Barang::findOrFail($productId);
+    {
+        $barang = Barang::findOrFail($productId);
 
-    return $barang->mutations()
-        ->where('warehouse_id', $warehouseId)
-        ->when($cutoffDate, function ($q) use ($cutoffDate) {
-            $q->whereDate('date_stock', '<=', $cutoffDate);
-        })
-        ->selectRaw("
+        return $barang->mutations()
+            ->where('warehouse_id', $warehouseId)
+            ->when($cutoffDate, function ($q) use ($cutoffDate) {
+                $q->whereDate('date_stock', '<=', $cutoffDate);
+            })
+            ->selectRaw("
             COALESCE(
                 SUM(
                     CASE
@@ -811,29 +1021,29 @@ class ItemTransferController extends Controller
                 0
             ) as total
         ")
-        ->value('total');
-}
+            ->value('total');
+    }
 
-public function getStock(Request $request)
-{
-    $request->validate([
-        'product_id'   => 'required|integer',
-        'warehouse_id' => 'required|integer',
-    ]);
+    public function getStock(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|integer',
+            'warehouse_id' => 'required|integer',
+        ]);
 
-    $stock = $this->realStock(
-        $request->product_id,
-        $request->warehouse_id,
-        $request->cutoff_date
-    );
+        $stock = $this->realStock(
+            $request->product_id,
+            $request->warehouse_id,
+            $request->cutoff_date
+        );
 
-    $barang = Barang::with('unitID')
-        ->find($request->product_id);
+        $barang = Barang::with('unitID')
+            ->find($request->product_id);
 
-    return response()->json([
-        'success' => true,
-        'stock'   => $stock,
-        'unit'    => $barang?->unitID?->detail ?? '',
-    ]);
-}
+        return response()->json([
+            'success' => true,
+            'stock' => $stock,
+            'unit' => $barang?->unitID?->detail ?? '',
+        ]);
+    }
 }

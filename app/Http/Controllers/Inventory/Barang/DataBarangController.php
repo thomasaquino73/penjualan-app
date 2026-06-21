@@ -57,9 +57,9 @@ class DataBarangController extends Controller
             $cutOffDate = Company::value('cut_off_date');
             // dd($cutOffDate);
             $query = Barang::query()
-            ->where('status', '<>', 0)
-            ->join('basic_code_detail as kategori', 'kategori.id', '=', 'data_barang.kategori_id')
-    ->addSelect('data_barang.*')
+                ->where('status', '<>', 0)
+                ->join('basic_code_detail as kategori', 'kategori.id', '=', 'data_barang.kategori_id')
+                ->addSelect('data_barang.*')
                 ->addSelect([
                     'current_stock' => StockMutation::query()
                         ->selectRaw("
@@ -87,7 +87,7 @@ class DataBarangController extends Controller
                     'kategoriID',
                     'unitID',
                     'brandID',
-                    'typeID'
+                    'typeID',
                 ])
                 ->orderBy('kategori.detail')
                 ->orderBy('nama_barang');
@@ -512,96 +512,96 @@ class DataBarangController extends Controller
     }
 
     public function show(string $id)
-{
-    $idDetail = Barang::with([
-        'variants',
-        'stockHistories.warehouseID',
-        'stockHistories.unitID',
-        'mutations.unitID',
-    ])->findOrFail($id);
+    {
+        $idDetail = Barang::with([
+            'variants',
+            'stockHistories.warehouseID',
+            'stockHistories.unitID',
+            'mutations.unitID',
+        ])->findOrFail($id);
 
-    $cutOffDate = Company::value('cut_off_date');
+        $cutOffDate = Company::value('cut_off_date');
 
-    /*
-    |--------------------------------------------------------------------------
-    | OPENING BALANCE
-    |--------------------------------------------------------------------------
-    */
-   $openingBalance = 0;
+        /*
+        |--------------------------------------------------------------------------
+        | OPENING BALANCE
+        |--------------------------------------------------------------------------
+        */
+        $openingBalance = 0;
 
-    /*
-    |--------------------------------------------------------------------------
-    | MUTASI SETELAH CUT OFF
-    |--------------------------------------------------------------------------
-    */
-    $mutations = $idDetail->mutations()
-        ->when($cutOffDate, function ($q) use ($cutOffDate) {
-            $q->whereDate('date_stock', '>=', $cutOffDate);
-        })
-        ->orderBy('date_stock')
-        ->orderBy('id')
-        ->get();
+        /*
+        |--------------------------------------------------------------------------
+        | MUTASI SETELAH CUT OFF
+        |--------------------------------------------------------------------------
+        */
+        $mutations = $idDetail->mutations()
+            ->when($cutOffDate, function ($q) use ($cutOffDate) {
+                $q->whereDate('date_stock', '>=', $cutOffDate);
+            })
+            ->orderBy('date_stock')
+            ->orderBy('id')
+            ->get();
 
-    /*
-    |--------------------------------------------------------------------------
-    | RUNNING BALANCE
-    |--------------------------------------------------------------------------
-    */
-    $saldo = $openingBalance;
+        /*
+        |--------------------------------------------------------------------------
+        | RUNNING BALANCE
+        |--------------------------------------------------------------------------
+        */
+        $saldo = $openingBalance;
 
-    foreach ($mutations as $mutation) {
+        foreach ($mutations as $mutation) {
 
-        if ($mutation->type == 'in') {
-            $saldo += $mutation->total_base_qty;
-        } else {
-            $saldo -= $mutation->total_base_qty;
+            if ($mutation->type == 'in') {
+                $saldo += $mutation->total_base_qty;
+            } else {
+                $saldo -= $mutation->total_base_qty;
+            }
+
+            $mutation->saldo_akhir = $saldo;
         }
 
-        $mutation->saldo_akhir = $saldo;
+        $currentStock = $saldo;
+
+        /*
+        |--------------------------------------------------------------------------
+        | UNIT CONVERSION
+        |--------------------------------------------------------------------------
+        */
+        $unitConversion = DataBarangConversion::where(
+            'data_barang_id',
+            $idDetail->id
+        )
+            ->where('qty', '>', 0)
+            ->get();
+
+        return view(
+            'inventory.barang.data_barang.data_barang_detail',
+            [
+                'title' => 'Detail Product',
+
+                'breadcrumb' => [
+                    [
+                        'label' => 'Product',
+                        'url' => route('data-barang.index'),
+                    ],
+                    [
+                        'label' => 'Detail Product',
+                        'url' => '',
+                    ],
+                ],
+
+                'detail' => $idDetail,
+                'mutations' => $mutations,
+                'unitConversion' => $unitConversion,
+                'stok' => $unitConversion,
+                'warehouseHistory' => $this->getWarehouse($idDetail->id),
+
+                'cutOffDate' => $cutOffDate,
+                'openingBalance' => $openingBalance,
+                'currentStock' => $currentStock,
+            ]
+        );
     }
-
-    $currentStock = $saldo;
-
-    /*
-    |--------------------------------------------------------------------------
-    | UNIT CONVERSION
-    |--------------------------------------------------------------------------
-    */
-    $unitConversion = DataBarangConversion::where(
-        'data_barang_id',
-        $idDetail->id
-    )
-        ->where('qty', '>', 0)
-        ->get();
-
-    return view(
-        'inventory.barang.data_barang.data_barang_detail',
-        [
-            'title' => 'Detail Product',
-
-            'breadcrumb' => [
-                [
-                    'label' => 'Product',
-                    'url' => route('data-barang.index'),
-                ],
-                [
-                    'label' => 'Detail Product',
-                    'url' => '',
-                ],
-            ],
-
-            'detail' => $idDetail,
-            'mutations' => $mutations,
-            'unitConversion' => $unitConversion,
-            'stok' => $unitConversion,
-            'warehouseHistory' => $this->getWarehouse($idDetail->id),
-
-            'cutOffDate' => $cutOffDate,
-            'openingBalance' => $openingBalance,
-            'currentStock' => $currentStock,
-        ]
-    );
-}
 
     private function getWarehouse($data_barang_id)
     {

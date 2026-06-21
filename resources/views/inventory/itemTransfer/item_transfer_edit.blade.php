@@ -106,12 +106,8 @@
                     </table>
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">
-                    <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
-                        <i class="fa fa-upload me-1"></i> Save and Close
-                    </button>
-
-                    <button type="submit" id="savedata" class="btn btn-success" data-save-and-new="true">
-                        <i class="fa fa-plus-circle me-1"></i> Save and Create New
+                    <button type="submit" id="savedata" class="btn btn-primary">
+                        <i class="fa fa-save me-1"></i> Update
                     </button>
                     <a href="{{ route('permintaan-pembelian.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>

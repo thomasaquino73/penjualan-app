@@ -23,7 +23,7 @@ class ItemTransferRequest extends FormRequest
      */
     public function rules()
     {
-        $id = $this->route('item-transfer');
+        $id = $this->route('item_transfer');
 
         return [
             'transfer_code' => [
