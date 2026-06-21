@@ -488,10 +488,10 @@ class DeliveryOrderController extends Controller
      public function create()
     {
         $x = [
-            'title' => 'Sales Order New',
+            'title' => 'Delivery Order New',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Sales Order', 'url' => ''],
+                ['label' => 'Delivery Order', 'url' => ''],
             ],
             'customer' => Customer::where('status', '<>', 0)->get(),
             'idNumber' => $this->generateNumberId(),

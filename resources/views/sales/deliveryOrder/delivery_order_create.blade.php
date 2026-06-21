@@ -262,31 +262,11 @@
                         data: "unit",
                         className: "text-center"
                     },
-                    {
-                        data: "unit_price",
-                        className: "text-end",
-                        render: function(data) {
-                            return parseFloat(data ?? 0).toLocaleString('id-ID', {
-                                minimumFractionDigits: 0
-                            });
-                        }
-                    },
-                    {
-                        data: "discount",
-                        className: "text-end",
-                        render: function(data) {
-                            return parseFloat(data ?? 0).toLocaleString('id-ID', {
-                                minimumFractionDigits: 0
-                            });
-                        }
-                    },
-                    {
-                        data: "amount",
-                        className: "text-end",
-                        render: function(data) {
-                            return `<strong>${parseFloat(data ?? 0).toLocaleString('id-ID', { minimumFractionDigits: 0 })}</strong>`;
-                        }
-                    },
+                    // {
+                    //     data: "warehouse_id",
+                    //     className: "text-center"
+                    // },
+
                 ],
                 layout: {
                     topStart: {
@@ -425,6 +405,129 @@
                 },
             });
 
+            $('#formPrDetail').on('submit', function(e) {
+                e.preventDefault();
+
+                let productId = $('#product_id').val();
+                let productName = $('#product_id option:selected').text();
+                let unitId = $('#unit_id').val();
+                let unitName = $('#unit_id option:selected').text();
+                let quantity = parseFloat($('#quantity').val()) || 0;
+                let availableStock = parseFloat($('#available_stok').val()) || 0;
+                let warehouseID = $('#warehouse_id').val();
+                let detailId = $('#detail_id').val();
+
+                // Validasi input wajib
+                if (!productId || quantity <= 0 || !unitId) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Please fill all required fields! (Product, Quantity, Unit)',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                }
+
+                // Validasi stok tersedia
+                if (quantity > availableStock) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Insufficient Stock!',
+                        html: `
+                Requested quantity <b>${quantity}</b> exceeds
+                available stock <b>${availableStock}</b>.
+                `,
+                        customClass: {
+                            confirmButton: 'btn btn-warning'
+                        },
+                        buttonsStyling: false
+                    });
+
+                    $('#quantity').focus();
+                    return false;
+                }
+
+                // Validasi Duplikasi Produk
+                let isDuplicate = false;
+
+                if (prDetailsData && prDetailsData.length > 0) {
+                    for (let i = 0; i < prDetailsData.length; i++) {
+
+                        if (prDetailsData[i].product_id == productId) {
+
+                            // Mode Create
+                            if (detailId === '') {
+                                isDuplicate = true;
+                                break;
+                            }
+
+                            // Mode Edit
+                            if (detailId !== '' && parseInt(i) !== parseInt(detailId)) {
+                                isDuplicate = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (isDuplicate) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Product Already Exists!',
+                        html: `The product <b>"${productName}"</b> is already registered in the list.`,
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+                    return false;
+                }
+
+                // Susun Object Data
+                let itemData = {
+                    product_id: productId,
+                    data_produk: productName,
+                    quantity: quantity,
+                    unit_id: unitId,
+                    unit: unitName,
+                    warehouse_id: warehouseID
+                };
+
+                // Create / Update
+                if (detailId === '') {
+                    prDetailsData.push(itemData);
+                } else {
+                    prDetailsData[detailId] = itemData;
+                }
+
+                // Refresh DataTable
+                table.clear();
+                table.rows.add(prDetailsData);
+                table.draw();
+
+                // Reset Form
+                $('#formPrDetail')[0].reset();
+                $('#detail_id').val('');
+                $('#product_id').val(null).trigger('change');
+                $('#unit_id').empty().trigger('change');
+                $('#available_stok').val('');
+
+                // Tutup Modal
+                $('#modalPrDetail').modal('hide');
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: detailId === '' ?
+                        'Item added successfully.' : 'Item updated successfully.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            });
+
             $('#customer_id').on('change', function() {
                 var customerId = $(this).val();
                 var contactDropdown = $('#customer_contact_id');
@@ -535,6 +638,94 @@
                 });
 
 
+            });
+
+            let saveAndNew = false;
+            let activeBtn = null;
+
+            $(document).on("click", '.card-footer button[type="submit"]', function() {
+                saveAndNew = $(this).data("save-and-new");
+                activeBtn = $(this);
+            });
+
+
+            $("#postForm").on("submit", function(e) {
+                e.preventDefault();
+
+                // 1. Tangkap tombol yang ditekan (lebih akurat)
+                let submitter = e.originalEvent.submitter;
+                let saveAndNew = $(submitter).data("save-and-new") === true;
+                let btnTextOriginal = $(submitter).html();
+
+                // 2. Validasi awal (Frontend)
+                if (typeof prDetailsData === "undefined" || prDetailsData.length === 0) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Empty Items",
+                        text: "Please add at least one item detail to the table before saving.",
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn btn-primary waves-effect waves-light",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return false;
+                }
+
+                let formData = new FormData(this);
+                formData.append("save_and_new", saveAndNew ? 1 : 0);
+                formData.append("items_detail", JSON.stringify(prDetailsData));
+
+                $.ajax({
+                    url: $(this).attr("action"),
+                    method: $(this).attr("method"),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    beforeSend: function() {
+                        $(submitter).html(
+                                '<i class="fa fa-spin fa-spinner me-1"></i> Processing...')
+                            .prop("disabled", true);
+                        $(".card-footer button").prop("disabled", true);
+                    },
+                    complete: function() {
+                        // Kembalikan teks asli ke tombol yang diklik
+                        // $(submitter).html(btnTextOriginal).prop("disabled", false);
+                        $(".card-footer button").prop("disabled", false);
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                                icon: "success",
+                                title: "Success",
+                                text: response.message,
+                                customClass: {
+                                    confirmButton: "btn btn-primary waves-effect waves-light",
+                                },
+                                buttonsStyling: false,
+                            })
+                            .then(() => {
+                                window.location.href = response.redirect;
+                            });
+                    },
+                    error: function(xhr) {
+                        resetValidation();
+                        let errors = xhr.responseJSON?.errors;
+                        $.each(errors, function(key, value) {
+                            displayFieldError(key, value[0]);
+                        });
+                        Swal.fire({
+                            icon: "error",
+                            title: "Failed",
+                            text: xhr.responseJSON?.message || "Error",
+                            customClass: {
+                                confirmButton: "btn btn-primary waves-effect waves-light",
+                            },
+                            buttonsStyling: false,
+                        });
+
+                    }
+                });
             });
         });
     </script>

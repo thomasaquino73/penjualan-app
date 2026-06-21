@@ -469,7 +469,7 @@
                         html: `
                 Requested quantity <b>${quantity}</b> exceeds
                 available stock <b>${availableStock}</b>.
-            `,
+                `,
                         customClass: {
                             confirmButton: 'btn btn-warning'
                         },

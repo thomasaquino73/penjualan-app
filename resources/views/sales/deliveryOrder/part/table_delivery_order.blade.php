@@ -6,9 +6,6 @@
                  <th>Item</th>
                  <th>Qty</th>
                  <th>Unit</th>
-                 <th>Unit Price</th>
-                 <th>Disc</th>
-                 <th>Amount</th>
              </tr>
          </thead>
      </table>
