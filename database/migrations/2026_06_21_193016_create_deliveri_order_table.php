@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('no_document')->nullable();
             $table->string('address')->nullable();
             $table->string('description')->nullable();
-            $table->unsignedBigInteger('contact_id')->nullable();
+            $table->unsignedBigInteger('customer_contact_id')->nullable();
             $table->string('fob_id')->nullable();
             $table->enum('status', [
                 'draft',

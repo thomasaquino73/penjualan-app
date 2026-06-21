@@ -90,21 +90,44 @@ class DashboardController extends Controller
     private function getTransaksiTerbanyak()
     {
         $year = now()->year;
-        $tableDetail = "purchase_order_detail_{$year}";
-        $tableHeader = "purchase_order_{$year}";
+        $tableDetail = "sales_order_detail_{$year}";
+        $tableHeader = "sales_order_{$year}";
 
-        return DB::table("{$tableDetail} as pod")->join("{$tableHeader} as po", 'po.id', '=', 'pod.purchase_order_id')->join('data_barang as b', 'b.id', '=', 'pod.product_id')->where('pod.active', 1)->whereMonth('po.datepo', now()->month)->whereYear('po.datepo', now()->year)->select('b.id as product_id', 'b.nama_barang', DB::raw('SUM(pod.qty) as total_qty'), DB::raw('COUNT(DISTINCT po.id) as total_transaksi'))->groupBy('b.id', 'b.nama_barang')->orderByDesc('total_qty')->limit(5)->get();
+        return DB::table("{$tableDetail} as pod")
+            ->join("{$tableHeader} as po", 'po.id', '=', 'pod.sales_order_id')
+            ->join('data_barang as b', 'b.id', '=', 'pod.product_id')
+            ->join('basic_code_detail as c', 'c.id', '=', 'b.unit_id')
+            ->where('pod.active', 1)
+            ->whereMonth('po.sales_order_date', now()->month)
+            ->whereYear('po.sales_order_date', now()->year)
+            ->select(
+                'b.id as product_id',
+                'b.nama_barang',
+                'b.photo_filename',
+                'c.detail as unit_name',
+                DB::raw('SUM(pod.qty) as total_qty'),
+                DB::raw('COUNT(DISTINCT po.id) as total_transaksi')
+            )
+            ->groupBy(
+                'b.id',
+                'b.nama_barang',
+                'b.photo_filename',
+                'c.detail'
+            )
+            ->orderByDesc('total_qty')
+            ->limit(5)
+            ->get();
     }
 
     private function getTotalTransactions()
     {
         $year = now()->year;
-        $table = "purchase_order_{$year}";
+        $table = "sales_order_{$year}";
 
         return DB::table($table)
             ->whereIn('status', ['approved', 'completed'])
-            ->whereMonth('datePO', now()->month)
-            ->whereYear('datePO', now()->year)
+            ->whereMonth('sales_order_date', now()->month)
+            ->whereYear('sales_order_date', now()->year)
             ->where('active', 1)
             ->count();
     }

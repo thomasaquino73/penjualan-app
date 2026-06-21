@@ -27,7 +27,7 @@
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
                     <button class="btn btn-success btn-sm " id="showModalpr">
-                        <i class="ti ti-clipboard me-1"></i>QUOTATION
+                        <i class="ti ti-clipboard me-1"></i>SALES ORDER
                     </button>
 
                 </div>
@@ -35,7 +35,7 @@
 
         </div>
         <div class="card-body table-responsive p-3">
-            <form action="{{ route('sales-order.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
+            <form action="{{ route('delivery-order.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
                 @csrf
                 <div class="row mb-5">
 

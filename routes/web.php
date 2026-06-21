@@ -299,6 +299,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/item-transfer/{id}/submit', [ItemTransferController::class, 'submitToPending'])->name('item-transfer.submit');
     Route::resource('item-transfer', ItemTransferController::class);
 
+    Route::post('/delivery-order/delete-multiple', [DeliveryOrderController::class, 'deleteMultiple']);
+    Route::post('/delivery-order/restore-multiple', [DeliveryOrderController::class, 'restoreMultiple']);
+    Route::put('/delivery-order/restore/{id}', [DeliveryOrderController::class, 'restore'])->name('delivery-order.restore');
     Route::get('/delivery-order/trash', [DeliveryOrderController::class, 'trash'])->name('delivery-order.trash');
     Route::resource('delivery-order', DeliveryOrderController::class);
 

@@ -404,7 +404,7 @@
                     <div class="card h-100">
                         <div class="card-header d-flex justify-content-between">
                             <div class="card-title m-0 me-2">
-                                <h5 class="m-0 me-2">Transactions</h5>
+                                <h5 class="m-0 me-2">Sales Transactions</h5>
                                 <small class="text-muted">Total {{ $TotalTransactions }} Transactions done in this
                                     Month</small>
                             </div>
@@ -425,7 +425,8 @@
                                 @foreach ($transaksiTerbanyak as $tranTer)
                                     <li class="d-flex mb-3 pb-1 align-items-center">
                                         <div class="badge bg-label-primary me-3 rounded p-2">
-                                            <i class="ti ti-shopping-cart ti-sm"></i>
+                                            <img src="{{ !empty($tranTer->photo_filename) ? asset($tranTer->photo_filename) : asset('image/no-images.jpg') }}"
+                                                alt="{{ $tranTer->nama_barang }}" width="50">
                                         </div>
 
                                         <div
@@ -433,13 +434,13 @@
                                             <div class="me-2">
                                                 <h6 class="mb-0">{{ $tranTer->nama_barang }}</h6>
                                                 <small class="text-muted d-block">
-                                                    {{ $tranTer->total_transaksi }} kali pembelian
+                                                    {{ $tranTer->total_transaksi }} kali penjualan
                                                 </small>
                                             </div>
 
                                             <div class="user-progress d-flex align-items-center gap-1">
                                                 <span class="badge bg-label-success">
-                                                    {{ number_format($tranTer->total_qty, 0) }} Qty
+                                                    {{ number_format($tranTer->total_qty, 0) }} {{ $tranTer->unit_name }}
                                                 </span>
                                             </div>
                                         </div>
