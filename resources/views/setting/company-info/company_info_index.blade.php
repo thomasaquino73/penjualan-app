@@ -92,7 +92,7 @@
                             <span class="text-danger error" id="mata_uangError"></span>
                         </div>
                         <div class="col-md-6 mb-3 ">
-                            <label>Cut Off Date<small>*</small></label>
+                            <label>Accounting Start Date<small>*</small></label>
                             <input type="text" name="cut_off_date" id="cut_off_date" class="form-control"
                                 value="{{ Carbon\Carbon::parse($dataSistem->cut_off_date)->format('d/m/Y') ?? 'Belum Diatur' }}"
                                 disabled>

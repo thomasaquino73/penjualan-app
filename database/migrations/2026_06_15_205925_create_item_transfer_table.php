@@ -17,10 +17,8 @@ return new class extends Migration
 
             $table->unsignedBigInteger('from_warehouse_id');
             $table->unsignedBigInteger('to_warehouse_id');
-
             $table->date('transfer_date');
             $table->string('description')->nullable();
-
             $table->enum('status', [
                 'draft',
                 'pending',
@@ -48,14 +46,10 @@ return new class extends Migration
 
         Schema::create('stock_balance', function (Blueprint $table) {
             $table->id();
-
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('warehouse_id');
-
             $table->decimal('qty', 15, 4)->default(0);
-
             $table->timestamps();
-
             $table->unique([
                 'product_id',
                 'warehouse_id',

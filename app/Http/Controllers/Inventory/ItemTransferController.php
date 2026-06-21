@@ -24,13 +24,13 @@ class ItemTransferController extends Controller
     {
         if ($r->ajax()) {
             $userId = Auth::user()->id;
-            $query = ItemTransfer::where('status', '<>', 0) ->where(function ($q) use ($userId) {
-                    $q->where('status', '<>', 'draft')
-                        ->orWhere(function ($subQ) use ($userId) {
-                            $subQ->where('status', 'draft')
-                                ->where('created_by', $userId);
-                        });
-                })
+            $query = ItemTransfer::where('status', '<>', 0)->where(function ($q) use ($userId) {
+                $q->where('status', '<>', 'draft')
+                    ->orWhere(function ($subQ) use ($userId) {
+                        $subQ->where('status', 'draft')
+                            ->where('created_by', $userId);
+                    });
+            })
                 ->orderby('transfer_code', 'desc');
 
             return DataTables::of($query)

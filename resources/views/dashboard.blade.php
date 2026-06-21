@@ -405,7 +405,8 @@
                         <div class="card-header d-flex justify-content-between">
                             <div class="card-title m-0 me-2">
                                 <h5 class="m-0 me-2">Transactions</h5>
-                                <small class="text-muted">Total 58 Transactions done in this Month</small>
+                                <small class="text-muted">Total {{ $TotalTransactions }} Transactions done in this
+                                    Month</small>
                             </div>
                             <div class="dropdown">
                                 <button class="btn p-0" type="button" id="transactionID" data-bs-toggle="dropdown"
@@ -421,21 +422,30 @@
                         </div>
                         <div class="card-body">
                             <ul class="p-0 m-0">
-                                <li class="d-flex mb-3 pb-1 align-items-center">
-                                    <div class="badge bg-label-primary me-3 rounded p-2">
-                                        <i class="ti ti-wallet ti-sm"></i>
-                                    </div>
-                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                        <div class="me-2">
-                                            <h6 class="mb-0">Wallet</h6>
-                                            <small class="text-muted d-block">Starbucks</small>
+                                @foreach ($transaksiTerbanyak as $tranTer)
+                                    <li class="d-flex mb-3 pb-1 align-items-center">
+                                        <div class="badge bg-label-primary me-3 rounded p-2">
+                                            <i class="ti ti-shopping-cart ti-sm"></i>
                                         </div>
-                                        <div class="user-progress d-flex align-items-center gap-1">
-                                            <h6 class="mb-0 text-danger">-$75</h6>
+
+                                        <div
+                                            class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                            <div class="me-2">
+                                                <h6 class="mb-0">{{ $tranTer->nama_barang }}</h6>
+                                                <small class="text-muted d-block">
+                                                    {{ $tranTer->total_transaksi }} kali pembelian
+                                                </small>
+                                            </div>
+
+                                            <div class="user-progress d-flex align-items-center gap-1">
+                                                <span class="badge bg-label-success">
+                                                    {{ number_format($tranTer->total_qty, 0) }} Qty
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                </li>
-                                <li class="d-flex mb-3 pb-1 align-items-center">
+                                    </li>
+                                @endforeach
+                                {{-- <li class="d-flex mb-3 pb-1 align-items-center">
                                     <div class="badge bg-label-success rounded me-3 p-2">
                                         <i class="ti ti-browser-check ti-sm"></i>
                                     </div>
@@ -518,7 +528,7 @@
                                             <h6 class="mb-0 text-danger">-$1290</h6>
                                         </div>
                                     </div>
-                                </li>
+                                </li> --}}
                             </ul>
                         </div>
                     </div>

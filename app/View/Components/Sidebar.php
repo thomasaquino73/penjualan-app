@@ -83,13 +83,7 @@ class Sidebar extends Component
                         'roles' => ['Super Admin'],
                         'permissions' => ['receive_item-browse'],
                     ],
-                    [
-                        'name' => 'Purchase Invoice',
-                        'route' => 'purchase-invoice.index',
-                        'pattern' => 'purchase-invoice.*',
-                        'roles' => ['Super Admin'],
-                        'permissions' => ['purchase_invoice-browse'],
-                    ],
+
                     // [
                     //     'name' => 'Purchase Payment',
                     //     'route' => 'customer.index',
@@ -104,6 +98,35 @@ class Sidebar extends Component
                     //     'roles' => ['Super Admin'],
                     //     'permissions' => ['barang-browse'],
                     // ],
+                ],
+            ],
+            [
+                'type' => 'dropdown',
+                'name' => 'PAYMENT',
+                'icon' => 'ti ti-file-invoice',
+                'roles' => ['Super Admin'],
+                'permissions' => [
+                    'permintaan_pembelian-browse',
+                    'purchase_order-browse',
+                    'receive_item-browse',
+                    'purchase_invoice-browse',
+                ],
+                'children' => [
+                    [
+                        'name' => 'Purchase Invoice',
+                        'route' => 'purchase-invoice.index',
+                        'pattern' => 'purchase-invoice.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['purchase_invoice-browse'],
+                    ],
+                    [
+                        'name' => 'Purchase Payment',
+                        'route' => 'purchase-invoice.index',
+                        'pattern' => 'purchase-invoice.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['purchase_invoice-browse'],
+                    ],
+
                 ],
             ],
             [
@@ -159,20 +182,6 @@ class Sidebar extends Component
                     ],
 
                     // [
-                    //     'name' => 'Proforma Invoice',
-                    //     'route' => 'customer.index',
-                    //     'pattern' => 'customer.*',
-                    //     'roles' => ['Super Admin'],
-                    //     'permissions' => ['barang-browse'],
-                    // ],
-                    // [
-                    //     'name' => 'Sales Invoice',
-                    //     'route' => 'customer.index',
-                    //     'pattern' => 'customer.*',
-                    //     'roles' => ['Super Admin'],
-                    //     'permissions' => ['barang-browse'],
-                    // ],
-                    // [
                     //     'name' => 'Customer Receipt',
                     //     'route' => 'customer.index',
                     //     'pattern' => 'customer.*',
@@ -189,14 +198,43 @@ class Sidebar extends Component
                 ],
             ],
             [
+                'type' => 'dropdown',
+                'name' => 'INVOICE',
+                'icon' => 'ti ti-file-invoice',
+                'roles' => ['Super Admin'],
+                'permissions' => [
+                    'permintaan_pembelian-browse',
+                    'purchase_order-browse',
+                    'receive_item-browse',
+                    'purchase_invoice-browse',
+                ],
+                'children' => [
+                    [
+                        'name' => 'Proforma Invoice',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['barang-browse'],
+                    ],
+                    [
+                        'name' => 'Sales Invoice',
+                        'route' => 'customer.index',
+                        'pattern' => 'customer.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['barang-browse'],
+                    ],
+
+                ],
+            ],
+            [
                 'type' => 'single',
                 'name' => 'Delivery Order',
-                'route' => 'user.index',
+                'route' => 'delivery-order.index',
                 'icon' => 'ti ti-truck-delivery',
-                'pattern' => 'user.*',
+                'pattern' => 'delivery-order.*',
                 'active' => true,
                 'roles' => ['Super Admin'],
-                'permissions' => ['user-browse'],
+                'permissions' => ['delivery_order-browse'],
             ],
             [
                 'type' => 'section',

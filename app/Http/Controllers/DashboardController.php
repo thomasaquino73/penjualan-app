@@ -14,12 +14,16 @@ class DashboardController extends Controller
         $data = User::query();
         $stats = $this->getUserStatistics($data);
         $minStock = $this->getMinimumStock();
+        $transaksiTerbanyak = $this->getTransaksiTerbanyak();
+        $TotalTransactions = $this->getTotalTransactions();
         $x = [
             'totalUsers' => $stats['totalUsers'],
             'totalActive' => $stats['totalActive'],
             'totalVerified' => $stats['totalVerified'],
             'totalLogin' => $stats['totalLogin'],
             'minStock' => $minStock,
+            'transaksiTerbanyak' => $transaksiTerbanyak,
+            'TotalTransactions' => $TotalTransactions,
         ];
 
         return view('dashboard', $x);
@@ -81,5 +85,27 @@ class DashboardController extends Controller
             ->orderBy('current_stock')
             ->limit(10)
             ->get();
+    }
+
+    private function getTransaksiTerbanyak()
+    {
+        $year = now()->year;
+        $tableDetail = "purchase_order_detail_{$year}";
+        $tableHeader = "purchase_order_{$year}";
+
+        return DB::table("{$tableDetail} as pod")->join("{$tableHeader} as po", 'po.id', '=', 'pod.purchase_order_id')->join('data_barang as b', 'b.id', '=', 'pod.product_id')->where('pod.active', 1)->whereMonth('po.datepo', now()->month)->whereYear('po.datepo', now()->year)->select('b.id as product_id', 'b.nama_barang', DB::raw('SUM(pod.qty) as total_qty'), DB::raw('COUNT(DISTINCT po.id) as total_transaksi'))->groupBy('b.id', 'b.nama_barang')->orderByDesc('total_qty')->limit(5)->get();
+    }
+
+    private function getTotalTransactions()
+    {
+        $year = now()->year;
+        $table = "purchase_order_{$year}";
+
+        return DB::table($table)
+            ->whereIn('status', ['approved', 'completed'])
+            ->whereMonth('datePO', now()->month)
+            ->whereYear('datePO', now()->year)
+            ->where('active', 1)
+            ->count();
     }
 }

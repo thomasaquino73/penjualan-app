@@ -20,6 +20,7 @@ use App\Http\Controllers\Purchase\Supplier\KategoriSupplierController;
 use App\Http\Controllers\Purchase\Supplier\SupplierController;
 use App\Http\Controllers\Sales\Customer\CustomerController;
 use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
+use App\Http\Controllers\Sales\DeliveryOrderController;
 use App\Http\Controllers\Sales\SalesOrderController;
 use App\Http\Controllers\Sales\SalesQuotationController;
 use App\Http\Controllers\Setting\CashBankController;
@@ -297,7 +298,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/item-transfer/print/{id}', [ItemTransferController::class, 'print'])->name('item-transfer.print');
     Route::post('/item-transfer/{id}/submit', [ItemTransferController::class, 'submitToPending'])->name('item-transfer.submit');
     Route::resource('item-transfer', ItemTransferController::class);
-});
+
+    Route::resource('delivery-order', DeliveryOrderController::class);
+
+    });
 
 Route::fallback(function () {
     Log::warning('Fallback route triggered', [

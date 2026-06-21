@@ -107,7 +107,7 @@
                                 <span class="text-danger error" id="mata_uang_idError"></span>
                             </div>
                             <div class="col-md-6 mb-3 ">
-                                <label>Cut Off Date<small>*</small></label>
+                                <label>Accounting Start Date<small>*</small></label>
                                 <input type="text" name="cut_off_date" id="cut_off_date" class="form-control"
                                     value="{{ $dataSistem->cut_off_date }}">
                                 <span class="text-danger error" id="cut_off_dateError"></span>
