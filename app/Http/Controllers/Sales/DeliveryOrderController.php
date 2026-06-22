@@ -10,6 +10,7 @@ use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
 use App\Models\Sales\DeliveryOrder;
 use App\Models\Sales\DeliveryOrderDetail;
+use App\Models\Sales\SalesOrder;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
@@ -254,7 +255,7 @@ class DeliveryOrderController extends Controller
                                     data-id="'.$row->id.'">
 
                                     <i class="ti ti-send me-1"></i>
-                                    Send To Approval
+                                    Processing DO
                                 </a>
                             ';
                         }
@@ -267,7 +268,7 @@ class DeliveryOrderController extends Controller
 
                             $btn .= '
                                 <a class="dropdown-item"
-                                    href="'.route('sales-order.edit', $row->id).'">
+                                    href="'.route('delivery-order.edit', $row->id).'">
 
                                     <i class="far fa-edit me-1"></i>
                                     Edit
@@ -315,7 +316,7 @@ class DeliveryOrderController extends Controller
                                         data-id="'.$row->id.'">
 
                                         <i class="ti ti-check me-1"></i>
-                                        Approve 
+                                        Approve
                                     </a>
                                 ';
 
@@ -326,7 +327,7 @@ class DeliveryOrderController extends Controller
                                         data-id="'.$row->id.'">
 
                                         <i class="ti ti-x me-1"></i>
-                                        Reject 
+                                        Reject
                                     </a>
                                 ';
                         }
@@ -368,7 +369,7 @@ class DeliveryOrderController extends Controller
 
                         $btn .= '
             <a class="dropdown-item text-primary"
-                href="'.route('sales-order.receive', $row->id).'">
+                href="'.route('delivery-order.receive', $row->id).'">
 
                 <i class="ti ti-package-import me-1"></i>
                 Receive Item
@@ -392,7 +393,7 @@ class DeliveryOrderController extends Controller
                 data-id="'.$row->id.'">
 
                 <i class="ti ti-circle-x me-1"></i>
-                Cancel 
+                Cancel
             </a>
         ';
                     }
@@ -411,7 +412,7 @@ class DeliveryOrderController extends Controller
                     $btn .= '
         <a class="dropdown-item"
             target="_blank"
-            href="'.route('sales-order.print', $row->id).'">
+            href="'.route('delivery-order.print', $row->id).'">
 
             <i class="ti ti-printer me-1"></i>
             Print / PDF
@@ -652,7 +653,23 @@ class DeliveryOrderController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $deliveryOrder = DeliveryOrder::findOrFail($id);
+        $x = [
+            'title' => 'Delivery Order New',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Delivery Order', 'url' => ''],
+            ],
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'idNumber' => $this->generateNumberId(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'warehouse' => Warehouse::where('status', '<>', 0)->get(),
+            'shipping' => Shipping::where('status', 1)->get(),
+            'fob' => BasicCodeDetail::where('master_id', 7)->get(),
+            'model' => $deliveryOrder,
+        ];
+
+        return view('sales.deliveryOrder.delivery_order_edit', $x);
     }
 
     /**
@@ -774,7 +791,7 @@ class DeliveryOrderController extends Controller
                 ->addColumn('customer', function ($row) {
                     return $row->customerID->nama_customer ?? 'N/A';
                 })
-               
+
                 ->addColumn('cekbok', function ($row) {
 
                     if (
@@ -1083,5 +1100,20 @@ class DeliveryOrderController extends Controller
                 'message' => 'Gagal merestore data: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+     public function getProcessingData(Request $request)
+    {
+        $orders = SalesOrder::with([
+            'details' => function ($query) {
+                $query->whereColumn('so_qty', '<', 'qty');
+            },
+        ])
+            ->where('customer_id', $request->customer_id)
+        // ->whereNotIn('status', ['draft', 'closed', 'completed'])
+            ->whereIn('status', ['approved', 'partial'])
+            ->get();
+
+        return response()->json($orders);
     }
 }

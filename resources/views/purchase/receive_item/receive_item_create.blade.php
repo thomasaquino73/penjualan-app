@@ -248,7 +248,7 @@
             const expectedPicker = flatpickr("#tanggal_kirim", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                minDate: "today",
+                // minDate: "today",
 
                 onChange: function(selectedDates, dateStr) {
                     if (selectedDates.length > 0) {

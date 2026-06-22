@@ -487,14 +487,14 @@
             const datePicker = flatpickr("#datePO", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                minDate: "today",
+                // minDate: "today",
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
             });
 
             const expectedPicker = flatpickr("#tanggal_kirim", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                minDate: "today",
+                // minDate: "today",
 
                 onChange: function(selectedDates, dateStr) {
                     if (selectedDates.length > 0) {

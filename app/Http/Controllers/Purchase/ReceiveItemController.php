@@ -382,7 +382,8 @@ class ReceiveItemController extends Controller
                         $totalRequested = $allDetails->sum('qty');
                         $totalOrdered = $allDetails->sum('received_qty');
 
-                        $newStatus = ($totalOrdered >= $totalRequested) ? 'closed' : (($totalOrdered > 0) ? 'partial' : 'processing');
+                        // $newStatus = ($totalOrdered >= $totalRequested) ? 'closed' : (($totalOrdered > 0) ? 'partial' : 'processing');
+                        $newStatus = ($totalOrdered >= $totalRequested) ? 'completed' : (($totalOrdered > 0) ? 'partial' : 'processing');
 
                         DB::table("purchase_order_{$currentYear}")
                             ->where('id', $prId)

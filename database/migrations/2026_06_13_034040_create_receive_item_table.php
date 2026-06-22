@@ -23,9 +23,9 @@ return new class extends Migration
             $table->string('no_dokumen')->nullable();
             $table->string('address')->nullable();
             $table->string('description')->nullable();
-            $table->dateTime('tanggal_kirim');
-            $table->unsignedBigInteger('shipping_id');
-            $table->string('fob_id');
+            $table->dateTime('tanggal_kirim')->nullable();
+            $table->unsignedBigInteger('shipping_id')->nullable();
+            $table->string('fob_id')->nullable();
             $table->decimal('sub_total', 18, 2)->default(0)->nullable();
             $table->decimal('disc_percent', 5, 2)->default(0)->nullable();
             $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();

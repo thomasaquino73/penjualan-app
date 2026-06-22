@@ -41,6 +41,7 @@ return new class extends Migration
          Schema::create("delivery_order_detail_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('delivery_order_id');
+            $table->unsignedBigInteger('sales_order_detail_id');
             $table->unsignedBigInteger('data_barang_id');
             $table->unsignedBigInteger('unit_id');
             $table->unsignedBigInteger('warehouse_id');

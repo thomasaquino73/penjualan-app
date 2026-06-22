@@ -268,7 +268,7 @@ class PurchaseOrderController extends Controller
                         // EDIT
                         if (
                             $user->can('purchase_order-edit') &&
-                            in_array($row->status, ['draft', 'rejected'])
+                            in_array($row->status, ['draft', 'rejected', 'pending'])
                         ) {
 
                             $btn .= '

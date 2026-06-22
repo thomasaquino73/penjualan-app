@@ -100,6 +100,7 @@ class DashboardController extends Controller
             ->where('pod.active', 1)
             ->whereMonth('po.sales_order_date', now()->month)
             ->whereYear('po.sales_order_date', now()->year)
+            ->whereIn('po.status', ['approved', 'completed'])
             ->select(
                 'b.id as product_id',
                 'b.nama_barang',

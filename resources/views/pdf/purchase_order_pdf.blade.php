@@ -358,25 +358,30 @@
                     <tr>
                         <td>Sub Total</td>
                         <td class="text-right">
-                            {{ isset($model) ? number_format($model->sub_total, 2, ',', '.') : '' }}</td>
-                    </tr>
-                    <tr>
-                        <td>Diskon</td>
-                        <td class="text-right">0</td>
-                    </tr>
-                    <tr>
-                        <td>PPN (11%)</td>
-                        <td class="text-right">{{ isset($model) ? number_format($model->ppn, 0, ',', '.') : '28.133' }}
+                            {{ isset($model) ? format_uang(convert_currency($model->sub_total, $detail->currency_id ?? 1)) : '' }}
                         </td>
                     </tr>
                     <tr>
+                        <td>Diskon</td>
+                        <td class="text-right">
+                            {{ isset($model) ? format_uang(convert_currency($model->disc_nominal, $detail->currency_id ?? 1)) : '' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>PPN (11%)</td>
+                        <td class="text-right">
+                            {{ isset($model) ? format_uang(convert_currency($model->ppn, $detail->currency_id ?? 1)) : '' }}
+                        </td>
+                    </tr>
+                    {{-- <tr>
                         <td>Biaya Lain-lain</td>
                         <td class="text-right">0</td>
-                    </tr>
+                    </tr> --}}
                     <tr class="total-row">
                         <td>Total</td>
                         <td class="text-right">
-                            {{ isset($model) ? number_format($model->total, 2, ',', '.') : '283.885,35' }}</td>
+                            {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1)) : '' }}
+                        </td>
                     </tr>
                 </table>
             </td>

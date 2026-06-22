@@ -488,14 +488,14 @@
             const datePicker = flatpickr("#datePO", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                minDate: "today",
+                // minDate: "today",
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
             });
 
             const expectedPicker = flatpickr("#tanggal_kirim", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                minDate: "today",
+                // minDate: "today",
 
                 onChange: function(selectedDates, dateStr) {
                     if (selectedDates.length > 0) {
@@ -1042,7 +1042,7 @@
                 } else {
                     // --- CARA B: AMBIL DARI PR & EDIT DATA ---
                     // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
-                    // Properti bawaan PR seperti 'requisition_code' & 'purchase_requisition_detail_id' 
+                    // Properti bawaan PR seperti 'requisition_code' & 'purchase_requisition_detail_id'
                     // akan otomatis aman dan dipertahankan.
                     prDetailsData[detailId] = {
                         ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)
