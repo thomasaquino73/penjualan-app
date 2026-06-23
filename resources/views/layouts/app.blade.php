@@ -37,7 +37,7 @@
                                     <script>
                                         document.write(new Date().getFullYear());
                                     </script>
-                                    , {{ $aplikasi }}, by
+                                    , {{ $aplikasi }}, Powered by
                                     <a href="https://www.thomasaquino.my.id" target="_blank"
                                         class="footer-link text-primary fw-medium">Thomas Aquino</a>
                                 </div>

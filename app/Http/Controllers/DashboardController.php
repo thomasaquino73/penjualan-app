@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
@@ -23,6 +24,8 @@ class DashboardController extends Controller
             $brandLabels = ['No Data'];
             $brandValues = [0];
         }
+        $brandName = BasicCodeDetail::where('master_id',11)->orderby('detail','asc')->get();
+
         $x = [
             'totalUsers' => $stats['totalUsers'],
             'totalActive' => $stats['totalActive'],
@@ -34,6 +37,7 @@ class DashboardController extends Controller
             'popularBrands' => $popularBrands,
             'brandLabels' => $brandLabels,
             'brandValues' => $brandValues,
+            'brandName' => $brandName,
         ];
 
         return view('dashboard', $x);

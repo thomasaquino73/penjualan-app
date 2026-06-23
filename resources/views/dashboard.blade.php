@@ -68,7 +68,7 @@
     <div class="row">
         <div class="col-xl-4 col-md-6 mb-4">
             <div class="row">
-                <div class="col-xl-6 mb-4 col-md-3 col-6">
+                <div class="col-xl-12 mb-4 col-md-3 col-6">
                     <div class="card h-100">
 
                         <div class="card-header pb-0">
@@ -91,22 +91,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-6 mb-4 col-md-3 col-6">
-                    <div class="card">
-                        <div class="card-header pb-0">
-                            <h5 class="card-title mb-0">Profit</h5>
-                            <small class="text-muted">Last Month</small>
-                        </div>
-                        <div class="card-body">
-                            <div id="profitChart"></div>
 
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <h4 class="mb-0">624k</h4>
-                                <small class="text-success">+8.24%</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <div class="col-xl-12 mb-4 col-md-6">
                     <div class="card">
                         <div class="card-body">
@@ -141,10 +126,9 @@
                                                     <clipPath id="forecastMaskz8gle1gxf"></clipPath>
                                                     <clipPath id="nonForecastMaskz8gle1gxf"></clipPath>
                                                     <clipPath id="gridRectMarkerMaskz8gle1gxf">
-                                                        <rect id="SvgjsRect2023" width="222" height="167" x="-2"
-                                                            y="-2" rx="0" ry="0" opacity="1"
-                                                            stroke-width="0" stroke="none" stroke-dasharray="0"
-                                                            fill="#fff"></rect>
+                                                        <rect id="SvgjsRect2023" width="222" height="167" x="-2" y="-2"
+                                                            rx="0" ry="0" opacity="1" stroke-width="0"
+                                                            stroke="none" stroke-dasharray="0" fill="#fff"></rect>
                                                     </clipPath>
                                                 </defs>
                                                 <g id="SvgjsG2024" class="apexcharts-pie">
@@ -661,7 +645,61 @@
             </div>
         </div>
     </div>
+    <div class="marquee-container">
+        <div class="marquee-text" id="content">
+            @foreach ($brandName as $bn)
+                <span class="brand-item">{{ $bn->detail }} </span>
+            @endforeach
+            @foreach ($brandName as $bn)
+                <span class="brand-item">{{ $bn->detail }} </span>
+            @endforeach
+        </div>
+    </div>
 @endsection
+@push('style')
+    <style>
+        .marquee-container {
+            width: 100%;
+            overflow: hidden;
+            background-color: #FFFAF3;
+            padding: 20px 0;
+            /* Tambahkan ini agar aman */
+            position: relative;
+        }
+
+        .marquee-text {
+            white-space: nowrap;
+            display: inline-block;
+            /* Durasi bisa diatur: makin besar angkanya, makin lambat gerakannya */
+            animation: move-text 30s linear infinite;
+        }
+
+        .brand-item {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0A2947;
+            text-transform: uppercase;
+            /* Menambahkan margin kanan agar setiap brand punya jarak */
+            margin-right: 50px;
+            /* Menambahkan transparansi 50% */
+            opacity: 0.5;
+
+            /* Opsi tambahan: Agar transisi saat hover lebih halus */
+            transition: opacity 0.3s ease;
+        }
+
+        @keyframes move-text {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                /* Dengan duplikasi konten, -50% akan membuat loop terlihat sempurna */
+                transform: translateX(-50%);
+            }
+        }
+    </style>
+@endpush
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
@@ -709,7 +747,7 @@
                 series: values,
                 chart: {
                     type: 'donut',
-                    height: 300
+                    height: 100
                 },
                 labels: labels,
 
