@@ -196,6 +196,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('permissions', PermissionsController::class);
 
     Route::prefix('user')->name('user.')->group(function () {
+    Route::get('/cetak-kartu/{id}', [UserController::class, 'cetak'])->name('cetak.kartu');
         Route::get('/', [UserController::class, 'index'])->name('index');
         Route::get('/create', [UserController::class, 'create'])->name('create');
         Route::post('/store', [UserController::class, 'store'])->name('store');

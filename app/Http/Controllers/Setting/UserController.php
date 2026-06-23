@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Setting;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PenggunaRequest;
+use App\Models\PengaturanSistem;
+use App\Models\Setting\Company;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -87,7 +90,7 @@ class UserController extends Controller
                     if ($row->avatar) {
                         $avatarUrl = asset($row->avatar);
                     } else {
-                        $avatarUrl = $row->gender == 'Perempuan'
+                        $avatarUrl = $row->gender == 'Female'
                             ? asset('image/foto_user/avatar_women.png')
                             : asset('image/foto_user/avatar_user_default.png');
                     }
@@ -155,7 +158,7 @@ class UserController extends Controller
                     if (auth()->user()->can('user-read')) {
                         $btn .= '
                             <a class="dropdown-item has-icon" href="'.route('user.show', $row->id).'">
-                                <i class="far fa-eye"></i> Detail
+                                 <i class="ti ti-list-details"></i> Detail
                             </a>
                         ';
                     }
@@ -521,5 +524,32 @@ class UserController extends Controller
                 'message' => 'User berhasil dikembalikan.',
             ]);
         }
+    }
+
+    public function cetak($id)
+    {
+        $user = User::where('id', $id)->first();
+         $company = Company::first();
+        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+        $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+            }
+        }
+
+        $data = [
+            'user' => $user,
+            'company' => $company,
+            'logoBase64' => $logoBase64,
+        ];
+
+        $pdf = Pdf::loadView('setting.user.kartu_anggota', $data)
+            ->setPaper([0, 0, 242.65, 153.07]);
+
+        return $pdf->stream('user-kartu-anggota.pdf');
     }
 }

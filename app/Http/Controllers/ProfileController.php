@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PasswordRequest;
 use App\Models\PengaturanSistem;
+use App\Models\Setting\Company;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -102,11 +103,22 @@ class ProfileController extends Controller
     public function cetak($id)
     {
         $user = User::where('id', $id)->first();
-        $company = PengaturanSistem::find(1);
+          $company = Company::first();
+        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+        $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+            }
+        }
 
         $data = [
             'user' => $user,
             'company' => $company,
+             'logoBase64' => $logoBase64,
         ];
 
         $pdf = Pdf::loadView('profile.kartu_anggota', $data)

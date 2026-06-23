@@ -28,9 +28,15 @@
                     </div>
                     <div class="user-profile-header d-flex flex-column flex-sm-row text-sm-start text-center mb-4">
                         <div class="flex-shrink-0 mt-n2 mx-sm-0 mx-auto">
-                            <img src="{{ $user->avatar ? asset($user->avatar) : asset('image/foto_user/avatar_user_default.png') }}"
-                                alt="{{ $user->fullname ?? 'User Avatar' }}"
-                                class="d-block h-auto ms-0 ms-sm-4 rounded user-profile-img" />
+                            @if ($user->gender == 'Male')
+                                <img src="{{ $user->avatar ? asset($user->avatar) : asset('image/foto_user/avatar_user_default.png') }}"
+                                    alt="{{ $user->fullname ?? 'User Avatar' }}"
+                                    class="d-block h-auto ms-0 ms-sm-4 rounded user-profile-img" />
+                            @else
+                                <img src="{{ $user->avatar ? asset($user->avatar) : asset('image/foto_user/avatar_women.png') }}"
+                                    alt="{{ $user->fullname ?? 'User Avatar' }}"
+                                    class="d-block h-auto ms-0 ms-sm-4 rounded user-profile-img" />
+                            @endif
                         </div>
                         <div class="flex-grow-1 mt-3 mt-sm-5">
                             <div

@@ -122,7 +122,6 @@
         <div class="nama ">
             {{ $user->no_ID }}
         </div>
-
         @if ($user->gender == 'Male')
             <img src="{{ $user->avatar ? asset($user->avatar) : asset('image/foto_user/avatar_user_default.png') }}"
                 alt="{{ $user->fullname ?? 'User Avatar' }}"
@@ -132,6 +131,7 @@
                 alt="{{ $user->fullname ?? 'User Avatar' }}"
                 class="d-block h-auto ms-0 ms-sm-4 rounded user-profile-img" />
         @endif
+
 
         <div class="barcode">
             {!! DNS1D::getBarcodeHTML($user->no_ID, 'C128', 1.4, 35) !!}

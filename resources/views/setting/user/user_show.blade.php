@@ -25,20 +25,27 @@
                 </div>
                 <div class="user-profile-header d-flex flex-column flex-sm-row text-sm-start text-center mb-4">
                     <div class="flex-shrink-0 mt-n2 mx-sm-0 mx-auto">
-                        <img src="{{ Auth::user()->avatar ? asset(Auth::user()->avatar) : asset('image/foto_user/avatar_user_default.png') }}"
-                            alt="{{ Auth::user()->fullname ?? 'User Avatar' }}"
-                            class="d-block h-auto ms-0 ms-sm-4 rounded user-profile-img" />
+                        @if ($user->gender == 'Male')
+                            <img src="{{ $user->avatar ? asset($user->avatar) : asset('image/foto_user/avatar_user_default.png') }}"
+                                alt="{{ $user->fullname ?? 'User Avatar' }}"
+                                class="d-block h-auto ms-0 ms-sm-4 rounded user-profile-img" />
+                        @else
+                            <img src="{{ $user->avatar ? asset($user->avatar) : asset('image/foto_user/avatar_women.png') }}"
+                                alt="{{ $user->fullname ?? 'User Avatar' }}"
+                                class="d-block h-auto ms-0 ms-sm-4 rounded user-profile-img" />
+                        @endif
+
                     </div>
                     <div class="flex-grow-1 mt-3 mt-sm-5">
                         <div
                             class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-4 flex-md-row flex-column gap-4">
                             <div class="user-profile-info">
-                                <h4>{{ Auth::user()->fullname }}</h4>
+                                <h4>{{ $user->fullname }}</h4>
                                 <ul
                                     class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-2">
                                     <li class="list-inline-item d-flex gap-1">
                                         <i class="ti ti-color-swatch"></i>
-                                        @foreach (Auth::user()->getRoleNames() as $role)
+                                        @foreach ($user->getRoleNames() as $role)
                                             {{ $role }}
                                             @if (!$loop->last)
                                                 |
@@ -55,7 +62,7 @@
                                     <i class="ti ti-chevron-left me-1"></i>Back
                                 </a>
 
-                                <a href="{{ route('cetak.kartu', Auth::user()->id) }}" target="_blank"
+                                <a href="{{ route('user.cetak.kartu', $user->id) }}" target="_blank"
                                     class="btn btn-primary">
                                     <i class="ti ti-id-badge-2 me-1"></i>Cetak Kartu
                                 </a>
@@ -128,7 +135,7 @@
                         <li class="d-flex align-items-center mb-3">
                             <i class="ti ti-crown text-heading"></i><span class="fw-medium mx-2 text-heading">Roles:</span>
                             <span>
-                                @foreach (Auth::user()->getRoleNames() as $role)
+                                @foreach ($user->getRoleNames() as $role)
                                     {{ $role }}
                                     @if (!$loop->last)
                                         |
