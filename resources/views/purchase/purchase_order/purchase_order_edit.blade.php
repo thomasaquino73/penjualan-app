@@ -121,6 +121,7 @@
                                                 <th>Unit Price</th>
                                                 <th>Disc</th>
                                                 <th>Amount</th>
+                                                <th>Warehouse</th>
                                             </tr>
                                         </thead>
                                     </table>
@@ -641,6 +642,8 @@
                         'quantity': '{{ $detail['quantity'] }}',
                         'unit_id': '{{ $detail['unit_id'] }}',
                         'unit': '{{ $detail['unit'] }}',
+                        'warehouse_id': '{{ $detail['warehouse_id'] }}',
+                        'warehouse': '{{ $detail['warehouse'] }}',
                         'unit_price': '{{ $detail['unit_price'] }}',
                         'discount': '{{ $detail['discount'] }}',
                         'amount': '{{ $detail['amount'] }}',
@@ -752,6 +755,10 @@
                             return `<strong>${parseFloat(data ?? 0).toLocaleString('id-ID', { minimumFractionDigits: 0 })}</strong>`;
                         }
                     },
+                    {
+                        data: "warehouse",
+                        className: "text-center"
+                    },
                 ],
                 layout: {
                     topStart: {
@@ -845,6 +852,8 @@
 
                                     // Trigger Product untuk memuat daftar unit via AJAX
                                     $("#product_id").val(data.product_id).trigger("change.select2");
+                                    $("#warehouse_id").val(data.warehouse_id).trigger(
+                                        "change.select2");
 
                                     // Delay untuk menunggu respons AJAX produk selesai
                                     setTimeout(function() {
@@ -935,6 +944,8 @@
                 let qtyInput = parseFloat($("#quantity").val() || 0);
                 let unitId = $("#unit_id").val();
                 let unitName = $("#unit_id option:selected").text();
+                let warehouseId = $("#warehouse_id").val();
+                let warehouseName = $("#warehouse_id option:selected").text();
                 let unitPrice = parseFloat($("#unit_price").val() || 0);
                 let discount = parseFloat($("#discount").val() || 0);
                 let tax = parseFloat($("#tax").val() || 0);
@@ -971,6 +982,8 @@
                     quantity: qtyInput,
                     unit_id: unitId,
                     unit: unitName,
+                    warehouse_id: warehouseId,
+                    warehouse: warehouseName,
                     unit_price: unitPrice,
                     discount: discount,
                     tax: tax,

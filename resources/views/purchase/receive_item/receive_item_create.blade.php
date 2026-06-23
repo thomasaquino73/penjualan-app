@@ -384,6 +384,7 @@
 
                                     $("#formPrDetail")[0].reset();
                                     $("#detail_id").val("");
+                                    $("#warehouse_id").val("").trigger("change");
 
                                     if ($.fn.select2) {
                                         $("#product_id").val("").trigger("change");
@@ -429,6 +430,7 @@
                                     $("#quantity").val(data.quantity);
                                     $("#unit_id").data("pending-val", data.unit_id);
                                     $("#product_id").val(data.product_id).trigger("change");
+                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
                                     // $("#unit_price").val(data.unit_price);
                                     // $("#discount").val(data.discount || 0);
                                     // $("#tax").val(data.tax || 0);
@@ -1018,9 +1020,10 @@
                                             sisa_pr: sisaPr,
                                             unit_id: item.unit_id,
                                             unit: item.unit_name,
-                                            warehouse_id: null,
-                                            warehouse: '-', // Sesuaikan dengan controller Anda
-
+                                            warehouse_id: item
+                                                .warehouse_id,
+                                            warehouse: item
+                                                .nama_gudang,
                                             quotation_code: item
                                                 .quotation_code
                                         });

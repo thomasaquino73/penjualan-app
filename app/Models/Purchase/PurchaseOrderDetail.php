@@ -4,6 +4,7 @@ namespace App\Models\Purchase;
 
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
+use App\Models\Inventory\Warehouse;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -44,6 +45,12 @@ class PurchaseOrderDetail extends Model
         // Sesuaikan nama class Unit dengan model master unit Anda
         return $this->belongsTo(BasicCodeDetail::class, 'unit_id', 'id');
     }
+
+    public function warehouseID()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id', 'id');
+    }
+
 
     public function purchaseOrder()
     {

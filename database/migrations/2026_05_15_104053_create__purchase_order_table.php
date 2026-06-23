@@ -59,6 +59,7 @@ return new class extends Migration
             $table->bigInteger('product_id');
             $table->decimal('qty', 18, 4);
             $table->bigInteger('unit_id');
+            $table->unsignedBigInteger('warehouse_id');
             $table->decimal('unit_price', 15, 2);
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('amount', 15, 2);

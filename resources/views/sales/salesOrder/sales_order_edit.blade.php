@@ -589,6 +589,8 @@
 
                                     // Trigger Product untuk memuat daftar unit via AJAX
                                     $("#product_id").val(data.product_id).trigger("change.select2");
+                                    $("#warehouse_id").val(data.warehouse_id).trigger(
+                                        "change.select2");
 
                                     // Delay untuk menunggu respons AJAX produk selesai
                                     setTimeout(function() {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseOrderRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
+use App\Models\Inventory\Warehouse;
 use App\Models\Purchase\PurchaseOrder;
 use App\Models\Purchase\PurchaseOrderDetail;
 use App\Models\Purchase\PurchaseRequisition;
@@ -524,6 +525,7 @@ class PurchaseOrderController extends Controller
             'company' => Company::first(),
             'idNumber' => $this->generateNumberId(),
             'shipping' => Shipping::where('status', 1)->get(),
+            'warehouse' => Warehouse::where('status', 1)->get(),
             'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
@@ -618,6 +620,7 @@ class PurchaseOrderController extends Controller
                             'qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
                             'unit_price' => $unitPrice,
+                            'warehouse_id' => $item['warehouse_id'],
                             'discount' => $discount,
                             'amount' => $item['amount'] ?? $amount,
                             'active' => 1,
@@ -706,6 +709,7 @@ class PurchaseOrderController extends Controller
             'purchaseRequisition',
             'details.produkID',
             'details.unitID',
+            'details.warehouseID',
             'details.purchaseRequisitionDetail.requisition',
         ])->findOrFail($id);
 
@@ -753,6 +757,8 @@ class PurchaseOrderController extends Controller
                 'quantity' => (float) $detail->qty,
                 'unit_id' => $detail->unit_id,
                 'unit' => $detail->unitID->detail ?? '-',
+                'warehouse_id' => $detail->warehouse_id,
+                'warehouse' => $detail->warehouseID->nama_gudang ?? '-',
                 'unit_price' => (float) $detail->unit_price,
                 'discount' => (float) $detail->discount,
                 'amount' => (float) $detail->amount,
@@ -774,6 +780,7 @@ class PurchaseOrderController extends Controller
             'company' => Company::first(),
             'idNumber' => $this->generateNumberId(),
             'shipping' => Shipping::where('status', 1)->get(),
+            'warehouse' => Warehouse::where('status', 1)->get(),
             'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
@@ -954,6 +961,7 @@ class PurchaseOrderController extends Controller
                     'product_id' => $item['product_id'],
                     'qty' => $qty,
                     'unit_id' => $item['unit_id'],
+                    'warehouse_id' => $item['warehouse_id'],
                     'unit_price' => $unitPrice,
                     'discount' => $discount,
                     'amount' => $item['amount'] ?? (($qty * $unitPrice) - $discount),

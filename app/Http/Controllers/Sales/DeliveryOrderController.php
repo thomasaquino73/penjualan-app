@@ -6,13 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DeliveryOrderRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
+use App\Models\Inventory\StockBalance;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
 use App\Models\Sales\DeliveryOrder;
 use App\Models\Sales\DeliveryOrderDetail;
 use App\Models\Sales\SalesOrder;
+use App\Models\Sales\SalesOrderDetail;
+use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
+use App\Models\StockMutation;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -497,7 +501,7 @@ class DeliveryOrderController extends Controller
             ],
             'customer' => Customer::where('status', '<>', 0)->get(),
             'idNumber' => $this->generateNumberId(),
-            'product' => Barang::where('status', '<>', 0)->get(),
+            'product' => Barang::with(['unitID'])->where('status', '<>', 0)->get(),
             'warehouse' => Warehouse::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
@@ -522,7 +526,7 @@ class DeliveryOrderController extends Controller
             $data['delivery_order_code'] = $generatedCode;
             $data['delivery_order_date'] = Carbon::parse($r->delivery_order_date)->format('Y-m-d');
             $data['created_by'] = Auth::id();
-            $itemTransfer = DeliveryOrder::create($data);
+            $deilveryOrder = DeliveryOrder::create($data);
             if ($itemsDetailRaw) {
 
                 $items = json_decode($itemsDetailRaw, true);
@@ -532,8 +536,6 @@ class DeliveryOrderController extends Controller
                     foreach ($items as $item) {
 
                         $qty = $item['quantity'] ?? $item['qty'];
-                        // $fromgudang = Warehouse::find($r->from_warehouse_id);
-                        // $fromnamaGudang = $fromgudang ? $fromgudang->nama_gudang : 'Unknown';
                         // $togudang = Warehouse::find($r->to_warehouse_id);
                         // $tonamaGudang = $togudang ? $togudang->nama_gudang : 'Unknown';
                         /*
@@ -542,7 +544,7 @@ class DeliveryOrderController extends Controller
                         |--------------------------------------------------------------------------
                         */
                         DeliveryOrderDetail::create([
-                            'delivery_order_id' => $itemTransfer->id,
+                            'delivery_order_id' => $deilveryOrder->id,
                             'data_barang_id' => $item['product_id'],
                             'qty' => $qty,
                             'unit_id' => $item['unit_id'],
@@ -556,70 +558,47 @@ class DeliveryOrderController extends Controller
                         | Stock Mutation OUT
                         |--------------------------------------------------------------------------
                         */
-                        // StockMutation::create([
-                        //     'data_barang_id' => $item['product_id'],
-                        //     'unit_id' => $item['unit_id'],
-                        //     'warehouse_id' => $r->from_warehouse_id,
-                        //     'date_stock' => Carbon::parse($r->delivery_order_date)->format('Y-m-d'),
-                        //     'qty_transaksi' => $qty,
-                        //     'total_base_qty' => $qty,
-                        //     'type' => 'out',
-                        //     'document_number' => $itemTransfer->delivery_order_code,
-                        //     'document_type' => 'item_transfer',
-                        //     // 'item_delivery_order_id' => $itemTransfer->id,
-                        //     'keterangan' => 'Keluar barang dari : '.$fromnamaGudang.' menuju '.$tonamaGudang,
-                        //     'created_by' => Auth::id(),
-                        // ]);
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Stock Mutation IN
-                        |--------------------------------------------------------------------------
-                        */
-                        // StockMutation::create([
-                        //     'data_barang_id' => $item['product_id'],
-                        //     'unit_id' => $item['unit_id'],
-                        //     'warehouse_id' => $r->to_warehouse_id,
-                        //     'date_stock' => Carbon::parse($r->delivery_order_date)->format('Y-m-d'),
-                        //     'qty_transaksi' => $qty,
-                        //     'total_base_qty' => $qty,
-                        //     'type' => 'in',
-                        //     'document_number' => $itemTransfer->delivery_order_code,
-                        //     'document_type' => 'item_transfer',
-                        //     // 'item_delivery_order_id' => $itemTransfer->id,
-                        //     'keterangan' => 'Masuk barang dari : '.$fromnamaGudang.' menuju '.$tonamaGudang,
-                        //     'created_by' => Auth::id(),
-                        // ]);
+                        $customer = Customer::find($r->customer_id);
+                        $namaCustomer = $customer
+                            ? $customer->nama_customer
+                            : 'Customer Tidak Diketahui';
+                        StockMutation::create([
+                            'data_barang_id' => $item['product_id'],
+                            'unit_id' => $item['unit_id'],
+                            'warehouse_id' => $r->warehouse_id,
+                            'date_stock' => Carbon::parse($r->delivery_order_date)->format('Y-m-d'),
+                            'qty_transaksi' => $qty,
+                            'total_base_qty' => $qty,
+                            'type' => 'out',
+                            'document_number' => $deilveryOrder->delivery_order_code,
+                            'document_type' => 'delivery_order',
+                            'keterangan' => sprintf(
+                                'Pengiriman barang ke customer %s melalui DO %s',
+                                $namaCustomer,
+                                $deilveryOrder->delivery_order_code
+                            ),
+                            'created_by' => Auth::id(),
+                        ]);
 
                         /*
                         |--------------------------------------------------------------------------
                         | Kurangi Stock Balance Gudang Asal
                         |--------------------------------------------------------------------------
                         */
-                        // StockBalance::where([
-                        //     'product_id' => $item['product_id'],
-                        //     'warehouse_id' => $r->from_warehouse_id,
-                        // ])->decrement('qty', $qty);
+                        $stock = StockBalance::where([
+                            'product_id' => $item['product_id'],
+                            'warehouse_id' => $r->warehouse_id,
+                        ])->first();
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Tambah Stock Balance Gudang Tujuan
-                        |--------------------------------------------------------------------------
-                        */
-                        // StockBalance::updateOrCreate(
-                        //     [
-                        //         'product_id' => $item['product_id'],
-                        //         'warehouse_id' => $r->to_warehouse_id,
-                        //     ],
-                        //     [
-                        //         'qty' => 0,
-                        //     ]
-                        // );
+                        if (!$stock) {
+                            throw new \Exception("Stock barang tidak ditemukan");
+                        }
 
-                        // StockBalance::where([
-                        //     'product_id' => $item['product_id'],
-                        //     'warehouse_id' => $r->to_warehouse_id,
-                        // ])->increment('qty', $qty);
+                        if ($stock->qty < $qty) {
+                            throw new \Exception("Stock tidak mencukupi");
+                        }
+
+                        $stock->decrement('qty', $qty);
                     }
                 }
             }
@@ -1101,7 +1080,69 @@ class DeliveryOrderController extends Controller
             ], 500);
         }
     }
+public function getOrderDetail(Request $request)
+    {
+        $ids = $request->ids;
 
+        if (empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data PO yang dipilih.',
+                'data' => [],
+            ]);
+        }
+
+        $details = SalesOrderDetail::with([
+            'produkID',
+            'unitID',
+            'salesOrder',
+        ])
+            ->whereIn('sales_order_id', $ids)
+            ->where('active', 1)
+            ->whereHas('salesOrder', function ($q) {
+                // Sesuaikan dengan status yang valid di database Anda
+                $q->whereIn('status', ['approved', 'partial']);
+            })
+            ->get();
+
+        $formattedData = $details->map(function ($item) {
+            // 1. Ambil nilai dasar
+            $totalQty = (float) ($item->qty ?? 0);
+            $receivedQty = (float) ($item->received_qty ?? 0);
+
+            // 2. Hitung sisa yang benar
+            $sisaQty = $totalQty - $receivedQty;
+
+            // 3. Jika sisa 0 atau kurang, item ini tidak perlu diproses lagi
+            if ($sisaQty <= 0) {
+                return null;
+            }
+
+            return [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->produkID->nama_barang ?? '-',
+
+                // Gunakan hasil perhitungan sisa yang benar
+                'quantity' => $sisaQty,
+                'qty' => $sisaQty,
+
+                'received_qty' => $receivedQty,
+                'unit_id' => $item->unit_id,
+                'unit_name' => $item->unitID->detail ?? '-',
+                'order_code' => $item->salesOrder->code ?? '',
+                'pr_status' => $item->salesOrder->status ?? '',
+                'warehouse_id' =>  $item->warehouseID->warehouse_id,
+                'warehouse' => '-',
+            ];
+        })->filter()->values();
+        //    dd($details);
+
+        return response()->json([
+            'success' => true,
+            'data' => $formattedData,
+        ]);
+    }
      public function getProcessingData(Request $request)
     {
         $orders = SalesOrder::with([
@@ -1115,5 +1156,55 @@ class DeliveryOrderController extends Controller
             ->get();
 
         return response()->json($orders);
+    }
+    public function getStock(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|integer|exists:data_barang,id',
+            'warehouse_id' => 'required|integer|exists:warehouse,id',
+        ]);
+
+        // ambil cut off date dari company
+        $company = Company::first(); // atau pakai company aktif kalau multi-company
+
+        $cutoffDate = $company?->cut_off_date;
+
+        $stock = $this->realStock(
+            $request->product_id,
+            $request->warehouse_id,
+            $cutoffDate
+        );
+
+        $barang = Barang::with('unitID')
+            ->find($request->product_id);
+        $unit = BasicCodeDetail::where('master_id',2)->find($request->unit_id);
+      return response()->json([
+            'success' => true,
+            'stock' => $stock ?? 0,
+            'unit' => $unit?->detail ?? '',
+            'cutoff_date' => $cutoffDate,
+        ]);
+        // return response()->json([
+        //     'success' => true,
+        //     'stock' => $stock ?? 0,
+        //     'unit' => $barang?->unitID?->detail ?? '',
+        //     'cutoff_date' => $cutoffDate,
+        // ]);
+    }
+    public function realStock($productId, $warehouseId, $cutoffDate = null)
+    {
+        return DB::table('stock_mutations')
+            ->where('data_barang_id', $productId)
+            ->where('warehouse_id', $warehouseId)
+            ->when($cutoffDate, function ($q) use ($cutoffDate) {
+                $q->whereDate('date_stock', '<=', $cutoffDate);
+            })
+            ->selectRaw("
+                SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
+                -
+                SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
+                as stock
+            ")
+            ->value('stock') ?? 0;
     }
 }

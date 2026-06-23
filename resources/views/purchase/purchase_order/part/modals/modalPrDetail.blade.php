@@ -69,6 +69,17 @@
                               <input type="number" id="discount" name="discount" class="form-control" placeholder="0">
                               <span class="error text-danger" id="discountError"></span>
                           </div>
+                          <div class="col-md-6 col-sm-12  mb-3">
+                              <label class="form-label" for="warehouse_id">Warehouse</label>
+                              <select name="warehouse_id" id="warehouse_id" class="form-select select2-modal"
+                                  data-placeholder="Select Warehouse">
+                                  <option></option>
+                                  @foreach ($warehouse as $wh)
+                                      <option value="{{ $wh->id }}">{{ $wh->nama_gudang }}</option>
+                                  @endforeach
+                              </select>
+                              <span class="error text-danger" id="warehouse_idError"></span>
+                          </div>
                       </div>
                   </div>
                   <div class="modal-footer">

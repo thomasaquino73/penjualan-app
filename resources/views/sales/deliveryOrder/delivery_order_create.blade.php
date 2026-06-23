@@ -192,36 +192,78 @@
                 width: "100%",
             });
 
+            // function loadAvailableStock() {
+
+            //     let productId = $('#product_id').val();
+            //     let warehouseId = $('#warehouse_id').val();
+
+            //     if (!productId || !warehouseId) {
+            //         $('#available_stok').val('');
+            //         return;
+            //     }
+
+            //     $.ajax({
+            //         url: "{{ route('item-transfer.wh.get-stock') }}",
+            //         type: "GET",
+            //         data: {
+            //             product_id: productId,
+            //             warehouse_id: warehouseId,
+            //         },
+            //         success: function(res) {
+            //             let stock = Number(res.stock);
+            //             $('#available_stok').val(stock);
+
+            //             $('#modalTitle').text(
+            //                 `Create new entry (Available Stock: ${stock} ${res.unit})`
+            //             );
+            //         }
+            //     });
+            // }
+
             function loadAvailableStock() {
 
                 let productId = $('#product_id').val();
                 let warehouseId = $('#warehouse_id').val();
+                let unitId = $('#unit_id').val();
 
-                if (!productId || !warehouseId) {
+                console.log({
+                    productId,
+                    warehouseId,
+                    unitId
+                });
+
+                if (!productId || !warehouseId || !unitId) {
                     $('#available_stok').val('');
                     return;
                 }
 
                 $.ajax({
-                    url: "{{ route('item-transfer.wh.get-stock') }}",
+                    url: "{{ route('delivery-order.wh.get-stock') }}",
                     type: "GET",
                     data: {
                         product_id: productId,
                         warehouse_id: warehouseId,
+                        unit_id: unitId
                     },
                     success: function(res) {
-                        let stock = Number(res.stock);
-                        $('#available_stok').val(stock);
+                        $('#available_stok').val(res.stock);
+                        console.log('RESPONSE STOCK:', res.stock);
 
                         $('#modalTitle').text(
-                            `Create new entry (Available Stock: ${stock} ${res.unit})`
+                            `Create new entry (Available Stock: ${res.stock} ${res.unit})`
                         );
                     }
                 });
             }
 
-            $('#product_id').on('change', loadAvailableStock);
-            $('#warehouse_id').on('change', loadAvailableStock);
+            $(document).on('change', '#product_id, #warehouse_id', loadAvailableStock);
+            $(document).on('change select2:select', '#unit_id', function() {
+                $('#warehouse_id').val('').trigger('change');
+                loadAvailableStock();
+            });
+            // $(document).on('change select2:select', '#unit_id', function() {
+
+            // });
             let table = new DataTable("#table", {
                 processing: true,
                 serverSide: false,
@@ -619,7 +661,10 @@
                             );
                         }
 
-                        unitSelect.trigger("change");
+                        setTimeout(() => {
+                            unitSelect.trigger("change");
+                        }, 0);
+                        // unitSelect.trigger("change");
 
                         let pendingUnitId = unitSelect.data("pending-val");
                         if (pendingUnitId) {
@@ -860,7 +905,7 @@
 
                         // 4. Kirim request AJAX ke backend
                         $.ajax({
-                            url: "{{ route('receive-item.get-order-detail') }}",
+                            url: "{{ route('delivery-order.get-order-detail') }}",
                             type: "POST",
                             data: {
                                 ids: ids,

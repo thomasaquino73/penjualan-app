@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SalesOrderRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
+use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderDetail;
@@ -504,6 +505,7 @@ class SalesOrderController extends Controller
             'customer' => Customer::where('status', '<>', 0)->get(),
             'idNumber' => $this->generateNumberId(),
             'product' => Barang::where('status', '<>', 0)->get(),
+            'warehouse' => Warehouse::where('status', 1)->get(),
             'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
             'salesman' => User::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),
@@ -715,6 +717,8 @@ class SalesOrderController extends Controller
                 'quantity' => (float) $detail->qty,
                 'unit_id' => $detail->unit_id,
                 'unit' => $detail->unitID->detail ?? '-',
+                'warehouse_id' => $detail->warehouse_id,
+                'warehouse' => $detail->warehouseID->nama_gudang ?? '-',
                 'unit_price' => (float) $detail->unit_price,
                 'discount' => (float) $detail->discount,
                 'amount' => (float) $detail->amount,
@@ -733,6 +737,7 @@ class SalesOrderController extends Controller
             'customer' => Customer::where('status', '<>', 0)->get(),
             'idNumber' => $this->generateNumberId(),
             'product' => Barang::where('status', '<>', 0)->get(),
+            'warehouse' => Warehouse::where('status', 1)->get(),
             'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
             'salesman' => User::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),

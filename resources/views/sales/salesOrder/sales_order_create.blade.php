@@ -469,6 +469,10 @@
                             return `<strong>${parseFloat(data ?? 0).toLocaleString('id-ID', { minimumFractionDigits: 0 })}</strong>`;
                         }
                     },
+                    {
+                        data: "warehouse",
+                        className: "text-center"
+                    },
                 ],
                 layout: {
                     topStart: {
@@ -494,6 +498,7 @@
                                     }
 
                                     $("#formPrDetail")[0].reset();
+                                    $("#warehouse_id").val("").trigger("change");
                                     $("#detail_id").val("");
 
                                     if ($.fn.select2) {
@@ -536,9 +541,9 @@
                                             "data-sisa-pr"); // Jika PO bebas, hapus batasannya
                                     }
                                     // --------------------------------------
-
                                     $("#quantity").val(data.quantity);
                                     $("#unit_id").data("pending-val", data.unit_id);
+                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
                                     $("#product_id").val(data.product_id).trigger("change");
                                     $("#unit_price").val(data.unit_price);
                                     $("#discount").val(data.discount || 0);
@@ -1039,6 +1044,8 @@
                 let quantity = parseFloat($("#quantity").val()) || 0;
                 let unitId = $("#unit_id").val();
                 let unitName = $("#unit_id option:selected").text();
+                let warehouseId = $("#warehouse_id").val();
+                let warehouseName = $("#warehouse_id option:selected").text();
                 let detailId = $("#detail_id")
                     .val(); // Ini adalah index row array (kosong jika barang baru)
 
@@ -1107,6 +1114,8 @@
                     quantity: quantity,
                     unit_id: unitId,
                     unit: unitName,
+                    warehouse_id: warehouseId,
+                    warehouse: warehouseName,
                     unit_price: unitPrice,
                     discount: discount,
                     tax: tax,

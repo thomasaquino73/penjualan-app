@@ -654,6 +654,10 @@
                             return `<strong>${parseFloat(data ?? 0).toLocaleString('id-ID', { minimumFractionDigits: 0 })}</strong>`;
                         }
                     },
+                    {
+                        data: "warehouse",
+                        className: "text-center"
+                    },
                 ],
                 layout: {
                     topStart: {
@@ -680,6 +684,7 @@
 
                                     $("#formPrDetail")[0].reset();
                                     $("#detail_id").val("");
+                                    $("#warehouse_id").val("").trigger("change");
 
                                     if ($.fn.select2) {
                                         $("#product_id").val("").trigger("change");
@@ -724,6 +729,7 @@
 
                                     $("#quantity").val(data.quantity);
                                     $("#unit_id").data("pending-val", data.unit_id);
+                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
                                     $("#product_id").val(data.product_id).trigger("change");
                                     $("#unit_price").val(data.unit_price);
                                     $("#discount").val(data.discount || 0);
@@ -960,6 +966,8 @@
                 let quantity = parseFloat($("#quantity").val()) || 0;
                 let unitId = $("#unit_id").val();
                 let unitName = $("#unit_id option:selected").text();
+                let warehouseId = $("#warehouse_id").val();
+                let warehouseName = $("#warehouse_id option:selected").text();
                 let detailId = $("#detail_id")
                     .val(); // Ini adalah index row array (kosong jika barang baru)
 
@@ -970,11 +978,11 @@
                 let requiredDate = $("#required_date").val() || "";
 
                 // 1. Validasi Input Wajib
-                if (!productId || quantity <= 0 || !unitId) {
+                if (!productId || quantity <= 0 || !unitId || !warehouseId) {
                     Swal.fire({
                         icon: "error",
                         title: "Oops...",
-                        text: "Please fill all required fields! (Product, Valid Quantity, and Unit)",
+                        text: "Please fill all required fields! (Product, Valid Quantity, Warehouse, and Unit)",
                         customClass: {
                             confirmButton: "btn btn-danger",
                         },
@@ -1028,6 +1036,8 @@
                     quantity: quantity,
                     unit_id: unitId,
                     unit: unitName,
+                    warehouse_id: warehouseId,
+                    warehouse: warehouseName,
                     unit_price: unitPrice,
                     discount: discount,
                     tax: tax,
@@ -1445,7 +1455,7 @@
                                             data_produk: item
                                                 .product_name,
                                             quantity: sisaPr,
-                                            sisa_pr: sisaPr, // <--- TAMBAHKAN INI: Sebagai acuan validasi batas maksimal
+                                            sisa_pr: sisaPr,
                                             unit_id: item.unit_id,
                                             unit: item.unit_name,
                                             unit_price: unitPrice,

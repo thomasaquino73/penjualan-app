@@ -62,6 +62,7 @@ return new class extends Migration
             $table->decimal('unit_price', 15, 2);
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('amount', 15, 2);
+            $table->unsignedBigInteger('warehouse_id');
             $table->decimal('so_qty', 18, 4)->default(0)->comment('Qty yang sudah sukses di-SO-kan');
             $table->decimal('outstanding_qty', 18, 4)->default(0)
                 ->comment('Sisa qty yang belum di-SQ-kan: qty - sq_qty');

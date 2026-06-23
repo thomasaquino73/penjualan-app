@@ -4,6 +4,9 @@ namespace App\Models\Sales;
 
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
+use App\Models\Inventory\Warehouse;
+use App\Models\Sales\SalesOrder;
+use App\Models\Sales\SalesQuotationDetail;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -43,6 +46,10 @@ class SalesOrderDetail extends Model
     {
         // Sesuaikan nama class Unit dengan model master unit Anda
         return $this->belongsTo(BasicCodeDetail::class, 'unit_id', 'id');
+    }
+     public function warehouseID()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id', 'id');
     }
 
     public function salesOrder()

@@ -427,6 +427,7 @@ class ReceiveItemController extends Controller
         $details = PurchaseOrderDetail::with([
             'produkID',
             'unitID',
+            'warehouseID',
             'purchaseOrder',
         ])
             ->whereIn('purchase_order_id', $ids)
@@ -462,10 +463,12 @@ class ReceiveItemController extends Controller
                 'received_qty' => $receivedQty,
                 'unit_id' => $item->unit_id,
                 'unit_name' => $item->unitID->detail ?? '-',
+                'warehouse_id' => $item->warehouse_id,
+                'nama_gudang' => $item->warehouseID->nama_gudang ?? '-',
                 'order_code' => $item->purchaseOrder->code ?? '',
                 'pr_status' => $item->purchaseOrder->status ?? '',
-                'warehouse_id' => '',
-                'warehouse' => '-',
+                // 'warehouse_id' => '',
+                // 'warehouse' => '-',
             ];
         })->filter()->values();
         //    dd($details);
