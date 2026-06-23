@@ -310,7 +310,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/delivery-order/trash', [DeliveryOrderController::class, 'trash'])->name('delivery-order.trash');
     Route::resource('delivery-order', DeliveryOrderController::class);
 
-    });
+});
 
 Route::fallback(function () {
     Log::warning('Fallback route triggered', [

@@ -359,7 +359,7 @@ class ItemTransferController extends Controller
                 ['label' => 'Item Transfer', 'url' => ''],
             ],
             'idNumber' => $this->generateNumberId(),
-             'product' => Barang::with(['unitID'])->where('status', '<>', 0)->get(),
+            'product' => Barang::with(['unitID'])->where('status', '<>', 0)->get(),
             'fromWarehouse' => Warehouse::where('status', '<>', 0)->get(),
             'toWarehouse' => Warehouse::where('status', '<>', 0)->get(),
         ];
@@ -1022,55 +1022,57 @@ class ItemTransferController extends Controller
 
         $barang = Barang::with('unitID')
             ->find($request->product_id);
-        $unit = BasicCodeDetail::where('master_id',2)->find($request->unit_id);
-      return response()->json([
+        $unit = BasicCodeDetail::where('master_id', 2)->find($request->unit_id);
+
+        return response()->json([
             'success' => true,
             'stock' => $stock ?? 0,
             'unit' => $unit?->detail ?? '',
             'cutoff_date' => $cutoffDate,
         ]);
-   
-    }
-public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
-{
-    $unitId = (int) $unitId;
-    $today = now()->format('Y-m-d');
-    
-    // Jika cutoffDate null, kita anggap mulai dari tanggal yang sangat lampau atau hari ini
-    $startDate = $cutoffDate ?? $today;
 
-    return DB::table('stock_mutations')
-        ->where('data_barang_id', (int) $productId)
-        ->where('warehouse_id', (int) $warehouseId)
-        ->where('unit_id', $unitId)
-        // Filter rentang: date_stock harus >= cutoffDate DAN <= hari ini
-        ->whereBetween('date_stock', [$startDate, $today])
-        ->selectRaw("
+    }
+
+    public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
+    {
+        $unitId = (int) $unitId;
+        $today = now()->format('Y-m-d');
+
+        // Jika cutoffDate null, kita anggap mulai dari tanggal yang sangat lampau atau hari ini
+        $startDate = $cutoffDate ?? $today;
+
+        return DB::table('stock_mutations')
+            ->where('data_barang_id', (int) $productId)
+            ->where('warehouse_id', (int) $warehouseId)
+            ->where('unit_id', $unitId)
+            // Filter rentang: date_stock harus >= cutoffDate DAN <= hari ini
+            ->whereBetween('date_stock', [$startDate, $today])
+            ->selectRaw("
             SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
             -
             SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
             as stock
         ")
-        ->value('stock') ?? 0;
-}
-  
-//    public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
-//     {
-//         return DB::table('stock_mutations')
-//             ->where('data_barang_id', $productId)
-//             ->where('warehouse_id', $warehouseId)
-//             // ->where('unit_id', $unitId) // Filter berdasarkan unit yang dipilih
-//             ->when($cutoffDate, function ($q) use ($cutoffDate) {
-//                 $q->whereDate('date_stock', '<=', $cutoffDate);
-//             })
-//             ->selectRaw("
-//                 SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
-//                 -
-//                 SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
-//                 as stock
-//             ")
-//             ->value('stock') ?? 0;
-//     }
+            ->value('stock') ?? 0;
+    }
+
+    //    public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
+    //     {
+    //         return DB::table('stock_mutations')
+    //             ->where('data_barang_id', $productId)
+    //             ->where('warehouse_id', $warehouseId)
+    //             // ->where('unit_id', $unitId) // Filter berdasarkan unit yang dipilih
+    //             ->when($cutoffDate, function ($q) use ($cutoffDate) {
+    //                 $q->whereDate('date_stock', '<=', $cutoffDate);
+    //             })
+    //             ->selectRaw("
+    //                 SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
+    //                 -
+    //                 SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
+    //                 as stock
+    //             ")
+    //             ->value('stock') ?? 0;
+    //     }
 
     // public function getStock(Request $request)
     // {

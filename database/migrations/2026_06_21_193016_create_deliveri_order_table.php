@@ -12,6 +12,7 @@ return new class extends Migration
     {
         $this->year = date('Y'); // tahun berjalan
     }
+
     public function up(): void
     {
         Schema::create("delivery_order_{$this->year}", function (Blueprint $table) {
@@ -30,7 +31,7 @@ return new class extends Migration
                 'confirmed',
                 'partial',
                 'delivered',
-                'cancelled'
+                'cancelled',
             ])->default('draft');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
@@ -38,7 +39,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-         Schema::create("delivery_order_detail_{$this->year}", function (Blueprint $table) {
+        Schema::create("delivery_order_detail_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('delivery_order_id');
             $table->unsignedBigInteger('sales_order_detail_id')->nullable();

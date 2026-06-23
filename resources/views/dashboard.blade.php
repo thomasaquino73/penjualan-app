@@ -69,103 +69,25 @@
         <div class="col-xl-4 col-md-6 mb-4">
             <div class="row">
                 <div class="col-xl-6 mb-4 col-md-3 col-6">
-                    <div class="card">
+                    <div class="card h-100">
+
                         <div class="card-header pb-0">
-                            <h5 class="card-title mb-0">82.5k</h5>
-                            <small class="text-muted">Expenses</small>
+                            <h5 class="card-title mb-0">Top Selling Brands</h5>
+                            <small class="text-muted">Based on this month’s sales</small>
                         </div>
-                        <div class="card-body" style="position: relative;">
-                            <div id="expensesChart" style="min-height: 63.5px;">
-                                <div id="apexchartsizz5yf6x"
-                                    class="apexcharts-canvas apexchartsizz5yf6x apexcharts-theme-light"
-                                    style="width: 197px; height: 63.5px;"><svg id="SvgjsSvg1946" width="197"
-                                        height="63.5" xmlns="http://www.w3.org/2000/svg" version="1.1"
-                                        xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev"
-                                        class="apexcharts-svg" xmlns:data="ApexChartsNS" transform="translate(0, 0)"
-                                        style="background: transparent;">
-                                        <g id="SvgjsG1948" class="apexcharts-inner apexcharts-graphical"
-                                            transform="translate(38.5, 0)">
-                                            <defs id="SvgjsDefs1947">
-                                                <clipPath id="gridRectMaskizz5yf6x">
-                                                    <rect id="SvgjsRect1950" width="126" height="117" x="-3" y="-1"
-                                                        rx="0" ry="0" opacity="1" stroke-width="0"
-                                                        stroke="none" stroke-dasharray="0" fill="#fff"></rect>
-                                                </clipPath>
-                                                <clipPath id="forecastMaskizz5yf6x"></clipPath>
-                                                <clipPath id="nonForecastMaskizz5yf6x"></clipPath>
-                                                <clipPath id="gridRectMarkerMaskizz5yf6x">
-                                                    <rect id="SvgjsRect1951" width="124" height="119" x="-2" y="-2"
-                                                        rx="0" ry="0" opacity="1" stroke-width="0"
-                                                        stroke="none" stroke-dasharray="0" fill="#fff"></rect>
-                                                </clipPath>
-                                            </defs>
-                                            <g id="SvgjsG1952" class="apexcharts-radialbar">
-                                                <g id="SvgjsG1953">
-                                                    <g id="SvgjsG1954" class="apexcharts-tracks">
-                                                        <g id="SvgjsG1955"
-                                                            class="apexcharts-radialbar-track apexcharts-track"
-                                                            rel="1">
-                                                            <path id="apexcharts-radialbarTrack-0"
-                                                                d="M 20.335365853658537 57.49999999999999 A 39.66463414634146 39.66463414634146 0 0 1 99.66463414634146 57.5"
-                                                                fill="none" fill-opacity="1"
-                                                                stroke="rgba(219,218,222,0.85)" stroke-opacity="1"
-                                                                stroke-linecap="round" stroke-width="3.4298780487804885"
-                                                                stroke-dasharray="0" class="apexcharts-radialbar-area"
-                                                                data:pathOrig="M 20.335365853658537 57.49999999999999 A 39.66463414634146 39.66463414634146 0 0 1 99.66463414634146 57.5">
-                                                            </path>
-                                                        </g>
-                                                    </g>
-                                                    <g id="SvgjsG1957">
-                                                        <g id="SvgjsG1961"
-                                                            class="apexcharts-series apexcharts-radial-series"
-                                                            seriesName="Progress" rel="1" data:realIndex="0">
-                                                            <path id="SvgjsPath1962"
-                                                                d="M 20.335365853658537 57.49999999999999 A 39.66463414634146 39.66463414634146 0 0 1 90.38487257615215 32.00406462798209"
-                                                                fill="none" fill-opacity="0.85"
-                                                                stroke="rgba(255,159,67,0.85)" stroke-opacity="1"
-                                                                stroke-linecap="round" stroke-width="7.621951219512196"
-                                                                stroke-dasharray="0"
-                                                                class="apexcharts-radialbar-area apexcharts-radialbar-slice-0"
-                                                                data:angle="140" data:value="78" index="0" j="0"
-                                                                data:pathOrig="M 20.335365853658537 57.49999999999999 A 39.66463414634146 39.66463414634146 0 0 1 90.38487257615215 32.00406462798209">
-                                                            </path>
-                                                        </g>
-                                                        <circle id="SvgjsCircle1958" r="32.949695121951216" cx="60"
-                                                            cy="57.5" class="apexcharts-radialbar-hollow"
-                                                            fill="transparent"></circle>
-                                                        <g id="SvgjsG1959" class="apexcharts-datalabels-group"
-                                                            transform="translate(0, 0) scale(1)" style="opacity: 1;"><text
-                                                                id="SvgjsText1960"
-                                                                font-family="Helvetica, Arial, sans-serif" x="60" y="52.5"
-                                                                text-anchor="middle" dominant-baseline="auto"
-                                                                font-size="18px" font-weight="500" fill="#5d596c"
-                                                                class="apexcharts-text apexcharts-datalabel-value"
-                                                                style="font-family: Helvetica, Arial, sans-serif;">78%</text>
-                                                        </g>
-                                                    </g>
-                                                </g>
-                                            </g>
-                                            <line id="SvgjsLine1963" x1="0" y1="0" x2="120"
-                                                y2="0" stroke="#b6b6b6" stroke-dasharray="0" stroke-width="1"
-                                                stroke-linecap="butt" class="apexcharts-ycrosshairs"></line>
-                                            <line id="SvgjsLine1964" x1="0" y1="0" x2="120"
-                                                y2="0" stroke-dasharray="0" stroke-width="0"
-                                                stroke-linecap="butt" class="apexcharts-ycrosshairs-hidden"></line>
-                                        </g>
-                                        <g id="SvgjsG1949" class="apexcharts-annotations"></g>
-                                    </svg>
-                                    <div class="apexcharts-legend"></div>
-                                </div>
+
+                        <div class="card-body">
+
+                            <!-- DONUT CHART -->
+                            <div id="brandSalesDonut"></div>
+
+                            <!-- BOTTOM INFO -->
+                            <div class="mt-3 text-center">
+                                <small class="text-muted">
+                                    Total brands sold this month
+                                </small>
                             </div>
-                            <div class="mt-md-2 text-center mt-lg-3 mt-3">
-                                <small class="text-muted mt-3">$21k Expenses more than last month</small>
-                            </div>
-                            <div class="resize-triggers">
-                                <div class="expand-trigger">
-                                    <div style="width: 246px; height: 149px;"></div>
-                                </div>
-                                <div class="contract-trigger"></div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -212,10 +134,9 @@
                                                 transform="translate(-29, 15)">
                                                 <defs id="SvgjsDefs2019">
                                                     <clipPath id="gridRectMaskz8gle1gxf">
-                                                        <rect id="SvgjsRect2022" width="222" height="163" x="-2"
-                                                            y="0" rx="0" ry="0" opacity="1"
-                                                            stroke-width="0" stroke="none" stroke-dasharray="0"
-                                                            fill="#fff"></rect>
+                                                        <rect id="SvgjsRect2022" width="222" height="163" x="-2" y="0"
+                                                            rx="0" ry="0" opacity="1" stroke-width="0"
+                                                            stroke="none" stroke-dasharray="0" fill="#fff"></rect>
                                                     </clipPath>
                                                     <clipPath id="forecastMaskz8gle1gxf"></clipPath>
                                                     <clipPath id="nonForecastMaskz8gle1gxf"></clipPath>
@@ -768,6 +689,62 @@
 
         var chart = new ApexCharts(document.querySelector("#profitChart"), options);
         chart.render();
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            let labels = @json($brandLabels ?? []);
+            let values = @json($brandValues ?? []);
+
+            console.log("LABELS:", labels);
+            console.log("VALUES:", values);
+
+            if (!values.length) {
+                document.querySelector("#brandSalesDonut").innerHTML =
+                    "<div class='text-center text-muted'>No Data</div>";
+                return;
+            }
+
+            const options = {
+                series: values,
+                chart: {
+                    type: 'donut',
+                    height: 300
+                },
+                labels: labels,
+
+                legend: {
+                    position: 'bottom'
+                },
+
+                dataLabels: {
+                    enabled: true
+                },
+
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '65%',
+                            labels: {
+                                show: true,
+                                total: {
+                                    show: true,
+                                    label: 'Total',
+                                    formatter: function(w) {
+                                        return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            new ApexCharts(
+                document.querySelector("#brandSalesDonut"),
+                options
+            ).render();
+        });
     </script>
 @endpush
 @push('style')

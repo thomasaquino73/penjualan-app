@@ -509,6 +509,7 @@
                                     $("#modalTitle").text("Create new entry");
                                     $("#btnSubmitModal").text("Create");
                                     $("#modalPrDetail").modal("show");
+
                                 },
                             },
                             {
@@ -552,6 +553,8 @@
                                     $("#modalTitle").text("Edit entry");
                                     $("#btnSubmitModal").text("Update");
                                     $("#modalPrDetail").modal("show");
+
+
                                 },
                             },
                             {
@@ -648,9 +651,11 @@
                 });
             }
 
-            $(document).on('change', '#product_id, #warehouse_id', loadAvailableStock);
+            $(document).on('change', '#product_id, #warehouse_id', function() {
+                loadAvailableStock();
+            });
+
             $(document).on('change select2:select', '#unit_id', function() {
-                $('#warehouse_id').val('').trigger('change');
                 loadAvailableStock();
             });
 

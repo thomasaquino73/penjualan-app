@@ -2,13 +2,12 @@
 
 namespace App\Models\Sales;
 
-use App\Models\Sales\Customer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 class DeliveryOrder extends Model
 {
-     protected $table = 'delivery_order';
+    protected $table = 'delivery_order';
 
     protected $guarded = [];
 

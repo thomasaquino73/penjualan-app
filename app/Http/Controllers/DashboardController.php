@@ -16,6 +16,13 @@ class DashboardController extends Controller
         $minStock = $this->getMinimumStock();
         $transaksiTerbanyak = $this->getTransaksiTerbanyak();
         $TotalTransactions = $this->getTotalTransactions();
+        $popularBrands = $this->getPopularBrandThisMonth();
+        $brandLabels = $popularBrands->pluck('brand_name');
+        $brandValues = $popularBrands->pluck('total_qty');
+        if ($brandLabels->isEmpty()) {
+            $brandLabels = ['No Data'];
+            $brandValues = [0];
+        }
         $x = [
             'totalUsers' => $stats['totalUsers'],
             'totalActive' => $stats['totalActive'],
@@ -24,6 +31,9 @@ class DashboardController extends Controller
             'minStock' => $minStock,
             'transaksiTerbanyak' => $transaksiTerbanyak,
             'TotalTransactions' => $TotalTransactions,
+            'popularBrands' => $popularBrands,
+            'brandLabels' => $brandLabels,
+            'brandValues' => $brandValues,
         ];
 
         return view('dashboard', $x);
@@ -131,5 +141,37 @@ class DashboardController extends Controller
             ->whereYear('sales_order_date', now()->year)
             ->where('active', 1)
             ->count();
+    }
+
+    private function getPopularBrandThisMonth()
+    {
+        $year = now()->year;
+
+        $detailTable = "sales_invoice_detail_{$year}";
+        $headerTable = "sales_invoice_{$year}";
+
+        return DB::table("$detailTable as sid")
+            ->join("$headerTable as si", 'sid.sales_invoice_id', '=', 'si.id')
+            ->join('data_barang as db', 'sid.product_id', '=', 'db.id')
+
+            // JOIN BRAND dari basic_code_detail (master_id = 11)
+            ->leftJoin('basic_code_detail as brand', function ($join) {
+                $join->on('db.brand_id', '=', 'brand.id')
+                    ->where('brand.master_id', '=', 11);
+            })
+
+            ->whereMonth('si.sales_invoice_date', now()->month)
+            ->whereYear('si.sales_invoice_date', now()->year)
+
+            ->select(
+                'brand.id as brand_id',
+                DB::raw('COALESCE(brand.detail, "No Brand") as brand_name'),
+                DB::raw('SUM(sid.qty) as total_qty')
+            )
+
+            ->groupBy('brand.id', 'brand.detail')
+            ->orderByDesc('total_qty')
+            ->limit(5)
+            ->get();
     }
 }

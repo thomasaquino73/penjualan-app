@@ -51,7 +51,6 @@ class PurchaseOrderDetail extends Model
         return $this->belongsTo(Warehouse::class, 'warehouse_id', 'id');
     }
 
-
     public function purchaseOrder()
     {
         return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');

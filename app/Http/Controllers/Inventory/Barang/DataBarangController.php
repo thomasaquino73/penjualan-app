@@ -61,7 +61,7 @@ class DataBarangController extends Controller
                 ->join('basic_code_detail as kategori', 'kategori.id', '=', 'data_barang.kategori_id')
                 ->addSelect('data_barang.*')
                 ->addSelect([
-                  'current_stock' => StockMutation::query()
+                    'current_stock' => StockMutation::query()
                         ->selectRaw("
                             COALESCE(
                                 SUM(

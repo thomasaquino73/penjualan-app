@@ -777,16 +777,28 @@ class SalesQuotationController extends Controller
             ->join($tableMaster, "{$tableDetail}.sales_quotation_id", '=', "{$tableMaster}.id")
             ->where("{$tableDetail}.product_id", $productId)
             ->where("{$tableMaster}.customer_id", $customerId)
-            // Kuncinya di sini: kelompokkan berdasarkan harga, lalu ambil tanggal terbaru dengan MAX()
             ->select(
-                "{$tableDetail}.unit_price as harga",
+                "{$tableDetail}.unit_price as harga", // Pastikan nama kolom benar
                 DB::raw("MAX({$tableMaster}.sales_quotation_date) as tanggal")
             )
             ->groupBy("{$tableDetail}.unit_price")
-            // Urutkan berdasarkan tanggal terbaru (hasil dari MAX tanggal di atas)
             ->orderBy('tanggal', 'desc')
             ->limit(5)
             ->get();
+        // $history = DB::table($tableDetail)
+        //     ->join($tableMaster, "{$tableDetail}.sales_quotation_id", '=', "{$tableMaster}.id")
+        //     ->where("{$tableDetail}.product_id", $productId)
+        //     ->where("{$tableMaster}.customer_id", $customerId)
+        //     // Kuncinya di sini: kelompokkan berdasarkan harga, lalu ambil tanggal terbaru dengan MAX()
+        //     ->select(
+        //         "{$tableDetail}.unit_price as harga",
+        //         DB::raw("MAX({$tableMaster}.sales_quotation_date) as tanggal")
+        //     )
+        //     ->groupBy("{$tableDetail}.unit_price")
+        //     // Urutkan berdasarkan tanggal terbaru (hasil dari MAX tanggal di atas)
+        //     ->orderBy('tanggal', 'desc')
+        //     ->limit(5)
+        //     ->get();
 
         return response()->json([
             'success' => true,

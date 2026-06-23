@@ -192,33 +192,7 @@
                 width: "100%",
             });
 
-            // function loadAvailableStock() {
 
-            //     let productId = $('#product_id').val();
-            //     let warehouseId = $('#warehouse_id').val();
-
-            //     if (!productId || !warehouseId) {
-            //         $('#available_stok').val('');
-            //         return;
-            //     }
-
-            //     $.ajax({
-            //         url: "{{ route('item-transfer.wh.get-stock') }}",
-            //         type: "GET",
-            //         data: {
-            //             product_id: productId,
-            //             warehouse_id: warehouseId,
-            //         },
-            //         success: function(res) {
-            //             let stock = Number(res.stock);
-            //             $('#available_stok').val(stock);
-
-            //             $('#modalTitle').text(
-            //                 `Create new entry (Available Stock: ${stock} ${res.unit})`
-            //             );
-            //         }
-            //     });
-            // }
 
             function loadAvailableStock() {
 
@@ -256,7 +230,13 @@
                 });
             }
 
+            $(document).on('change', '#product_id, #warehouse_id', function() {
+                loadAvailableStock();
+            });
 
+            $(document).on('change select2:select', '#unit_id', function() {
+                loadAvailableStock();
+            });
 
             let table = new DataTable("#table", {
                 processing: true,
@@ -341,12 +321,13 @@
                                     $("#btnSubmitModal").text("Create");
                                     $("#modalPrDetail").modal("show");
 
-                                    $(document).on('change', '#product_id, #warehouse_id',
-                                        loadAvailableStock);
-                                    $(document).on('change select2:select', '#unit_id', function() {
-                                        // $('#warehouse_id').val('').trigger('change');
-                                        loadAvailableStock();
-                                    });
+                                    // $(document).on('change', '#product_id, #warehouse_id',
+                                    //     '#unit_id',
+                                    //     loadAvailableStock);
+                                    // $(document).on('change select2:select', '#unit_id', function() {
+                                    //     // $('#warehouse_id').val('').trigger('change');
+                                    //     loadAvailableStock();
+                                    // });
                                 },
                             },
                             {

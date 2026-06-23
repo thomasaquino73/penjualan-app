@@ -15,7 +15,6 @@ use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderDetail;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
-use App\Models\Setting\SyaratPembayaran;
 use App\Models\StockMutation;
 use App\Models\User;
 use Carbon\Carbon;
@@ -52,7 +51,8 @@ class DeliveryOrderController extends Controller
             return $next($request);
         });
     }
-   public function index(Request $r)
+
+    public function index(Request $r)
     {
         if ($r->ajax()) {
             // Ambil ID user yang sedang login
@@ -491,7 +491,8 @@ class DeliveryOrderController extends Controller
 
         return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
     }
-     public function create()
+
+    public function create()
     {
         $x = [
             'title' => 'Delivery Order New',
@@ -511,7 +512,7 @@ class DeliveryOrderController extends Controller
         return view('sales.deliveryOrder.delivery_order_create', $x);
     }
 
-     public function store(DeliveryOrderRequest $r)
+    public function store(DeliveryOrderRequest $r)
     {
         DB::beginTransaction();
 
@@ -565,7 +566,7 @@ class DeliveryOrderController extends Controller
                         StockMutation::create([
                             'data_barang_id' => $item['product_id'],
                             'unit_id' => $item['unit_id'],
-                            'warehouse_id' => $r->warehouse_id,
+                            'warehouse_id' => $item['warehouse_id'],
                             'date_stock' => Carbon::parse($r->delivery_order_date)->format('Y-m-d'),
                             'qty_transaksi' => $qty,
                             'total_base_qty' => $qty,
@@ -587,15 +588,15 @@ class DeliveryOrderController extends Controller
                         */
                         $stock = StockBalance::where([
                             'product_id' => $item['product_id'],
-                            'warehouse_id' => $r->warehouse_id,
+                            'warehouse_id' => $item['warehouse_id'],
                         ])->first();
 
-                        if (!$stock) {
-                            throw new \Exception("Stock barang tidak ditemukan");
+                        if (! $stock) {
+                            throw new \Exception('Stock barang tidak ditemukan');
                         }
 
                         if ($stock->qty < $qty) {
-                            throw new \Exception("Stock tidak mencukupi");
+                            throw new \Exception('Stock tidak mencukupi');
                         }
 
                         $stock->decrement('qty', $qty);
@@ -607,7 +608,7 @@ class DeliveryOrderController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data created successfully',
-                'redirect' => route('item-transfer.index'), // Sesuaikan route
+                'redirect' => route('delivery-order.index'), // Sesuaikan route
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -659,7 +660,7 @@ class DeliveryOrderController extends Controller
         //
     }
 
-       public function destroy(Request $request, $id)
+    public function destroy(Request $request, $id)
     {
         DB::beginTransaction();
 
@@ -732,14 +733,14 @@ class DeliveryOrderController extends Controller
         }
     }
 
-     public function trash(Request $r)
+    public function trash(Request $r)
     {
         if ($r->ajax()) {
             // Ambil ID user yang sedang login
             $userId = Auth::user()->id;
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
-            $query = DeliveryOrder::where('active',  0)
+            $query = DeliveryOrder::where('active', 0)
                 ->orderby('delivery_order_code', 'desc')->get();
             if ($r->status) {
                 $query->where('status', $r->status);
@@ -830,7 +831,7 @@ class DeliveryOrderController extends Controller
         return view('sales.deliveryOrder.delivery_order_trash', $x);
     }
 
-      public function deleteMultiple(Request $request)
+    public function deleteMultiple(Request $request)
     {
         DB::beginTransaction();
 
@@ -1080,7 +1081,8 @@ class DeliveryOrderController extends Controller
             ], 500);
         }
     }
-public function getOrderDetail(Request $request)
+
+    public function getOrderDetail(Request $request)
     {
         $ids = $request->ids;
 
@@ -1132,7 +1134,7 @@ public function getOrderDetail(Request $request)
                 'unit_name' => $item->unitID->detail ?? '-',
                 'order_code' => $item->salesOrder->code ?? '',
                 'pr_status' => $item->salesOrder->status ?? '',
-                'warehouse_id' =>  $item->warehouseID->warehouse_id,
+                'warehouse_id' => $item->warehouseID->warehouse_id,
                 'warehouse' => '-',
             ];
         })->filter()->values();
@@ -1143,7 +1145,8 @@ public function getOrderDetail(Request $request)
             'data' => $formattedData,
         ]);
     }
-     public function getProcessingData(Request $request)
+
+    public function getProcessingData(Request $request)
     {
         $orders = SalesOrder::with([
             'details' => function ($query) {
@@ -1157,6 +1160,7 @@ public function getOrderDetail(Request $request)
 
         return response()->json($orders);
     }
+
     public function getStock(Request $request)
     {
         $request->validate([
@@ -1178,35 +1182,37 @@ public function getOrderDetail(Request $request)
 
         $barang = Barang::with('unitID')
             ->find($request->product_id);
-        $unit = BasicCodeDetail::where('master_id',2)->find($request->unit_id);
-      return response()->json([
+        $unit = BasicCodeDetail::where('master_id', 2)->find($request->unit_id);
+
+        return response()->json([
             'success' => true,
             'stock' => $stock ?? 0,
             'unit' => $unit?->detail ?? '',
             'cutoff_date' => $cutoffDate,
         ]);
-   
-    }
-public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
-{
-    $unitId = (int) $unitId;
-    $today = now()->format('Y-m-d');
-    
-    // Jika cutoffDate null, kita anggap mulai dari tanggal yang sangat lampau atau hari ini
-    $startDate = $cutoffDate ?? $today;
 
-    return DB::table('stock_mutations')
-        ->where('data_barang_id', (int) $productId)
-        ->where('warehouse_id', (int) $warehouseId)
-        ->where('unit_id', $unitId)
-        // Filter rentang: date_stock harus >= cutoffDate DAN <= hari ini
-        ->whereBetween('date_stock', [$startDate, $today])
-        ->selectRaw("
+    }
+
+    public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
+    {
+        $unitId = (int) $unitId;
+        $today = now()->format('Y-m-d');
+
+        // Jika cutoffDate null, kita anggap mulai dari tanggal yang sangat lampau atau hari ini
+        $startDate = $cutoffDate ?? $today;
+
+        return DB::table('stock_mutations')
+            ->where('data_barang_id', (int) $productId)
+            ->where('warehouse_id', (int) $warehouseId)
+            ->where('unit_id', $unitId)
+            // Filter rentang: date_stock harus >= cutoffDate DAN <= hari ini
+            ->whereBetween('date_stock', [$startDate, $today])
+            ->selectRaw("
             SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
             -
             SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
             as stock
         ")
-        ->value('stock') ?? 0;
-}
+            ->value('stock') ?? 0;
+    }
 }
