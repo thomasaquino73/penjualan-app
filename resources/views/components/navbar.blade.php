@@ -219,7 +219,7 @@
                                           <div class="avatar avatar-online">
                                               <img src="{{ $user?->avatar
                                                   ? asset($user->avatar)
-                                                  : (($user?->gender ?? null) == 'Perempuan'
+                                                  : (($user?->gender ?? null) == 'Female'
                                                       ? asset('image/foto_user/avatar_women.png')
                                                       : asset('image/foto_user/avatar_user_default.png')) }}"
                                                   class="rounded-circle" />
