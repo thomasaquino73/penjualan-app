@@ -256,14 +256,8 @@
                 });
             }
 
-            $(document).on('change', '#product_id, #warehouse_id', loadAvailableStock);
-            $(document).on('change select2:select', '#unit_id', function() {
-                $('#warehouse_id').val('').trigger('change');
-                loadAvailableStock();
-            });
-            // $(document).on('change select2:select', '#unit_id', function() {
 
-            // });
+
             let table = new DataTable("#table", {
                 processing: true,
                 serverSide: false,
@@ -304,10 +298,10 @@
                         data: "unit",
                         className: "text-center"
                     },
-                    // {
-                    //     data: "warehouse_id",
-                    //     className: "text-center"
-                    // },
+                    {
+                        data: "warehouse",
+                        className: "text-center"
+                    },
 
                 ],
                 layout: {
@@ -335,6 +329,8 @@
 
                                     $("#formPrDetail")[0].reset();
                                     $("#detail_id").val("");
+                                    $("#available_stok").val("");
+                                    $('#warehouse_id').val('selectedIndex', 0).trigger('change');
 
                                     if ($.fn.select2) {
                                         $("#product_id").val("").trigger("change");
@@ -344,6 +340,13 @@
                                     $("#modalTitle").text("Create new entry");
                                     $("#btnSubmitModal").text("Create");
                                     $("#modalPrDetail").modal("show");
+
+                                    $(document).on('change', '#product_id, #warehouse_id',
+                                        loadAvailableStock);
+                                    $(document).on('change select2:select', '#unit_id', function() {
+                                        // $('#warehouse_id').val('').trigger('change');
+                                        loadAvailableStock();
+                                    });
                                 },
                             },
                             {
@@ -383,7 +386,7 @@
                                     $("#unit_price").val(data.unit_price);
                                     $("#discount").val(data.discount || 0);
                                     $("#tax").val(data.tax || 0);
-
+                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
                                     $("#modalTitle").text("Edit entry");
                                     $("#btnSubmitModal").text("Update");
                                     $("#modalPrDetail").modal("show");
@@ -454,9 +457,11 @@
                 let productName = $('#product_id option:selected').text();
                 let unitId = $('#unit_id').val();
                 let unitName = $('#unit_id option:selected').text();
+                let warehouseId = $('#warehouse_id').val();
+                let warehouseName = $('#warehouse_id option:selected').text();
                 let quantity = parseFloat($('#quantity').val()) || 0;
                 let availableStock = parseFloat($('#available_stok').val()) || 0;
-                let warehouseID = $('#warehouse_id').val();
+                // let warehouseID = $('#warehouse_id').val();
                 let detailId = $('#detail_id').val();
 
                 // Validasi input wajib
@@ -535,7 +540,8 @@
                     quantity: quantity,
                     unit_id: unitId,
                     unit: unitName,
-                    warehouse_id: warehouseID
+                    warehouse_id: warehouseId,
+                    warehouse: warehouseName,
                 };
 
                 // Create / Update
@@ -555,6 +561,7 @@
                 $('#detail_id').val('');
                 $('#product_id').val(null).trigger('change');
                 $('#unit_id').empty().trigger('change');
+                $('#warehouse_id').prop('selectedIndex', 0).trigger('change');
                 $('#available_stok').val('');
 
                 // Tutup Modal

@@ -1595,4 +1595,57 @@ class SalesOrderController extends Controller
             ], 422);
         }
     }
+
+     public function getStock(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|integer|exists:data_barang,id',
+            'warehouse_id' => 'required|integer|exists:warehouse,id',
+        ]);
+
+        // ambil cut off date dari company
+        $company = Company::first(); // atau pakai company aktif kalau multi-company
+
+        $cutoffDate = $company?->cut_off_date;
+
+        $stock = $this->realStock(
+            $request->product_id,
+            $request->warehouse_id,
+            $request->unit_id,
+            $cutoffDate
+        );
+
+        $barang = Barang::with('unitID')
+            ->find($request->product_id);
+        $unit = BasicCodeDetail::where('master_id',2)->find($request->unit_id);
+      return response()->json([
+            'success' => true,
+            'stock' => $stock ?? 0,
+            'unit' => $unit?->detail ?? '',
+            'cutoff_date' => $cutoffDate,
+        ]);
+   
+    }
+public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
+{
+    $unitId = (int) $unitId;
+    $today = now()->format('Y-m-d');
+    
+    // Jika cutoffDate null, kita anggap mulai dari tanggal yang sangat lampau atau hari ini
+    $startDate = $cutoffDate ?? $today;
+
+    return DB::table('stock_mutations')
+        ->where('data_barang_id', (int) $productId)
+        ->where('warehouse_id', (int) $warehouseId)
+        ->where('unit_id', $unitId)
+        // Filter rentang: date_stock harus >= cutoffDate DAN <= hari ini
+        ->whereBetween('date_stock', [$startDate, $today])
+        ->selectRaw("
+            SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
+            -
+            SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
+            as stock
+        ")
+        ->value('stock') ?? 0;
+}
 }

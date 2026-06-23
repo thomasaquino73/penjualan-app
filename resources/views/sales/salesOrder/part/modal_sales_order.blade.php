@@ -86,6 +86,12 @@
                               </select>
                               <span class="error text-danger" id="warehouse_idError"></span>
                           </div>
+                          <div class="col-md-6 col-sm-12 mb-3">
+                              <label class="form-label" for="available_stok">Available Stock</label>
+                              <input type="number" id="available_stok" name="available_stok" class="form-control"
+                                  readonly style="background-color: beige">
+                              <span class="error text-danger" id="available_stokError"></span>
+                          </div>
                       </div>
                   </div>
                   <div class="modal-footer">

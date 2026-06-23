@@ -612,6 +612,48 @@
                 },
             });
 
+            function loadAvailableStock() {
+
+                let productId = $('#product_id').val();
+                let warehouseId = $('#warehouse_id').val();
+                let unitId = $('#unit_id').val();
+
+                console.log({
+                    productId,
+                    warehouseId,
+                    unitId
+                });
+
+                if (!productId || !warehouseId || !unitId) {
+                    $('#available_stok').val('');
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ route('sales-order.wh.get-stock') }}",
+                    type: "GET",
+                    data: {
+                        product_id: productId,
+                        warehouse_id: warehouseId,
+                        unit_id: unitId
+                    },
+                    success: function(res) {
+                        $('#available_stok').val(res.stock);
+                        console.log('RESPONSE STOCK:', res.stock);
+
+                        $('#modalTitle').text(
+                            `Create new entry (Available Stock: ${res.stock} ${res.unit})`
+                        );
+                    }
+                });
+            }
+
+            $(document).on('change', '#product_id, #warehouse_id', loadAvailableStock);
+            $(document).on('change select2:select', '#unit_id', function() {
+                $('#warehouse_id').val('').trigger('change');
+                loadAvailableStock();
+            });
+
             $('#customer_id').on('change', function() {
                 var customerId = $(this).val();
                 var contactDropdown = $('#customer_contact_id');

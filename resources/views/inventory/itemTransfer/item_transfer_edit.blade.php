@@ -216,6 +216,7 @@
                 });
             });
 
+
             // function loadAvailableStock() {
 
             //     let productId = $('#product_id').val();

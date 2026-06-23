@@ -1172,6 +1172,7 @@ public function getOrderDetail(Request $request)
         $stock = $this->realStock(
             $request->product_id,
             $request->warehouse_id,
+            $request->unit_id,
             $cutoffDate
         );
 
@@ -1184,27 +1185,28 @@ public function getOrderDetail(Request $request)
             'unit' => $unit?->detail ?? '',
             'cutoff_date' => $cutoffDate,
         ]);
-        // return response()->json([
-        //     'success' => true,
-        //     'stock' => $stock ?? 0,
-        //     'unit' => $barang?->unitID?->detail ?? '',
-        //     'cutoff_date' => $cutoffDate,
-        // ]);
+   
     }
-    public function realStock($productId, $warehouseId, $cutoffDate = null)
-    {
-        return DB::table('stock_mutations')
-            ->where('data_barang_id', $productId)
-            ->where('warehouse_id', $warehouseId)
-            ->when($cutoffDate, function ($q) use ($cutoffDate) {
-                $q->whereDate('date_stock', '<=', $cutoffDate);
-            })
-            ->selectRaw("
-                SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
-                -
-                SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
-                as stock
-            ")
-            ->value('stock') ?? 0;
-    }
+public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
+{
+    $unitId = (int) $unitId;
+    $today = now()->format('Y-m-d');
+    
+    // Jika cutoffDate null, kita anggap mulai dari tanggal yang sangat lampau atau hari ini
+    $startDate = $cutoffDate ?? $today;
+
+    return DB::table('stock_mutations')
+        ->where('data_barang_id', (int) $productId)
+        ->where('warehouse_id', (int) $warehouseId)
+        ->where('unit_id', $unitId)
+        // Filter rentang: date_stock harus >= cutoffDate DAN <= hari ini
+        ->whereBetween('date_stock', [$startDate, $today])
+        ->selectRaw("
+            SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
+            -
+            SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
+            as stock
+        ")
+        ->value('stock') ?? 0;
+}
 }

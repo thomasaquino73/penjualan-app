@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ItemTransferRequest;
+use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\ItemTransfer;
 use App\Models\Inventory\ItemTransferDetail;
@@ -358,7 +359,7 @@ class ItemTransferController extends Controller
                 ['label' => 'Item Transfer', 'url' => ''],
             ],
             'idNumber' => $this->generateNumberId(),
-            'product' => Barang::where('status', '<>', 0)->get(),
+             'product' => Barang::with(['unitID'])->where('status', '<>', 0)->get(),
             'fromWarehouse' => Warehouse::where('status', '<>', 0)->get(),
             'toWarehouse' => Warehouse::where('status', '<>', 0)->get(),
         ];
@@ -1000,50 +1001,97 @@ class ItemTransferController extends Controller
         return $pdf->stream($filename.'.pdf');
     }
 
-    public function realStock($productId, $warehouseId, $cutoffDate = null)
-    {
-        $barang = Barang::findOrFail($productId);
-
-        return $barang->mutations()
-            ->where('warehouse_id', $warehouseId)
-            ->when($cutoffDate, function ($q) use ($cutoffDate) {
-                $q->whereDate('date_stock', '<=', $cutoffDate);
-            })
-            ->selectRaw("
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN type = 'in'
-                        THEN total_base_qty
-                        ELSE -total_base_qty
-                    END
-                ),
-                0
-            ) as total
-        ")
-            ->value('total');
-    }
-
     public function getStock(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|integer',
-            'warehouse_id' => 'required|integer',
+            'product_id' => 'required|integer|exists:data_barang,id',
+            'warehouse_id' => 'required|integer|exists:warehouse,id',
         ]);
+
+        // ambil cut off date dari company
+        $company = Company::first(); // atau pakai company aktif kalau multi-company
+
+        $cutoffDate = $company?->cut_off_date;
 
         $stock = $this->realStock(
             $request->product_id,
             $request->warehouse_id,
-            $request->cutoff_date
+            $request->unit_id,
+            $cutoffDate
         );
 
         $barang = Barang::with('unitID')
             ->find($request->product_id);
-
-        return response()->json([
+        $unit = BasicCodeDetail::where('master_id',2)->find($request->unit_id);
+      return response()->json([
             'success' => true,
-            'stock' => $stock,
-            'unit' => $barang?->unitID?->detail ?? '',
+            'stock' => $stock ?? 0,
+            'unit' => $unit?->detail ?? '',
+            'cutoff_date' => $cutoffDate,
         ]);
+   
     }
+public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
+{
+    $unitId = (int) $unitId;
+    $today = now()->format('Y-m-d');
+    
+    // Jika cutoffDate null, kita anggap mulai dari tanggal yang sangat lampau atau hari ini
+    $startDate = $cutoffDate ?? $today;
+
+    return DB::table('stock_mutations')
+        ->where('data_barang_id', (int) $productId)
+        ->where('warehouse_id', (int) $warehouseId)
+        ->where('unit_id', $unitId)
+        // Filter rentang: date_stock harus >= cutoffDate DAN <= hari ini
+        ->whereBetween('date_stock', [$startDate, $today])
+        ->selectRaw("
+            SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
+            -
+            SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
+            as stock
+        ")
+        ->value('stock') ?? 0;
+}
+  
+//    public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
+//     {
+//         return DB::table('stock_mutations')
+//             ->where('data_barang_id', $productId)
+//             ->where('warehouse_id', $warehouseId)
+//             // ->where('unit_id', $unitId) // Filter berdasarkan unit yang dipilih
+//             ->when($cutoffDate, function ($q) use ($cutoffDate) {
+//                 $q->whereDate('date_stock', '<=', $cutoffDate);
+//             })
+//             ->selectRaw("
+//                 SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
+//                 -
+//                 SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
+//                 as stock
+//             ")
+//             ->value('stock') ?? 0;
+//     }
+
+    // public function getStock(Request $request)
+    // {
+    //     $request->validate([
+    //         'product_id' => 'required|integer',
+    //         'warehouse_id' => 'required|integer',
+    //     ]);
+
+    //     $stock = $this->realStock(
+    //         $request->product_id,
+    //         $request->warehouse_id,
+    //         $request->cutoff_date
+    //     );
+
+    //     $barang = Barang::with('unitID')
+    //         ->find($request->product_id);
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'stock' => $stock,
+    //         'unit' => $barang?->unitID?->detail ?? '',
+    //     ]);
+    // }
 }

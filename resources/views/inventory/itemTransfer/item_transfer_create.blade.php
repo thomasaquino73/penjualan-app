@@ -199,9 +199,15 @@
 
                 let productId = $('#product_id').val();
                 let warehouseId = $('#from_warehouse_id').val();
-                let cutoffDate = $('#cutoff_date').val();
+                let unitId = $('#unit_id').val();
 
-                if (!productId || !warehouseId) {
+                console.log({
+                    productId,
+                    warehouseId,
+                    unitId
+                });
+
+                if (!productId || !warehouseId || !unitId) {
                     $('#available_stok').val('');
                     return;
                 }
@@ -212,22 +218,25 @@
                     data: {
                         product_id: productId,
                         warehouse_id: warehouseId,
-                        cutoff_date: cutoffDate
+                        unit_id: unitId
                     },
                     success: function(res) {
-                        let stock = Number(res.stock);
-                        $('#available_stok').val(stock);
+                        $('#available_stok').val(res.stock);
+                        console.log('RESPONSE STOCK:', res.stock);
 
                         $('#modalTitle').text(
-                            `Create new entry (Available Stock: ${stock} ${res.unit})`
+                            `Create new entry (Available Stock: ${res.stock} ${res.unit})`
                         );
                     }
                 });
             }
 
-            $('#product_id').on('change', loadAvailableStock);
-            $('#from_warehouse_id').on('change', loadAvailableStock);
-            $('#cutoff_date').on('change', loadAvailableStock);
+            $(document).on('change', '#product_id, #from_warehouse_id', loadAvailableStock);
+            $(document).on('change select2:select', '#unit_id', function() {
+                loadAvailableStock();
+            });
+
+
             let prDetailsData = [];
             let table = new DataTable('#table', {
                 processing: true,

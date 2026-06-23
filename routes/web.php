@@ -268,6 +268,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('', PurchaseInvoiceController::class)->parameters(['' => 'purchase_invoice']);
     });
 
+    Route::get('/sales-order/wh/get-stock', [SalesOrderController::class, 'getStock'])->name('sales-order.wh.get-stock');
     Route::patch('/sales-order/{id}/close', [SalesOrderController::class, 'CloseDocument'])->name('sales-order.close');
     Route::post('/sales-order/send-supplier/{id}', [SalesOrderController::class, 'sendSupplier'])->name('sales-order.send-supplier');
     Route::post('/sales-order/change-status/{id}', [SalesOrderController::class, 'changeStatus']);
