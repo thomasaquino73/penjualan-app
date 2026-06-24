@@ -97,25 +97,6 @@
                         </div>
                         <span class="error text-danger" id="kategori_idError"></span>
                     </div>
-
-                    {{-- <div class="col-md-12 mb-3">
-                        <label class="form-label">Warehouse<small class="text-danger">*</small></label>
-                        <div class="input-group input-group-merge">
-                            <span class="input-group-text"> <i class="ti ti-building-warehouse"></i></span>
-                            <select name="gudang_id" id="gudang_id" class="form-select select2"
-                                data-placeholder="Select warehouse">
-                                <option></option>
-                                @foreach ($warehouses as $warehouse)
-                                    <option value="{{ $warehouse->id }}"
-                                        {{ old('gudang_id', $detail->gudang_id ?? '') == $warehouse->id ? 'selected' : '' }}>
-                                        {{ $warehouse->nama_gudang }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <span class="error text-danger" id="gudang_idError"></span>
-                    </div> --}}
-
                     <div class="col-md-12 mb-3">
                         <label class="form-label">Unit<small class="text-danger">*</small></label>
                         <div class="input-group input-group-merge">
@@ -186,7 +167,7 @@
                                     <i class="ti ti-trash fs-5"></i>
                                 </button>
                             </div>
-                            <div class="row g-2">
+                            <div class="row g-2 mb-3">
                                 <div class="col-md-3">
                                     <select name="conversion[{{ $cIndex }}][to_unit]"
                                         class="form-select to_unit">
@@ -205,7 +186,8 @@
                                 </div>
                                 <div class="col-md-3">
                                     <input type="number" name="conversion[{{ $cIndex }}][qty]"
-                                        class="form-control qty" placeholder="Qty" value="{{ $conversion->qty }}">
+                                        class="form-control qty" placeholder="Qty"
+                                        value="{{ rtrim(rtrim($conversion->qty, '0'), '.') }}">
                                 </div>
                                 <div class="col-md-4">
                                     <input type="text" class="form-control from_unit_text"
@@ -213,6 +195,20 @@
                                     <input type="hidden" class="from_unit_id"
                                         name="conversion[{{ $cIndex }}][from_unit]"
                                         value="{{ $detail->unit_id }}">
+                                </div>
+                            </div>
+                            <div class="mb-3 row {{ empty($conversion->sell_price) ? 'd-none' : '' }} grupsell">
+                                <label class="col-md-4 col-form-label">Default Sell Price #{{ $cIndex + 1 }}</label>
+                                <div class="col-md-8">
+                                    <div class="input-group input-group-merge disabled-group">
+                                        <span class="input-group-text ">{{ $mataUangDefault->symbol }}</span>
+                                        <input type="number" name="sell_price[0][to_unit]"
+                                            class="form-control sell_price" placeholder="0" min="0"
+                                            value="{{ rtrim(rtrim($conversion->sell_price, '-'), '.') }}">
+                                        <span class="input-group-text sellPrice"
+                                            id="">{{ $conversion->fromUnitID->detail ?? '' }}</span>
+                                    </div>
+                                    <span class="error text-danger" id="sell_priceError"></span>
                                 </div>
                             </div>
                         </div>
@@ -225,7 +221,7 @@
                                 <i class="ti ti-trash fs-5"></i>
                             </button>
                         </div>
-                        <div class="row g-2">
+                        <div class="row g-2 mb-3">
                             <div class="col-md-3">
                                 <select name="conversion[0][to_unit]" class="form-select to_unit">
                                     <option value="">Select</option>
@@ -248,6 +244,20 @@
                                     value="{{ $detail->unit_id }}">
                             </div>
                         </div>
+                        <div class="mb-3 row d-none grupsell">
+                            <label class="col-md-4 col-form-label">Default Sell Price #2</label>
+                            <div class="col-md-8">
+                                <div class="input-group input-group-merge disabled-group">
+                                    <span class="input-group-text ">{{ $mataUangDefault->symbol }}</span>
+                                    <input type="number" name="sell_price[1][to_unit]"
+                                        class="form-control sell_price" placeholder="0" min="0"
+                                        value="">
+                                    <span class="input-group-text sellPrice"
+                                        id="">{{ $conversion->fromUnitID->detail ?? '' }}</span>
+                                </div>
+                                <span class="error text-danger" id="sell_priceError"></span>
+                            </div>
+                        </div>
                     </div>
                 @endif
             </div>
@@ -256,6 +266,43 @@
     </div>
 
     <div class="col-lg-6" id="supplyForm">
+        <h6><strong>Sales Information</strong></h6>
+        <div class="mb-3 row">
+            <label class="col-md-4 col-form-label">Default Discount </label>
+            <div class="col-md-8">
+                <div class="input-group input-group-merge">
+                    <span class="input-group-text"><i class="ti ti-tag"></i></span>
+                    <input type="number" id="default_discount" name="default_discount" class="form-control"
+                        placeholder="0" min="0" value="{{ $detail->default_discount }}">
+                    <span class="input-group-text">%</span>
+                </div>
+                <span class="error text-danger" id="default_discountError"></span>
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-md-4 col-form-label">Default Sell Price </label>
+            <div class="col-md-8">
+                <div class="input-group input-group-merge">
+                    <span class="input-group-text">{{ $mataUangDefault->symbol }}</span>
+                    <input type="number" id="default_price" name="default_price" class="form-control"
+                        placeholder="0" min="0" value="{{ $detail->default_price }}">
+                    <span class="input-group-text" id="sellPrice">/ {{ $detail->unitID->detail ?? '' }}</span>
+                </div>
+                <span class="error text-danger" id="default_priceError"></span>
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-md-4 col-form-label">Selling Minimum </label>
+            <div class="col-md-8">
+                <div class="input-group input-group-merge">
+                    <span class="input-group-text"><i class="ti ti-tag-minus"></i></span>
+                    <input type="number" id="selling_minimun" name="selling_minimun" class="form-control"
+                        placeholder="0" min="0" value="{{ $detail->selling_minimun }}">
+                    <span class="input-group-text" id="selMin">/ {{ $detail->unitID->detail ?? '' }}</span>
+                </div>
+                <span class="error text-danger" id="selling_minimunError"></span>
+            </div>
+        </div>
         <h6><strong>Purchase Information</strong></h6>
         <div class="mb-3 row">
             <label class="col-md-4 col-form-label">Primary Supplier</label>
@@ -301,7 +348,7 @@
             <label class="col-md-4 col-form-label">Price/Unit</label>
             <div class="col-md-8">
                 <div class="input-group input-group-merge">
-                    <span class="input-group-text"> {{ $mataUangDefault ?? 'Rp' }}</span>
+                    <span class="input-group-text"> {{ $mataUangDefault->symbol }}</span>
                     <input type="number" id="primary_price" name="primary_price" class="form-control"
                         placeholder="0" value="{{ old('primary_price', $detail->primary_price ?? '') }}"
                         min="0">

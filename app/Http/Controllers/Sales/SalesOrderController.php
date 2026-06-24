@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SalesOrderRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
+use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
@@ -1649,5 +1650,81 @@ class SalesOrderController extends Controller
             as stock
         ")
             ->value('stock') ?? 0;
+    }
+
+    public function getUnitsByProduct($id)
+    {
+        // 🔥 Ambil data produk (buat ambil harga)
+        $product = Barang::find($id);
+        // 1. Ambil semua baris data konversi berdasarkan data_barang_id
+        $conversions = DataBarangConversion::with(['toUnitID', 'fromUnitID'])
+            ->where('data_barang_id', $id)
+            ->get();
+
+        if ($conversions->isEmpty()) {
+            return response()->json([]);
+        }
+
+        $result = [];
+        $addedIds = []; // Array penampung untuk menghindari ID kembar di dropdown
+
+        // 2. Cek apakah ada SALAH SATU atau SEMUA baris yang to_unit_id-nya terisi (TIDAK NULL)
+        $hasToUnit = $conversions->contains(function ($item) {
+            return ! is_null($item->getRawOriginal('to_unit_id')) && $item->getRawOriginal('to_unit_id') !== '';
+        });
+
+        if ($hasToUnit) {
+            // --- KONDISI A: to_unit_id ada yang terisi -> Tampilkan dari to_unit_id DAN from_unit_id ---
+
+            // Ambil SEMUA data to_unit_id yang valid (tidak null)
+            foreach ($conversions as $item) {
+                $toId = $item->getRawOriginal('to_unit_id');
+
+                if (! is_null($toId) && ! in_array($toId, $addedIds)) {
+                    $result[] = [
+                        'id' => $toId,
+                        'name' => $item->toUnitID ? $item->toUnitID->detail : 'Unit '.$toId,
+                    ];
+                    $addedIds[] = $toId;
+                }
+            }
+
+            // Tambahkan JUGAdari darifrom_unit_id (ambil 1 data saja)
+            $firstFromUnit = $conversions->first(function ($item) {
+                return ! is_null($item->getRawOriginal('from_unit_id'));
+            });
+
+            if ($firstFromUnit) {
+                $fromId = $firstFromUnit->getRawOriginal('from_unit_id');
+                if (! in_array($fromId, $addedIds)) {
+                    $result[] = [
+                        'id' => $fromId,
+                        'name' => $firstFromUnit->fromUnitID ? $firstFromUnit->fromUnitID->detail : 'Unit '.$fromId,
+                    ];
+                }
+            }
+
+        } else {
+            // --- KONDISI B: to_unit_id KOSONG SEMUA -> Hanya tampilkan 1 data dari from_unit_id ---
+
+            $firstFromUnit = $conversions->first(function ($item) {
+                return ! is_null($item->getRawOriginal('from_unit_id'));
+            });
+
+            if ($firstFromUnit) {
+                $fromId = $firstFromUnit->getRawOriginal('from_unit_id');
+                $result[] = [
+                    'id' => $fromId,
+                    'name' => $firstFromUnit->fromUnitID ? $firstFromUnit->fromUnitID->detail : 'Unit '.$fromId,
+                ];
+            }
+        }
+
+         // 🔥 RETURN SEKALIGUS HARGA
+        return response()->json([
+            'units' => $result,
+            'default_price' => $product->default_price ?? $product->primary_price ?? 0
+        ]);
+        // return response()->json($result);
     }
 }

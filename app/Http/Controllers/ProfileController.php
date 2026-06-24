@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PasswordRequest;
-use App\Models\PengaturanSistem;
 use App\Models\Setting\Company;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -100,64 +99,64 @@ class ProfileController extends Controller
         }
     }
 
-  public function cetak($id)
-{
-    $user = User::findOrFail(Auth::user()->id);
-    $company = Company::first();
+    public function cetak($id)
+    {
+        $user = User::findOrFail(Auth::user()->id);
+        $company = Company::first();
 
-    // Logo perusahaan
-    $logoBase64 = null;
-    if ($company && $company->logo) {
-        $path = public_path($company->logo);
+        // Logo perusahaan
+        $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
 
-        if (file_exists($path)) {
-            $type = pathinfo($path, PATHINFO_EXTENSION);
-            $logoBase64 = 'data:image/' . $type . ';base64,' .
-                base64_encode(file_get_contents($path));
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $logoBase64 = 'data:image/'.$type.';base64,'.
+                    base64_encode(file_get_contents($path));
+            }
         }
+
+        // Background kartu
+        $backgroundBase64 = null;
+        $backgroundPath = public_path('image/logo/backgroundkartu.png');
+
+        if (file_exists($backgroundPath)) {
+            $backgroundBase64 = 'data:image/png;base64,'.
+                base64_encode(file_get_contents($backgroundPath));
+        }
+
+        // Avatar user
+        if (
+            $user->avatar &&
+            file_exists(public_path($user->avatar))
+        ) {
+            $avatarPath = public_path($user->avatar);
+        } else {
+            $avatarPath = $user->gender == 'Male'
+                ? public_path('image/foto_user/avatar_user_default.png')
+                : public_path('image/foto_user/avatar_women.png');
+        }
+
+        $avatarBase64 = null;
+
+        if (file_exists($avatarPath)) {
+            $type = pathinfo($avatarPath, PATHINFO_EXTENSION);
+
+            $avatarBase64 = 'data:image/'.$type.';base64,'.
+                base64_encode(file_get_contents($avatarPath));
+        }
+
+        $data = [
+            'user' => $user,
+            'company' => $company,
+            'logoBase64' => $logoBase64,
+            'avatar' => $avatarBase64,
+            'backgroundBase64' => $backgroundBase64,
+        ];
+
+        $pdf = Pdf::loadView('profile.kartu_anggota', $data)
+            ->setPaper([0, 0, 242.65, 153.07]);
+
+        return $pdf->stream('kartu-anggota.pdf');
     }
-
-    // Background kartu
-    $backgroundBase64 = null;
-    $backgroundPath = public_path('image/logo/backgroundkartu.png');
-
-    if (file_exists($backgroundPath)) {
-        $backgroundBase64 = 'data:image/png;base64,' .
-            base64_encode(file_get_contents($backgroundPath));
-    }
-
-    // Avatar user
-    if (
-        $user->avatar &&
-        file_exists(public_path($user->avatar))
-    ) {
-        $avatarPath = public_path($user->avatar);
-    } else {
-        $avatarPath = $user->gender == 'Male'
-            ? public_path('image/foto_user/avatar_user_default.png')
-            : public_path('image/foto_user/avatar_women.png');
-    }
-
-    $avatarBase64 = null;
-
-    if (file_exists($avatarPath)) {
-        $type = pathinfo($avatarPath, PATHINFO_EXTENSION);
-
-        $avatarBase64 = 'data:image/' . $type . ';base64,' .
-            base64_encode(file_get_contents($avatarPath));
-    }
-
-    $data = [
-        'user' => $user,
-        'company' => $company,
-        'logoBase64' => $logoBase64,
-        'avatar' => $avatarBase64,
-        'backgroundBase64' => $backgroundBase64,
-    ];
-
-    $pdf = Pdf::loadView('profile.kartu_anggota', $data)
-          ->setPaper([0, 0, 242.65, 153.07]);
-
-    return $pdf->stream('kartu-anggota.pdf');
-}
 }

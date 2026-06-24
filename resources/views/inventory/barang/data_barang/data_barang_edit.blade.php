@@ -851,35 +851,85 @@
         document.getElementById('unit_price').addEventListener('input', hitungTotal);
     </script>
     <script>
-        $('#unit_id').on('change', function() {
+        // $('#unit_id').on('change', function() {
+        //     let unitId = $(this).val();
+        //     let unitText = $(this).find('option:selected').text().trim();
+
+        //     // Targetkan container konversi
+        //     let $container = $('#conversion-container');
+
+        //     if (unitId !== "") {
+        //         // Logika saat unit_id dipilih
+        //         $container.find('.from_unit_text').val(unitText);
+        //         $container.find('.from_unit_id').val(unitId);
+
+        //         $container.find('.qty, .to_unit').prop('disabled', false);
+        //         $('#btn-add-conversion').prop('disabled', false);
+        //     } else {
+        //         // --- LOGIKA RESET ---
+        //         $container.find('.from_unit_text').val('');
+        //         // $container.find('.from_unit_id').val('');
+
+        //         // Reset selectbox ke nilai kosong (placeholder)
+        //         $container.find('.to_unit').val('');
+
+        //         // Reset juga input quantity
+        //         // $container.find('.qty').val('');
+
+        //         // Nonaktifkan input
+        //         $container.find('.qty, .to_unit').prop('disabled', true);
+        //         $('#btn-add-conversion').prop('disabled', true);
+        //     }
+        // });
+         $('#unit_id').on('change', function() {
             let unitId = $(this).val();
-            let unitText = $(this).find('option:selected').text().trim();
-
-            // Targetkan container konversi
-            let $container = $('#conversion-container');
-
+            let unitText = $('#unit_id option:selected').text();
             if (unitId !== "") {
-                // Logika saat unit_id dipilih
-                $container.find('.from_unit_text').val(unitText);
-                $container.find('.from_unit_id').val(unitId);
+                $('.from_unit_text').val(unitText);
 
-                $container.find('.qty, .to_unit').prop('disabled', false);
-                $('#btn-add-conversion').prop('disabled', false);
+                // isi ke hidden input (buat backend)
+                $('.from_unit_id').val(unitId);
+                $('#selMin').html('/ ' + unitText);
+                $('#sellPrice').html('/ ' + unitText);
+                // 🔥 AKTIFKAN INPUT
+                $('.qty').prop('disabled', false);
+                $('.to_unit').prop('disabled', false);
+                $('.sell_price').prop('disabled', false);
+                // $('#btn-add-conversion').prop('disabled', false);
+
             } else {
-                // --- LOGIKA RESET ---
-                $container.find('.from_unit_text').val('');
-                // $container.find('.from_unit_id').val('');
+                $('.from_unit_text').val(unitText);
 
-                // Reset selectbox ke nilai kosong (placeholder)
-                $container.find('.to_unit').val('');
-
-                // Reset juga input quantity
-                // $container.find('.qty').val('');
-
-                // Nonaktifkan input
-                $container.find('.qty, .to_unit').prop('disabled', true);
-                $('#btn-add-conversion').prop('disabled', true);
+                // isi ke hidden input (buat backend)
+                $('.from_unit_id').val(unitId);
+                $('#selMin').html('/ ' + unitText);
+                $('#sellPrice').html('/ ' + unitText);
+                // 🔥 AKTIFKAN INPUT
+                $('.qty').prop('disabled', true);
+                $('.to_unit').prop('disabled', true);
+                $('.sell_price').prop('disabled', true);
+                // $('#btn-add-conversion').prop('disabled', true);
             }
+        });
+        $(document).on('change', '.to_unit', function() {
+
+            let unitValue = $(this).val();
+            let row = $(this).closest('.conversion-item');
+
+            if (unitValue === "" || unitValue === null) {
+
+                row.find('.sellPrice').text('');
+                row.find('.grupsell').addClass('d-none');
+
+                return;
+            }
+
+            let unitText = $(this).find('option:selected').text();
+
+            row.find('.sellPrice').text('/ ' + unitText);
+
+            // 👉 TAMPILKAN GROUP SELL PRICE
+            row.find('.grupsell').removeClass('d-none');
         });
         $(function() {
             $('#modalPrDetail').on('shown.bs.modal', function() {

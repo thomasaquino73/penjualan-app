@@ -724,7 +724,7 @@
                 // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
                 // ==========================================
                 $.ajax({
-                    url: `/get-units-by-product/${productId}`,
+                    url: `/sales-order/get-units-by-product/${productId}`,
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -739,6 +739,7 @@
                             .prop("disabled", false);
 
                         if (response && response.length > 0) {
+                            // if (response.units && response.units.length > 0) {
                             $.each(response, function(key, item) {
                                 unitSelect.append(
                                     `<option value="${item.id}">${item.name}</option>`,
@@ -751,7 +752,7 @@
                         }
 
                         unitSelect.trigger("change");
-
+                        priceInput.val(response.default_price || 0);
                         let pendingUnitId = unitSelect.data("pending-val");
                         if (pendingUnitId) {
                             unitSelect.val(pendingUnitId).trigger("change");

@@ -41,7 +41,7 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
         });
-  
+
         Schema::create('data_barang_conversions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('data_barang_id');

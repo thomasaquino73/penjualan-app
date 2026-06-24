@@ -28,21 +28,23 @@ class CreateYearlyTables extends Command
             $tableName = $row->$key;
 
             // hanya proses tabel yang ada suffix tahun sekarang
-            if (!str_ends_with($tableName, "_{$year}")) {
+            if (! str_ends_with($tableName, "_{$year}")) {
                 continue;
             }
 
             $newTable = str_replace("_{$year}", "_{$nextYear}", $tableName);
 
             // jika tabel tahun sekarang tidak ada, skip
-            if (!Schema::hasTable($tableName)) {
+            if (! Schema::hasTable($tableName)) {
                 $this->warn("Skip {$tableName} (not exists)");
+
                 continue;
             }
 
             // jika tabel baru sudah ada, skip
             if (Schema::hasTable($newTable)) {
                 $this->info("Skip {$newTable} (already exists)");
+
                 continue;
             }
 

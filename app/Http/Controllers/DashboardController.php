@@ -24,7 +24,7 @@ class DashboardController extends Controller
             $brandLabels = ['No Data'];
             $brandValues = [0];
         }
-        $brandName = BasicCodeDetail::where('master_id',11)->orderby('detail','asc')->get();
+        $brandName = BasicCodeDetail::where('master_id', 11)->orderby('detail', 'asc')->get();
 
         $x = [
             'totalUsers' => $stats['totalUsers'],

@@ -341,7 +341,7 @@ class DataBarangController extends Controller
             'supplier' => Supplier::where('status', 1)->get(),
             'warehouses' => Warehouse::where('status', 1)->get(),
             'brand' => BasicCodeDetail::where('master_id', 11)->get(),
-             'mataUangDefault' => $company->defaultCurrency,
+            'mataUangDefault' => $company->defaultCurrency,
         ]);
     }
     // protected function uploadAvatar($avatar)
@@ -392,7 +392,7 @@ class DataBarangController extends Controller
         try {
             $isSaveAndNew = $request->input('save_and_new') == '1';
 
-            $data = $request->except(['_token', 'save_and_new', 'conversion', 'variants','sell_price']);
+            $data = $request->except(['_token', 'save_and_new', 'conversion', 'variants', 'sell_price']);
             $itemsDetailRaw = $request->input('items_detail');
             unset($data['items_detail']);
             $data['created_by'] = Auth::id();
@@ -410,8 +410,8 @@ class DataBarangController extends Controller
             // =========================
             // 2. SAVE CONVERSION DATA
             // =========================
-           $conversions = $request->conversion ?? [];
-            $sellPrices  = $request->sell_price ?? [];
+            $conversions = $request->conversion ?? [];
+            $sellPrices = $request->sell_price ?? [];
 
             for ($i = 0; $i < 2; $i++) {
 
@@ -775,6 +775,7 @@ class DataBarangController extends Controller
         $unit = BasicCodeDetail::where('master_id', 2)->get();
         $warehouses = Warehouse::where('status', 1)->get();
         $suppliers = Supplier::where('status', 1)->get();
+        $company = Company::with('defaultCurrency')->first();
 
         return view('inventory.barang.data_barang.data_barang_edit', [
             'title' => 'Edit Product',
@@ -790,6 +791,7 @@ class DataBarangController extends Controller
             'warehouses' => $warehouses,
             'detail' => $idDetail,
             'brand' => BasicCodeDetail::where('master_id', 11)->get(),
+            'mataUangDefault' => $company->defaultCurrency,
         ]);
     }
 
@@ -804,7 +806,7 @@ class DataBarangController extends Controller
             // ==================================================
             // 1. UPDATE DATA MASTER BARANG
             // ==================================================
-            $data = $request->except(['_token', '_method', 'save_and_new', 'conversion', 'variants', 'items_detail']);
+            $data = $request->except(['_token', '_method', 'save_and_new', 'conversion', 'variants', 'items_detail', 'sell_price']);
             $data['updated_by'] = Auth::id();
             $data['status'] = $request->has('status') ? 1 : 2;
 
@@ -817,36 +819,82 @@ class DataBarangController extends Controller
             $barang->update($data);
 
             // 1. Ambil data konversi yang valid saja
+            $conversions = $request->conversion ?? [];
+            $sellPrices = $request->sell_price ?? [];
+
             $newConversions = [];
+
             if ($request->has('conversion')) {
-                foreach ($request->conversion as $conv) {
+                foreach ($request->conversion as $i => $conv) {
+
                     if (! empty($conv['to_unit']) && $conv['to_unit'] !== 'Select Unit') {
-                        $newConversions[] = $conv;
+
+                        $newConversions[] = [
+                            'conv' => $conv,
+                            'price' => $sellPrices[$i]['to_unit'] ?? 0,
+                        ];
                     }
                 }
             }
 
-            // 2. Pastikan minimal ada 2 index (tambahkan array kosong jika kurang dari 2)
+            // pastikan minimal 2 data
             while (count($newConversions) < 2) {
-                $newConversions[] = ['to_unit' => null, 'qty' => 0];
+                $newConversions[] = [
+                    'conv' => ['to_unit' => null, 'qty' => 0],
+                    'price' => 0,
+                ];
             }
 
-            // 3. Update database
-            // Menggunakan transaction agar lebih aman
             DB::transaction(function () use ($barang, $request, $newConversions) {
-                // Hapus data lama
+
+                // hapus lama
                 DataBarangConversion::where('data_barang_id', $barang->id)->delete();
 
-                // Insert data yang sudah dipastikan minimal 2
-                foreach ($newConversions as $conv) {
+                // insert baru
+                foreach ($newConversions as $item) {
+
+                    $conv = $item['conv'];
+                    $price = $item['price'];
+
                     DataBarangConversion::create([
                         'data_barang_id' => $barang->id,
                         'to_unit_id' => $request->unit_id,
                         'from_unit_id' => $conv['to_unit'] ?? null,
                         'qty' => $conv['qty'] ?? 0,
+                        'sell_price' => $price,
                     ]);
                 }
             });
+            // $newConversions = [];
+            // if ($request->has('conversion')) {
+            //     foreach ($request->conversion as $conv) {
+            //         if (! empty($conv['to_unit']) && $conv['to_unit'] !== 'Select Unit') {
+            //             $newConversions[] = $conv;
+            //         }
+            //     }
+            // }
+
+            // // 2. Pastikan minimal ada 2 index (tambahkan array kosong jika kurang dari 2)
+            // while (count($newConversions) < 2) {
+            //     $newConversions[] = ['to_unit' => null, 'qty' => 0];
+            // }
+
+            // // 3. Update database
+            // // Menggunakan transaction agar lebih aman
+            // DB::transaction(function () use ($barang, $request, $newConversions) {
+            //     // Hapus data lama
+            //     DataBarangConversion::where('data_barang_id', $barang->id)->delete();
+
+            //     // Insert data yang sudah dipastikan minimal 2
+            //     foreach ($newConversions as $conv) {
+            //         DataBarangConversion::create([
+            //             'data_barang_id' => $barang->id,
+            //             'to_unit_id' => $request->unit_id,
+            //             'from_unit_id' => $conv['to_unit'] ?? null,
+            //             'qty' => $conv['qty'] ?? 0,
+            //         ]);
+            //     }
+            // });
 
             // ==================================================
             // 3. UPDATE VARIAN
