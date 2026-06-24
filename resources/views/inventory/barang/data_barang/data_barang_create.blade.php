@@ -211,7 +211,7 @@
                             <div class="col-12 mb-3">
                                 <label class="form-label" for="discount">Total Price</label>
                                 <div class="input-group input-group-merge">
-                                    <span class="input-group-text"> {{ $mataUangDefault ?? 'Rp' }}
+                                    <span class="input-group-text">{{ $mataUangDefault ?? 'Rp' }}
                                     </span>
                                     <input type="number" id="total_price" name="total_price" class="form-control"
                                         placeholder="0" min="0" readonly>

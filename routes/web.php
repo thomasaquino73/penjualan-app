@@ -21,6 +21,7 @@ use App\Http\Controllers\Purchase\Supplier\SupplierController;
 use App\Http\Controllers\Sales\Customer\CustomerController;
 use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
 use App\Http\Controllers\Sales\DeliveryOrderController;
+use App\Http\Controllers\Sales\KasirController;
 use App\Http\Controllers\Sales\SalesOrderController;
 use App\Http\Controllers\Sales\SalesQuotationController;
 use App\Http\Controllers\Setting\CashBankController;
@@ -261,6 +262,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/get-processing-po', [ReceiveItemController::class, 'getProcessingData'])->name('po.processing');
         Route::get('/trash', [ReceiveItemController::class, 'trash'])->name('trash');
         Route::resource('', ReceiveItemController::class)->parameters(['' => 'receive_item']);
+    });
+
+    Route::prefix('penjualan-toko')->name('penjualan-toko.')->group(function () {
+        // Route::get('/print/{id}', [ReceiveItemController::class, 'print'])->name('print');
+        // Route::post('/get-order-detail', [ReceiveItemController::class, 'getOrderDetail'])->name('get-order-detail');
+        // Route::get('/get-processing-po', [ReceiveItemController::class, 'getProcessingData'])->name('po.processing');
+        // Route::get('/trash', [ReceiveItemController::class, 'trash'])->name('trash');
+        Route::resource('', KasirController::class)->parameters(['' => 'penjualan_toko']);
     });
 
     Route::prefix('purchase-invoice')->name('purchase-invoice.')->group(function () {

@@ -237,6 +237,16 @@ class Sidebar extends Component
                 'permissions' => ['delivery_order-browse'],
             ],
             [
+                'type' => 'single',
+                'name' => 'Store Sales',
+                'route' => 'penjualan-toko.index',
+                'icon' => 'ti ti-calculator',
+                'pattern' => 'penjualan-toko.*',
+                'active' => true,
+                'roles' => ['Super Admin'],
+                'permissions' => ['penjualan_toko-browse'],
+            ],
+            [
                 'type' => 'section',
                 'label' => 'INVENTORY',
                 'roles' => ['Super Admin'],

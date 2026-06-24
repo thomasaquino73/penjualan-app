@@ -497,6 +497,8 @@ class SalesOrderController extends Controller
 
     public function create()
     {
+        $company = Company::with('defaultCurrency')->first();
+
         $x = [
             'title' => 'Sales Order New',
             'breadcrumb' => [
@@ -511,6 +513,7 @@ class SalesOrderController extends Controller
             'salesman' => User::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
+            'company' => $company,
 
         ];
 
