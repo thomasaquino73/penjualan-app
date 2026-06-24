@@ -241,6 +241,7 @@
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
         $(document).ready(function() {
+
             // 1. Aksi Tambah Baris Konversi
             $('#btn-add-conversion').on('click', function() {
                 // Hitung baris yang sudah ada untuk menentukan index baru
@@ -255,7 +256,7 @@
                             <i class="ti ti-trash fs-5"></i>
                         </button>
                     </div>
-                    <div class="row g-2">
+                    <div class="row g-2 mb-3">
                            <div class="col-md-3">
                             <select name="conversion[${index}][to_unit]" class="form-select to_unit" ${$('.to_unit').first().is(':disabled') ? 'disabled' : ''}>
                                 <option value="">Select</option>
@@ -274,7 +275,19 @@
                             <input type="hidden" name="conversion[${index}][from_unit]" class="from_unit_id" value="${$('.from_unit_id').first().val() || ''}">
                         </div>
                     </div>
-                </div>`;
+                 <div class="mb-3 row d-none grupsell">
+                       <label class="col-md-4 col-form-label">Default Sell Price #${index + 1}</label>
+                       <div class="col-md-8">
+                           <div class="input-group input-group-merge disabled-group">
+                               <span class="input-group-text ">{{ $mataUangDefault->symbol }}</span>
+                               <input type="number" name="sell_price[${index}][to_unit]" class="form-control sell_price"
+                                   placeholder="0" min="0" >
+                               <span class="input-group-text sellPrice" id=""></span>
+                           </div>
+                       </div>
+                   </div>
+                </div>
+                   `;
 
                 // Masukkan ke dalam container
                 $('#conversion-container').append(html);
@@ -303,6 +316,29 @@
                     $(this).find('.to_unit').attr('name', `conversion[${index}][to_unit]`);
                 });
             }
+        });
+    </script>
+    <script>
+        function checkConversionComplete() {
+
+            let allFilled = true;
+
+            $('.conversion-item').each(function() {
+
+                let unit = $(this).find('.to_unit').val();
+                let qty = $(this).find('.qty').val();
+
+                // kalau salah satu kosong → belum lengkap
+                if (!unit || !qty) {
+                    allFilled = false;
+                }
+
+            });
+
+            $('#btn-add-conversion').prop('disabled', !allFilled);
+        }
+        $(document).on('change keyup', '.to_unit, .qty', function() {
+            checkConversionComplete();
         });
     </script>
     <script>
@@ -517,6 +553,7 @@
                         <button type="button" class="btn btn-sm btn-danger btn-remove-spec d-none">&times;</button>
                     </div>
                 </div>
+
              `;
 
                 // Tampilkan dan aktifkan tombol "Hapus Varian" untuk blok kartu baru ini
@@ -596,23 +633,62 @@
 
                 // isi ke hidden input (buat backend)
                 $('.from_unit_id').val(unitId);
+                $('#selMin').html('/ ' + unitText);
+                $('#sellPrice').html('/ ' + unitText);
                 // 🔥 AKTIFKAN INPUT
                 $('.qty').prop('disabled', false);
                 $('.to_unit').prop('disabled', false);
-                $('#btn-add-conversion').prop('disabled', false);
+                $('.sell_price').prop('disabled', false);
+                // $('#btn-add-conversion').prop('disabled', false);
 
             } else {
                 $('.from_unit_text').val(unitText);
 
                 // isi ke hidden input (buat backend)
                 $('.from_unit_id').val(unitId);
+                $('#selMin').html('/ ' + unitText);
+                $('#sellPrice').html('/ ' + unitText);
                 // 🔥 AKTIFKAN INPUT
                 $('.qty').prop('disabled', true);
                 $('.to_unit').prop('disabled', true);
-                $('#btn-add-conversion').prop('disabled', true);
+                $('.sell_price').prop('disabled', true);
+                // $('#btn-add-conversion').prop('disabled', true);
+            }
+        });
+        $(document).on('change', '.to_unit', function() {
+
+            let unitValue = $(this).val();
+            let row = $(this).closest('.conversion-item');
+
+            if (unitValue === "" || unitValue === null) {
+
+                row.find('.sellPrice').text('');
+                row.find('.grupsell').addClass('d-none');
+
+                return;
             }
 
+            let unitText = $(this).find('option:selected').text();
+
+            row.find('.sellPrice').text('/ ' + unitText);
+
+            // 👉 TAMPILKAN GROUP SELL PRICE
+            row.find('.grupsell').removeClass('d-none');
         });
+        // $(document).on('change', '.to_unit', function() {
+
+        //     let unitValue = $(this).val();
+        //     let row = $(this).closest('.conversion-item');
+
+        //     if (unitValue === "" || unitValue === null) {
+        //         row.find('.sellPrice').text('');
+        //         return;
+        //     }
+
+        //     let unitText = $(this).find('option:selected').text();
+
+        //     row.find('.sellPrice').text('/ ' + unitText);
+        // });
         let prDetailsData = [];
         $(function() {
             $('#modalPrDetail').on('shown.bs.modal', function() {

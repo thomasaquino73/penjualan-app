@@ -164,7 +164,7 @@
                            <i class="ti ti-trash fs-5"></i>
                        </button>
                    </div>
-                   <div class="row g-2">
+                   <div class="row g-2 mb-3">
                        <div class="col-md-3">
                            <select name="conversion[0][to_unit]" class="form-select to_unit" disabled>
                                <option value="">Select</option>
@@ -185,6 +185,18 @@
                            <input type="hidden" name="conversion[0][from_unit]" class="from_unit_id">
                        </div>
                    </div>
+                   <div class="mb-3 row d-none grupsell">
+                       <label class="col-md-4 col-form-label">Default Sell Price #1</label>
+                       <div class="col-md-8">
+                           <div class="input-group input-group-merge">
+                               <span class="input-group-text">{{ $mataUangDefault->symbol }}</span>
+                               <input type="number" name="sell_price[0][to_unit]" class="form-control sell_price"
+                                   placeholder="0" min="0" disabled>
+                               <span class="input-group-text sellPrice" id=""></span>
+                           </div>
+                           <span class="error text-danger" id="sell_priceError"></span>
+                       </div>
+                   </div>
                </div>
 
                <div class="conversion-item border p-3 mb-2 rounded position-relative">
@@ -194,7 +206,7 @@
                            <i class="ti ti-trash fs-5"></i>
                        </button>
                    </div>
-                   <div class="row g-2">
+                   <div class="row g-2 mb-3">
                        <div class="col-md-3">
                            <select name="conversion[1][to_unit]" class="form-select to_unit" disabled>
                                <option value="">Select</option>
@@ -215,10 +227,59 @@
                            <input type="hidden" name="conversion[1][from_unit]" class="from_unit_id">
                        </div>
                    </div>
+                   <div class="mb-3 row d-none grupsell">
+                       <label class="col-md-4 col-form-label">Default Sell Price #2</label>
+                       <div class="col-md-8">
+                           <div class="input-group input-group-merge disabled-group">
+                               <span class="input-group-text ">{{ $mataUangDefault->symbol }}</span>
+                               <input type="number" name="sell_price[1][to_unit]" class="form-control sell_price"
+                                   placeholder="0" min="0" disabled>
+                               <span class="input-group-text sellPrice" id=""></span>
+                           </div>
+                           <span class="error text-danger" id="sell_priceError"></span>
+                       </div>
+                   </div>
                </div>
            </div>
        </div>
        <div class="col-lg-6" id="supplyForm">
+           <h6><strong>Sales Information</strong></h6>
+           <div class="mb-3 row">
+               <label class="col-md-4 col-form-label">Default Discount </label>
+               <div class="col-md-8">
+                   <div class="input-group input-group-merge">
+                       <span class="input-group-text"><i class="ti ti-tag"></i></span>
+                       <input type="number" id="default_discount" name="default_discount" class="form-control"
+                           placeholder="0" min="0">
+                       <span class="input-group-text">%</span>
+                   </div>
+                   <span class="error text-danger" id="default_discountError"></span>
+               </div>
+           </div>
+           <div class="mb-3 row">
+               <label class="col-md-4 col-form-label">Default Sell Price </label>
+               <div class="col-md-8">
+                   <div class="input-group input-group-merge">
+                       <span class="input-group-text">{{ $mataUangDefault->symbol }}</span>
+                       <input type="number" id="default_price" name="default_price" class="form-control"
+                           placeholder="0" min="0">
+                       <span class="input-group-text" id="sellPrice"></span>
+                   </div>
+                   <span class="error text-danger" id="default_priceError"></span>
+               </div>
+           </div>
+           <div class="mb-3 row">
+               <label class="col-md-4 col-form-label">Selling Minimum </label>
+               <div class="col-md-8">
+                   <div class="input-group input-group-merge">
+                       <span class="input-group-text"><i class="ti ti-tag-minus"></i></span>
+                       <input type="number" id="selling_minimun" name="selling_minimun" class="form-control"
+                           placeholder="0" min="0">
+                       <span class="input-group-text" id="selMin"></span>
+                   </div>
+                   <span class="error text-danger" id="selling_minimunError"></span>
+               </div>
+           </div>
            <h6><strong>Purchase Information</strong></h6>
            <div class="mb-3 row">
                <label class="col-md-4 col-form-label">Primary Supplier</label>
@@ -260,7 +321,7 @@
                <label class="col-md-4 col-form-label">Price/Unit</label>
                <div class="col-md-8">
                    <div class="input-group input-group-merge">
-                       <span class="input-group-text"> {{ $mataUangDefault ?? 'Rp' }}
+                       <span class="input-group-text"> {{ $mataUangDefault->symbol }}
                        </span>
                        <input type="number" id="primary_price" name="primary_price" class="form-control"
                            placeholder="0" min="0">

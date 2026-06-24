@@ -47,7 +47,7 @@
             top: 8px;
             right: 10px;
             font-size: 12px;
-            color: white;
+            color: black;
         }
 
         /* kode barcode */
@@ -122,16 +122,8 @@
         <div class="nama ">
             {{ $user->no_ID }}
         </div>
+        <img src="{{ $avatar }}" class="foto">
 
-        @if ($user->gender == 'Male')
-            <img src="{{ $user->avatar ? asset($user->avatar) : asset('image/foto_user/avatar_user_default.png') }}"
-                alt="{{ $user->fullname ?? 'User Avatar' }}"
-                class="d-block h-auto ms-0 ms-sm-4 rounded user-profile-img" />
-        @else
-            <img src="{{ $user->avatar ? asset($user->avatar) : asset('image/foto_user/avatar_women.png') }}"
-                alt="{{ $user->fullname ?? 'User Avatar' }}"
-                class="d-block h-auto ms-0 ms-sm-4 rounded user-profile-img" />
-        @endif
 
         <div class="barcode">
             {!! DNS1D::getBarcodeHTML($user->no_ID, 'C128', 1.4, 35) !!}

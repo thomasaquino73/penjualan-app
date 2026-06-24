@@ -176,7 +176,7 @@ class DataBarangController extends Controller
                 ->addColumn('harga', function ($row) {
                     return format_uang(
                         convert_currency(
-                            $row->primary_price,
+                            $row->default_price,
                             $row->currency_id ?? 1
                         )
                     );
@@ -341,6 +341,7 @@ class DataBarangController extends Controller
             'supplier' => Supplier::where('status', 1)->get(),
             'warehouses' => Warehouse::where('status', 1)->get(),
             'brand' => BasicCodeDetail::where('master_id', 11)->get(),
+             'mataUangDefault' => $company->defaultCurrency,
         ]);
     }
     // protected function uploadAvatar($avatar)
@@ -391,7 +392,7 @@ class DataBarangController extends Controller
         try {
             $isSaveAndNew = $request->input('save_and_new') == '1';
 
-            $data = $request->except(['_token', 'save_and_new', 'conversion', 'variants']);
+            $data = $request->except(['_token', 'save_and_new', 'conversion', 'variants','sell_price']);
             $itemsDetailRaw = $request->input('items_detail');
             unset($data['items_detail']);
             $data['created_by'] = Auth::id();
@@ -409,18 +410,20 @@ class DataBarangController extends Controller
             // =========================
             // 2. SAVE CONVERSION DATA
             // =========================
-            $conversions = $request->conversion ?? [];
+           $conversions = $request->conversion ?? [];
+            $sellPrices  = $request->sell_price ?? [];
 
-            // pastikan selalu ada 2 index
             for ($i = 0; $i < 2; $i++) {
 
                 $conv = $conversions[$i] ?? [];
+                $price = $sellPrices[$i]['to_unit'] ?? 0;
 
                 DataBarangConversion::create([
                     'data_barang_id' => $barang->id,
-                    'to_unit_id' => $request->unit_id, // selalu dari unit utama
+                    'to_unit_id' => $request->unit_id,
                     'from_unit_id' => $conv['to_unit'] ?? null,
                     'qty' => $conv['qty'] ?? 0,
+                    'sell_price' => $price,
                 ]);
             }
 

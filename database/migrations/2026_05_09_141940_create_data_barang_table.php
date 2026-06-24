@@ -27,6 +27,9 @@ return new class extends Migration
             $table->bigInteger('price')->nullable();
             $table->bigInteger('hasil_akhir')->nullable();
             $table->date('date')->nullable();
+            $table->decimal('default_discount')->nullable();
+            $table->decimal('default_price')->nullable();
+            $table->integer('selling_minimun')->nullable();
             $table->integer('primary_supplier_id')->nullable();
             $table->integer('primary_unit_id')->nullable();
             $table->integer('primary_price')->nullable();
@@ -38,12 +41,14 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
         });
+  
         Schema::create('data_barang_conversions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('data_barang_id');
             $table->unsignedBigInteger('from_unit_id')->nullable();
             $table->unsignedBigInteger('to_unit_id')->nullable();
             $table->decimal('qty', 15, 4)->default(1);
+            $table->decimal('sell_price', 15, 4)->default(1);
             $table->timestamps();
             $table->index('data_barang_id');
             $table->index('from_unit_id');

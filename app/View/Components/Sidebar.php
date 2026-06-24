@@ -313,8 +313,8 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'Company',
-                'icon' => 'ti ti-building',
+                'name' => 'Preference',
+                'icon' => 'ti ti-settings',
                 'roles' => ['Super Admin'],
                 'permissions' => ['fob-browse', 'shipping-browse'],
                 'children' => [
