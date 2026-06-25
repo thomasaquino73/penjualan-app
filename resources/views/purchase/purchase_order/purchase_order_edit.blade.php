@@ -137,14 +137,14 @@
                 </div>
 
                 <div class="row mb-5">
-                    <div class="col-md-3"></div>
-                    <div class="col-md-3">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-2">
                         <div class="col-12 mb-3 ">
                             <label class="form-label" for="sub_total">Sub Total</label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                 <input type="number" id="sub_total" name="sub_total" class="form-control"
-                                    placeholder="0" readonly>
+                                    value="{{ $model->sub_total }}" placeholder="0" readonly>
                             </div>
 
                         </div>
@@ -157,27 +157,36 @@
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text">%</span>
                                         <input type="number" id="percent" name="percent" min="0"
-                                            step="any" class="form-control" placeholder="0">
+                                            value="{{ $model->disc_percent }}" step="any" class="form-control"
+                                            placeholder="0">
                                     </div>
                                 </div>
                                 <div class="col-8">
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                         <input type="number" id="discount_all" name="discount_all" class="form-control"
-                                            placeholder="0" min='0'>
+                                            placeholder="0" min='0' value="{{ $model->disc_percent }}">
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
+                    <div class="col-2 mb-3" id="ppn_container" style="display:none;">
+                        <div class="col-12 mb-3 ">
+                            <label class="form-label" for="sub_total" id="taxes">Tax</label>
+                            <div class="input-group input-group-merge">
+                                <input type="text" name="tax_amount" id="tax_amount" class="form-control"
+                                    value="{{ $model->tax_amount }}" readonly>
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-lg-3">
                         <div class="col-12 mb-3">
                             <label class="form-label" for="total_order"> <strong>Total Order</strong></label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                 <input type="number" id="total_order" name="total_order" class="form-control"
-                                    placeholder="0" readonly>
+                                    value="{{ $model->grand_total }}" placeholder="0" readonly>
                             </div>
 
                         </div>
@@ -206,6 +215,32 @@
 
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
+    <script>
+        $(document).ready(function() {
+
+            // 🔥 SET STATE AWAL checkbox
+            if ($("#kena_pajak").is(":checked")) {
+                $("#tax_container").show();
+                $("#ppn_container").show();
+            } else {
+                $("#tax_container").hide();
+                $("#ppn_container").hide();
+            }
+
+            // 🔥 kalau sudah ada tax_id dari DB, jangan override default
+            let existingTaxId = $("#tax_id").val();
+
+            if ($("#kena_pajak").is(":checked")) {
+                if (!existingTaxId && DEFAULT_TAX_ID) {
+                    $("#tax_id").val(DEFAULT_TAX_ID);
+                }
+            }
+
+            // 🔥 WAJIB: hitung ulang saat pertama load
+            calculateTotalOrder();
+            calculateGrandTotal();
+        });
+    </script>
     <script>
         $("#vehicle_id").on("select2:select", function(e) {
             let data = e.params.data;
@@ -1307,23 +1342,118 @@
                 calculateTotalOrder();
             }
 
+            // function calculateTotalOrderV2() {
+            //     // Ambil nilai dari input, jika kosong atau bukan angka, default ke 0
+            //     let subTotal = parseFloat($("#sub_total").val()) || 0;
+            //     let discount = parseFloat($("#discount_all").val()) || 0;
+
+            //     // Rumus: Total Order = Sub Total - Discount
+            //     let totalOrder = subTotal - discount;
+
+            //     // Cegah nilai total order menjadi minus jika discount lebih besar dari subtotal
+            //     if (totalOrder < 0) {
+            //         totalOrder = 0;
+            //     }
+
+            //     // Masukkan hasil kalkulasi ke input Total Order
+            //     $("#total_order").val(Math.round(totalOrder));
+            // }
+
+
+            const TAXES = @json($taxes);
+            const DEFAULT_TAX_ID = {{ $defaultTax->id ?? 'null' }};
+
             function calculateTotalOrder() {
-                // Ambil nilai dari input, jika kosong atau bukan angka, default ke 0
                 let subTotal = parseFloat($("#sub_total").val()) || 0;
                 let discount = parseFloat($("#discount_all").val()) || 0;
 
-                // Rumus: Total Order = Sub Total - Discount
-                let totalOrder = subTotal - discount;
+                let kenaPajak = $("#kena_pajak").is(":checked");
+                let totalInclude = $("#total_termasuk_pajak").is(":checked");
 
-                // Cegah nilai total order menjadi minus jika discount lebih besar dari subtotal
-                if (totalOrder < 0) {
-                    totalOrder = 0;
+                let selectedTaxId = $("#tax_id").val();
+
+                let taxPercent = 0;
+
+                // 🚫 STOP kalau kena pajak tapi belum pilih tax
+                if (kenaPajak && !selectedTaxId) {
+                    let dpp = subTotal - discount;
+
+                    $("#taxes").text("0");
+                    $("#total_order").val(dpp);
+                    $("#tax_amount").val(0); // 🔥 reset
+
+                    return;
                 }
 
-                // Masukkan hasil kalkulasi ke input Total Order
+                // ambil tax
+                if (typeof TAXES !== "undefined" && selectedTaxId) {
+                    let selectedTax = TAXES.find(t => t.id == selectedTaxId);
+                    if (selectedTax) {
+                        taxPercent = parseFloat(selectedTax.percentage) || 0;
+                    }
+                }
+
+                let dpp = subTotal - discount;
+                if (dpp < 0) dpp = 0;
+
+                let tax = 0;
+                let totalOrder = dpp;
+
+                if (kenaPajak && taxPercent > 0) {
+
+                    if (totalInclude) {
+                        tax = (dpp * taxPercent) / (100 + taxPercent);
+                        totalOrder = dpp;
+                    } else {
+                        tax = (dpp * taxPercent) / 100;
+                        totalOrder = dpp + tax;
+                    }
+
+                    $("#ppn_container").show();
+
+                } else {
+                    tax = 0;
+                    totalOrder = dpp;
+                    $("#ppn_container").hide();
+                }
+
+                // 🔥 tampilkan ke UI
+                $("#taxes").text(
+                    taxPercent > 0 ?
+                    `Tax (${taxPercent}%)` :
+                    "0"
+                );
+
+                // 🔥 simpan ke hidden input (INI PENTING)
+                $("#tax_amount").val(Math.round(tax));
+
                 $("#total_order").val(Math.round(totalOrder));
             }
 
+            $("#kena_pajak").on("change", function() {
+
+                if ($(this).is(":checked")) {
+                    $("#tax_container").show();
+
+                    // optional: set default tax
+                    if (DEFAULT_TAX_ID) {
+                        $("#tax_id").val(DEFAULT_TAX_ID).trigger("change");
+                    }
+
+                } else {
+                    $("#tax_container").hide();
+
+                    // reset tax
+                    $("#tax_id").val("").trigger("change");
+                    $("#total_termasuk_pajak").prop("checked", false);
+                }
+
+                calculateTotalOrder();
+            });
+            $("#tax_id").on("change", function() {
+                calculateTotalOrder();
+            });
+            $("#sub_total, #discount_all").on("input", calculateTotalOrder);
             // A. Jika User Mengetik di Kolom PERSEN (%)
             $("#percent").on("input", function() {
                 let subTotal = parseFloat($("#sub_total").val()) || 0;

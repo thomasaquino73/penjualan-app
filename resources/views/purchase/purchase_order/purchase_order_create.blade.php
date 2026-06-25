@@ -1239,7 +1239,6 @@
             });
 
             $("#sub_total, #discount_all").on("input", calculateTotalOrder);
-            $("#tax_id").on("change", calculateTotalOrder);
 
             // A. Jika User Mengetik di Kolom PERSEN (%)
             $("#percent").on("input", function() {
