@@ -414,13 +414,13 @@
                                             </div>
                                         </div>
                                         <div class="row mb-3">
-                                            <label class="col-sm-3 col-form-label" for="basic-default-name">NPWP
+                                            <label class="col-sm-3 col-form-label" for="basic-default-name">Taxpayer
                                                 Number</label>
                                             <div class="col-sm-9">
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
                                                     <input type="text" class="form-control" id="nomor_wajib_pajak"
-                                                        name="nomor_wajib_pajak" placeholder="Enter NPWP number">
+                                                        name="nomor_wajib_pajak" placeholder="Enter Taxpayer Number">
                                                 </div>
 
                                             </div>

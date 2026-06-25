@@ -602,6 +602,9 @@ class PurchaseOrderController extends Controller
             $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
             $data['shipping_address'] = $request->shipping_address;
             $data['description'] = $request->description;
+            $data['tax_id'] = $request->tax_id;
+            $data['tax_amount'] = $request->tax_amount;
+            $data['description'] = $request->description;
             $data['datePO'] = Carbon::parse($request->datePO)->format('Y-m-d');
             $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
 

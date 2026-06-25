@@ -154,9 +154,9 @@
                     </div>
                     <div class="col-2 mb-3" id="ppn_container" style="display:none;">
                         <div class="col-12 mb-3 ">
-                            <label class="form-label" for="sub_total">Tax</label>
+                            <label class="form-label" for="sub_total" id="taxes">Tax</label>
                             <div class="input-group input-group-merge">
-                                <span id="taxes">0</span>
+                                <input type="text" name="tax_amount" id="tax_amount" class="form-control" readonly>
                             </div>
                         </div>
                     </div>
@@ -1151,9 +1151,13 @@
 
                 // 🚫 STOP kalau kena pajak tapi belum pilih tax
                 if (kenaPajak && !selectedTaxId) {
+                    let dpp = subTotal - discount;
+
                     $("#taxes").text("0");
-                    $("#total_order").val(subTotal - discount);
-                    return; // 🔥 penting: stop disini
+                    $("#total_order").val(dpp);
+                    $("#tax_amount").val(0); // 🔥 reset
+
+                    return;
                 }
 
                 // ambil tax
@@ -1188,11 +1192,15 @@
                     $("#ppn_container").hide();
                 }
 
+                // 🔥 tampilkan ke UI
                 $("#taxes").text(
                     taxPercent > 0 ?
-                    `${Math.round(tax)} (${taxPercent}%)` :
+                    `Tax (${taxPercent}%)` :
                     "0"
                 );
+
+                // 🔥 simpan ke hidden input (INI PENTING)
+                $("#tax_amount").val(Math.round(tax));
 
                 $("#total_order").val(Math.round(totalOrder));
             }
