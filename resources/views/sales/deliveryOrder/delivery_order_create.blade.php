@@ -347,19 +347,19 @@
                                     // Menyimpan index baris array untuk penanda update
                                     $("#detail_id").val(rowIndex);
 
-                                    // --- AMANKAN DATA ID RELASI DI SINI ---
-                                    $("#modal_purchase_quotation_detail_id").val(data.detail_id ||
-                                        data.purchase_quotation_detail_id || "");
-                                    $("#modal_quotation_code").val(data.quotation_code || "");
+                                    // // --- AMANKAN DATA ID RELASI DI SINI ---
+                                    // $("#modal_purchase_quotation_detail_id").val(data.detail_id ||
+                                    //     data.purchase_quotation_detail_id || "");
+                                    // $("#modal_quotation_code").val(data.quotation_code || "");
 
-                                    // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
-                                    if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
-                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
-                                    } else {
-                                        $("#quantity").removeAttr(
-                                            "data-sisa-pr"); // Jika PO bebas, hapus batasannya
-                                    }
-                                    // --------------------------------------
+                                    // // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
+                                    // if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
+                                    //     $("#quantity").attr("data-sisa-pr", data.sisa_pr);
+                                    // } else {
+                                    //     $("#quantity").removeAttr(
+                                    //         "data-sisa-pr"); // Jika PO bebas, hapus batasannya
+                                    // }
+                                    // // --------------------------------------
 
                                     $("#quantity").val(data.quantity);
                                     $("#unit_id").data("pending-val", data.unit_id);

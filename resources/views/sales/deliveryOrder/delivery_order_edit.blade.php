@@ -142,12 +142,8 @@
 
 
                 <div class="card-footer d-flex justify-content-end gap-2">
-                    <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
-                        <i class="fa fa-upload me-1"></i> Save and Close
-                    </button>
-
-                    <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
-                        <i class="fa fa-plus-circle me-1"></i> Save and Create New
+                    <button type="submit" id="savedata" class="btn btn-primary">
+                        <i class="fa fa-save me-1"></i> Update
                     </button>
                     <a href="{{ route('sales-order.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
@@ -168,7 +164,25 @@
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
-        let prDetailsData = [];
+        let prDetailsData = [
+            @if (isset($model) && $model->details)
+                @foreach ($model->details as $detail)
+                    {
+                        'product_id': '{{ $detail->data_barang_id }}',
+                        'data_produk': '{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}',
+                        'quantity': '{{ $detail->qty ?? 0 }}',
+                        'unit_id': '{{ $detail->unit_id }}',
+                        'unit': '{{ $detail->unitID ? $detail->unitID->name ?? ($detail->unitID->detail ?? ($detail->unitID->nama ?? 'Unit')) : 'Unit' }}',
+                        'warehouse_id': '{{ $detail->warehouse_id }}',
+                        'warehouse': '{{ $detail->warehouseID ? $detail->warehouseID->name ?? ($detail->warehouseID->nama_gudang ?? ($detail->warehouseID->nama ?? 'Warehouse')) : 'Warehouse' }}',
+                        'unit_price': '{{ $detail->unit_price ?? 0 }}',
+
+                    }
+                    {{ !$loop->last ? ',' : '' }}
+                @endforeach
+            @endif
+        ];
+        const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
         $(function() {
             const datePicker = flatpickr("#delivery_order_date", {
                 enableTime: false,
@@ -349,23 +363,22 @@
                                     }).index();
 
                                     window.isEditingMode = true;
-
                                     // Menyimpan index baris array untuk penanda update
                                     $("#detail_id").val(rowIndex);
 
-                                    // --- AMANKAN DATA ID RELASI DI SINI ---
-                                    $("#modal_purchase_quotation_detail_id").val(data.detail_id ||
-                                        data.purchase_quotation_detail_id || "");
-                                    $("#modal_quotation_code").val(data.quotation_code || "");
+                                    // // --- AMANKAN DATA ID RELASI DI SINI ---
+                                    // $("#modal_purchase_quotation_detail_id").val(data.detail_id ||
+                                    //     data.purchase_quotation_detail_id || "");
+                                    // $("#modal_quotation_code").val(data.quotation_code || "");
 
-                                    // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
-                                    if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
-                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
-                                    } else {
-                                        $("#quantity").removeAttr(
-                                            "data-sisa-pr"); // Jika PO bebas, hapus batasannya
-                                    }
-                                    // --------------------------------------
+                                    // // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
+                                    // if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
+                                    //     $("#quantity").attr("data-sisa-pr", data.sisa_pr);
+                                    // } else {
+                                    //     $("#quantity").removeAttr(
+                                    //         "data-sisa-pr"); // Jika PO bebas, hapus batasannya
+                                    // }
+                                    // // --------------------------------------
 
                                     $("#quantity").val(data.quantity);
                                     $("#unit_id").data("pending-val", data.unit_id);

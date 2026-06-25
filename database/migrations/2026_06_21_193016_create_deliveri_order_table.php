@@ -27,12 +27,12 @@ return new class extends Migration
             $table->unsignedBigInteger('customer_contact_id')->nullable();
             $table->string('fob_id')->nullable();
             $table->enum('status', [
-                'draft',
+                'processing',
                 'confirmed',
                 'partial',
                 'delivered',
                 'cancelled',
-            ])->default('draft');
+            ])->default('processing');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

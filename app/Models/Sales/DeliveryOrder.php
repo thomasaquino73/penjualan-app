@@ -33,4 +33,8 @@ class DeliveryOrder extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+     public function details()
+    {
+        return $this->hasMany(DeliveryOrderDetail::class, 'delivery_order_id');
+    }
 }
