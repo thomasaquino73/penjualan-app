@@ -1008,7 +1008,8 @@ class PurchaseOrderController extends Controller
                 'payment_term' => $request->payment_term,
                 'shipping_address' => $request->shipping_address,
                 'description' => $request->description,
-
+                'tax_id' => $request->tax_id,
+                'tax_amount' => $request->tax_amount,
                 'sub_total' => $request->sub_total,
                 'disc_percent' => $request->percent,
                 'disc_nominal' => $request->discount_all,
