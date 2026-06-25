@@ -219,7 +219,7 @@
                             <div class="col-6 mb-3">
                                 <label class="form-label" for="unit_price">Unit Price</label>
                                 <div class="input-group input-group-merge">
-                                    <span class="input-group-text"> {{ $mataUangDefault ?? 'Rp' }}</span>
+                                    <span class="input-group-text"> {{ $mataUangDefault->symbol }}</span>
                                     <input type="number" id="unit_price" name="unit_price" class="form-control"
                                         placeholder="0" min="0">
                                 </div>
@@ -228,7 +228,7 @@
                             <div class="col-12 mb-3">
                                 <label class="form-label" for="discount">Total Price</label>
                                 <div class="input-group input-group-merge">
-                                    <span class="input-group-text"> {{ $mataUangDefault ?? 'Rp' }}</span>
+                                    <span class="input-group-text"> {{ $mataUangDefault->symbol }}</span>
                                     <input type="number" id="total_price" name="total_price" class="form-control"
                                         placeholder="0" min="0" readonly>
                                 </div>
@@ -395,7 +395,7 @@
                             <input type="text" class="form-control from_unit_text" disabled value="${$('.from_unit_text').first().val() || ''}">
                             <input type="hidden" name="conversion[${index}][from_unit]" class="from_unit_id" value="${$('.from_unit_id').first().val() || ''}">
                         </div>
-                       
+
                     </div>
                 </div>`;
 
@@ -881,7 +881,7 @@
         //         $('#btn-add-conversion').prop('disabled', true);
         //     }
         // });
-         $('#unit_id').on('change', function() {
+        $('#unit_id').on('change', function() {
             let unitId = $(this).val();
             let unitText = $('#unit_id option:selected').text();
             if (unitId !== "") {

@@ -34,11 +34,11 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
-                    <h6 class="card-title mb-2 mb-lg-0">Transaction</h6>
+                    <h6 class="card-title mb-2 mb-lg-0"><i class="ti ti-news me-1"></i>Transaction</h6>
                 </div>
                 <div class="card-body">
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label">Transaction Number <small class="text-danger">*</small> </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"> <i class="ti ti-barcode"></i>
@@ -47,7 +47,7 @@
                             </div>
                             <span class="error text-danger" id="id_barangError"></span>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-8">
                             <label class="form-label">Customer<small class="text-danger">*</small> </label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"> <i class="ti ti-user"></i>
