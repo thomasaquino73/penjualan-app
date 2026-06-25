@@ -993,6 +993,43 @@
                     }
                 });
             });
+
+            var initialCustomerId = $('#customer_id').val();
+            if (initialCustomerId) {
+                // Panggil fungsi atau jalankan AJAX yang sama dengan yang ada di event change
+                loadKontak(initialCustomerId);
+            }
+
+            function loadKontak(customerId) {
+                var contactDropdown = $('#customer_contact_id');
+                var selectedContactId =
+                    "{{ $model->customer_contact_id ?? '' }}"; // Ambil ID kontak yang tersimpan
+
+                $.ajax({
+                    url: '/get-kontak/' + customerId,
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        contactDropdown.empty();
+                        contactDropdown.append('<option value="">Pilih Kontak</option>');
+
+                        $.each(data, function(key, value) {
+                            // Cek apakah ID kontak ini sama dengan yang tersimpan di database
+                            var isSelected = (value.id == selectedContactId) ? 'selected' : '';
+
+                            contactDropdown.append(
+                                '<option value="' + value.id + '" ' + isSelected + '>' +
+                                value.sapaan + ' ' + value.contact_person + ' (' + value
+                                .posisi_jabatan + ')' +
+                                '</option>'
+                            );
+                        });
+
+                        // Jika Anda menggunakan Select2, jangan lupa trigger update
+                        contactDropdown.trigger('change.select2');
+                    }
+                });
+            }
         });
     </script>
 @endpush

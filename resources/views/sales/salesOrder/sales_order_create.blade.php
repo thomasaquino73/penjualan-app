@@ -738,9 +738,11 @@
                             .append("<option></option>")
                             .prop("disabled", false);
 
-                        if (response && response.length > 0) {
-                            // if (response.units && response.units.length > 0) {
-                            $.each(response, function(key, item) {
+                        // FIX: Akses properti 'units' dari objek response
+                        let units = response.units;
+
+                        if (units && units.length > 0) {
+                            $.each(units, function(key, item) {
                                 unitSelect.append(
                                     `<option value="${item.id}">${item.name}</option>`,
                                 );
@@ -752,7 +754,10 @@
                         }
 
                         unitSelect.trigger("change");
+
+                        // Gunakan response.default_price
                         priceInput.val(response.default_price || 0);
+
                         let pendingUnitId = unitSelect.data("pending-val");
                         if (pendingUnitId) {
                             unitSelect.val(pendingUnitId).trigger("change");
