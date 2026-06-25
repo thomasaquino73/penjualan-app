@@ -16,6 +16,7 @@ use App\Models\Setting\Company;
 use App\Models\Setting\CompanyDeliveryAddress;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
+use App\Models\Setting\Tax;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Dotenv\Exception\ValidationException;
@@ -515,6 +516,16 @@ class PurchaseOrderController extends Controller
 
     public function create()
     {
+         // 🔥 Ambil semua pajak aktif (khusus pembelian & general)
+        $taxes = Tax::where('is_active', true)
+            ->whereIn('usage', ['purchase', 'both'])
+            ->get();
+
+        // 🔥 Ambil default tax (misalnya PPN)
+        $defaultTax = Tax::where('is_active', true)
+            ->where('is_default', true)
+            ->whereIn('usage', ['purchase', 'both'])
+            ->first();
         $x = [
             'title' => 'Purchase Order New',
             'breadcrumb' => [
@@ -529,7 +540,8 @@ class PurchaseOrderController extends Controller
             'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
-            'taxes' => BasicCodeDetail::where('master_id', 6)->get(),
+            'taxes' => $taxes,
+            'defaultTax' => $defaultTax,
 
         ];
 

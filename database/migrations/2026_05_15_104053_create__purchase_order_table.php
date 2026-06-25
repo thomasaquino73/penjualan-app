@@ -33,9 +33,7 @@ return new class extends Migration
             $table->decimal('disc_percent', 5, 2)->default(0)->nullable();
             $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();
             $table->decimal('grand_total', 18, 2)->default(0)->nullable();
-            // $table->bigInteger('total_hari')->nullable();
-            // $table->bigInteger('total_diskon')->nullable();
-            // $table->bigInteger('masa_jatuh_tempo')->nullable();
+            $table->decimal('tax', 5, 2); // contoh: 11.00
             $table->enum('status', [
                 'draft',               // Baru dibuat
                 'pending',             // Menunggu approval

@@ -120,8 +120,8 @@
                 </div>
 
                 <div class="row mb-5">
-                    <div class="col-md-3"></div>
-                    <div class="col-md-3">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-2">
                         <div class="col-12 mb-3 ">
                             <label class="form-label" for="sub_total">Sub Total</label>
                             <div class="input-group input-group-merge">
@@ -129,7 +129,6 @@
                                 <input type="number" id="sub_total" name="sub_total" class="form-control"
                                     placeholder="0" readonly>
                             </div>
-
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -153,7 +152,14 @@
                             </div>
                         </div>
                     </div>
-
+                    <div class="col-2 mb-3" id="ppn_container" style="display:none;">
+                        <div class="col-12 mb-3 ">
+                            <label class="form-label" for="sub_total">Tax</label>
+                            <div class="input-group input-group-merge">
+                                <span id="taxes">0</span>
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-lg-3">
                         <div class="col-12 mb-3">
                             <label class="form-label" for="total_order"> <strong>Total Order</strong></label>
@@ -1113,22 +1119,119 @@
                 calculateTotalOrder();
             }
 
+            // function calculateTotalOrder() {
+            //     // Ambil nilai dari input, jika kosong atau bukan angka, default ke 0
+            //     let subTotal = parseFloat($("#sub_total").val()) || 0;
+            //     let discount = parseFloat($("#discount_all").val()) || 0;
+
+            //     // Rumus: Total Order = Sub Total - Discount
+            //     let totalOrder = subTotal - discount;
+
+            //     // Cegah nilai total order menjadi minus jika discount lebih besar dari subtotal
+            //     if (totalOrder < 0) {
+            //         totalOrder = 0;
+            //     }
+
+            //     // Masukkan hasil kalkulasi ke input Total Order
+            //     $("#total_order").val(Math.round(totalOrder));
+            // }
+            const TAXES = @json($taxes);
+            const DEFAULT_TAX_ID = {{ $defaultTax->id ?? 'null' }};
+
             function calculateTotalOrder() {
-                // Ambil nilai dari input, jika kosong atau bukan angka, default ke 0
                 let subTotal = parseFloat($("#sub_total").val()) || 0;
                 let discount = parseFloat($("#discount_all").val()) || 0;
 
-                // Rumus: Total Order = Sub Total - Discount
-                let totalOrder = subTotal - discount;
+                let kenaPajak = $("#kena_pajak").is(":checked");
+                let totalInclude = $("#total_termasuk_pajak").is(":checked");
 
-                // Cegah nilai total order menjadi minus jika discount lebih besar dari subtotal
-                if (totalOrder < 0) {
-                    totalOrder = 0;
+                let selectedTaxId = $("#tax_id").val();
+
+                let taxPercent = 0;
+
+                // 🚫 STOP kalau kena pajak tapi belum pilih tax
+                if (kenaPajak && !selectedTaxId) {
+                    $("#taxes").text("0");
+                    $("#total_order").val(subTotal - discount);
+                    return; // 🔥 penting: stop disini
                 }
 
-                // Masukkan hasil kalkulasi ke input Total Order
+                // ambil tax
+                if (typeof TAXES !== "undefined" && selectedTaxId) {
+                    let selectedTax = TAXES.find(t => t.id == selectedTaxId);
+                    if (selectedTax) {
+                        taxPercent = parseFloat(selectedTax.percentage) || 0;
+                    }
+                }
+
+                let dpp = subTotal - discount;
+                if (dpp < 0) dpp = 0;
+
+                let tax = 0;
+                let totalOrder = dpp;
+
+                if (kenaPajak && taxPercent > 0) {
+
+                    if (totalInclude) {
+                        tax = (dpp * taxPercent) / (100 + taxPercent);
+                        totalOrder = dpp;
+                    } else {
+                        tax = (dpp * taxPercent) / 100;
+                        totalOrder = dpp + tax;
+                    }
+
+                    $("#ppn_container").show();
+
+                } else {
+                    tax = 0;
+                    totalOrder = dpp;
+                    $("#ppn_container").hide();
+                }
+
+                $("#taxes").text(
+                    taxPercent > 0 ?
+                    `${Math.round(tax)} (${taxPercent}%)` :
+                    "0"
+                );
+
                 $("#total_order").val(Math.round(totalOrder));
             }
+
+            $("#kena_pajak").on("change", function() {
+
+                if ($(this).is(":checked")) {
+                    $("#tax_container").show();
+
+                    // optional: set default tax
+                    if (DEFAULT_TAX_ID) {
+                        $("#tax_id").val(DEFAULT_TAX_ID).trigger("change");
+                    }
+
+                } else {
+                    $("#tax_container").hide();
+
+                    // reset tax
+                    $("#tax_id").val("").trigger("change");
+                    $("#total_termasuk_pajak").prop("checked", false);
+                }
+
+                calculateTotalOrder();
+            });
+            $("#tax_id").on("change", function() {
+                calculateTotalOrder();
+            });
+            $("#total_termasuk_pajak").on("change", function() {
+
+                // 🔥 kalau include dicentang, otomatis kena pajak harus aktif
+                if ($(this).is(":checked")) {
+                    $("#kena_pajak").prop("checked", true);
+                }
+
+                calculateTotalOrder();
+            });
+
+            $("#sub_total, #discount_all").on("input", calculateTotalOrder);
+            $("#tax_id").on("change", calculateTotalOrder);
 
             // A. Jika User Mengetik di Kolom PERSEN (%)
             $("#percent").on("input", function() {
