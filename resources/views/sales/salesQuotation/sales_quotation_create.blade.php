@@ -442,35 +442,57 @@
             });
 
             $('#customer_id').on('change', function() {
-                var customerId = $(this).val();
-                var contactDropdown = $('#customer_contact_id');
 
-                // Reset dropdown
+                let customerId = $(this).val();
+                let contactDropdown = $('#customer_contact_id');
+
                 contactDropdown.empty().append('<option>Loading...</option>');
 
-                if (customerId) {
-                    $.ajax({
-                        url: '/get-kontak/' + customerId,
-                        type: "GET",
-                        dataType: "json",
-                        success: function(data) {
-                            contactDropdown.empty();
-                            contactDropdown.append('<option value="">Pilih Kontak</option>');
+                // kosongkan data pajak
+                $('#taxpayer_data').val('');
 
-                            $.each(data, function(key, value) {
-                                contactDropdown.append(
-                                    '<option value="' + value.id + '">' + value
-                                    .sapaan + ' ' +
-                                    value.contact_person + ' (' + value
-                                    .posisi_jabatan + ')' +
-                                    '</option>'
-                                );
-                            });
-                        }
-                    });
-                } else {
-                    contactDropdown.empty().append('<option></option>');
+                if (!customerId) {
+                    contactDropdown.empty().append('<option value="">Pilih Kontak</option>');
+                    return;
                 }
+
+                $.ajax({
+                    url: '/get-kontak/' + customerId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+
+                        // ==========================
+                        // Kontak
+                        // ==========================
+                        contactDropdown.empty();
+                        contactDropdown.append('<option value="">Pilih Kontak</option>');
+
+                        $.each(response.kontak, function(key, value) {
+
+                            contactDropdown.append(`
+                    <option value="${value.id}">
+                        ${value.sapaan} ${value.contact_person}
+                        (${value.posisi_jabatan})
+                    </option>
+                `);
+
+                        });
+
+                        // ==========================
+                        // Pajak
+                        // ==========================
+                        if (response.pajak) {
+                            $('#taxpayer_data').val(response.pajak.tipe_id_pajak + ' :' +
+                                response.pajak.nomor_wajib_pajak);
+                        } else {
+                            $('#taxpayer_data').val('');
+
+                        }
+
+                    }
+                });
+
             });
 
             $(document).on("change", "#product_id", function() {

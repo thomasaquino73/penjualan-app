@@ -31,11 +31,8 @@
                     <select name="bank_id" id="bank_id" class="form-select select2 "
                         data-placeholder="Select Bank Account">
                         <option></option>
-
                     </select>
-
                 </div>
-
                 <span class="error text-danger" id="bank_idError"></span>
             </div>
         </div>
@@ -162,7 +159,7 @@
             <div class="mb-3 row">
                 <label class="col-md-4 col-form-label">Taxpayer data</label>
                 <div class="col-md-8">
-                    <input type="text" class="form-control">
+                    <input type="text" class="form-control" name="taxpayer_data" id="taxpayer_data">
                 </div>
             </div>
         </div>

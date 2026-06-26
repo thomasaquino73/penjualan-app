@@ -23,6 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('salesman_id')->nullable();
             $table->string('address')->nullable();
             $table->string('description')->nullable();
+            $table->string('taxpayer_data')->nullable();
             $table->unsignedBigInteger('customer_id');
             $table->unsignedBigInteger('customer_contact_id')->nullable();
             $table->boolean('kena_pajak')->default(1)->comment('kena pajak atau tidak')->nullable();

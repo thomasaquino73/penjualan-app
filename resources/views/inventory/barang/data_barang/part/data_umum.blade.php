@@ -288,7 +288,7 @@
                        <span class="input-group-text"><i class="ti ti-user"></i>
                        </span>
                        <select name="primary_supplier_id" id="primary_supplier_id" class="form-select select2 "
-                           data-placeholder="Select Unit">
+                           data-placeholder="Select Supplier">
                            <option></option>
                            @foreach ($supplier as $sup)
                                <option value="{{ $sup->id }}">{{ $sup->nama_supplier }}</option>

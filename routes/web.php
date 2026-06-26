@@ -238,7 +238,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('permintaan-pembelian', PurchaseRequisitionController::class);
 
     Route::prefix('purchase-order')->name('purchase-order.')->group(function () {
-        Route::get('/{id}/rekening', [PurchaseOrderController::class, 'getRekening'])->name('getRekening');
+        Route::get('/{id}/data', [PurchaseOrderController::class, 'getSupplierData'])->name('getSupplierData');
         Route::patch('/{id}/close', [PurchaseOrderController::class, 'CloseDocument'])->name('close');
         Route::get('/trash', [PurchaseOrderController::class, 'trash'])->name('trash');
         Route::post('/delete-multiple', [PurchaseOrderController::class, 'deleteMultiple']);
@@ -278,7 +278,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/trash', [PurchaseInvoiceController::class, 'trash'])->name('trash');
         Route::resource('', PurchaseInvoiceController::class)->parameters(['' => 'purchase_invoice']);
     });
-
+    Route::get('/sales-order/{id}/data', [SalesOrderController::class, 'getCustomerData'])->name('sales-order.getCustomerData');
     Route::get('/sales-order/get-units-by-product/{id}', [SalesOrderController::class, 'getUnitsByProduct'])->name('sales-order.get_units');
     Route::get('/sales-order/wh/get-stock', [SalesOrderController::class, 'getStock'])->name('sales-order.wh.get-stock');
     Route::patch('/sales-order/{id}/close', [SalesOrderController::class, 'CloseDocument'])->name('sales-order.close');

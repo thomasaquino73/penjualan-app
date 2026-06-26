@@ -594,6 +594,7 @@ class PurchaseOrderController extends Controller
             $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
             $data['shipping_address'] = $request->shipping_address;
             $data['description'] = $request->description;
+            $data['taxpayer_data'] = $request->taxpayer_data;
             $data['tax_id'] = $request->tax_id;
             $data['tax_amount'] = $request->tax_amount;
             $data['description'] = $request->description;
@@ -1003,6 +1004,7 @@ class PurchaseOrderController extends Controller
                 'payment_term' => $request->payment_term,
                 'shipping_address' => $request->shipping_address,
                 'description' => $request->description,
+                'taxpayer_data' => $request->taxpayer_data,
                 'tax_id' => $request->tax_id,
                 'tax_amount' => $request->tax_amount,
                 'sub_total' => $request->sub_total,
@@ -2000,8 +2002,9 @@ class PurchaseOrderController extends Controller
         }
     }
 
-    public function getRekening($supplierId)
+    public function getSupplierData($supplierId)
     {
+        // Rekening
         $rekening = DB::table('supplier_rekening')
             ->leftJoin(
                 'basic_code_detail',
@@ -2019,6 +2022,14 @@ class PurchaseOrderController extends Controller
             ->where('supplier_rekening.supplier_id', $supplierId)
             ->get();
 
-        return response()->json($rekening);
+        // Pajak (ambil default)
+        $pajak = DB::table('supplier_pajak')
+            ->where('supplier_id', $supplierId)
+            ->first();
+
+        return response()->json([
+            'rekening' => $rekening,
+            'pajak' => $pajak
+        ]);
     }
 }

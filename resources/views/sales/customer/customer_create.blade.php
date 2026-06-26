@@ -406,7 +406,7 @@
                                             </div>
                                         </div>
                                         <div class="row mb-3">
-                                            <label class="col-sm-3 col-form-label" for="basic-default-name">NPWP
+                                            <label class="col-sm-3 col-form-label" for="basic-default-name">Taxpayer
                                                 Number</label>
                                             <div class="col-sm-9">
                                                 <div class="input-group input-group-merge">

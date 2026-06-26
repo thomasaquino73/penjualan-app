@@ -215,6 +215,32 @@
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
+        $(document).ready(function() {
+
+            // 🔥 SET STATE AWAL checkbox
+            if ($("#kena_pajak").is(":checked")) {
+                $("#tax_container").show();
+                $("#ppn_container").show();
+            } else {
+                $("#tax_container").hide();
+                $("#ppn_container").hide();
+            }
+
+            // 🔥 kalau sudah ada tax_id dari DB, jangan override default
+            let existingTaxId = $("#tax_id").val();
+
+            if ($("#kena_pajak").is(":checked")) {
+                if (!existingTaxId && DEFAULT_TAX_ID) {
+                    $("#tax_id").val(numeral(DEFAULT_TAX_ID).format('0,0.00'));
+                }
+            }
+
+            // 🔥 WAJIB: hitung ulang saat pertama load
+            calculateTotalOrder();
+            calculateGrandTotal();
+        });
+    </script>
+    <script>
         let prDetailsData = [
             @if (isset($model) && $model->details)
                 @foreach ($model->details as $detail)
@@ -458,37 +484,57 @@
             });
 
             $('#customer_id').on('change', function() {
-                var customerId = $(this).val();
-                var contactDropdown = $('#customer_contact_id');
 
-                // Reset dropdown
+                let customerId = $(this).val();
+                let contactDropdown = $('#customer_contact_id');
+
                 contactDropdown.empty().append('<option>Loading...</option>');
 
-                if (customerId) {
-                    $.ajax({
-                        url: '/get-kontak/' + customerId,
-                        type: "GET",
-                        dataType: "json",
-                        success: function(data) {
-                            contactDropdown.empty();
-                            contactDropdown.append('<option value="">Pilih Kontak</option>');
+                // kosongkan data pajak
+                $('#taxpayer_data').val('');
 
-                            $.each(data, function(key, value) {
-                                contactDropdown.append(
-                                    '<option value="' + value.id + '">' + value
-                                    .sapaan + ' ' +
-                                    value.contact_person + ' (' + value
-                                    .posisi_jabatan + ')' +
-                                    '</option>'
-                                );
-                            });
-                        }
-                    });
-                } else {
-                    contactDropdown.empty().append('<option></option>');
+                if (!customerId) {
+                    contactDropdown.empty().append('<option value="">Pilih Kontak</option>');
+                    return;
                 }
-                // Panggil fungsi untuk load kontak dengan parameter customerId yang baru
-                loadKontak(customerId);
+
+                $.ajax({
+                    url: '/get-kontak/' + customerId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+
+                        // ==========================
+                        // Kontak
+                        // ==========================
+                        contactDropdown.empty();
+                        contactDropdown.append('<option value="">Pilih Kontak</option>');
+
+                        $.each(response.kontak, function(key, value) {
+
+                            contactDropdown.append(`
+                    <option value="${value.id}">
+                        ${value.sapaan} ${value.contact_person}
+                        (${value.posisi_jabatan})
+                    </option>
+                `);
+
+                        });
+
+                        // ==========================
+                        // Pajak
+                        // ==========================
+                        if (response.pajak) {
+                            $('#taxpayer_data').val(response.pajak.tipe_id_pajak + ' :' +
+                                response.pajak.nomor_wajib_pajak);
+                        } else {
+                            $('#taxpayer_data').val('');
+
+                        }
+
+                    }
+                });
+
             });
 
             $(document).on("change", "#product_id", function() {
@@ -1079,7 +1125,7 @@
             document.getElementById('discount').value = totalDiscount.toFixed(2);
 
             // Set total price
-            document.getElementById('total_price').value = remaining.toFixed(2);
+            document.getElementById('amount').value = remaining.toFixed(2);
         }
 
         document.getElementById('discount').addEventListener('input', function() {
@@ -1095,7 +1141,7 @@
 
             let total = subtotal - discountNominal;
 
-            document.getElementById('total_price').value = total.toFixed(2);
+            document.getElementById('amount').value = total.toFixed(2);
         });
 
         document.getElementById('quantity').addEventListener('input', calculateTotal);

@@ -345,7 +345,7 @@ class SalesQuotationController extends Controller
             $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
             $data['address'] = $request->address;
             $data['description'] = $request->description;
-            $data['description'] = $request->description;
+            $data['taxpayer_data'] = $request->taxpayer_data;
 
             do {
                 $generatedCode = $this->generateNumberId();
@@ -516,6 +516,7 @@ class SalesQuotationController extends Controller
             $data['payment_term_id'] = $request->payment_term_id;
             $data['address'] = $request->address;
             $data['description'] = $request->description;
+            $data['taxpayer_data'] = $request->taxpayer_data;
             $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
             $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
 
@@ -787,9 +788,18 @@ class SalesQuotationController extends Controller
 
     public function getKontakByCustomer($customer_id)
     {
-        $kontak = DB::table('customer_kontak')->where('customer_id', $customer_id)->get();
+        $kontak = DB::table('customer_kontak')
+            ->where('customer_id', $customer_id)
+            ->get();
 
-        return response()->json($kontak);
+        $pajak = DB::table('customer_pajak')
+            ->where('customer_id', $customer_id)
+            ->first();
+
+        return response()->json([
+            'kontak' => $kontak,
+            'pajak'  => $pajak
+        ]);
     }
 
     public function getPriceHistory(Request $request)
@@ -900,4 +910,6 @@ class SalesQuotationController extends Controller
             ], 422);
         }
     }
+
+   
 }

@@ -26,6 +26,7 @@ return new class extends Migration
             $table->bigInteger('bank_id')->nullable();
             $table->string('shipping_address')->nullable();
             $table->string('description')->nullable();
+            $table->string('taxpayer_data')->nullable();
             $table->boolean('kena_pajak')->default(1)->comment('kena pajak atau tidak')->nullable();
             $table->boolean('total_termasuk_pajak')->default(1)->comment('harga total termasuk pajak')->nullable();
             $table->string('fob_id')->nullable();

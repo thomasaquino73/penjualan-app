@@ -149,7 +149,8 @@
             <div class="mb-3 row">
                 <label class="col-md-4 col-form-label">Taxpayer data</label>
                 <div class="col-md-8">
-                    <input type="text" class="form-control">
+                    <input type="text" class="form-control" name="taxpayer_data" id="taxpayer_data"
+                        value="{{ $model->taxpayer_data }}">
                 </div>
             </div>
         </div>

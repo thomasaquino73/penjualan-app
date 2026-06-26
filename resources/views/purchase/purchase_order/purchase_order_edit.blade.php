@@ -1858,6 +1858,47 @@
                 // JIKA PO BEBAS / INPUT MANUAL
                 // Kode di bawah ini tetap berjalan bebas tanpa interupsi batas maksimal...
             });
+
+            $('#supplier_id').on('change', function() {
+
+                let supplierId = $(this).val();
+
+                $('#bank_id').empty().append('<option value="">Pilih Rekening</option>');
+                $('#taxpayer_data').val('');
+
+                if (!supplierId) {
+                    return;
+                }
+
+                $.ajax({
+                    url: '/purchase-order/' + supplierId + '/data',
+                    type: 'GET',
+                    success: function(response) {
+
+                        // Isi rekening
+                        $.each(response.rekening, function(index, item) {
+
+                            $('#bank_id').append(`
+                    <option value="${item.id}">
+                        ${item.bank_name} - ${item.nomor_rekening}
+                        (${item.nama_rekening})
+                    </option>
+                `);
+
+                        });
+
+                        $('#bank_id').trigger('change');
+
+                        // Isi NPWP
+                        if (response.pajak) {
+                            $('#taxpayer_data').val(response.pajak.tipe_id_pajak + ' :' +
+                                response.pajak.nomor_wajib_pajak);
+                        }
+
+                    }
+                });
+
+            });
         });
     </script>
     <script>
