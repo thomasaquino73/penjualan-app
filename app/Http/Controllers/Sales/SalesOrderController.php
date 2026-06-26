@@ -16,6 +16,7 @@ use App\Models\Sales\SalesQuotationDetail;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
+use App\Models\Setting\Tax;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -497,6 +498,16 @@ class SalesOrderController extends Controller
 
     public function create()
     {
+        // 🔥 Ambil semua pajak aktif (khusus pembelian & general)
+        $taxes = Tax::where('is_active', true)
+            ->whereIn('usage', ['purchase', 'both'])
+            ->get();
+
+        // 🔥 Ambil default tax (misalnya PPN)
+        $defaultTax = Tax::where('is_active', true)
+            ->where('is_default', true)
+            ->whereIn('usage', ['purchase', 'both'])
+            ->first();
         $company = Company::with('defaultCurrency')->first();
 
         $x = [
@@ -513,7 +524,9 @@ class SalesOrderController extends Controller
             'salesman' => User::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
-            'company' => $company,
+            'taxes' => $taxes,
+            'defaultTax' => $defaultTax,
+            'company' => $company->defaultCurrency,
 
         ];
 
@@ -560,6 +573,7 @@ class SalesOrderController extends Controller
                         $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
                         $unitPrice = floatval($item['unit_price'] ?? 0);
                         $discount = floatval($item['discount'] ?? 0);
+                        $discountPercent = $item['discount'] ?? 0;
                         $amount = ($qtyInputForm * $unitPrice) - $discount;
 
                         // 1. Simpan ke Sales Order Detail
@@ -571,6 +585,7 @@ class SalesOrderController extends Controller
                             'unit_id' => $item['unit_id'],
                             'warehouse_id' => $item['warehouse_id'],
                             'unit_price' => $unitPrice,
+                            'discount_percent' => $discountPercent,
                             'discount' => $discount,
                             'amount' => $item['amount'] ?? $amount,
                             'so_qty' => $qtyInputForm, // Sinkronisasi: sq_qty di SO = qty SO
@@ -725,6 +740,7 @@ class SalesOrderController extends Controller
                 'warehouse_id' => $detail->warehouse_id,
                 'warehouse' => $detail->warehouseID->nama_gudang ?? '-',
                 'unit_price' => (float) $detail->unit_price,
+                'discount_percent' => $detail->discount_percent,
                 'discount' => (float) $detail->discount,
                 'amount' => (float) $detail->amount,
                 'tax' => (float) ($detail->tax ?? 0),
@@ -733,6 +749,15 @@ class SalesOrderController extends Controller
                 'total_diambil_lainnya' => (float) $totalDiambilLainnya, // Dikirim ke frontend
             ];
         });
+         $taxes = Tax::where('is_active', true)
+            ->whereIn('usage', ['purchase', 'both'])
+            ->get();
+
+        // 🔥 Ambil default tax (misalnya PPN)
+        $defaultTax = Tax::where('is_active', true)
+            ->where('is_default', true)
+            ->whereIn('usage', ['purchase', 'both'])
+            ->first();
         $x = [
             'title' => 'Edit Sales Order ',
             'breadcrumb' => [
@@ -750,6 +775,8 @@ class SalesOrderController extends Controller
             'model' => $salesOrder,
             'isFromPR' => $isFromPR,
             'jsonDetails' => $detailDataMapped,
+              'taxes' => $taxes,
+            'defaultTax' => $defaultTax,
         ];
 
         return view('sales.salesOrder.sales_order_edit', $x);
@@ -827,6 +854,7 @@ class SalesOrderController extends Controller
                     'unit_id' => $item['unit_id'],
                     'warehouse_id' => $item['warehouse_id'],
                     'unit_price' => floatval($item['unit_price'] ?? 0),
+                    'discount_percent' => $item['discount_percent'] ?? 0,
                     'discount' => floatval($item['discount'] ?? 0),
                     'amount' => $item['amount'] ?? 0,
                     'so_qty' => $qty, // Sinkronisasi: SO sudah menyerap qty ini

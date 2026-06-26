@@ -115,7 +115,7 @@
         <h6><strong>Others Information</strong></h6>
         <div class="mb-3 row">
             <label class="col-md-4 col-form-label">FOB</label>
-            <div class="col-md-8">
+            <div class="col-md-8 mb-3">
                 <select name="fob_id" id="fob_id" class="form-select select2" data-placeholder="Select FOB">
                     <option></option>
                     @foreach ($fob as $f)
@@ -124,6 +124,29 @@
                     @endforeach
                 </select>
                 <span class="error text-danger" id="fob_idError"></span>
+            </div>
+            <div class="mb-3 " id="tax_container" style="display: none;">
+                <div class="mb-3 row">
+                    <label class="col-md-4 col-form-label">Tax</label>
+                    <div class="col-md-8">
+                        <select id="tax_id" name="tax_id" class="form-control select2"
+                            data-placeholder="Select Tax">
+                            <option></option>
+                            @foreach ($taxes as $tax)
+                                <option value="{{ $tax->id }}"
+                                    {{ $defaultTax && $defaultTax->id == $tax->id ? 'selected' : '' }}>
+                                    {{ $tax->tax_name }} ({{ $tax->percentage }}%)
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label class="col-md-4 col-form-label">Taxpayer data</label>
+                    <div class="col-md-8">
+                        <input type="text" class="form-control">
+                    </div>
+                </div>
             </div>
         </div>
     </div>

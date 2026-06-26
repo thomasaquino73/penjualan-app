@@ -36,7 +36,7 @@
                               </select>
                               <span class="error text-danger" id="unit_idError"></span>
                           </div>
-                          <div class="col-md-6 col-sm-12 mb-3">
+                          <div class="col-md-12 col-sm-12 mb-3">
                               <label class="form-label" for="unit_price">Unit Price</label>
                               <div class="input-group input-group-merge">
                                   <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
@@ -64,9 +64,25 @@
                               <small id="po-history-helper" class="form-text text-muted" style="font-size: 11px;">Pilih
                                   produk untuk melacak riwayat harga beli.</small>
                           </div>
-                          <div class="col-md-6 col-sm-12 mb-3">
+                          <div class="col-md-12 col-sm-12  mb-3">
                               <label class="form-label" for="discount">Discount</label>
-                              <input type="number" id="discount" name="discount" class="form-control" placeholder="0">
+                              <div class="row">
+                                  <div class="col-lg-4 col-sm-12">
+                                      <div class="input-group input-group-merge">
+                                          <input type="text" id="discount_percent" name="discount_percent"
+                                              class="form-control" placeholder="0" min="0">
+                                          <span class="input-group-text"><i class="ti ti-percentage"></i></span>
+                                      </div>
+                                  </div>
+                                  <div class="col-lg-8 col-sm-12">
+                                      <div class="input-group input-group-merge">
+                                          <span class="input-group-text">{{ $company->symbol ?? '' }}</span>
+                                          <input type="number" id="discount" name="discount" class="form-control"
+                                              step="any" placeholder="0">
+                                      </div>
+
+                                  </div>
+                              </div>
                               <span class="error text-danger" id="discountError"></span>
                           </div>
                           <div class="col-12 mb-3">
