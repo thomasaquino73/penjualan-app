@@ -119,7 +119,7 @@
                                                 <th>Qty</th>
                                                 <th>Unit</th>
                                                 <th>Unit Price</th>
-                                                <th>DiscPercent</th>
+                                                {{-- <th>DiscPercent</th> --}}
                                                 <th>Disc</th>
                                                 <th>Amount</th>
                                                 <th>Warehouse</th>
@@ -760,10 +760,10 @@
                             });
                         }
                     },
-                    {
-                        data: "discount_percent",
-                        className: "text-center"
-                    },
+                    // {
+                    //     data: "discount_percent",
+                    //     className: "text-center"
+                    // },
                     {
                         data: "discount",
                         className: "text-end",
@@ -1302,162 +1302,143 @@
             // });
 
             // Jalankan fungsi setiap kali user mengetik sesuatu di Sub Total atau Discount
-            $("#sub_total, #discount_all").on("input", function() {
-                calculateTotalOrder();
-            });
+            // $("#sub_total, #discount_all").on("input", function() {
+            //     calculateTotalOrder();
+            // });
 
-            function calculateGrandTotal() {
-                let grandSubTotal = 0;
+            // function calculateGrandTotal() {
+            //     let grandSubTotal = 0;
 
-                // 1. Iterasi/looping semua data amount yang ada di array lokal
-                $.each(prDetailsData, function(index, item) {
-                    grandSubTotal += parseFloat(item.amount) || 0;
-                });
+            //     // 1. Iterasi/looping semua data amount yang ada di array lokal
+            //     $.each(prDetailsData, function(index, item) {
+            //         grandSubTotal += parseFloat(item.amount) || 0;
+            //     });
 
-                // 2. Masukkan hasil penjumlahan ke input field Sub Total
-                $("#sub_total").val(Math.round(grandSubTotal));
+            //     // 2. Masukkan hasil penjumlahan ke input field Sub Total
+            //     $("#sub_total").val(Math.round(grandSubTotal));
 
-                // 3. Hitung ulang diskon global secara otomatis saat isi tabel berubah
-                let currentPercent = parseFloat($("#percent").val()) || 0;
+            //     // 3. Hitung ulang diskon global secara otomatis saat isi tabel berubah
+            //     let currentPercent = parseFloat($("#percent").val()) || 0;
 
-                if (currentPercent > 0) {
-                    // Jika awalnya diisi persen, hitung ulang nominal Rupiahnya berdasarkan Sub Total baru
-                    let newDiscountNominal = grandSubTotal * (currentPercent / 100);
-                    $("#discount_all").val(Math.round(newDiscountNominal));
-                } else {
-                    // Jika awalnya diisi nominal Rupiah, validasi agar tidak melebihi Sub Total baru
-                    let currentNominal = parseFloat($("#discount_all").val()) || 0;
-                    if (currentNominal > grandSubTotal) {
-                        currentNominal = grandSubTotal;
-                        $("#discount_all").val(Math.round(grandSubTotal));
-                    }
-                    // Set ulang nilai persen barunya
-                    let newPercent =
-                        grandSubTotal > 0 ? (currentNominal / grandSubTotal) * 100 : 0;
-                    $("#percent").val(
-                        newPercent % 1 === 0 ? newPercent : newPercent.toFixed(2),
-                    );
-                }
+            //     if (currentPercent > 0) {
+            //         // Jika awalnya diisi persen, hitung ulang nominal Rupiahnya berdasarkan Sub Total baru
+            //         let newDiscountNominal = grandSubTotal * (currentPercent / 100);
+            //         $("#discount_all").val(Math.round(newDiscountNominal));
+            //     } else {
+            //         // Jika awalnya diisi nominal Rupiah, validasi agar tidak melebihi Sub Total baru
+            //         let currentNominal = parseFloat($("#discount_all").val()) || 0;
+            //         if (currentNominal > grandSubTotal) {
+            //             currentNominal = grandSubTotal;
+            //             $("#discount_all").val(Math.round(grandSubTotal));
+            //         }
+            //         // Set ulang nilai persen barunya
+            //         let newPercent =
+            //             grandSubTotal > 0 ? (currentNominal / grandSubTotal) * 100 : 0;
+            //         $("#percent").val(
+            //             newPercent % 1 === 0 ? newPercent : newPercent.toFixed(2),
+            //         );
+            //     }
 
-                // 4. Update hasil akhir ke Total Order
-                calculateTotalOrder();
-            }
+            //     // 4. Update hasil akhir ke Total Order
+            //     calculateTotalOrder();
+            // }
 
-            // function calculateTotalOrderV2() {
-            //     // Ambil nilai dari input, jika kosong atau bukan angka, default ke 0
+            // const TAXES = @json($taxes);
+            // const DEFAULT_TAX_ID = {{ $defaultTax->id ?? 'null' }};
+
+            // function calculateTotalOrder() {
             //     let subTotal = parseFloat($("#sub_total").val()) || 0;
             //     let discount = parseFloat($("#discount_all").val()) || 0;
 
-            //     // Rumus: Total Order = Sub Total - Discount
-            //     let totalOrder = subTotal - discount;
+            //     let kenaPajak = $("#kena_pajak").is(":checked");
+            //     let totalInclude = $("#total_termasuk_pajak").is(":checked");
 
-            //     // Cegah nilai total order menjadi minus jika discount lebih besar dari subtotal
-            //     if (totalOrder < 0) {
-            //         totalOrder = 0;
+            //     let selectedTaxId = $("#tax_id").val();
+
+            //     let taxPercent = 0;
+
+            //     // 🚫 STOP kalau kena pajak tapi belum pilih tax
+            //     if (kenaPajak && !selectedTaxId) {
+            //         let dpp = subTotal - discount;
+
+            //         $("#taxes").text("0");
+            //         $("#total_order").val(dpp);
+            //         $("#tax_amount").val(0); // 🔥 reset
+
+            //         return;
             //     }
 
-            //     // Masukkan hasil kalkulasi ke input Total Order
-            //     $("#total_order").val(Math.round(totalOrder));
+            //     // ambil tax
+            //     if (typeof TAXES !== "undefined" && selectedTaxId) {
+            //         let selectedTax = TAXES.find(t => t.id == selectedTaxId);
+            //         if (selectedTax) {
+            //             taxPercent = parseFloat(selectedTax.percentage) || 0;
+            //         }
+            //     }
+
+            //     let dpp = subTotal - discount;
+            //     if (dpp < 0) dpp = 0;
+
+            //     let tax = 0;
+            //     let totalOrder = dpp;
+
+            //     if (kenaPajak && taxPercent > 0) {
+
+            //         if (totalInclude) {
+            //             tax = (dpp * taxPercent) / (100 + taxPercent);
+            //             totalOrder = dpp;
+            //         } else {
+            //             tax = (dpp * taxPercent) / 100;
+            //             totalOrder = dpp + tax;
+            //         }
+
+            //         $("#ppn_container").show();
+
+            //     } else {
+            //         tax = 0;
+            //         totalOrder = dpp;
+            //         $("#ppn_container").hide();
+            //     }
+
+            //     // 🔥 tampilkan ke UI
+            //     $("#taxes").text(
+            //         taxPercent > 0 ?
+            //         `Tax (${taxPercent}%)` :
+            //         "0"
+            //     );
+
+            //     // 🔥 simpan ke hidden input (INI PENTING)
+            //     $("#tax_amount").val(Math.round(tax));
+
+            //     // $("#total_order").val(Math.round(totalOrder));
+            //     let total = Math.round(totalOrder);
+            //     $("#total_order").val(total); // raw
+            //     $("#total_order_view").val(numeral(total).format('0,0.00'));
             // }
 
+            // $("#kena_pajak").on("change", function() {
 
-            const TAXES = @json($taxes);
-            const DEFAULT_TAX_ID = {{ $defaultTax->id ?? 'null' }};
+            //     if ($(this).is(":checked")) {
+            //         $("#tax_container").show();
 
-            function calculateTotalOrder() {
-                let subTotal = parseFloat($("#sub_total").val()) || 0;
-                let discount = parseFloat($("#discount_all").val()) || 0;
+            //         // optional: set default tax
+            //         if (DEFAULT_TAX_ID) {
+            //             $("#tax_id").val(DEFAULT_TAX_ID).trigger("change");
+            //         }
 
-                let kenaPajak = $("#kena_pajak").is(":checked");
-                let totalInclude = $("#total_termasuk_pajak").is(":checked");
+            //     } else {
+            //         $("#tax_container").hide();
 
-                let selectedTaxId = $("#tax_id").val();
+            //         // reset tax
+            //         $("#tax_id").val("").trigger("change");
+            //         $("#total_termasuk_pajak").prop("checked", false);
+            //     }
 
-                let taxPercent = 0;
-
-                // 🚫 STOP kalau kena pajak tapi belum pilih tax
-                if (kenaPajak && !selectedTaxId) {
-                    let dpp = subTotal - discount;
-
-                    $("#taxes").text("0");
-                    $("#total_order").val(dpp);
-                    $("#tax_amount").val(0); // 🔥 reset
-
-                    return;
-                }
-
-                // ambil tax
-                if (typeof TAXES !== "undefined" && selectedTaxId) {
-                    let selectedTax = TAXES.find(t => t.id == selectedTaxId);
-                    if (selectedTax) {
-                        taxPercent = parseFloat(selectedTax.percentage) || 0;
-                    }
-                }
-
-                let dpp = subTotal - discount;
-                if (dpp < 0) dpp = 0;
-
-                let tax = 0;
-                let totalOrder = dpp;
-
-                if (kenaPajak && taxPercent > 0) {
-
-                    if (totalInclude) {
-                        tax = (dpp * taxPercent) / (100 + taxPercent);
-                        totalOrder = dpp;
-                    } else {
-                        tax = (dpp * taxPercent) / 100;
-                        totalOrder = dpp + tax;
-                    }
-
-                    $("#ppn_container").show();
-
-                } else {
-                    tax = 0;
-                    totalOrder = dpp;
-                    $("#ppn_container").hide();
-                }
-
-                // 🔥 tampilkan ke UI
-                $("#taxes").text(
-                    taxPercent > 0 ?
-                    `Tax (${taxPercent}%)` :
-                    "0"
-                );
-
-                // 🔥 simpan ke hidden input (INI PENTING)
-                $("#tax_amount").val(Math.round(tax));
-
-                // $("#total_order").val(Math.round(totalOrder));
-                let total = Math.round(totalOrder);
-                $("#total_order").val(total); // raw
-                $("#total_order_view").val(numeral(total).format('0,0.00'));
-            }
-
-            $("#kena_pajak").on("change", function() {
-
-                if ($(this).is(":checked")) {
-                    $("#tax_container").show();
-
-                    // optional: set default tax
-                    if (DEFAULT_TAX_ID) {
-                        $("#tax_id").val(DEFAULT_TAX_ID).trigger("change");
-                    }
-
-                } else {
-                    $("#tax_container").hide();
-
-                    // reset tax
-                    $("#tax_id").val("").trigger("change");
-                    $("#total_termasuk_pajak").prop("checked", false);
-                }
-
-                calculateTotalOrder();
-            });
-            $("#tax_id").on("change", function() {
-                calculateTotalOrder();
-            });
-            $("#sub_total, #discount_all").on("input", calculateTotalOrder);
+            //     calculateTotalOrder();
+            // });
+            // $("#tax_id").on("change", function() {
+            //     calculateTotalOrder();
+            // });
             // A. Jika User Mengetik di Kolom PERSEN (%)
             $("#percent").on("input", function() {
                 let subTotal = parseFloat($("#sub_total").val()) || 0;
@@ -1930,5 +1911,227 @@
         document.getElementById('quantity').addEventListener('input', calculateTotal);
         document.getElementById('unit_price').addEventListener('input', calculateTotal);
         document.getElementById('discount_percent').addEventListener('input', calculateTotal);
+    </script>
+    <script>
+        $("#sub_total, #discount_all").on("input", function() {
+            calculateTotalOrder();
+        });
+
+        // ===============================
+        // Ambil Grand Total dari Detail
+        // ===============================
+        function getGrandSubTotal() {
+
+            let total = 0;
+
+            $.each(prDetailsData, function(index, item) {
+                total += parseFloat(item.amount) || 0;
+            });
+
+            return total;
+        }
+
+        // ===============================
+        // Hitung Grand Total
+        // ===============================
+        function calculateGrandTotal() {
+
+            let grandSubTotal = getGrandSubTotal();
+
+            let currentPercent = parseFloat($("#percent").val()) || 0;
+
+            if (currentPercent > 0) {
+
+                let nominalDiscount = grandSubTotal * currentPercent / 100;
+
+                $("#discount_all").val(Math.round(nominalDiscount));
+
+            } else {
+
+                let nominalDiscount = parseFloat($("#discount_all").val()) || 0;
+
+                if (nominalDiscount > grandSubTotal) {
+                    nominalDiscount = grandSubTotal;
+                    $("#discount_all").val(Math.round(nominalDiscount));
+                }
+
+                let percent = grandSubTotal > 0 ?
+                    (nominalDiscount / grandSubTotal) * 100 :
+                    0;
+
+                $("#percent").val(
+                    percent % 1 === 0 ? percent : percent.toFixed(2)
+                );
+            }
+
+            calculateTotalOrder();
+        }
+
+        const TAXES = @json($taxes);
+        const DEFAULT_TAX_ID = {{ $defaultTax->id ?? 'null' }};
+
+        // ===============================
+        // Hitung Total Order
+        // ===============================
+        function calculateTotalOrder() {
+
+            // Selalu hitung subtotal dari tabel
+            let grandSubTotal = getGrandSubTotal();
+
+            let discount = parseFloat($("#discount_all").val()) || 0;
+
+            let kenaPajak = $("#kena_pajak").is(":checked");
+            let totalInclude = $("#total_termasuk_pajak").is(":checked");
+
+            let selectedTaxId = $("#tax_id").val();
+
+            let taxPercent = 0;
+
+            if (selectedTaxId) {
+                let selectedTax = TAXES.find(t => t.id == selectedTaxId);
+
+                if (selectedTax) {
+                    taxPercent = parseFloat(selectedTax.percentage) || 0;
+                }
+            }
+
+            // subtotal setelah diskon
+            let subtotal = grandSubTotal - discount;
+
+            if (subtotal < 0)
+                subtotal = 0;
+
+            let dpp = subtotal;
+            let tax = 0;
+            let totalOrder = subtotal;
+
+            if (kenaPajak && taxPercent > 0) {
+
+                $("#ppn_container").show();
+
+                if (totalInclude) {
+
+                    // ==================================
+                    // TAX INCLUSIVE
+                    // subtotal sudah termasuk pajak
+                    // ==================================
+
+                    dpp = subtotal / (1 + (taxPercent / 100));
+
+                    tax = subtotal - dpp;
+
+                    totalOrder = subtotal;
+
+                } else {
+
+                    // ==================================
+                    // TAX EXCLUSIVE
+                    // subtotal belum termasuk pajak
+                    // ==================================
+
+                    dpp = subtotal;
+
+                    tax = dpp * taxPercent / 100;
+
+                    totalOrder = dpp + tax;
+                }
+
+            } else {
+
+                $("#ppn_container").hide();
+
+                dpp = subtotal;
+                tax = 0;
+                totalOrder = subtotal;
+            }
+
+            // Label tax
+            $("#taxes").text(
+                taxPercent > 0 ?
+                `Tax (${taxPercent}%)` :
+                "Tax"
+            );
+
+            // ===================================================
+            // SUB TOTAL TETAP DARI TABEL (JANGAN DPP)
+            // ===================================================
+            $("#sub_total").val(Math.round(subtotal));
+
+            // Simpan DPP jika diperlukan
+            $("#dpp_amount").val(Math.round(dpp));
+
+            $("#tax_amount").val(Math.round(tax));
+
+            $("#total_order").val(Math.round(totalOrder));
+        }
+
+        // ===============================
+        // EVENT
+        // ===============================
+
+        $("#kena_pajak").on("change", function() {
+
+            if ($(this).is(":checked")) {
+
+                $("#tax_container").show();
+
+                if (DEFAULT_TAX_ID) {
+                    $("#tax_id").val(DEFAULT_TAX_ID);
+                }
+
+            } else {
+
+                $("#tax_container").hide();
+
+                $("#tax_id").val("");
+
+                $("#total_termasuk_pajak").prop("checked", false);
+
+            }
+
+            calculateTotalOrder();
+        });
+
+        $("#tax_id").on("change", function() {
+
+            calculateTotalOrder();
+
+        });
+
+        $("#total_termasuk_pajak").on("change", function() {
+
+            if ($(this).is(":checked")) {
+
+                $("#kena_pajak").prop("checked", true);
+
+                if ($("#tax_id").val() == "" && DEFAULT_TAX_ID) {
+                    $("#tax_id").val(DEFAULT_TAX_ID);
+                }
+
+            }
+
+            calculateTotalOrder();
+
+        });
+
+        $("#discount_all").on("input", function() {
+
+            calculateTotalOrder();
+
+        });
+
+        $("#percent").on("input", function() {
+
+            let subtotal = getGrandSubTotal();
+
+            let percent = parseFloat($(this).val()) || 0;
+
+            let nominal = subtotal * percent / 100;
+
+            $("#discount_all").val(Math.round(nominal));
+
+            calculateTotalOrder();
+
+        });
     </script>
 @endpush
