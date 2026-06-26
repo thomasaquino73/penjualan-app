@@ -2,14 +2,13 @@
 
 namespace App\Models\Sales;
 
-use App\Models\Sales\Customer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class StoreSales extends Model
 {
-     use HasFactory;
+    use HasFactory;
 
     protected $table = 'store_sales';
 
@@ -37,7 +36,8 @@ class StoreSales extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
-     public function details()
+
+    public function details()
     {
         return $this->hasMany(StoreSalesDetail::class, 'store_sales_id');
     }

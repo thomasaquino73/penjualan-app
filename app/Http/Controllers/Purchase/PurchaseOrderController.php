@@ -630,7 +630,7 @@ class PurchaseOrderController extends Controller
                             'unit_price' => $unitPrice,
                             'warehouse_id' => $item['warehouse_id'],
                             'discount' => $discount,
-                            'discount_percent' =>$item['discount_percent'],
+                            'discount_percent' => $item['discount_percent'],
                             'amount' => $item['amount'] ?? $amount,
                             'active' => 1,
                             'created_by' => Auth::id(),

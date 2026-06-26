@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-   protected string $year;
+    protected string $year;
 
     public function __construct()
     {
@@ -32,9 +32,9 @@ return new class extends Migration
             $table->string('shipping_method');
             $table->string('notes');
             $table->enum('status', [
-                'draft',              
-                'pending',            
-                'paid',            
+                'draft',
+                'pending',
+                'paid',
             ])->default('draft');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

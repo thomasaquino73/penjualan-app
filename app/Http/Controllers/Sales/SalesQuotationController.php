@@ -10,6 +10,7 @@ use App\Models\Sales\SalesQuotation;
 use App\Models\Sales\SalesQuotationDetail;
 use App\Models\Setting\Company;
 use App\Models\Setting\SyaratPembayaran;
+use App\Models\Setting\Tax;
 use App\Models\User;
 use App\Notifications\SalesQuotationNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -287,6 +288,17 @@ class SalesQuotationController extends Controller
 
     public function create()
     {
+        // 🔥 Ambil semua pajak aktif (khusus pembelian & general)
+        $taxes = Tax::where('is_active', true)
+            ->whereIn('usage', ['purchase', 'both'])
+            ->get();
+
+        // 🔥 Ambil default tax (misalnya PPN)
+        $defaultTax = Tax::where('is_active', true)
+            ->where('is_default', true)
+            ->whereIn('usage', ['purchase', 'both'])
+            ->first();
+        $company = Company::with('defaultCurrency')->first();
         $x = [
             'title' => 'Sales Quotation New',
             'breadcrumb' => [
@@ -298,6 +310,9 @@ class SalesQuotationController extends Controller
             'product' => Barang::where('status', '<>', 0)->get(),
             'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
             'salesman' => User::where('status', '<>', 0)->get(),
+            'taxes' => $taxes,
+            'defaultTax' => $defaultTax,
+            'company' => $company->defaultCurrency,
 
         ];
 
@@ -359,6 +374,7 @@ class SalesQuotationController extends Controller
                             'qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
                             'unit_price' => $unitPrice,
+                            'discount_percent' => $item['discount_percent'],
                             'discount' => $discount,
                             'amount' => $item['amount'] ?? $amount,
                             'active' => 1,
@@ -450,6 +466,15 @@ class SalesQuotationController extends Controller
     public function edit(string $id)
     {
         $salesQuotation = SalesQuotation::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $taxes = Tax::where('is_active', true)
+            ->whereIn('usage', ['purchase', 'both'])
+            ->get();
+
+        // 🔥 Ambil default tax (misalnya PPN)
+        $defaultTax = Tax::where('is_active', true)
+            ->where('is_default', true)
+            ->whereIn('usage', ['purchase', 'both'])
+            ->first();
         $x = [
             'title' => 'Sales Quotation New',
             'breadcrumb' => [
@@ -462,6 +487,8 @@ class SalesQuotationController extends Controller
             'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
             'salesman' => User::where('status', '<>', 0)->get(),
             'model' => $salesQuotation,
+            'taxes' => $taxes,
+            'defaultTax' => $defaultTax,
         ];
 
         return view('sales.salesQuotation.sales_quotation_edit', $x);
@@ -507,6 +534,7 @@ class SalesQuotationController extends Controller
                         $unitPrice = floatval($item['unit_price'] ?? 0);
                         $discount = floatval($item['discount'] ?? 0);
                         $amount = ($qtyInputForm * $unitPrice) - $discount;
+                        $discountPercent = $item['discount_percent'] ?? 0;
 
                         SalesQuotationDetail::create([
                             'sales_quotation_id' => $salesQuotation->id,
@@ -514,6 +542,7 @@ class SalesQuotationController extends Controller
                             'qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
                             'unit_price' => $unitPrice,
+                            'discount_percent' => $discountPercent,
                             'discount' => $discount,
                             'amount' => $item['amount'] ?? $amount,
                             'active' => 1,

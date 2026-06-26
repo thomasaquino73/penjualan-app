@@ -60,6 +60,7 @@ return new class extends Migration
             $table->decimal('qty', 18, 4);
             $table->bigInteger('unit_id');
             $table->decimal('unit_price', 15, 2);
+            $table->string('discount_percent')->nullable();
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('amount', 15, 2);
             $table->unsignedBigInteger('warehouse_id');

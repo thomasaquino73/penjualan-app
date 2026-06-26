@@ -22,6 +22,7 @@ class StoreSalesDetail extends Model
         $year = date('Y');
         $this->table = "store_sales_detail_{$year}";
     }
+
     public function produkID()
     {
         return $this->belongsTo(Barang::class, 'product_id', 'id');

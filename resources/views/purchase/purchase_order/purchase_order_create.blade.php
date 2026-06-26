@@ -2021,7 +2021,10 @@
                 if ($("#tax_id").val() == "" && DEFAULT_TAX_ID) {
                     $("#tax_id").val(DEFAULT_TAX_ID);
                 }
+                $("#tax_container").hide();
 
+            } else {
+                $("#tax_container").show();
             }
 
             calculateTotalOrder();
