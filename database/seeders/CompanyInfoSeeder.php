@@ -7,6 +7,7 @@ use App\Models\Sales\Customer;
 use App\Models\Setting\Company;
 use App\Models\Setting\Currency;
 use App\Models\Setting\SyaratPembayaran;
+use App\Models\Setting\Tax;
 use Illuminate\Database\Seeder;
 
 class CompanyInfoSeeder extends Seeder
@@ -16,6 +17,29 @@ class CompanyInfoSeeder extends Seeder
      */
     public function run(): void
     {
+        Currency::insert([
+            [
+                'id' => 1,
+                'code' => 'IDR',
+                'name' => 'Rupiah',
+                'symbol' => 'Rp',
+                'country' => 'Indonesia',
+            ],
+            [
+                'id' => 2,
+                'code' => 'USD',
+                'name' => 'US Dollar',
+                'symbol' => 'USD',
+                'country' => 'United States',
+            ],
+            [
+                'id' => 3,
+                'code' => 'SGD',
+                'name' => 'Singapore Dollar',
+                'symbol' => 'SGD',
+                'country' => 'Singapore',
+            ],
+        ]);
         Company::create([
             'nama_perusahaan' => 'PT Almex Bintang Timur',
             'alamat' => 'Green Lake City Ruko Food City RKFC-005 Petir Cipondoh',
@@ -26,27 +50,8 @@ class CompanyInfoSeeder extends Seeder
             'email' => 'info@almexbintangtimur.com',
             'logo' => 'image/logo/69fd6d6ab719c1778216298.png',
             'favicon' => 'image/logo/69fd6d6ab719c1778216298.png',
-        ]);
-
-        Currency::insert([
-            [
-                'code' => 'IDR',
-                'name' => 'Rupiah',
-                'symbol' => 'Rp',
-                'country' => 'Indonesia',
-            ],
-            [
-                'code' => 'USD',
-                'name' => 'US Dollar',
-                'symbol' => 'USD',
-                'country' => 'United States',
-            ],
-            [
-                'code' => 'SGD',
-                'name' => 'Singapore Dollar',
-                'symbol' => 'SGD',
-                'country' => 'Singapore',
-            ],
+            'default_currency_id' => '1',
+            'cut_off_date' => '2026-05-01',
         ]);
 
         Supplier::create([
@@ -90,6 +95,20 @@ class CompanyInfoSeeder extends Seeder
             'status' => 1,
             'created_by' => 1,
             'updated_by' => null,
+        ]);
+
+        Tax::create([
+            'tax_name' => 'PPN 11%',
+            'tax_type' => 'PPN',
+            'percentage' => '11',
+            'description' => 'Pajak Pertambahan Nilai',
+            'is_default' => 1,
+            'calculation_type' => 'percent',
+            'is_active' => 1,
+            'created_by' => 1,
+            'updated_by' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         SyaratPembayaran::insert([

@@ -739,7 +739,9 @@
                                     $("#product_id").val(data.product_id).trigger("change");
                                     $("#unit_price").val(data.unit_price);
                                     $("#discount").val(data.discount || 0);
+                                    $("#discount_percent").val(data.discount_percent || 0);
                                     $("#tax").val(data.tax || 0);
+                                    $("#amount").val(data.amount || 0);
 
                                     $("#modalTitle").text("Edit entry");
                                     $("#btnSubmitModal").text("Update");
@@ -974,6 +976,7 @@
                 let unitName = $("#unit_id option:selected").text();
                 let warehouseId = $("#warehouse_id").val();
                 let warehouseName = $("#warehouse_id option:selected").text();
+                let discountPercent = $("#discount_percent").val();
                 let detailId = $("#detail_id")
                     .val(); // Ini adalah index row array (kosong jika barang baru)
 
@@ -1045,6 +1048,7 @@
                     warehouse_id: warehouseId,
                     warehouse: warehouseName,
                     unit_price: unitPrice,
+                    discount_percent: discountPercent,
                     discount: discount,
                     tax: tax,
                     amount: amount,
@@ -1773,7 +1777,7 @@
             document.getElementById('discount').value = totalDiscount.toFixed(2);
 
             // Set total price
-            document.getElementById('total_price').value = remaining.toFixed(2);
+            document.getElementById('amount').value = remaining.toFixed(2);
         }
 
         document.getElementById('discount').addEventListener('input', function() {
@@ -1789,7 +1793,7 @@
 
             let total = subtotal - discountNominal;
 
-            document.getElementById('total_price').value = total.toFixed(2);
+            document.getElementById('amount').value = total.toFixed(2);
         });
 
         document.getElementById('quantity').addEventListener('input', calculateTotal);

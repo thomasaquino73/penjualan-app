@@ -618,6 +618,7 @@ class PurchaseOrderController extends Controller
                         $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
                         $unitPrice = floatval($item['unit_price'] ?? 0);
                         $discount = floatval($item['discount'] ?? 0);
+                        $discountPercent = floatval($item['discount_percent'] ?? 0);
                         $amount = ($qtyInputForm * $unitPrice) - $discount;
 
                         PurchaseOrderDetail::create([
@@ -629,6 +630,7 @@ class PurchaseOrderController extends Controller
                             'unit_price' => $unitPrice,
                             'warehouse_id' => $item['warehouse_id'],
                             'discount' => $discount,
+                            'discount_percent' =>$item['discount_percent'],
                             'amount' => $item['amount'] ?? $amount,
                             'active' => 1,
                             'created_by' => Auth::id(),
@@ -768,6 +770,7 @@ class PurchaseOrderController extends Controller
                 'warehouse' => $detail->warehouseID->nama_gudang ?? '-',
                 'unit_price' => (float) $detail->unit_price,
                 'discount' => (float) $detail->discount,
+                'discount_percent' => $detail->discount_percent,
                 'amount' => (float) $detail->amount,
                 'tax' => (float) ($detail->tax ?? 0),
                 'sisa_pr' => $sisaPr,
@@ -1131,6 +1134,7 @@ class PurchaseOrderController extends Controller
 
                 $unitPrice = floatval($item['unit_price'] ?? 0);
                 $discount = floatval($item['discount'] ?? 0);
+                $discountPercent = $item['discount_percent'] ?? 0;
 
                 PurchaseOrderDetail::create([
                     'purchase_order_id' => $purchaseOrder->id,
@@ -1141,6 +1145,7 @@ class PurchaseOrderController extends Controller
                     'warehouse_id' => $item['warehouse_id'],
                     'unit_price' => $unitPrice,
                     'discount' => $discount,
+                    'discount_percent' => $discountPercent,
                     'amount' => $item['amount'] ?? (($qty * $unitPrice) - $discount),
                     'active' => 1,
                     'created_by' => $purchaseOrder->created_by,

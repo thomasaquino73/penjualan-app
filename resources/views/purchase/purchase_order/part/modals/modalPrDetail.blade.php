@@ -77,7 +77,7 @@
                                       <div class="input-group input-group-merge">
                                           <span class="input-group-text">{{ $company->symbol ?? '' }}</span>
                                           <input type="number" id="discount" name="discount" class="form-control"
-                                              placeholder="0">
+                                              step="any" placeholder="0">
                                       </div>
 
                                   </div>
@@ -89,7 +89,7 @@
                               <div class="input-group input-group-merge">
                                   <span class="input-group-text">{{ $company->symbol ?? 'Rp' }}</span>
                                   <input type="number" id="amount" name="amount" class="form-control"
-                                      placeholder="0" min="0">
+                                      step="any" placeholder="0" min="0">
                               </div>
                               <span class="error text-danger" id="amountError"></span>
                           </div>

@@ -119,6 +119,7 @@
                                                 <th>Qty</th>
                                                 <th>Unit</th>
                                                 <th>Unit Price</th>
+                                                <th>DiscPercent</th>
                                                 <th>Disc</th>
                                                 <th>Amount</th>
                                                 <th>Warehouse</th>
@@ -681,6 +682,7 @@
                         'warehouse': '{{ $detail['warehouse'] }}',
                         'unit_price': '{{ $detail['unit_price'] }}',
                         'discount': '{{ $detail['discount'] }}',
+                        'discount_percent': '{{ $detail['discount_percent'] }}',
                         'amount': '{{ $detail['amount'] }}',
                         'sisa_pr': '{{ $detail['sisa_pr'] }}',
                         'kuota_asli': '{{ $detail['kuota_asli'] }}',
@@ -697,23 +699,7 @@
             // Jika PO ini dari PR, mungkin kamu mau mendisable tombol "REQUISITION" di atas agar user tidak tambah PR lain
             $(".btn-success").html('<i class="ti ti-link"></i> Linked to PR').prop('disabled', true);
         }
-        // let prDetailsData = [
-        //     @if (isset($model) && isset($model->details))
-        //         @foreach ($model->details as $detail)
-        //             {
-        //                 'product_id': '{{ $detail->product_id }}',
-        //                 'data_produk': '{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}',
-        //                 'quantity': '{{ $detail->qty }}',
-        //                 'unit_id': '{{ $detail->unit_id }}',
-        //                 'unit': '{{ $detail->unitID ? $detail->unitID->name ?? ($detail->unitID->detail ?? $detail->unitID->nama) : 'Unit' }}',
-        //                 'unit_price': '{{ $detail->unit_price }}',
-        //                 'discount': '{{ $detail->discount ?? 0 }}',
-        //                 'amount': '{{ $detail->amount }}',
-        //             }
-        //             {{ !$loop->last ? ',' : '' }}
-        //         @endforeach
-        //     @endif
-        // ];
+
 
         $(document).ready(function() {
             $(".select2-modal").each(function() {
@@ -773,6 +759,10 @@
                                 minimumFractionDigits: 0
                             });
                         }
+                    },
+                    {
+                        data: "discount_percent",
+                        className: "text-center"
                     },
                     {
                         data: "discount",
@@ -873,7 +863,9 @@
                                         .purchase_requisition_detail_id || "");
                                     $("#unit_price").val(parseFloat(data.unit_price || 0));
                                     $("#discount").val(parseFloat(data.discount || 0));
+                                    $("#discount_percent").val(data.discount_percent || 0);
                                     $("#tax").val(parseFloat(data.tax || 0));
+                                    $("#amount").val(data.amount || 0);
 
                                     // 6. Set Validasi Maksimal di Input
                                     // Logika: Sisa PR (outstanding) + Qty PO ini sendiri (karena qty lama akan di-overwrite)
@@ -970,6 +962,7 @@
                     },
                 },
             });
+
             $("#btnSubmitModal").on("click", function(e) {
                 e.preventDefault();
 
@@ -983,6 +976,7 @@
                 let warehouseName = $("#warehouse_id option:selected").text();
                 let unitPrice = parseFloat($("#unit_price").val() || 0);
                 let discount = parseFloat($("#discount").val() || 0);
+                let discountPercent = $("#discount_percent").val();
                 let tax = parseFloat($("#tax").val() || 0);
 
                 // 2. Ambil ID dan PR Detail ID
@@ -1021,6 +1015,7 @@
                     warehouse: warehouseName,
                     unit_price: unitPrice,
                     discount: discount,
+                    discount_percent: discountPercent,
                     tax: tax,
                     amount: (qtyInput * unitPrice) - discount,
                     purchase_requisition_detail_id: prDetailId // Ini yang akan dikirim ke controller
@@ -1191,114 +1186,120 @@
             //==============================+++++++++++
 
             // 5. Event Handler: Submit Form Modal Detail (Sekarang baris prDetailsData PASTI terbaca)
-            $("#formPrDetail").on("submit", function(e) {
-                e.preventDefault();
+            // $("#formPrDetail").on("submit", function(e) {
+            //     e.preventDefault();
 
-                let productId = $("#product_id").val();
-                let productName = $("#product_id option:selected").text();
-                let quantity = parseFloat($("#quantity").val()) || 0;
-                let unitId = $("#unit_id").val();
-                let unitName = $("#unit_id option:selected").text();
-                let detailId = $("#detail_id")
-                    .val(); // Ini adalah index row array (kosong jika barang baru)
+            //     let productId = $("#product_id").val();
+            //     let productName = $("#product_id option:selected").text();
+            //     let quantity = parseFloat($("#quantity").val()) || 0;
+            //     let unitId = $("#unit_id").val();
+            //     let unitName = $("#unit_id option:selected").text();
+            //     let warehouseId = $("#warehouse_id").val();
+            //     let warehouseName = $("#warehouse_id option:selected").text();
+            //     let discountPercent = $("#discount_percent").val();
+            //     let detailId = $("#detail_id")
+            //         .val(); // Ini adalah index row array (kosong jika barang baru)
 
-                let unitPrice = parseFloat($("#unit_price").val()) || 0;
-                let discount = parseFloat($("#discount").val()) || 0;
-                let tax = parseFloat($("#tax").val()) || 0;
+            //     let unitPrice = parseFloat($("#unit_price").val()) || 0;
+            //     let discount = parseFloat($("#discount").val()) || 0;
+            //     let tax = parseFloat($("#tax").val()) || 0;
 
-                let requiredDate = $("#required_date").val() || "";
+            //     let requiredDate = $("#required_date").val() || "";
 
-                // 1. Validasi Input Wajib
-                if (!productId || quantity <= 0 || !unitId) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Oops...",
-                        text: "Please fill all required fields! (Product, Valid Quantity, and Unit)",
-                        customClass: {
-                            confirmButton: "btn btn-danger",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return false;
-                }
+            //     // 1. Validasi Input Wajib
+            //     if (!productId || quantity <= 0 || !unitId || !warehouseId) {
+            //         Swal.fire({
+            //             icon: "error",
+            //             title: "Oops...",
+            //             text: "Please fill all required fields! (Product, Valid Quantity, Warehouse, and Unit)",
+            //             customClass: {
+            //                 confirmButton: "btn btn-danger",
+            //             },
+            //             buttonsStyling: false,
+            //         });
+            //         return false;
+            //     }
 
-                // 2. Validasi Duplikasi Produk
-                let isDuplicate = false;
-                if (prDetailsData && prDetailsData.length > 0) {
-                    for (let i = 0; i < prDetailsData.length; i++) {
-                        if (prDetailsData[i].product_id == productId) {
-                            if (detailId === "") {
-                                // Jika tambah baru dan produk sudah ada di tabel
-                                isDuplicate = true;
-                                break;
-                            } else if (detailId !== "" && i != detailId) {
-                                // Jika sedang edit, tapi produk diubah ke produk lain yang sudah ada di tabel
-                                isDuplicate = true;
-                                break;
-                            }
-                        }
-                    }
-                }
+            //     // 2. Validasi Duplikasi Produk
+            //     let isDuplicate = false;
+            //     if (prDetailsData && prDetailsData.length > 0) {
+            //         for (let i = 0; i < prDetailsData.length; i++) {
+            //             if (prDetailsData[i].product_id == productId) {
+            //                 if (detailId === "") {
+            //                     // Jika tambah baru dan produk sudah ada di tabel
+            //                     isDuplicate = true;
+            //                     break;
+            //                 } else if (detailId !== "" && i != detailId) {
+            //                     // Jika sedang edit, tapi produk diubah ke produk lain yang sudah ada di tabel
+            //                     isDuplicate = true;
+            //                     break;
+            //                 }
+            //             }
+            //         }
+            //     }
 
-                if (isDuplicate) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Product Already Exists!",
-                        html: `The product <b>"${productName}"</b> is already registered.<br>Please edit the item if you want to change it.`,
-                        customClass: {
-                            confirmButton: "btn btn-danger",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return false;
-                }
+            //     if (isDuplicate) {
+            //         Swal.fire({
+            //             icon: "error",
+            //             title: "Product Already Exists!",
+            //             html: `The product <b>"${productName}"</b> is already registered.<br>Please edit the item if you want to change it.`,
+            //             customClass: {
+            //                 confirmButton: "btn btn-danger",
+            //             },
+            //             buttonsStyling: false,
+            //         });
+            //         return false;
+            //     }
 
-                // 3. Matematika Kalkulasi Amount (Tax dalam persen)
-                let subTotal = quantity * unitPrice;
-                let totalDiscount = discount; // Diskon nominal tetap
-                let setelahDiskon = subTotal - totalDiscount;
-                let totalTax = setelahDiskon * (tax / 100);
-                let amount = setelahDiskon + totalTax;
+            //     // 3. Matematika Kalkulasi Amount (Tax dalam persen)
+            //     let subTotal = quantity * unitPrice;
+            //     let totalDiscount = discount; // Diskon nominal tetap
+            //     let setelahDiskon = subTotal - totalDiscount;
+            //     let totalTax = setelahDiskon * (tax / 100);
+            //     let amount = setelahDiskon + totalTax;
 
-                // 4. Menyusun Object Data Baru / Hasil Editan Form
-                let itemData = {
-                    product_id: productId,
-                    data_produk: productName,
-                    quantity: quantity,
-                    unit_id: unitId,
-                    unit: unitName,
-                    unit_price: unitPrice,
-                    discount: discount,
-                    tax: tax,
-                    amount: amount,
-                    required_date: requiredDate,
-                };
+            //     // 4. Menyusun Object Data Baru / Hasil Editan Form
+            //     let itemData = {
+            //         product_id: productId,
+            //         data_produk: productName,
+            //         quantity: quantity,
+            //         unit_id: unitId,
+            //         unit: unitName,
+            //         warehouse_id: warehouseId,
+            //         warehouse: warehouseName,
+            //         unit_price: unitPrice,
+            //         discount_percent: discountPercent,
+            //         discount: discount,
+            //         tax: tax,
+            //         amount: amount,
+            //         required_date: requiredDate,
+            //     };
 
-                // 5. Logika Penyimpanan Berdasarkan 2 Cara Pengisian PO
-                if (detailId === "") {
-                    // --- CARA A: PO ISI SENDIRI (TAMBAH BARU MANUAL) ---
-                    prDetailsData.push(itemData);
-                } else {
-                    // --- CARA B: AMBIL DARI PR & EDIT DATA ---
-                    // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
-                    // Properti bawaan PR seperti 'requisition_code' & 'purchase_requisition_detail_id'
-                    // akan otomatis aman dan dipertahankan.
-                    prDetailsData[detailId] = {
-                        ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)
-                        ...itemData // Update dengan data baru dari form modal
-                    };
-                }
+            //     // 5. Logika Penyimpanan Berdasarkan 2 Cara Pengisian PO
+            //     if (detailId === "") {
+            //         // --- CARA A: PO ISI SENDIRI (TAMBAH BARU MANUAL) ---
+            //         prDetailsData.push(itemData);
+            //     } else {
+            //         // --- CARA B: AMBIL DARI PR & EDIT DATA ---
+            //         // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
+            //         // Properti bawaan PR seperti 'requisition_code' & 'purchase_requisition_detail_id'
+            //         // akan otomatis aman dan dipertahankan.
+            //         prDetailsData[detailId] = {
+            //             ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)
+            //             ...itemData // Update dengan data baru dari form modal
+            //         };
+            //     }
 
-                // 6. Refresh Tampilan & Hitung Total Akhir PO
-                table.clear().rows.add(prDetailsData).draw();
+            //     // 6. Refresh Tampilan & Hitung Total Akhir PO
+            //     table.clear().rows.add(prDetailsData).draw();
 
-                // Panggil fungsi hitung total keseluruhan halaman PO kamu
-                if (typeof calculateGrandTotal === "function") calculateGrandTotal();
-                if (typeof calculateTotalOrder === "function") calculateTotalOrder();
+            //     // Panggil fungsi hitung total keseluruhan halaman PO kamu
+            //     if (typeof calculateGrandTotal === "function") calculateGrandTotal();
+            //     if (typeof calculateTotalOrder === "function") calculateTotalOrder();
 
-                // Tutup Modal Form Detail
-                $("#modalPrDetail").modal("hide");
-            });
+            //     // Tutup Modal Form Detail
+            //     $("#modalPrDetail").modal("hide");
+            // });
 
             // Jalankan fungsi setiap kali user mengetik sesuatu di Sub Total atau Discount
             $("#sub_total, #discount_all").on("input", function() {
@@ -1877,5 +1878,57 @@
                 // Kode di bawah ini tetap berjalan bebas tanpa interupsi batas maksimal...
             });
         });
+    </script>
+    <script>
+        function calculateTotal() {
+            let qty = parseFloat(document.getElementById('quantity').value) || 0;
+            let price = parseFloat(document.getElementById('unit_price').value) || 0;
+            let discountInput = document.getElementById('discount_percent').value;
+
+            let subtotal = qty * price;
+
+            let remaining = subtotal;
+            let totalDiscount = 0;
+
+            if (discountInput) {
+                // Ambil semua angka dari input seperti "10+5+5"
+                let discounts = discountInput.split('+');
+
+                discounts.forEach(d => {
+                    let percent = parseFloat(d.trim()) || 0;
+
+                    let discValue = remaining * (percent / 100);
+                    totalDiscount += discValue;
+
+                    remaining -= discValue;
+                });
+            }
+
+            // Set hasil ke input discount (nominal)
+            document.getElementById('discount').value = totalDiscount.toFixed(2);
+
+            // Set total price
+            document.getElementById('amount').value = remaining.toFixed(2);
+        }
+
+        document.getElementById('discount').addEventListener('input', function() {
+            let qty = parseFloat(document.getElementById('quantity').value) || 0;
+            let price = parseFloat(document.getElementById('unit_price').value) || 0;
+            let discountNominal = parseFloat(this.value) || 0;
+
+            let subtotal = qty * price;
+
+            if (discountNominal > subtotal) {
+                discountNominal = subtotal;
+            }
+
+            let total = subtotal - discountNominal;
+
+            document.getElementById('amount').value = total.toFixed(2);
+        });
+
+        document.getElementById('quantity').addEventListener('input', calculateTotal);
+        document.getElementById('unit_price').addEventListener('input', calculateTotal);
+        document.getElementById('discount_percent').addEventListener('input', calculateTotal);
     </script>
 @endpush
