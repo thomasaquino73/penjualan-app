@@ -197,6 +197,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('permissions', PermissionsController::class);
 
     Route::prefix('user')->name('user.')->group(function () {
+        Route::get('/cetak-semua-kartu/', [UserController::class, 'cetakAllBarcode'])->name('cetak.kartu.all');
         Route::get('/cetak-kartu/{id}', [UserController::class, 'cetak'])->name('cetak.kartu');
         Route::get('/', [UserController::class, 'index'])->name('index');
         Route::get('/create', [UserController::class, 'create'])->name('create');
@@ -278,7 +279,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('', PurchaseInvoiceController::class)->parameters(['' => 'purchase_invoice']);
     });
 
-      Route::get('/sales-order/get-units-by-product/{id}', [SalesOrderController::class, 'getUnitsByProduct'])->name('sales-order.get_units');
+    Route::get('/sales-order/get-units-by-product/{id}', [SalesOrderController::class, 'getUnitsByProduct'])->name('sales-order.get_units');
     Route::get('/sales-order/wh/get-stock', [SalesOrderController::class, 'getStock'])->name('sales-order.wh.get-stock');
     Route::patch('/sales-order/{id}/close', [SalesOrderController::class, 'CloseDocument'])->name('sales-order.close');
     Route::post('/sales-order/send-supplier/{id}', [SalesOrderController::class, 'sendSupplier'])->name('sales-order.send-supplier');

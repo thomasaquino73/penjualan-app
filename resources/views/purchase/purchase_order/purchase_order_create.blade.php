@@ -125,7 +125,7 @@
                         <div class="col-12 mb-3 ">
                             <label class="form-label" for="sub_total">Sub Total</label>
                             <div class="input-group input-group-merge">
-                                <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
+                                <span class="input-group-text">{{ $company->symbol ?? 'Rp' }}</span>
                                 <input type="number" id="sub_total" name="sub_total" class="form-control"
                                     placeholder="0" readonly>
                             </div>
@@ -144,7 +144,7 @@
                                 </div>
                                 <div class="col-8">
                                     <div class="input-group input-group-merge">
-                                        <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
+                                        <span class="input-group-text">{{ $company->symbol ?? 'Rp' }}</span>
                                         <input type="number" id="discount_all" name="discount_all" class="form-control"
                                             placeholder="0" min='0'>
                                     </div>
@@ -164,7 +164,7 @@
                         <div class="col-12 mb-3">
                             <label class="form-label" for="total_order"> <strong>Total Order</strong></label>
                             <div class="input-group input-group-merge">
-                                <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
+                                <span class="input-group-text">{{ $company->symbol ?? 'Rp' }}</span>
                                 <input type="number" id="total_order" name="total_order" class="form-control"
                                     placeholder="0" readonly>
                             </div>
@@ -1743,5 +1743,57 @@
                 },
             });
         }
+    </script>
+    <script>
+        function calculateTotal() {
+            let qty = parseFloat(document.getElementById('quantity').value) || 0;
+            let price = parseFloat(document.getElementById('unit_price').value) || 0;
+            let discountInput = document.getElementById('discount_percent').value;
+
+            let subtotal = qty * price;
+
+            let remaining = subtotal;
+            let totalDiscount = 0;
+
+            if (discountInput) {
+                // Ambil semua angka dari input seperti "10+5+5"
+                let discounts = discountInput.split('+');
+
+                discounts.forEach(d => {
+                    let percent = parseFloat(d.trim()) || 0;
+
+                    let discValue = remaining * (percent / 100);
+                    totalDiscount += discValue;
+
+                    remaining -= discValue;
+                });
+            }
+
+            // Set hasil ke input discount (nominal)
+            document.getElementById('discount').value = totalDiscount.toFixed(2);
+
+            // Set total price
+            document.getElementById('total_price').value = remaining.toFixed(2);
+        }
+
+        document.getElementById('discount').addEventListener('input', function() {
+            let qty = parseFloat(document.getElementById('quantity').value) || 0;
+            let price = parseFloat(document.getElementById('unit_price').value) || 0;
+            let discountNominal = parseFloat(this.value) || 0;
+
+            let subtotal = qty * price;
+
+            if (discountNominal > subtotal) {
+                discountNominal = subtotal;
+            }
+
+            let total = subtotal - discountNominal;
+
+            document.getElementById('total_price').value = total.toFixed(2);
+        });
+
+        document.getElementById('quantity').addEventListener('input', calculateTotal);
+        document.getElementById('unit_price').addEventListener('input', calculateTotal);
+        document.getElementById('discount_percent').addEventListener('input', calculateTotal);
     </script>
 @endpush

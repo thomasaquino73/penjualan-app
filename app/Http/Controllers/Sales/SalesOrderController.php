@@ -1728,9 +1728,9 @@ class SalesOrderController extends Controller
         // Kembalikan data array JSON ter-filter ke JavaScript
         // return response()->json($result);
         return response()->json([
-                'units' => $result, // Ubah struktur agar units dibungkus
-                'default_price' => $defaultPrice
-            ]);
+            'units' => $result, // Ubah struktur agar units dibungkus
+            'default_price' => $defaultPrice,
+        ]);
     }
 
     // public function getUnitsByProduct($id)

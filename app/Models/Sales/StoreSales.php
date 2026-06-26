@@ -2,12 +2,16 @@
 
 namespace App\Models\Sales;
 
+use App\Models\Sales\Customer;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class DeliveryOrder extends Model
+class StoreSales extends Model
 {
-    protected $table = 'delivery_order';
+     use HasFactory;
+
+    protected $table = 'store_sales';
 
     protected $guarded = [];
 
@@ -16,7 +20,7 @@ class DeliveryOrder extends Model
         parent::__construct($attributes);
 
         $year = date('Y');
-        $this->table = "delivery_order_{$year}";
+        $this->table = "store_sales_{$year}";
     }
 
     public function creator()
@@ -33,9 +37,8 @@ class DeliveryOrder extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
-
-    public function details()
+     public function details()
     {
-        return $this->hasMany(DeliveryOrderDetail::class, 'delivery_order_id');
+        return $this->hasMany(StoreSalesDetail::class, 'store_sales_id');
     }
 }

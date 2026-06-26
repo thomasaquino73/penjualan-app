@@ -297,7 +297,8 @@
                 </div>
             </td>
             <td style="padding-left: 25px;">
-                <div class="po-box-title">Purchase Order</div>
+                {{-- <div class="po-box-title">Purchase Order</div> --}}
+                <div class="po-box-title">Pesanan Pembelian</div>
                 <table class="po-details-table">
                     <tr>
                         <td class="label">Nomor</td>
@@ -308,7 +309,7 @@
                         <td class="label">Tanggal</td>
                         <td class="colon">:</td>
                         <td class="value">
-                            {{ date('d M Y', strtotime($model->date)) }}</td>
+                            {{ date('d M Y', strtotime($model->datePO)) }}</td>
                     </tr>
                     <tr>
                         <td class="label">Tanggal Kirim</td>
@@ -370,7 +371,7 @@
                     <tr>
                         <td>PPN (11%)</td>
                         <td class="text-right">
-                            {{ isset($model) ? format_uang(convert_currency($model->ppn, $detail->currency_id ?? 1)) : '' }}
+                            {{ isset($model) ? format_uang(convert_currency($model->tax_amount, $detail->currency_id ?? 1)) : '' }}
                         </td>
                     </tr>
                     {{-- <tr>

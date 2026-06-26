@@ -64,7 +64,7 @@
 
                                 <a href="{{ route('user.cetak.kartu', $user->id) }}" target="_blank"
                                     class="btn btn-primary">
-                                    <i class="ti ti-id-badge-2 me-1"></i>Cetak Kartu
+                                    <i class="ti ti-id-badge-2 me-1"></i>Cetak Barcode
                                 </a>
                             </div>
 

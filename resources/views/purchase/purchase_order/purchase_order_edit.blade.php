@@ -232,7 +232,7 @@
 
             if ($("#kena_pajak").is(":checked")) {
                 if (!existingTaxId && DEFAULT_TAX_ID) {
-                    $("#tax_id").val(DEFAULT_TAX_ID);
+                    $("#tax_id").val(numeral(DEFAULT_TAX_ID).format('0,0.00'));
                 }
             }
 
@@ -1427,7 +1427,10 @@
                 // 🔥 simpan ke hidden input (INI PENTING)
                 $("#tax_amount").val(Math.round(tax));
 
-                $("#total_order").val(Math.round(totalOrder));
+                // $("#total_order").val(Math.round(totalOrder));
+                let total = Math.round(totalOrder);
+                $("#total_order").val(total); // raw
+                $("#total_order_view").val(numeral(total).format('0,0.00'));
             }
 
             $("#kena_pajak").on("change", function() {

@@ -9,7 +9,7 @@ class Tax extends Model
     protected $fillable = [
         'tax_name',
         'tax_type',
-        'percentage'
+        'percentage',
     ];
 
     public function calculate($amount)

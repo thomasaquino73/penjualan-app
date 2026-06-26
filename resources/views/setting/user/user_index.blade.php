@@ -134,6 +134,9 @@
                                 <i class="ti ti-trash me-1"></i>
                             </a>
                         @endcanany
+                        <a href="{{ route('user.cetak.kartu.all') }}" class="btn btn-info" target="_blank">
+                            <i class="ti ti-barcode me-1"></i>Print All Barcode
+                        </a>
                     </div>
                 </div>
 

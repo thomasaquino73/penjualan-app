@@ -70,14 +70,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="postForm" name="postForm" method="POST" action="{{ route('pengaturan.background.store') }}">
+                    <form id="postForm" name="postForm" method="POST" action="{{ route('pengaturan.background.store') }}"
+                        enctype="multipart/form-data">
                         @csrf
                         <input type="text" name="id" id="id" hidden>
                         <div class="row">
                             <div class="col-12 mb-3">
                                 <label for="gambar" class="form-label">Avatar<small>*</small></label>
                                 <input type="file" id="gambar" name="gambar" class="form-control"
-                                    placeholder="Masukkan Kode Iuran">
+                                    placeholder="Masukkan Gambar">
                                 <span class="error text-danger" id="gambarError"></span>
 
                             </div>

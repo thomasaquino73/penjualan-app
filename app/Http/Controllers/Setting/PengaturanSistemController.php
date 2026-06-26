@@ -171,17 +171,15 @@ class PengaturanSistemController extends Controller
 
         // Jika create → gambar wajib
         if (empty($id)) {
-            $rules['gambar'] = 'required|image|mimes:jpg,jpeg,png';
+            $rules['gambar'] = 'required|image';
         } else {
             // jika update → gambar optional
-            $rules['gambar'] = 'nullable|image|mimes:jpg,jpeg,png';
+            $rules['gambar'] = 'nullable|image';
         }
 
         $validator = Validator::make($request->all(), $rules, [
             'gambar.required' => 'Gambar wajib diisi',
             'gambar.image' => 'File harus berupa gambar',
-            'gambar.mimes' => 'Format gambar harus jpg, jpeg, png',
-            'gambar.max' => 'Ukuran gambar maksimal 2MB',
             'status.required' => 'Status wajib dipilih',
         ]);
 
@@ -192,25 +190,21 @@ class PengaturanSistemController extends Controller
         }
 
         try {
-
             $data = [
                 'status' => $request->status,
             ];
 
             // Upload gambar jika ada
-            if ($request->hasFile('gambar')) {
+            if ($request->file('gambar')) {
 
                 $file = $request->file('gambar');
-                $namaFile = time().'_'.$file->getClientOriginalName();
+                // $namaFile = time().'_'.str_replace(' ', '_', $file->getClientOriginalName());
+                $namaFile = time().'_'.preg_replace('/[^A-Za-z0-9.\-_]/', '_', $file->getClientOriginalName());
                 $file->move(public_path('image/login_background'), $namaFile);
 
-                // buat alias unik
-                $alias = 'bg-'.Str::random(8);
-
                 $data['gambar'] = $namaFile;
-                $data['alias'] = $alias;
+                $data['alias'] = 'bg-'.Str::random(8);
             }
-
             if (! empty($id)) {
 
                 $data['updated_at'] = now();

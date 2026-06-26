@@ -33,7 +33,7 @@ return new class extends Migration
             $table->decimal('disc_percent', 5, 2)->default(0)->nullable();
             $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();
             $table->decimal('grand_total', 18, 2)->default(0)->nullable();
-            $table->unsignedBigInteger('tax_id')->nullable()->nullable();
+            $table->unsignedBigInteger('tax_id')->nullable();
             $table->decimal('tax_percent', 5, 2)->default(0)->nullable();
             $table->decimal('tax_amount', 15, 2)->default(0)->nullable();
             $table->enum('status', [
@@ -61,6 +61,7 @@ return new class extends Migration
             $table->bigInteger('unit_id');
             $table->unsignedBigInteger('warehouse_id');
             $table->decimal('unit_price', 15, 2);
+            $table->string('discount_percent')->nullable();
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('amount', 15, 2);
             $table->decimal('received_qty', 18, 4)->default(0);

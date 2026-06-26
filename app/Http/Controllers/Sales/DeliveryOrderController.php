@@ -657,153 +657,150 @@ class DeliveryOrderController extends Controller
     }
 
     public function update(DeliveryOrderRequest $r, $id)
-{
-    DB::beginTransaction();
+    {
+        DB::beginTransaction();
 
-    try {
+        try {
 
+            $deliveryOrder = DeliveryOrder::findOrFail($id);
 
-        $deliveryOrder = DeliveryOrder::findOrFail($id);
+            /*
+            |--------------------------------------------------------------------------
+            | 1. KEMBALIKAN STOCK DARI DATA LAMA
+            |--------------------------------------------------------------------------
+            */
+            $oldDetails = DeliveryOrderDetail::where('delivery_order_id', $id)->get();
 
-        /*
-        |--------------------------------------------------------------------------
-        | 1. KEMBALIKAN STOCK DARI DATA LAMA
-        |--------------------------------------------------------------------------
-        */
-        $oldDetails = DeliveryOrderDetail::where('delivery_order_id', $id)->get();
+            foreach ($oldDetails as $old) {
+                // Balikin stok
+                $stock = StockBalance::where([
+                    'product_id' => $old->data_barang_id,
+                    'warehouse_id' => $old->warehouse_id,
+                ])->first();
 
-        foreach ($oldDetails as $old) {
-            // Balikin stok
-            $stock = StockBalance::where([
-                'product_id' => $old->data_barang_id,
-                'warehouse_id' => $old->warehouse_id,
-            ])->first();
+                if ($stock) {
+                    $stock->increment('qty', $old->qty);
+                }
 
-            if ($stock) {
-                $stock->increment('qty', $old->qty);
+                // Hapus mutation lama
+                StockMutation::where([
+                    'document_number' => $deliveryOrder->delivery_order_code,
+                    'data_barang_id' => $old->data_barang_id,
+                ])->delete();
             }
 
-            // Hapus mutation lama
-            StockMutation::where([
-                'document_number' => $deliveryOrder->delivery_order_code,
-                'data_barang_id' => $old->data_barang_id,
-            ])->delete();
-        }
+            // Hapus detail lama
+            DeliveryOrderDetail::where('delivery_order_id', $id)->delete();
 
-        // Hapus detail lama
-        DeliveryOrderDetail::where('delivery_order_id', $id)->delete();
+            /*
+            |--------------------------------------------------------------------------
+            | 2. UPDATE HEADER
+            |--------------------------------------------------------------------------
+            */
+            $data = $r->except('save_and_new', 'items_detail');
+            $data['delivery_order_date'] = Carbon::parse($r->delivery_order_date)->format('Y-m-d');
 
+            $deliveryOrder->update($data);
 
-        /*
-        |--------------------------------------------------------------------------
-        | 2. UPDATE HEADER
-        |--------------------------------------------------------------------------
-        */
-         $data = $r->except('save_and_new', 'items_detail');
-        $data['delivery_order_date'] = Carbon::parse($r->delivery_order_date)->format('Y-m-d');
+            /*
+            |--------------------------------------------------------------------------
+            | 3. INSERT DATA BARU (SAMA SEPERTI STORE)
+            |--------------------------------------------------------------------------
+            */
+            $itemsDetailRaw = $r->input('items_detail');
 
-        $deliveryOrder->update($data);
+            if ($itemsDetailRaw) {
+                $items = json_decode($itemsDetailRaw, true);
 
+                if (is_array($items) && count($items) > 0) {
 
-        /*
-        |--------------------------------------------------------------------------
-        | 3. INSERT DATA BARU (SAMA SEPERTI STORE)
-        |--------------------------------------------------------------------------
-        */
-        $itemsDetailRaw = $r->input('items_detail');
+                    foreach ($items as $item) {
 
-        if ($itemsDetailRaw) {
-            $items = json_decode($itemsDetailRaw, true);
+                        $qty = $item['quantity'] ?? $item['qty'];
 
-            if (is_array($items) && count($items) > 0) {
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Detail
+                        |--------------------------------------------------------------------------
+                        */
+                        DeliveryOrderDetail::create([
+                            'delivery_order_id' => $deliveryOrder->id,
+                            'data_barang_id' => $item['product_id'],
+                            'qty' => $qty,
+                            'unit_id' => $item['unit_id'],
+                            'warehouse_id' => $item['warehouse_id'],
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
 
-                foreach ($items as $item) {
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Stock Mutation OUT
+                        |--------------------------------------------------------------------------
+                        */
+                        $customer = Customer::find($r->customer_id);
+                        $namaCustomer = $customer
+                            ? $customer->nama_customer
+                            : 'Customer Tidak Diketahui';
 
-                    $qty = $item['quantity'] ?? $item['qty'];
+                        StockMutation::create([
+                            'data_barang_id' => $item['product_id'],
+                            'unit_id' => $item['unit_id'],
+                            'warehouse_id' => $item['warehouse_id'],
+                            'date_stock' => Carbon::parse($r->delivery_order_date)->format('Y-m-d'),
+                            'qty_transaksi' => $qty,
+                            'total_base_qty' => $qty,
+                            'type' => 'out',
+                            'document_number' => $deliveryOrder->delivery_order_code,
+                            'document_type' => 'delivery_order',
+                            'keterangan' => sprintf(
+                                'Pengiriman barang ke customer %s melalui DO %s',
+                                $namaCustomer,
+                                $deliveryOrder->delivery_order_code
+                            ),
+                            'created_by' => Auth::id(),
+                        ]);
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Detail
-                    |--------------------------------------------------------------------------
-                    */
-                    DeliveryOrderDetail::create([
-                        'delivery_order_id' => $deliveryOrder->id,
-                        'data_barang_id' => $item['product_id'],
-                        'qty' => $qty,
-                        'unit_id' => $item['unit_id'],
-                        'warehouse_id' => $item['warehouse_id'],
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Kurangi Stock Baru
+                        |--------------------------------------------------------------------------
+                        */
+                        $stock = StockBalance::where([
+                            'product_id' => $item['product_id'],
+                            'warehouse_id' => $item['warehouse_id'],
+                        ])->first();
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Stock Mutation OUT
-                    |--------------------------------------------------------------------------
-                    */
-                    $customer = Customer::find($r->customer_id);
-                    $namaCustomer = $customer
-                        ? $customer->nama_customer
-                        : 'Customer Tidak Diketahui';
+                        if (! $stock) {
+                            throw new \Exception('Stock barang tidak ditemukan');
+                        }
 
-                    StockMutation::create([
-                        'data_barang_id' => $item['product_id'],
-                        'unit_id' => $item['unit_id'],
-                        'warehouse_id' => $item['warehouse_id'],
-                        'date_stock' => Carbon::parse($r->delivery_order_date)->format('Y-m-d'),
-                        'qty_transaksi' => $qty,
-                        'total_base_qty' => $qty,
-                        'type' => 'out',
-                        'document_number' => $deliveryOrder->delivery_order_code,
-                        'document_type' => 'delivery_order',
-                        'keterangan' => sprintf(
-                            'Pengiriman barang ke customer %s melalui DO %s',
-                            $namaCustomer,
-                            $deliveryOrder->delivery_order_code
-                        ),
-                        'created_by' => Auth::id(),
-                    ]);
+                        if ($stock->qty < $qty) {
+                            throw new \Exception('Stock tidak mencukupi');
+                        }
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Kurangi Stock Baru
-                    |--------------------------------------------------------------------------
-                    */
-                    $stock = StockBalance::where([
-                        'product_id' => $item['product_id'],
-                        'warehouse_id' => $item['warehouse_id'],
-                    ])->first();
-
-                    if (! $stock) {
-                        throw new \Exception('Stock barang tidak ditemukan');
+                        $stock->decrement('qty', $qty);
                     }
-
-                    if ($stock->qty < $qty) {
-                        throw new \Exception('Stock tidak mencukupi');
-                    }
-
-                    $stock->decrement('qty', $qty);
                 }
             }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data updated successfully',
+                'redirect' => route('delivery-order.index'),
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal update data: '.$e->getMessage(),
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Data updated successfully',
-            'redirect' => route('delivery-order.index'),
-        ], 200);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Gagal update data: ' . $e->getMessage(),
-        ], 500);
     }
-}
 
     public function destroy(Request $request, $id)
     {

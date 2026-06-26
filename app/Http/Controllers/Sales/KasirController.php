@@ -40,20 +40,21 @@ class KasirController extends Controller
 
     public function index()
     {
-        $x=[];
-        return view('sales.kasir.kasir_index',$x);
+        $x = [];
+
+        return view('sales.kasir.kasir_index', $x);
     }
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
-   {
-         $company = Company::with('defaultCurrency')->first();
+    {
+        $company = Company::with('defaultCurrency')->first();
 
         return view('sales.kasir.kasir_create', [
             'title' => 'Add Product',
-            
+
             'mataUangDefault' => $company->defaultCurrency,
             'payment' => SyaratPembayaran::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),

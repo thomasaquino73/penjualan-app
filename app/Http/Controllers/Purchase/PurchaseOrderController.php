@@ -194,19 +194,9 @@ class PurchaseOrderController extends Controller
                     return Carbon::parse($row->tanggal_kirim)->format('d-m-Y');
                 })
                 ->addColumn('amount', function ($row) {
-                    // 1. Hitung total kotor (sum amount) dari detail item PO
-                    $subTotal = PurchaseOrderDetail::where('purchase_order_id', $row->id)
-                        ->where('active', 1)
-                        ->sum('amount');
-
-                    // 2. Hitung grand total: Subtotal dikurangi diskon nominal yang ada di tabel induk ($row)
-                    // Gunakan ?? 0 jika kolom disc_nominal di database bisa bernilai null
-                    $grandTotal = $subTotal - ($row->disc_nominal ?? 0);
-
-                    // 3. Kembalikan nilai yang sudah dikonversi dan diformat
                     $selectedCurrencyId = session('currency_id', 1); // Ambil dari session, default 1 (IDR)
 
-                    return format_uang(convert_currency($grandTotal, $selectedCurrencyId));
+                    return format_uang(convert_currency($row->grand_total, $selectedCurrencyId));
                 })
                 ->addColumn('supplier', function ($row) {
                     return $row->supplier->nama_supplier;
@@ -516,7 +506,7 @@ class PurchaseOrderController extends Controller
 
     public function create()
     {
-         // 🔥 Ambil semua pajak aktif (khusus pembelian & general)
+        // 🔥 Ambil semua pajak aktif (khusus pembelian & general)
         $taxes = Tax::where('is_active', true)
             ->whereIn('usage', ['purchase', 'both'])
             ->get();
@@ -526,6 +516,7 @@ class PurchaseOrderController extends Controller
             ->where('is_default', true)
             ->whereIn('usage', ['purchase', 'both'])
             ->first();
+        $company = Company::with('defaultCurrency')->first();
         $x = [
             'title' => 'Purchase Order New',
             'breadcrumb' => [
@@ -542,6 +533,7 @@ class PurchaseOrderController extends Controller
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
             'taxes' => $taxes,
             'defaultTax' => $defaultTax,
+            'company' => $company->defaultCurrency,
 
         ];
 
@@ -784,7 +776,7 @@ class PurchaseOrderController extends Controller
             ];
         });
 
-          // 🔥 Ambil semua pajak aktif (khusus pembelian & general)
+        // 🔥 Ambil semua pajak aktif (khusus pembelian & general)
         $taxes = Tax::where('is_active', true)
             ->whereIn('usage', ['purchase', 'both'])
             ->get();
@@ -820,162 +812,162 @@ class PurchaseOrderController extends Controller
         return view('purchase.purchase_order.purchase_order_edit', $x);
     }
 
-//     public function edit(string $id)
-// {
-//     $year = date('Y');
+    //     public function edit(string $id)
+    // {
+    //     $year = date('Y');
 
-//     // 1. Load data PO beserta relasi
-//     $purchaseOrder = PurchaseOrder::with([
-//         'purchaseRequisition',
-//         'details.produkID',
-//         'details.unitID',
-//         'details.warehouseID',
-//         'details.purchaseRequisitionDetail.requisition',
-//     ])->findOrFail($id);
+    //     // 1. Load data PO beserta relasi
+    //     $purchaseOrder = PurchaseOrder::with([
+    //         'purchaseRequisition',
+    //         'details.produkID',
+    //         'details.unitID',
+    //         'details.warehouseID',
+    //         'details.purchaseRequisitionDetail.requisition',
+    //     ])->findOrFail($id);
 
-//     // 2. Cek apakah dari PR
-//     $isFromPR = $purchaseOrder->details
-//         ->whereNotNull('purchase_requisition_detail_id')
-//         ->count() > 0;
+    //     // 2. Cek apakah dari PR
+    //     $isFromPR = $purchaseOrder->details
+    //         ->whereNotNull('purchase_requisition_detail_id')
+    //         ->count() > 0;
 
-//     // 3. Mapping detail
-//     $detailDataMapped = $purchaseOrder->details->map(function ($detail) use ($purchaseOrder, $year) {
+    //     // 3. Mapping detail
+    //     $detailDataMapped = $purchaseOrder->details->map(function ($detail) use ($purchaseOrder, $year) {
 
-//         $requisitionCode = null;
-//         $sisaPr = null;
-//         $kuotaAsliPr = null;
-//         $totalDiambilLainnya = 0;
+    //         $requisitionCode = null;
+    //         $sisaPr = null;
+    //         $kuotaAsliPr = null;
+    //         $totalDiambilLainnya = 0;
 
-//         if ($detail->purchase_requisition_detail_id) {
+    //         if ($detail->purchase_requisition_detail_id) {
 
-//             $prDetail = $detail->purchaseRequisitionDetail;
+    //             $prDetail = $detail->purchaseRequisitionDetail;
 
-//             if ($prDetail) {
-//                 $sisaPr = (float) $prDetail->outstanding_qty;
-//                 $kuotaAsliPr = (float) $prDetail->qty;
+    //             if ($prDetail) {
+    //                 $sisaPr = (float) $prDetail->outstanding_qty;
+    //                 $kuotaAsliPr = (float) $prDetail->qty;
 
-//                 $totalDiambilLainnya = DB::table("purchase_order_detail_{$year}")
-//                     ->where('purchase_requisition_detail_id', $detail->purchase_requisition_detail_id)
-//                     ->where('purchase_order_id', '<>', $purchaseOrder->id)
-//                     ->where('active', 1)
-//                     ->sum('qty');
+    //                 $totalDiambilLainnya = DB::table("purchase_order_detail_{$year}")
+    //                     ->where('purchase_requisition_detail_id', $detail->purchase_requisition_detail_id)
+    //                     ->where('purchase_order_id', '<>', $purchaseOrder->id)
+    //                     ->where('active', 1)
+    //                     ->sum('qty');
 
-//                 if ($prDetail->purchaseRequisition) {
-//                     $requisitionCode = $prDetail->purchaseRequisition->code;
-//                 }
-//             }
-//         }
+    //                 if ($prDetail->purchaseRequisition) {
+    //                     $requisitionCode = $prDetail->purchaseRequisition->code;
+    //                 }
+    //             }
+    //         }
 
-//         // 🔥 HITUNG AMOUNT ULANG (BIAR AMAN)
-//         $qty = (float) $detail->qty;
-//         $price = (float) $detail->unit_price;
-//         $disc = (float) $detail->discount;
+    //         // 🔥 HITUNG AMOUNT ULANG (BIAR AMAN)
+    //         $qty = (float) $detail->qty;
+    //         $price = (float) $detail->unit_price;
+    //         $disc = (float) $detail->discount;
 
-//         $amount = ($qty * $price) - $disc;
+    //         $amount = ($qty * $price) - $disc;
 
-//         return [
-//             'id' => $detail->id,
-//             'purchase_order_id' => $detail->purchase_order_id,
-//             'purchase_requisition_detail_id' => $detail->purchase_requisition_detail_id,
-//             'requisition_code' => $requisitionCode,
-//             'product_id' => $detail->product_id,
-//             'data_produk' => $detail->produkID->nama_barang ?? 'Product Not Found',
-//             'quantity' => $qty,
-//             'unit_id' => $detail->unit_id,
-//             'unit' => $detail->unitID->detail ?? '-',
-//             'warehouse_id' => $detail->warehouse_id,
-//             'warehouse' => $detail->warehouseID->nama_gudang ?? '-',
-//             'unit_price' => $price,
-//             'discount' => $disc,
-//             'amount' => $amount,
-//             'tax' => (float) ($detail->tax ?? 0),
-//             'sisa_pr' => $sisaPr,
-//             'kuota_asli' => $kuotaAsliPr,
-//             'total_diambil_lainnya' => (float) $totalDiambilLainnya,
-//         ];
-//     });
+    //         return [
+    //             'id' => $detail->id,
+    //             'purchase_order_id' => $detail->purchase_order_id,
+    //             'purchase_requisition_detail_id' => $detail->purchase_requisition_detail_id,
+    //             'requisition_code' => $requisitionCode,
+    //             'product_id' => $detail->product_id,
+    //             'data_produk' => $detail->produkID->nama_barang ?? 'Product Not Found',
+    //             'quantity' => $qty,
+    //             'unit_id' => $detail->unit_id,
+    //             'unit' => $detail->unitID->detail ?? '-',
+    //             'warehouse_id' => $detail->warehouse_id,
+    //             'warehouse' => $detail->warehouseID->nama_gudang ?? '-',
+    //             'unit_price' => $price,
+    //             'discount' => $disc,
+    //             'amount' => $amount,
+    //             'tax' => (float) ($detail->tax ?? 0),
+    //             'sisa_pr' => $sisaPr,
+    //             'kuota_asli' => $kuotaAsliPr,
+    //             'total_diambil_lainnya' => (float) $totalDiambilLainnya,
+    //         ];
+    //     });
 
-//     // ============================
-//     // 🔥 HITUNG TOTAL (FIX UTAMA)
-//     // ============================
+    //     // ============================
+    //     // 🔥 HITUNG TOTAL (FIX UTAMA)
+    //     // ============================
 
-//     $subTotal = $detailDataMapped->sum('amount');
+    //     $subTotal = $detailDataMapped->sum('amount');
 
-//     $discPercent = (float) ($purchaseOrder->disc_percent ?? 0);
-//     $discNominal = (float) ($purchaseOrder->disc_nominal ?? 0);
+    //     $discPercent = (float) ($purchaseOrder->disc_percent ?? 0);
+    //     $discNominal = (float) ($purchaseOrder->disc_nominal ?? 0);
 
-//     // kalau pakai percent
-//     if ($discPercent > 0) {
-//         $discNominal = ($subTotal * $discPercent) / 100;
-//     }
+    //     // kalau pakai percent
+    //     if ($discPercent > 0) {
+    //         $discNominal = ($subTotal * $discPercent) / 100;
+    //     }
 
-//     $afterDiscount = $subTotal - $discNominal;
+    //     $afterDiscount = $subTotal - $discNominal;
 
-//     $taxPercent = (float) ($purchaseOrder->tax_percent ?? 0);
+    //     $taxPercent = (float) ($purchaseOrder->tax_percent ?? 0);
 
-//     // cek kena pajak
-//     $taxAmount = 0;
-//     if ($purchaseOrder->kena_pajak) {
-//         $taxAmount = ($afterDiscount * $taxPercent) / 100;
-//     }
+    //     // cek kena pajak
+    //     $taxAmount = 0;
+    //     if ($purchaseOrder->kena_pajak) {
+    //         $taxAmount = ($afterDiscount * $taxPercent) / 100;
+    //     }
 
-//     // cek harga sudah termasuk pajak
-//     if ($purchaseOrder->total_termasuk_pajak) {
-//         // pajak sudah include
-//         $grandTotal = $afterDiscount;
-//     } else {
-//         $grandTotal = $afterDiscount + $taxAmount;
-//     }
+    //     // cek harga sudah termasuk pajak
+    //     if ($purchaseOrder->total_termasuk_pajak) {
+    //         // pajak sudah include
+    //         $grandTotal = $afterDiscount;
+    //     } else {
+    //         $grandTotal = $afterDiscount + $taxAmount;
+    //     }
 
-//     // ============================
-//     // 🔥 TAX MASTER
-//     // ============================
+    //     // ============================
+    //     // 🔥 TAX MASTER
+    //     // ============================
 
-//     $taxes = Tax::where('is_active', true)
-//         ->whereIn('usage', ['purchase', 'both'])
-//         ->get();
+    //     $taxes = Tax::where('is_active', true)
+    //         ->whereIn('usage', ['purchase', 'both'])
+    //         ->get();
 
-//     $defaultTax = Tax::where('is_active', true)
-//         ->where('is_default', true)
-//         ->whereIn('usage', ['purchase', 'both'])
-//         ->first();
+    //     $defaultTax = Tax::where('is_active', true)
+    //         ->where('is_default', true)
+    //         ->whereIn('usage', ['purchase', 'both'])
+    //         ->first();
 
-//     // ============================
-//     // 🔥 RETURN VIEW
-//     // ============================
+    //     // ============================
+    //     // 🔥 RETURN VIEW
+    //     // ============================
 
-//     $x = [
-//         'title' => 'Edit Purchase Order',
-//         'breadcrumb' => [
-//             ['label' => 'Purchase Order', 'url' => route('purchase-order.index')],
-//             ['label' => 'Edit Purchase Order', 'url' => ''],
-//         ],
-//         'supplier' => Supplier::where('status', 1)->get(),
-//         'company' => Company::first(),
-//         'idNumber' => $this->generateNumberId(),
-//         'shipping' => Shipping::where('status', 1)->get(),
-//         'warehouse' => Warehouse::where('status', 1)->get(),
-//         'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
-//         'product' => Barang::where('status', '<>', 0)->get(),
-//         'fob' => BasicCodeDetail::where('master_id', 7)->get(),
-//         'model' => $purchaseOrder,
-//         'isFromPR' => $isFromPR,
-//         'jsonDetails' => $detailDataMapped,
+    //     $x = [
+    //         'title' => 'Edit Purchase Order',
+    //         'breadcrumb' => [
+    //             ['label' => 'Purchase Order', 'url' => route('purchase-order.index')],
+    //             ['label' => 'Edit Purchase Order', 'url' => ''],
+    //         ],
+    //         'supplier' => Supplier::where('status', 1)->get(),
+    //         'company' => Company::first(),
+    //         'idNumber' => $this->generateNumberId(),
+    //         'shipping' => Shipping::where('status', 1)->get(),
+    //         'warehouse' => Warehouse::where('status', 1)->get(),
+    //         'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
+    //         'product' => Barang::where('status', '<>', 0)->get(),
+    //         'fob' => BasicCodeDetail::where('master_id', 7)->get(),
+    //         'model' => $purchaseOrder,
+    //         'isFromPR' => $isFromPR,
+    //         'jsonDetails' => $detailDataMapped,
 
-//         // 🔥 INI YANG PENTING KE FRONTEND
-//         'subTotal' => $subTotal,
-//         'discPercent' => $discPercent,
-//         'discNominal' => $discNominal,
-//         'taxPercent' => $taxPercent,
-//         'taxAmount' => $taxAmount,
-//         'grandTotal' => $grandTotal,
+    //         // 🔥 INI YANG PENTING KE FRONTEND
+    //         'subTotal' => $subTotal,
+    //         'discPercent' => $discPercent,
+    //         'discNominal' => $discNominal,
+    //         'taxPercent' => $taxPercent,
+    //         'taxAmount' => $taxAmount,
+    //         'grandTotal' => $grandTotal,
 
-//         'taxes' => $taxes,
-//         'defaultTax' => $defaultTax,
-//     ];
+    //         'taxes' => $taxes,
+    //         'defaultTax' => $defaultTax,
+    //     ];
 
-//     return view('purchase.purchase_order.purchase_order_edit', $x);
-// }
+    //     return view('purchase.purchase_order.purchase_order_edit', $x);
+    // }
 
     public function update(PurchaseOrderRequest $request, string $id)
     {
