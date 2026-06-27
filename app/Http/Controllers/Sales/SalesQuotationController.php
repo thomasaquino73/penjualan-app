@@ -346,6 +346,8 @@ class SalesQuotationController extends Controller
             $data['address'] = $request->address;
             $data['description'] = $request->description;
             $data['taxpayer_data'] = $request->taxpayer_data;
+            $data['tax_id'] = $request->tax_id;
+            $data['tax_amount'] = $request->tax_amount;
 
             do {
                 $generatedCode = $this->generateNumberId();
@@ -519,7 +521,9 @@ class SalesQuotationController extends Controller
             $data['taxpayer_data'] = $request->taxpayer_data;
             $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
             $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
-
+            $data['taxpayer_data'] = $request->taxpayer_data;
+            $data['tax_id'] = $request->tax_id;
+            $data['tax_amount'] = $request->tax_amount;
             $salesQuotation->update($data);
 
             // Update Detail: Hapus yang lama, insert yang baru

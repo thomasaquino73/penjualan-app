@@ -219,6 +219,32 @@
     <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
     <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
+        $(document).ready(function() {
+
+            // 🔥 SET STATE AWAL checkbox
+            if ($("#kena_pajak").is(":checked")) {
+                $("#tax_container").show();
+                $("#ppn_container").show();
+            } else {
+                $("#tax_container").hide();
+                $("#ppn_container").hide();
+            }
+
+            // 🔥 kalau sudah ada tax_id dari DB, jangan override default
+            let existingTaxId = $("#tax_id").val();
+
+            if ($("#kena_pajak").is(":checked")) {
+                if (!existingTaxId && DEFAULT_TAX_ID) {
+                    $("#tax_id").val(numeral(DEFAULT_TAX_ID).format('0,0.00'));
+                }
+            }
+
+            // 🔥 WAJIB: hitung ulang saat pertama load
+            calculateTotalOrder();
+            calculateGrandTotal();
+        });
+    </script>
+    <script>
         let prDetailsData = [
             @if (isset($jsonDetails))
                 @foreach ($jsonDetails as $detail)
@@ -776,22 +802,12 @@
                         // ======================
 
                         if (data.pajak) {
-
-                            $('#taxpayer_data').val(data.pajak.nomor_wajib_pajak);
-
-                            // jika ada field lain
-                            $('#taxpayer_name').val(data.pajak.nama_wajib_pajak);
-                            $('#tax_address').val(data.pajak.alamat_pajak);
-                            $('#id_tku').val(data.pajak.id_tku);
-
+                            $('#taxpayer_data').val(data.pajak.tipe_id_pajak + ' :' + data
+                                .pajak.nomor_wajib_pajak);
                         } else {
-
                             $('#taxpayer_data').val('');
-                            $('#taxpayer_name').val('');
-                            $('#tax_address').val('');
-                            $('#id_tku').val('');
-
                         }
+
 
                     }
                 });

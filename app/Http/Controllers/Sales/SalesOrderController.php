@@ -554,7 +554,8 @@ class SalesOrderController extends Controller
             $data['disc_nominal'] = $request->discount_all;
             $data['grand_total'] = $request->total_order;
             $data['taxpayer_data'] = $request->taxpayer_data;
-
+            $data['tax_id'] = $request->tax_id;
+            $data['tax_amount'] = $request->tax_amount;
             // Generate kode SO
             do {
                 $generatedCode = $this->generateNumberId();
@@ -816,6 +817,8 @@ class SalesOrderController extends Controller
                 'address' => $request->address,
                 'description' => $request->description,
                 'taxpayer_data' => $request->taxpayer_data,
+                'tax_id' => $request->tax_id,
+                'tax_amount' => $request->tax_amount,
                 'updated_by' => Auth::id(),
                 'updated_at' => now(),
             ]);

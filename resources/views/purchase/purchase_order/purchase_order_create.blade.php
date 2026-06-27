@@ -661,8 +661,10 @@
                         }
                     },
                     {
-                        data: "warehouse",
-                        className: "text-center"
+                        data: 'warehouse',
+                        render: function(data) {
+                            return data ? data : '-';
+                        }
                     },
                 ],
                 layout: {
@@ -1045,8 +1047,8 @@
                     quantity: quantity,
                     unit_id: unitId,
                     unit: unitName,
-                    warehouse_id: warehouseId,
-                    warehouse: warehouseName,
+                    warehouse_id: warehouseId || null,
+                    warehouse: warehouseName || '-',
                     unit_price: unitPrice,
                     discount_percent: discountPercent,
                     discount: discount,
@@ -1598,6 +1600,10 @@
                                             sisa_pr: sisaPr,
                                             unit_id: item.unit_id,
                                             unit: item.unit_name,
+                                            warehouse_id: item
+                                                .warehouse_id || null,
+                                            warehouse: item
+                                                .warehouse_name || '-',
                                             unit_price: unitPrice,
                                             discount: discount,
                                             amount: amount,

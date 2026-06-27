@@ -667,71 +667,60 @@
                 loadAvailableStock();
             });
 
-           $('#customer_id').on('change', function () {
+            $('#customer_id').on('change', function() {
 
-    let customerId = $(this).val();
-    let contactDropdown = $('#customer_contact_id');
+                let customerId = $(this).val();
+                let contactDropdown = $('#customer_contact_id');
 
-    contactDropdown.empty().append('<option>Loading...</option>');
+                contactDropdown.empty().append('<option>Loading...</option>');
 
-    // kosongkan data pajak
-    $('#taxpayer_data').val('');
+                // kosongkan data pajak
+                $('#taxpayer_data').val('');
 
-    if (!customerId) {
-        contactDropdown.empty().append('<option value="">Pilih Kontak</option>');
-        return;
-    }
+                if (!customerId) {
+                    contactDropdown.empty().append('<option value="">Pilih Kontak</option>');
+                    return;
+                }
 
-    $.ajax({
-        url: '/sales-order/' + customerId + '/data',
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
+                $.ajax({
+                    url: '/sales-order/' + customerId + '/data',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
 
-            // ======================
-            // Kontak
-            // ======================
+                        // ======================
+                        // Kontak
+                        // ======================
 
-            contactDropdown.empty();
-            contactDropdown.append('<option value="">Pilih Kontak</option>');
+                        contactDropdown.empty();
+                        contactDropdown.append('<option value="">Pilih Kontak</option>');
 
-            $.each(data.kontak, function (key, value) {
+                        $.each(data.kontak, function(key, value) {
 
-                contactDropdown.append(
-                    `<option value="${value.id}">
+                            contactDropdown.append(
+                                `<option value="${value.id}">
                         ${value.sapaan} ${value.contact_person}
                         (${value.posisi_jabatan})
                     </option>`
-                );
+                            );
+
+                        });
+
+                        // ======================
+                        // Pajak
+                        // ======================
+
+                        if (data.pajak) {
+                            $('#taxpayer_data').val(data.pajak.tipe_id_pajak + ' :' + data
+                                .pajak.nomor_wajib_pajak);
+                        } else {
+                            $('#taxpayer_data').val('');
+                        }
+
+                    }
+                });
 
             });
-
-            // ======================
-            // Pajak
-            // ======================
-
-            if (data.pajak) {
-
-                $('#taxpayer_data').val(data.pajak.nomor_wajib_pajak);
-
-                // jika ada field lain
-                $('#taxpayer_name').val(data.pajak.nama_wajib_pajak);
-                $('#tax_address').val(data.pajak.alamat_pajak);
-                $('#id_tku').val(data.pajak.id_tku);
-
-            } else {
-
-                $('#taxpayer_data').val('');
-                $('#taxpayer_name').val('');
-                $('#tax_address').val('');
-                $('#id_tku').val('');
-
-            }
-
-        }
-    });
-
-});
 
             $(document).on("change", "#product_id", function() {
                 let productId = $(this).val();

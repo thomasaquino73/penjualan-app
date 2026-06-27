@@ -384,7 +384,7 @@
                     <tr>
                         <td>PPN (11%)</td>
                         <td class="text-right">
-                            {{ isset($model) ? format_uang(convert_currency($model->ppn, $detail->currency_id ?? 1)) : '' }}
+                            {{ isset($model) ? format_uang(convert_currency($model->tax_amount, $detail->currency_id ?? 1)) : '' }}
                         </td>
                     </tr>
                     <tr class="total-row">

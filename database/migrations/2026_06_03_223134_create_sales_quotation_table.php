@@ -39,6 +39,9 @@ return new class extends Migration
             $table->decimal('disc_percent', 5, 2)->default(0)->nullable();
             $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();
             $table->decimal('grand_total', 18, 2)->default(0)->nullable();
+            $table->unsignedBigInteger('tax_id')->nullable();
+            $table->decimal('tax_percent', 5, 2)->default(0)->nullable();
+            $table->decimal('tax_amount', 15, 2)->default(0)->nullable();
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
