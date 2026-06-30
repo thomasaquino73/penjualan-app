@@ -42,8 +42,8 @@
                                   <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
 
                                   <!-- Input Box Utama -->
-                                  <input type="number" id="unit_price" name="unit_price" class="form-control"
-                                      placeholder="0" min="0">
+                                  <input type="number" id="unit_price" name="unit_price" class="form-control" step="any"
+                                     min="0" >
 
                                   <!-- Tombol Dropdown History Terintegrasi -->
 

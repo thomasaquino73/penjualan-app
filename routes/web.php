@@ -22,6 +22,7 @@ use App\Http\Controllers\Sales\Customer\CustomerController;
 use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
 use App\Http\Controllers\Sales\DeliveryOrderController;
 use App\Http\Controllers\Sales\KasirController;
+use App\Http\Controllers\Sales\SalesInvoiceController;
 use App\Http\Controllers\Sales\SalesOrderController;
 use App\Http\Controllers\Sales\SalesQuotationController;
 use App\Http\Controllers\Setting\CashBankController;
@@ -321,6 +322,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/delivery-order/restore/{id}', [DeliveryOrderController::class, 'restore'])->name('delivery-order.restore');
     Route::get('/delivery-order/trash', [DeliveryOrderController::class, 'trash'])->name('delivery-order.trash');
     Route::resource('delivery-order', DeliveryOrderController::class);
+
+    // INVOICE
+    Route::post('/sales-invoice/{id}/submit', [SalesInvoiceController::class, 'submitToPending'])->name('sales-invoice.submit');
+    Route::get('/sales-invoice/trash', [SalesInvoiceController::class, 'trash'])->name('sales-invoice.trash');
+    Route::resource('sales-invoice', SalesInvoiceController::class);
 
 });
 

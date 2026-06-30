@@ -308,7 +308,7 @@
                 </div>
             </td>
             <td style="padding-left: 25px;">
-                <div class="po-box-title">Sales Order</div>
+                <div class="po-box-title">Pesanan Penjualan</div>
                 <table class="po-details-table">
                     <tr>
                         <td class="label">Nomor</td>

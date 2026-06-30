@@ -31,7 +31,6 @@
 <script src="https://cdn.datatables.net/responsive/3.0.8/js/dataTables.responsive.js"></script>
 <script src="https://cdn.datatables.net/responsive/3.0.8/js/responsive.dataTables.js"></script>
 
-
 <script>
     function resetValidation() {
         // 1. Menghapus teks error pada span dengan class text-danger

@@ -308,7 +308,8 @@
                 </div>
             </td>
             <td style="padding-left: 25px;">
-                <div class="po-box-title">Sales Quotation</div>
+                {{-- <div class="po-box-title">Sales Quotation</div> --}}
+                <div class="po-box-title">Penawaran Harga</div>
                 <table class="po-details-table">
                     <tr>
                         <td class="label">Nomor</td>

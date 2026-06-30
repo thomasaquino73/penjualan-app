@@ -21,6 +21,20 @@
             </div>
         </div>
         <div class="mb-3 row">
+            <label class="col-md-4 col-form-label">PO Number</label>
+            <div class="col-md-8">
+                <div class="input-group input-group-merge">
+                    <span class="input-group-text">
+                        <i class="ti ti-file-code-2"></i>
+                    </span>
+                    <input type="text" name="po_number" id="po_number" class="form-control"
+                        value="{{ $model->po_number }}">
+                </div>
+                <span class="error text-danger" id="po_numberError"></span>
+
+            </div>
+        </div>
+        <div class="mb-3 row">
             <label class="col-md-4 col-form-label">Address</label>
             <div class="col-md-8">
                 <div class="input-group input-group-merge">

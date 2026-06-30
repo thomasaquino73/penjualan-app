@@ -18,32 +18,29 @@ class PermissionSeeder extends Seeder
             'kategori_supplier' => ['alias' => 'Supplier Category', 'group' => 'Purchase'],
             'receive_item' => ['alias' => 'Receive Item', 'group' => 'Purchase'],
             'purchase_invoice' => ['alias' => 'Purchase Invoice', 'group' => 'Purchase'],
-            'permintaan_pembelian' => [
-                'alias' => 'Purchase Requisition',
-                'group' => 'Purchase',
-            ],
+            'permintaan_pembelian' => ['alias' => 'Purchase Requisition', 'group' => 'Purchase'],
             'purchase_order' => [
                 'alias' => 'Purchase Order',
                 'group' => 'Purchase',
-                'actions' => array_merge($defaultActions, ['approval']), // default + approval
-            ],
-            'sales_quotation' => [
-                'alias' => 'Sales Quotation',
-                'group' => 'Sales',
+                'actions' => array_merge($defaultActions, ['approval']),
             ],
             'sales_order' => [
                 'alias' => 'Sales Order',
                 'group' => 'Sales',
-                'actions' => array_merge($defaultActions, ['approval']), // default + approval
+                'actions' => array_merge($defaultActions, ['approval']),
             ],
             'item_transfer' => [
                 'alias' => 'Item Transfer',
                 'group' => 'Sales',
-                'actions' => array_merge($defaultActions, ['approval']), // default + approval
+                'actions' => array_merge($defaultActions, ['approval']),
             ],
+            'sales_quotation' => ['alias' => 'Sales Quotation', 'group' => 'Sales'],
             'customer' => ['alias' => 'Customer', 'group' => 'Sales'],
             'kategori_customer' => ['alias' => 'Customer Category', 'group' => 'Sales'],
             'delivery_order' => ['alias' => 'Delivery Order', 'group' => 'Sales'],
+            'sales_invoice' => ['alias' => 'Sales Invoice', 'group' => 'Sales'],
+            'proforma_invoice' => ['alias' => 'Proforma Invoice', 'group' => 'Sales'],
+            'penjualan_toko' => ['alias' => 'Store Sales', 'group' => 'Sales'],
 
             'warehouse' => ['alias' => 'Warehouse', 'group' => 'Inventory'],
             'barang' => ['alias' => 'Product', 'group' => 'Inventory'],
@@ -59,10 +56,6 @@ class PermissionSeeder extends Seeder
             'shipping' => ['alias' => 'Shipping', 'group' => 'Setting'],
             'fob' => ['alias' => 'FOB', 'group' => 'Setting'],
             'syarat_pembayaran' => ['alias' => 'Payment Term', 'group' => 'Setting'],
-            'penjualan_toko' => ['alias' => 'Store Sales', 'group' => 'Sales'],
-
-            // 🔥 Modul transaksi ditambah action 'approval' khusus
-
         ];
 
         $role = Roles::firstOrCreate([

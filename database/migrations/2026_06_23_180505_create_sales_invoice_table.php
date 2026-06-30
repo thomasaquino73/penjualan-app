@@ -19,25 +19,33 @@ return new class extends Migration
             $table->id();
             $table->string('sales_invoice_code')->unique();
             $table->date('sales_invoice_date');
-
             $table->unsignedBigInteger('sales_order_id');
-            $table->unsignedBigInteger('customer_id');
-
+            $table->unsignedBigInteger('payment_term_id')->nullable();
             $table->string('address')->nullable();
             $table->string('description')->nullable();
-
+            $table->string('taxpayer_data')->nullable();
+            $table->unsignedBigInteger('customer_id');
+            $table->unsignedBigInteger('customer_contact_id')->nullable();
+            $table->boolean('kena_pajak')->default(1)->comment('kena pajak atau tidak')->nullable();
+            $table->boolean('total_termasuk_pajak')->default(1)->comment('harga total termasuk pajak')->nullable();
+            $table->enum('status', [
+                'draft',
+                'processing',
+                'paid',
+                'cancelled',
+                'closed',
+            ])->default('draft');
             $table->decimal('sub_total', 18, 2)->default(0);
             $table->decimal('disc_percent', 5, 2)->default(0);
             $table->decimal('disc_nominal', 18, 2)->default(0);
             $table->decimal('grand_total', 18, 2)->default(0);
-
-            $table->enum('status', [
-                'draft',
-                'posted',
-                'paid',
-                'cancelled',
-            ])->default('draft');
-
+            $table->unsignedBigInteger('tax_id')->nullable();
+            $table->decimal('tax_percent', 5, 2)->default(0)->nullable();
+            $table->decimal('tax_amount', 15, 2)->default(0)->nullable();
+            $table->string('po_number')->nullable();
+            $table->date('tanggal_pengiriman')->nullable();
+            $table->unsignedBigInteger('jenis_pengiriman')->nullable();
+            $table->string('fob_id')->nullable();
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

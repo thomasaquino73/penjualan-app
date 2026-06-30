@@ -802,7 +802,7 @@ class SalesQuotationController extends Controller
 
         return response()->json([
             'kontak' => $kontak,
-            'pajak'  => $pajak
+            'pajak' => $pajak,
         ]);
     }
 
@@ -914,6 +914,4 @@ class SalesQuotationController extends Controller
             ], 422);
         }
     }
-
-   
 }

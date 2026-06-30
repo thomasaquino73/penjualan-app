@@ -310,7 +310,7 @@ class SalesOrderController extends Controller
                     */
 
                     if (
-                        $row->created_by !== $currentUserId &&
+                        $row->created_by != $currentUserId &&
                         $user->can('sales_order-approval')
                     ) {
 
@@ -751,7 +751,7 @@ class SalesOrderController extends Controller
                 'total_diambil_lainnya' => (float) $totalDiambilLainnya, // Dikirim ke frontend
             ];
         });
-         $taxes = Tax::where('is_active', true)
+        $taxes = Tax::where('is_active', true)
             ->whereIn('usage', ['purchase', 'both'])
             ->get();
 
@@ -777,7 +777,7 @@ class SalesOrderController extends Controller
             'model' => $salesOrder,
             'isFromPR' => $isFromPR,
             'jsonDetails' => $detailDataMapped,
-              'taxes' => $taxes,
+            'taxes' => $taxes,
             'defaultTax' => $defaultTax,
         ];
 
@@ -1490,7 +1490,7 @@ class SalesOrderController extends Controller
         }
 
         // 3. Validasi Keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
-        if ($poData->status !== 'draft' || $poData->created_by !== Auth::user()->id) {
+        if ($poData->status !== 'draft' || $poData->created_by != Auth::user()->id) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'], 403);
         }
 
@@ -1766,19 +1766,19 @@ class SalesOrderController extends Controller
         ]);
     }
 
-      public function getCustomerData($customerId)
+    public function getCustomerData($customerId)
     {
         // Pajak (ambil default)
         $pajak = DB::table('customer_pajak')
             ->where('customer_id', $customerId)
             ->first();
-          $kontak = DB::table('customer_kontak')
+        $kontak = DB::table('customer_kontak')
             ->where('customer_id', $customerId)
             ->get();
 
         return response()->json([
             'pajak' => $pajak,
-            'kontak' => $kontak
+            'kontak' => $kontak,
         ]);
     }
 }

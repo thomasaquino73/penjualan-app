@@ -218,10 +218,10 @@ class Sidebar extends Component
                     ],
                     [
                         'name' => 'Sales Invoice',
-                        'route' => 'customer.index',
-                        'pattern' => 'customer.*',
+                        'route' => 'sales-invoice.index',
+                        'pattern' => 'sales-invoice.*',
                         'roles' => ['Super Admin'],
-                        'permissions' => ['barang-browse'],
+                        'permissions' => ['sales_invoice-browse'],
                     ],
 
                 ],

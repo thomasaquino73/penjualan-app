@@ -56,20 +56,19 @@ class PurchaseOrderController extends Controller
 
     public function index(Request $r)
     {
+        $userId = Auth::user()->id;
+
+        // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
+        $query = PurchaseOrder::where('active', '<>', 0)
+            ->where(function ($q) use ($userId) {
+                $q->where('status', '<>', 'draft')
+                    ->orWhere(function ($subQ) use ($userId) {
+                        $subQ->where('status', 'draft')
+                            ->where('created_by', $userId);
+                    });
+            })
+            ->orderby('code', 'desc');
         if ($r->ajax()) {
-            $userId = Auth::user()->id;
-
-            // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
-            $query = PurchaseOrder::where('active', '<>', 0)
-                ->where(function ($q) use ($userId) {
-                    $q->where('status', '<>', 'draft')
-                        ->orWhere(function ($subQ) use ($userId) {
-                            $subQ->where('status', 'draft')
-                                ->where('created_by', $userId);
-                        });
-                })
-                ->orderby('code', 'desc');
-
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('created_at', function ($row) {
@@ -300,7 +299,7 @@ class PurchaseOrderController extends Controller
                     */
 
                     if (
-                        $row->created_by !== $currentUserId &&
+                        $row->created_by != $currentUserId &&
                         $user->can('purchase_order-approval')
                     ) {
 
@@ -371,7 +370,7 @@ class PurchaseOrderController extends Controller
                 <i class="ti ti-package-import me-1"></i>
                 Receive Item
             </a>
-        ';
+                ';
                     }
 
                     /*
@@ -393,7 +392,7 @@ class PurchaseOrderController extends Controller
                 <i class="ti ti-circle-x me-1"></i>
                 Cancel PO
             </a>
-        ';
+                 ';
                     }
                     if ($row->status != 'closed') {
                         $btn .= '<a class="dropdown-item"
@@ -408,35 +407,65 @@ class PurchaseOrderController extends Controller
                     */
 
                     $btn .= '
-        <a class="dropdown-item"
-            target="_blank"
-            href="'.route('purchase-order.print', $row->id).'">
+                <a class="dropdown-item"
+                    target="_blank"
+                    href="'.route('purchase-order.print', $row->id).'">
 
-            <i class="ti ti-printer me-1"></i>
-            Print / PDF
-        </a>
-            ';
+                    <i class="ti ti-printer me-1"></i>
+                    Print / PDF
+                </a>
+                    ';
 
                     $btn .= '
-                    </ul>
-                </div>
-            ';
+                            </ul>
+                        </div>
+                    ';
 
                     return $btn;
                 })
                 ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'supplier', 'date', 'amount'])
                 ->make(true);
         }
-
+        $stats = $this->getStatistics($query);
         $x = [
             'title' => 'Purchase Order List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Purchase Order', 'url' => ''],
             ],
+            'totalPurchase' => $stats['totalPurchase'],
+            'partiallyReceived' => $stats['partiallyReceived'],
+            'grandTotal' => $stats['grandTotal'],
+            'completedReceived' => $stats['completedReceived'],
         ];
 
         return view('purchase.purchase_order.purchase_order_index', $x);
+    }
+
+    private function getStatistics($query)
+    {
+        $month = now()->month;
+        $year = now()->year;
+
+        return [
+            'totalPurchase' => PurchaseOrder::where('active', '<>', 0)
+                ->whereMonth('datePO', $month)
+                ->count(),
+
+            'partiallyReceived' => PurchaseOrder::where('status', 'partially_received')
+                ->whereMonth('datePO', $month)
+                ->count(),
+
+            'grandTotal' => PurchaseOrder::where('active', '<>', 0)
+                ->whereMonth('datePO', $month)
+                ->whereYear('datePO', $year)
+                ->whereNotIn('status', ['rejected', 'draft', 'pending'])
+                ->sum('grand_total'),
+
+            'completedReceived' => PurchaseOrder::where('status', 'completed')
+                ->whereMonth('datePO', $month)
+                ->count(),
+        ];
     }
 
     public function bulanRomawi($bulan)
@@ -1743,8 +1772,11 @@ class PurchaseOrderController extends Controller
         }
 
         // 3. Validasi Keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
-        if ($poData->status !== 'draft' || $poData->created_by !== Auth::user()->id) {
-            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'], 403);
+        if ($poData->status !== 'draft' || $poData->created_by != Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.',
+            ], 403);
         }
 
         // 4. Lakukan pembaruan status menggunakan Query Builder demi stabilitas tabel dinamis
@@ -2029,7 +2061,7 @@ class PurchaseOrderController extends Controller
 
         return response()->json([
             'rekening' => $rekening,
-            'pajak' => $pajak
+            'pajak' => $pajak,
         ]);
     }
 }

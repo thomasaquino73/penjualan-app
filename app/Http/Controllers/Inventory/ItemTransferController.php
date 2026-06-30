@@ -214,7 +214,7 @@ class ItemTransferController extends Controller
                     */
 
                     if (
-                        $row->created_by !== $currentUserId &&
+                        $row->created_by != $currentUserId &&
                         $user->can('item_transfer-approval')
                     ) {
 
@@ -768,7 +768,7 @@ class ItemTransferController extends Controller
         }
 
         // 3. Validasi Keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
-        if ($poData->status !== 'draft' || $poData->created_by !== Auth::user()->id) {
+        if ($poData->status !== 'draft' || $poData->created_by != Auth::user()->id) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'], 403);
         }
 
