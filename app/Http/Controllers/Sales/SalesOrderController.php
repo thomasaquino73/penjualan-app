@@ -575,7 +575,7 @@ class SalesOrderController extends Controller
                         $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
                         $unitPrice = floatval($item['unit_price'] ?? 0);
                         $discount = floatval($item['discount'] ?? 0);
-                        $discountPercent = $item['discount'] ?? 0;
+                        $discountPercent = $item['discount_percent'] ?? 0;
                         $amount = ($qtyInputForm * $unitPrice) - $discount;
 
                         // 1. Simpan ke Sales Order Detail
@@ -1076,18 +1076,8 @@ class SalesOrderController extends Controller
 
                     return '';
                 })
-                ->addColumn('total', function ($row) {
-                    // 1. Hitung total kotor (sum amount) dari detail item SO
-                    $subTotal = SalesOrderDetail::where('sales_order_id', $row->id)
-                        ->where('active', 1)
-                        ->sum('amount');
-
-                    // 2. Hitung grand total: Subtotal dikurangi diskon nominal yang ada di tabel induk ($row)
-                    // Gunakan ?? 0 jika kolom disc_nominal di database bisa bernilai null
-                    $grandTotal = $subTotal - ($row->disc_nominal ?? 0);
-
-                    // 3. Kembalikan nilai yang sudah dikonversi dan diformat
-                    return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
+                    ->addColumn('total', function ($row) {
+                    return format_uang(convert_currency($row->grand_total, $row->currency_id ?? 1));
                 })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">

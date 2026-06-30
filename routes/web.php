@@ -324,6 +324,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('delivery-order', DeliveryOrderController::class);
 
     // INVOICE
+    Route::post('/sales-invoice/restore-multiple', [SalesInvoiceController::class, 'restoreMultiple']);
+    Route::put('/sales-invoice/restore/{id}', [SalesInvoiceController::class, 'restore'])->name('sales-invoice.restore');
+    Route::post('/sales-invoice/delete-multiple', [SalesInvoiceController::class, 'deleteMultiple']);
+    Route::get('/sales-invoice/print/{id}', [SalesInvoiceController::class, 'print'])->name('sales-invoice.print');
+    Route::get('/sales-invoice/get-units-by-product/{id}', [SalesInvoiceController::class, 'getUnitsByProduct'])->name('sales-invoice.get_units');
+    Route::get('/sales-invoice/sq/price-history', [SalesInvoiceController::class, 'getPriceHistory']);
     Route::post('/sales-invoice/{id}/submit', [SalesInvoiceController::class, 'submitToPending'])->name('sales-invoice.submit');
     Route::get('/sales-invoice/trash', [SalesInvoiceController::class, 'trash'])->name('sales-invoice.trash');
     Route::resource('sales-invoice', SalesInvoiceController::class);

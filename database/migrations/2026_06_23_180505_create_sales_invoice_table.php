@@ -19,8 +19,9 @@ return new class extends Migration
             $table->id();
             $table->string('sales_invoice_code')->unique();
             $table->date('sales_invoice_date');
-            $table->unsignedBigInteger('sales_order_id');
+            $table->unsignedBigInteger('sales_order_id')->nullable();
             $table->unsignedBigInteger('payment_term_id')->nullable();
+            $table->unsignedBigInteger('salesman_id')->nullable();
             $table->string('address')->nullable();
             $table->string('description')->nullable();
             $table->string('taxpayer_data')->nullable();
@@ -35,10 +36,10 @@ return new class extends Migration
                 'cancelled',
                 'closed',
             ])->default('draft');
-            $table->decimal('sub_total', 18, 2)->default(0);
-            $table->decimal('disc_percent', 5, 2)->default(0);
-            $table->decimal('disc_nominal', 18, 2)->default(0);
-            $table->decimal('grand_total', 18, 2)->default(0);
+            $table->decimal('sub_total', 18, 2)->default(0)->nullable();
+            $table->decimal('disc_percent', 5, 2)->default(0)->nullable();
+            $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();
+            $table->decimal('grand_total', 18, 2)->default(0)->nullable();
             $table->unsignedBigInteger('tax_id')->nullable();
             $table->decimal('tax_percent', 5, 2)->default(0)->nullable();
             $table->decimal('tax_amount', 15, 2)->default(0)->nullable();
@@ -66,13 +67,20 @@ return new class extends Migration
             $table->unsignedBigInteger('unit_id');
 
             $table->decimal('unit_price', 15, 2);
+            $table->string('discount_percent')->nullable();
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('amount', 15, 2);
-
             $table->unsignedBigInteger('warehouse_id');
-
-            $table->tinyInteger('active')->default(1);
-
+            $table->decimal('so_qty', 18, 4)->default(0)->comment('Qty yang sudah sukses di-SO-kan');
+            $table->decimal('outstanding_qty', 18, 4)->default(0)
+                ->comment('Sisa qty yang belum di-SQ-kan: qty - sq_qty');
+            $table->enum('status', [
+                'open',
+                'partial',
+                'completed',
+                'cancelled',
+            ])->default('open');
+            $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
 

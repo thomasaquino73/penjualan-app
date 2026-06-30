@@ -33,7 +33,7 @@
                         <i class="ti ti-chevron-left me-1"></i> Back
                     </a>
 
-                    @canany(['sales_order-restore'])
+                    @canany(['sales_invoice-restore'])
                         <button id="restoreSelected" class="btn btn-success btn-sm ">
                             <i class="ti ti-refresh me-1"></i> Restore Selected
                         </button>
@@ -113,10 +113,10 @@
                         searchable: false
                     },
                     {
-                        data: 'sales_order_code',
+                        data: 'sales_invoice_code',
                     },
                     {
-                        data: 'sales_order_date',
+                        data: 'sales_invoice_date',
                     },
                     {
                         data: 'customer',
@@ -146,7 +146,7 @@
                 let id = $(this).data('id');
                 let token = $("meta[name='csrf-token']").attr("content");
                 Swal.fire({
-                    title: 'Restore this sales invoice?',
+                    title: 'Restore this sales order?',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, restore!',

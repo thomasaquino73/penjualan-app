@@ -26,18 +26,18 @@
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
 
-                    @canany(['sales_invoice-create'])
-                        <a href="{{ route('sales-invoice.create') }}" class="btn btn-sm btn-primary">
+                    @canany(['sales_order-create'])
+                        <a href="{{ route('sales-order.create') }}" class="btn btn-sm btn-primary">
                             <i class="ti ti-plus me-1"></i> Add Data
                         </a>
                     @endcanany
-                    @canany(['sales_invoice-trash'])
-                        <a href="{{ route('sales-invoice.trash') }}" class="btn btn-sm btn-secondary">
+                    @canany(['sales_order-trash'])
+                        <a href="{{ route('sales-order.trash') }}" class="btn btn-sm btn-secondary">
                             <i class="ti ti-trash me-1"></i> Trash Bin
                         </a>
                     @endcanany
 
-                    @canany(['sales_invoice-delete'])
+                    @canany(['sales_order-delete'])
                         <button id="deleteSelected" class="btn btn-danger btn-sm">
                             <i class="ti ti-trash me-1"></i> Delete Selected
                         </button>
@@ -116,7 +116,7 @@
                     [10, 25, 50, 'All']
                 ],
                 ajax: {
-                    url: '{{ route('sales-invoice.index') }}',
+                    url: '{{ route('sales-order.index') }}',
                     data: function(d) {
                         d.status = $('#selectStatus').val();
                     }
@@ -133,10 +133,10 @@
                         searchable: false
                     },
                     {
-                        data: 'sales_invoice_code',
+                        data: 'sales_order_code',
                     },
                     {
-                        data: 'sales_invoice_date',
+                        data: 'sales_order_date',
                     },
                     {
                         data: 'customer',
@@ -204,7 +204,7 @@
 
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: '/sales-invoice/delete-multiple',
+                            url: '/sales-order/delete-multiple',
                             type: 'POST',
                             data: {
                                 ids: ids,
@@ -248,7 +248,7 @@
                 }).then(function(result) {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/sales-invoice/${id}`,
+                            url: `/sales-order/${id}`,
                             type: "DELETE",
                             cache: false,
                             data: {
@@ -290,7 +290,7 @@
 
             $(document).on('click', '.btn-submit-po', function() {
                 let id = $(this).data('id');
-                let url = "{{ route('sales-invoice.submit', ':id') }}".replace(':id', id);
+                let url = "{{ route('sales-order.submit', ':id') }}".replace(':id', id);
 
                 Swal.fire({
                     title: 'Are you sure?',
@@ -365,7 +365,7 @@
                 let statusTarget = $(this).data('status'); // langsung 'processing'
 
                 $.ajax({
-                    url: '/sales-invoice/change-status/' + id,
+                    url: '/sales-order/change-status/' + id,
                     type: "POST",
                     data: {
                         _token: "{{ csrf_token() }}",
@@ -424,7 +424,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: '/sales-invoice/change-status/' + id,
+                            url: '/sales-order/change-status/' + id,
                             type: "POST",
                             data: {
                                 _token: "{{ csrf_token() }}",
@@ -499,7 +499,7 @@
                     if (result.isConfirmed) {
 
                         $.ajax({
-                            url: '/sales-invoice/send-supplier/' + id,
+                            url: '/sales-order/send-supplier/' + id,
                             type: 'POST',
                             data: {
                                 _token: $('meta[name="csrf-token"]').attr('content')
@@ -578,7 +578,7 @@
                 }).then(function(result) {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/sales-invoice/${id}/close`,
+                            url: `/sales-order/${id}/close`,
                             type: "PATCH",
                             cache: false,
                             data: {

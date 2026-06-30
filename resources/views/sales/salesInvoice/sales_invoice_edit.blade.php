@@ -22,7 +22,7 @@
 
             <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
 
-            <div class="col-12 col-lg-5">
+            {{-- <div class="col-12 col-lg-5">
                 <div
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
@@ -31,7 +31,7 @@
                     </button>
 
                 </div>
-            </div>
+            </div> --}}
 
         </div>
         <div class="card-body table-responsive p-3">
@@ -250,9 +250,7 @@
                 @foreach ($jsonDetails as $detail)
                     {
                         'id': '{{ $detail['id'] }}',
-                        'sales_order_id': '{{ $detail['sales_order_id'] }}',
-                        'sales_quotation_detail_id': '{{ $detail['sales_quotation_detail_id'] }}',
-                        'requisition_code': '{{ $detail['requisition_code'] ?? '' }}', // Ini yang Anda cari
+                        'sales_invoice_id': '{{ $detail['sales_invoice_id'] }}',
                         'product_id': '{{ $detail['product_id'] }}',
                         'data_produk': '{{ $detail['data_produk'] }}',
                         'quantity': '{{ $detail['quantity'] }}',
@@ -273,11 +271,6 @@
             @endif
         ];
 
-        // Cek status PO global (Optional jika ingin mematikan tombol "quotation" di pojok kanan atas saat edit)
-        let poIsFromPR = {{ $isFromPR ? 'true' : 'false' }};
-        if (poIsFromPR) {
-            $(".btn-success").html('<i class="ti ti-link"></i> Linked to SQ').prop('disabled', true);
-        }
         $(function() {
             const datePicker = flatpickr("#sales_order_date", {
                 enableTime: false,
@@ -515,9 +508,6 @@
                                 minimumFractionDigits: 0
                             });
                         }
-                    }, {
-                        data: "discount_percent",
-                        className: "text-center"
                     },
                     {
                         data: "discount",
@@ -613,8 +603,8 @@
 
                                     // 5. Isi Data ke Input Form
                                     $("#quantity").val(qtySekarang);
-                                    $("#modal_sales_quotation_detail_id").val(data
-                                        .sales_quotation_detail_id || "");
+                                    // $("#modal_sales_quotation_detail_id").val(data
+                                    //     .sales_quotation_detail_id || "");
                                     $("#unit_price").val(parseFloat(data.unit_price || 0));
                                     $("#discount_percent").val(data.discount_percent || 0);
                                     $("#discount").val(parseFloat(data.discount || 0));
@@ -633,7 +623,8 @@
 
                                     // Trigger Product untuk memuat daftar unit via AJAX
                                     $("#product_id").val(data.product_id).trigger("change.select2");
-                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
+                                    $("#warehouse_id").val(data.warehouse_id).trigger(
+                                        "change.select2");
 
                                     // Delay untuk menunggu respons AJAX produk selesai
                                     setTimeout(function() {
@@ -1131,7 +1122,7 @@
                         success: function(response) {
                             Swal.fire({
                                 icon: "success",
-                                title: "Data Updated Successfully",
+                                title: "Data Created Successfully",
                                 text: response.message,
                                 customClass: {
                                     confirmButton: "btn btn-primary waves-effect waves-light"
