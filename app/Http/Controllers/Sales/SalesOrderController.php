@@ -417,13 +417,13 @@ class SalesOrderController extends Controller
             </a>
         ';
                     }
-                        if ($row->status != 'closed' ) {
-                        $btn .= '<a class="dropdown-item"
+                       if ($row->status == 'completed' ) {
+                      
+                    }else {
+  $btn .= '<a class="dropdown-item"
                 href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->code.'">
                 <i class="ti ti-lock"></i> Close PO
              </a>';
-                    }elseif ($row->status == 'completed') {
-
                     }
                     /*
                     |--------------------------------------------------------------------------
