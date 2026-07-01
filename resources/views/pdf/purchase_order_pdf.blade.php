@@ -397,7 +397,20 @@
             </td>
         </tr>
     </table>
+    <table class="w-100 footer-table">
+        <tr>
+            <td class="keterangan-box">
+                @php
+                    $currencyId = session('currency_id') ?? \App\Models\Setting\Company::first()->default_currency_id;
+                    $currencyCode = \App\Models\Setting\Currency::find($currencyId)?->code ?? 'IDR';
 
+                    // Gunakan nilai asli (jangan di-round agar sen tidak hilang)
+                    $grandTotalConvert = convert_currency($model->grand_total, $model->currency_id ?? 1);
+                @endphp
+                <div>Terbilang: {{ terbilang($grandTotalConvert, $currencyCode) }}</div>
+            </td>
+        </tr>
+    </table>
     <div class="signature-section">
         <table class="signature-table">
             <tr>

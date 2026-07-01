@@ -57,8 +57,7 @@ class SalesOrderController extends Controller
 
     public function index(Request $r)
     {
-        if ($r->ajax()) {
-            // Ambil ID user yang sedang login
+                   // Ambil ID user yang sedang login
             $userId = Auth::user()->id;
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
@@ -74,6 +73,8 @@ class SalesOrderController extends Controller
             if ($r->status) {
                 $query->where('status', $r->status);
             }
+        if ($r->ajax()) {
+ 
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -109,9 +110,9 @@ class SalesOrderController extends Controller
                             $text = 'Draft';
                             break;
 
-                        case 'pending':
+                        case 'processing':
                             $badge = 'bg-label-warning';
-                            $text = 'Pending Approval';
+                            $text = 'Processing';
                             break;
 
                         case 'approved':
@@ -254,23 +255,34 @@ class SalesOrderController extends Controller
                     if ($row->created_by == $currentUserId) {
 
                         // SEND TO APPROVAL
+                        // if ($row->status == 'draft') {
+
+                        //     $btn .= '
+                        //         <a class="dropdown-item btn-submit-po"
+                        //             href="javascript:void(0)"
+                        //             data-id="'.$row->id.'">
+
+                        //             <i class="ti ti-send me-1"></i>
+                        //             Send To Approval
+                        //         </a>
+                        //     ';
+                        // }
                         if ($row->status == 'draft') {
 
                             $btn .= '
-                                <a class="dropdown-item btn-submit-po"
+                                <a class="dropdown-item btn-process"
                                     href="javascript:void(0)"
                                     data-id="'.$row->id.'">
 
                                     <i class="ti ti-send me-1"></i>
-                                    Send To Approval
+                                    Send To Process
                                 </a>
                             ';
                         }
-
                         // EDIT
                         if (
                             $user->can('sales_order-edit') &&
-                            in_array($row->status, ['draft', 'rejected'])
+                            in_array($row->status, ['draft', 'pending', 'processing'])
                         ) {
 
                             $btn .= '
@@ -278,7 +290,7 @@ class SalesOrderController extends Controller
                                     href="'.route('sales-order.edit', $row->id).'">
 
                                     <i class="far fa-edit me-1"></i>
-                                    Edit SO
+                                    Edit PO
                                 </a>
                             ';
                         }
@@ -375,13 +387,13 @@ class SalesOrderController extends Controller
                     ) {
 
                         $btn .= '
-            <a class="dropdown-item text-primary"
-                href="'.route('sales-order.receive', $row->id).'">
+                    <a class="dropdown-item text-primary"
+                        href="'.route('sales-order.receive', $row->id).'">
 
-                <i class="ti ti-package-import me-1"></i>
-                Receive Item
-            </a>
-        ';
+                        <i class="ti ti-package-import me-1"></i>
+                        Receive Item
+                    </a>
+                ';
                     }
 
                     /*
@@ -405,11 +417,13 @@ class SalesOrderController extends Controller
             </a>
         ';
                     }
-                    if ($row->status != 'closed') {
+                        if ($row->status != 'closed' ) {
                         $btn .= '<a class="dropdown-item"
-                href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->sales_order_code.'">
-                <i class="ti ti-lock"></i> Close SO
+                href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->code.'">
+                <i class="ti ti-lock"></i> Close PO
              </a>';
+                    }elseif ($row->status == 'completed') {
+
                     }
                     /*
                     |--------------------------------------------------------------------------
@@ -438,16 +452,47 @@ class SalesOrderController extends Controller
                 ->make(true);
         }
 
+        $stats = $this->getStatistics($query);
         $x = [
             'title' => 'Sales Order List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Sales Order', 'url' => ''],
             ],
+               'totalPurchase' => $stats['totalPurchase'],
+            'partiallyReceived' => $stats['partiallyReceived'],
+            'grandTotal' => $stats['grandTotal'],
+            'completedReceived' => $stats['completedReceived'],
         ];
 
         return view('sales.salesOrder.sales_order_index', $x);
     }
+     private function getStatistics($query)
+    {
+        $month = now()->month;
+        $year = now()->year;
+
+        return [
+            'totalPurchase' => SalesOrder::where('active', '<>', 0)
+                ->whereMonth('sales_order_date', $month)
+                ->count(),
+
+            'partiallyReceived' => SalesOrder::where('status', 'partially_received')
+                ->whereMonth('sales_order_date', $month)
+                ->count(),
+
+            'grandTotal' => SalesOrder::where('active', '<>', 0)
+                ->whereMonth('sales_order_date', $month)
+                ->whereYear('sales_order_date', $year)
+                ->whereNotIn('status', ['rejected', 'draft', 'processing'])
+                ->sum('grand_total'),
+
+            'completedReceived' => SalesOrder::where('status', 'completed')
+                ->whereMonth('sales_order_date', $month)
+                ->count(),
+        ];
+    }
+
 
     public function bulanRomawi($bulan)
     {
@@ -1770,5 +1815,37 @@ class SalesOrderController extends Controller
             'pajak' => $pajak,
             'kontak' => $kontak,
         ]);
+    }
+
+    public function processData($id)
+    {
+        // 1. Ambil tahun berjalan secara dinamis
+        $year = date('Y');
+        $tableName = "sales_order_{$year}";
+
+        // 2. Gunakan Query Builder dengan nama tabel dinamis agar pencarian ID aman
+        $poData = DB::table($tableName)->where('id', $id)->first();
+
+        // Jika data memang benar-benar tidak ditemukan di database
+        if (! $poData) {
+            return response()->json(['success' => false, 'message' => 'Data Sales Order tidak ditemukan.'], 404);
+        }
+
+        // 3. Validasi Keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
+        if ($poData->status !== 'draft' || $poData->created_by != Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.',
+            ], 403);
+        }
+
+        // 4. Lakukan pembaruan status menggunakan Query Builder demi stabilitas tabel dinamis
+        DB::table($tableName)->where('id', $id)->update([
+            'status' => 'processing',
+            'updated_by' => Auth::user()->id,
+            'updated_at' => now(), // Mengisi timestamp bawaan laravel secara manual karena menggunakan Query Builder
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Sales Order berhasil diajukan!']);
     }
 }

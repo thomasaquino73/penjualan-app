@@ -185,12 +185,12 @@ class ReceiveItemController extends Controller
                      </a>';
                     }
 
-            //         if ($row->status != 'closed') {
-            //             $btn .= '<a class="dropdown-item"
-            //     href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->receive_item_code.'">
-            //     <i class="ti ti-lock"></i> Close RI
-            //  </a>';
-            //         }
+                    //         if ($row->status != 'closed') {
+                    //             $btn .= '<a class="dropdown-item"
+                    //     href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->receive_item_code.'">
+                    //     <i class="ti ti-lock"></i> Close RI
+                    //  </a>';
+                    //         }
 
                     $btn .= '<a class="dropdown-item"
                 href="'.route('receive-item.show', $row->id).'">
@@ -435,7 +435,7 @@ class ReceiveItemController extends Controller
             ->where('active', 1)
             ->whereHas('purchaseOrder', function ($q) {
                 // Sesuaikan dengan status yang valid di database Anda
-                $q->whereIn('status', ['processing', 'partial'])->where('active','<>','0');
+                $q->whereIn('status', ['processing', 'partial'])->where('active', '<>', '0');
             })
             ->get();
 
@@ -490,7 +490,7 @@ class ReceiveItemController extends Controller
             ->where('supplier_id', $request->supplier_id)
         // ->whereNotIn('status', ['draft', 'closed', 'completed'])
             ->whereIn('status', ['processing', 'partial'])
-            ->where('active','<>','0')
+            ->where('active', '<>', '0')
             ->get();
 
         return response()->json($orders);
@@ -686,7 +686,7 @@ class ReceiveItemController extends Controller
                     $totalRequested = $allDetails->sum('qty');
                     $totalOrdered = $allDetails->sum('received_qty');
 
-                    $newStatus = ($totalOrdered >= $totalRequested) ? 'closed' : (($totalOrdered > 0) ? 'partial' : 'processing');
+                    $newStatus = ($totalOrdered >= $totalRequested) ? 'completed' : (($totalOrdered > 0) ? 'partially_received' : 'processing');
                     DB::table("purchase_order_{$currentYear}")->where('id', $prId)->update(['status' => $newStatus]);
                 }
             }

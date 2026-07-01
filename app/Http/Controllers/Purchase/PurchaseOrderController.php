@@ -406,11 +406,13 @@ class PurchaseOrderController extends Controller
             </a>
                  ';
                     }
-                    if ($row->status != 'closed') {
+                    if ($row->status != 'closed' ) {
                         $btn .= '<a class="dropdown-item"
                 href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->code.'">
                 <i class="ti ti-lock"></i> Close PO
              </a>';
+                    }elseif ($row->status == 'completed') {
+
                     }
                     /*
                     |--------------------------------------------------------------------------
@@ -1768,6 +1770,7 @@ class PurchaseOrderController extends Controller
             ], 500);
         }
     }
+
     public function processData($id)
     {
         // 1. Ambil tahun berjalan secara dinamis

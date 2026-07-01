@@ -268,21 +268,9 @@
                 <table>
                     <tr>
                         <td class="logo-box">
-                            <img src="{{ public_path('image/logo/logo_print.png') }}" style="height: 80px;">
-                            {{-- @if (isset($company) && $company->logo)
-                            @else
-                                <div
-                                    style="width: 70px; height: 70px; border: 1px dashed #ccc; background: #fafafa; text-align: center; line-height: 70px; color: #aaa; font-size: 8pt;">
-                                    No Logo
-                                </div>
-                            @endif --}}
+                            <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 340px;">
+
                         </td>
-                        {{-- <td class="company-contact">
-                            {{ $company->nomor_telepon }}<br>
-                            {{ $company->alamat }}<br>
-                            {{ $company->email }}<br>
-                            {{ $company->website }}<br>
-                        </td> --}}
                     </tr>
                 </table>
             </td>
@@ -308,7 +296,7 @@
                 </div>
             </td>
             <td style="padding-left: 25px;">
-                <div class="po-box-title">Pesanan Penjualan</div>
+                <div class="po-box-title">Sales Order</div>
                 <table class="po-details-table">
                     <tr>
                         <td class="label">Nomor</td>
@@ -432,15 +420,15 @@
                             $user = $model->approvedBy?->fullname;
                         }
                     @endphp
-                    @if ($model->pic_by !== null)
+                    @if ($model->status == 'processing')
                         <div class="approval-title">
-                            {{ $title }}
+                            Disetujui Oleh
                         </div>
                         <div style="height: 65px;">
                             <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height: 80px;">
                         </div>
                         <div style="font-weight: bold; text-decoration: underline;">
-                            {{ $user }}
+                            Yohanes Lukman
                         </div>
                     @else
                         <div class="approval-title">
@@ -454,8 +442,6 @@
                             {{ $model->creator->fullname }}
                         </div>
                     @endif
-
-
                 </td>
             </tr>
         </table>

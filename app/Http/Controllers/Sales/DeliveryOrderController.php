@@ -1245,7 +1245,7 @@ class DeliveryOrderController extends Controller
             ->where('active', 1)
             ->whereHas('salesOrder', function ($q) {
                 // Sesuaikan dengan status yang valid di database Anda
-                $q->whereIn('status', ['approved', 'partial']);
+                $q->whereIn('status', ['processing', 'partial']);
             })
             ->get();
 
@@ -1297,7 +1297,7 @@ class DeliveryOrderController extends Controller
         ])
             ->where('customer_id', $request->customer_id)
         // ->whereNotIn('status', ['processing', 'closed', 'completed'])
-            ->whereIn('status', ['approved', 'partial'])
+            ->whereIn('status', ['processing', 'partial'])
             ->get();
 
         return response()->json($orders);
