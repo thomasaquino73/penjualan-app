@@ -527,7 +527,7 @@ class DeliveryOrderController extends Controller
             $data['delivery_order_code'] = $generatedCode;
             $data['delivery_order_date'] = Carbon::parse($r->delivery_order_date)->format('Y-m-d');
             $data['created_by'] = Auth::id();
-            $deilveryOrder = DeliveryOrder::create($data);
+            $deliveryOrder = DeliveryOrder::create($data);
             if ($itemsDetailRaw) {
 
                 $items = json_decode($itemsDetailRaw, true);
@@ -545,7 +545,7 @@ class DeliveryOrderController extends Controller
                         |--------------------------------------------------------------------------
                         */
                         DeliveryOrderDetail::create([
-                            'delivery_order_id' => $deilveryOrder->id,
+                            'delivery_order_id' => $deliveryOrder->id,
                             'data_barang_id' => $item['product_id'],
                             'qty' => $qty,
                             'unit_id' => $item['unit_id'],
@@ -565,18 +565,19 @@ class DeliveryOrderController extends Controller
                             : 'Customer Tidak Diketahui';
                         StockMutation::create([
                             'data_barang_id' => $item['product_id'],
+                            'document_id' => $deliveryOrder->id,
                             'unit_id' => $item['unit_id'],
                             'warehouse_id' => $item['warehouse_id'],
                             'date_stock' => Carbon::parse($r->delivery_order_date)->format('Y-m-d'),
                             'qty_transaksi' => $qty,
                             'total_base_qty' => $qty,
                             'type' => 'out',
-                            'document_number' => $deilveryOrder->delivery_order_code,
+                            'document_number' => $deliveryOrder->delivery_order_code,
                             'document_type' => 'delivery_order',
                             'keterangan' => sprintf(
                                 'Pengiriman barang ke customer %s melalui DO %s',
                                 $namaCustomer,
-                                $deilveryOrder->delivery_order_code
+                                $deliveryOrder->delivery_order_code
                             ),
                             'created_by' => Auth::id(),
                         ]);
@@ -586,20 +587,20 @@ class DeliveryOrderController extends Controller
                         | Kurangi Stock Balance Gudang Asal
                         |--------------------------------------------------------------------------
                         */
-                        $stock = StockBalance::where([
-                            'product_id' => $item['product_id'],
-                            'warehouse_id' => $item['warehouse_id'],
-                        ])->first();
+                        // $stock = StockBalance::where([
+                        //     'product_id' => $item['product_id'],
+                        //     'warehouse_id' => $item['warehouse_id'],
+                        // ])->first();
 
-                        if (! $stock) {
-                            throw new \Exception('Stock barang tidak ditemukan');
-                        }
+                        // if (! $stock) {
+                        //     throw new \Exception('Stock barang tidak ditemukan');
+                        // }
 
-                        if ($stock->qty < $qty) {
-                            throw new \Exception('Stock tidak mencukupi');
-                        }
+                        // if ($stock->qty < $qty) {
+                        //     throw new \Exception('Stock tidak mencukupi');
+                        // }
 
-                        $stock->decrement('qty', $qty);
+                        // $stock->decrement('qty', $qty);
                     }
                 }
             }
@@ -633,11 +634,65 @@ class DeliveryOrderController extends Controller
      */
     public function edit(string $id)
     {
+        $year = date('Y');
         $deliveryOrder = DeliveryOrder::with([
             'details.produkID',
             'details.unitID',
             'details.warehouseID',
         ])->findOrFail($id);
+        $isFromPR = $deliveryOrder->details->whereNotNull('sales_order_detail_id')->count() > 0;
+        $detailDataMapped = $deliveryOrder->details->map(function ($detail) use ($deliveryOrder, $year) {
+
+            $orderCode = null;
+            $sisaPr = null;
+            $kuotaAsliPr = null;
+            $totalDiambilLainnya = 0;
+
+            // Cek apakah item detail ini memiliki keterikatan dengan PR
+            if ($detail->sales_order_detail_id) {
+                // Ambil data referensi dari relasi
+                $prDetail = $detail->salesQuotationDetail;
+
+                if ($prDetail) {
+                    $sisaPr = (float) $prDetail->outstanding_qty;
+                    $kuotaAsliPr = (float) $prDetail->qty;
+
+                    // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
+                    // Menggunakan DB::table karena tabel bersifat dinamis per tahun
+                    $totalDiambilLainnya = DB::table("sales_order_detail_{$year}")
+                        ->where('sales_order_detail_id', $detail->sales_order_detail_id)
+                        ->where('sales_order_id', '<>', $deliveryOrder->id) // Kecuali PO ini sendiri
+                        ->where('active', 1)
+                        ->sum('qty');
+
+                    if ($prDetail->salesQuotation) {
+                        $orderCode = $prDetail->salesQuotation->code;
+                    }
+                }
+            }
+
+            return [
+                'id' => $detail->id,
+                'sales_order_id' => $detail->sales_order_id,
+                'sales_order_detail_id' => $detail->sales_order_detail_id,
+                'order_code' => $orderCode,
+                'product_id' => $detail->product_id,
+                'data_produk' => $detail->produkID->nama_barang ?? 'Product Not Found',
+                'quantity' => (float) $detail->qty,
+                'unit_id' => $detail->unit_id,
+                'unit' => $detail->unitID->detail ?? '-',
+                'warehouse_id' => $detail->warehouse_id,
+                'warehouse' => $detail->warehouseID->nama_gudang ?? '-',
+                'unit_price' => (float) $detail->unit_price,
+                'discount_percent' => $detail->discount_percent,
+                'discount' => (float) $detail->discount,
+                'amount' => (float) $detail->amount,
+                'tax' => (float) ($detail->tax ?? 0),
+                'sisa_pr' => $sisaPr,
+                'kuota_asli' => $kuotaAsliPr,
+                'total_diambil_lainnya' => (float) $totalDiambilLainnya, // Dikirim ke frontend
+            ];
+        });
         $x = [
             'title' => 'Delivery Order New',
             'breadcrumb' => [
@@ -651,6 +706,7 @@ class DeliveryOrderController extends Controller
             'shipping' => Shipping::where('status', 1)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
             'model' => $deliveryOrder,
+            'isFromPR' => $isFromPR,
         ];
 
         return view('sales.deliveryOrder.delivery_order_edit', $x);
@@ -744,6 +800,7 @@ class DeliveryOrderController extends Controller
                             : 'Customer Tidak Diketahui';
 
                         StockMutation::create([
+                            'document_id' => $deliveryOrder->id,
                             'data_barang_id' => $item['product_id'],
                             'unit_id' => $item['unit_id'],
                             'warehouse_id' => $item['warehouse_id'],
@@ -802,76 +859,94 @@ class DeliveryOrderController extends Controller
         }
     }
 
+    // public function destroy(Request $request, $id)
+    // {
+    //     DB::beginTransaction();
+
+    //     try {
+    //         // 1. Cari SO yang akan dihapus
+    //         $po = DeliveryOrder::findOrFail($id);
+
+    //         // 2. Ambil detail SO untuk mendapatkan referensi PR Detail yang terkait
+    //         // $sqDetails = DeliveryOrderDetail::where('delivery_order_id', $po->id)->get();
+    //         // $involvedPrIds = [];
+
+    //         // foreach ($sqDetails as $sqDetail) {
+    //         //     if ($sqDetail->sales_order_detail_id) {
+    //         //         // Catat ID PR Master-nya
+    //         //         $prDetail = SalesQuotationDetail::where('id', $sqDetail->sales_order_detail_id)
+    //         //             ->first();
+
+    //         //         if ($prDetail && ! in_array($prDetail->sales_order_id, $involvedPrIds)) {
+    //         //             $involvedPrIds[] = $prDetail->sales_order_id;
+    //         //         }
+    //         //     }
+    //         // }
+
+    //         // 3. Nonaktifkan SO dan Detail SO
+    //         $po->update(['active' => 0, 'updated_by' => Auth::id()]);
+    //         // DeliveryOrderDetail::where('delivery_order_id', $po->id)->update(['active' => 0]);
+
+    //         // 4. Update Ulang sq_qty di setiap PR Detail yang terdampak
+    //         // Kita hitung ulang berdasarkan sisa SO yang masih 'active' = 1
+    //         // foreach ($sqDetails as $sqDetail) {
+    //         //     if ($sqDetail->sales_order_detail_id) {
+    //         //         $totalRemainingPo = DeliveryOrderDetail::where('sales_order_detail_id', $sqDetail->sales_order_detail_id)
+    //         //             ->where('active', 1)
+    //         //             ->sum('qty');
+
+    //         //         DB::table('sales_order_detail_'.date('Y'))
+    //         //             ->where('id', $sqDetail->sales_order_detail_id)
+    //         //             ->update(['sq_qty' => $totalRemainingPo]);
+    //         //     }
+    //         // }
+
+    //         // // 5. Update Status PR Master
+    //         // foreach ($involvedPrIds as $prId) {
+    //         //     $allDetails = SalesQuotationDetail::where('sales_order_id', $prId)
+    //         //         ->get();
+
+    //         //     $totalRequested = $allDetails->sum('qty');
+    //         //     $totalOrdered = $allDetails->sum('sq_qty');
+
+    //         //     if ($totalOrdered >= $totalRequested) {
+    //         //         $status = 'closed';
+    //         //     } elseif ($totalOrdered > 0) {
+    //         //         $status = 'partial';
+    //         //     } else {
+    //         //         $status = 'processing';
+    //         //     }
+
+    //         //     SalesQuotation::where('id', $prId)
+    //         //         ->update(['status' => $status]);
+    //         // }
+
+    //         DB::commit();
+
+    //         return response()->json(['status' => 'success', 'message' => 'SO berhasil dibatalkan.'], 200);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan SO: '.$e->getMessage()], 500);
+    //     }
+    // }
+
     public function destroy(Request $request, $id)
     {
         DB::beginTransaction();
 
         try {
-            // 1. Cari SO yang akan dihapus
-            $po = DeliveryOrder::findOrFail($id);
-
-            // 2. Ambil detail SO untuk mendapatkan referensi PR Detail yang terkait
-            // $sqDetails = DeliveryOrderDetail::where('delivery_order_id', $po->id)->get();
-            // $involvedPrIds = [];
-
-            // foreach ($sqDetails as $sqDetail) {
-            //     if ($sqDetail->sales_quotation_detail_id) {
-            //         // Catat ID PR Master-nya
-            //         $prDetail = SalesQuotationDetail::where('id', $sqDetail->sales_quotation_detail_id)
-            //             ->first();
-
-            //         if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
-            //             $involvedPrIds[] = $prDetail->sales_quotation_id;
-            //         }
-            //     }
-            // }
-
-            // 3. Nonaktifkan SO dan Detail SO
-            $po->update(['active' => 0, 'updated_by' => Auth::id()]);
-            // DeliveryOrderDetail::where('delivery_order_id', $po->id)->update(['active' => 0]);
-
-            // 4. Update Ulang sq_qty di setiap PR Detail yang terdampak
-            // Kita hitung ulang berdasarkan sisa SO yang masih 'active' = 1
-            // foreach ($sqDetails as $sqDetail) {
-            //     if ($sqDetail->sales_quotation_detail_id) {
-            //         $totalRemainingPo = DeliveryOrderDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
-            //             ->where('active', 1)
-            //             ->sum('qty');
-
-            //         DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $sqDetail->sales_quotation_detail_id)
-            //             ->update(['sq_qty' => $totalRemainingPo]);
-            //     }
-            // }
-
-            // // 5. Update Status PR Master
-            // foreach ($involvedPrIds as $prId) {
-            //     $allDetails = SalesQuotationDetail::where('sales_quotation_id', $prId)
-            //         ->get();
-
-            //     $totalRequested = $allDetails->sum('qty');
-            //     $totalOrdered = $allDetails->sum('sq_qty');
-
-            //     if ($totalOrdered >= $totalRequested) {
-            //         $status = 'closed';
-            //     } elseif ($totalOrdered > 0) {
-            //         $status = 'partial';
-            //     } else {
-            //         $status = 'processing';
-            //     }
-
-            //     SalesQuotation::where('id', $prId)
-            //         ->update(['status' => $status]);
-            // }
-
+            $do = DeliveryOrder::findOrFail($id);
+            $do->update(['active' => 0, 'updated_by' => Auth::id()]);
+            StockMutation::where('document_type', 'delivery_order')
+            ->where('document_id', $do->id)
+            ->delete();
             DB::commit();
-
-            return response()->json(['status' => 'success', 'message' => 'SO berhasil dibatalkan.'], 200);
-
+            return response()->json(['status' => 'success', 'message' => 'DO berhasil dibatalkan.'], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-
-            return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan SO: '.$e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan DO: '.$e->getMessage()], 500);
         }
     }
 
@@ -997,32 +1072,32 @@ class DeliveryOrderController extends Controller
 
             // 3. Update sq_qty di PR Detail dan kumpulkan ID PR Master
             // foreach ($sqDetails as $sqDetail) {
-            //     if ($sqDetail->sales_quotation_detail_id) {
+            //     if ($sqDetail->sales_order_detail_id) {
             //         // Hitung total dari SO yang tersisa (yang masih aktif)
-            //         $totalRemainingPo = DeliveryOrderDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
+            //         $totalRemainingPo = DeliveryOrderDetail::where('sales_order_detail_id', $sqDetail->sales_order_detail_id)
             //             ->where('active', 1)
             //             ->sum('qty');
 
             //         // Update ke tabel PR Detail
-            //         DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $sqDetail->sales_quotation_detail_id)
+            //         DB::table('sales_order_detail_'.date('Y'))
+            //             ->where('id', $sqDetail->sales_order_detail_id)
             //             ->update(['sq_qty' => $totalRemainingPo]);
 
             //         // Simpan ID PR untuk update status nanti
-            //         $prDetail = DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $sqDetail->sales_quotation_detail_id)
+            //         $prDetail = DB::table('sales_order_detail_'.date('Y'))
+            //             ->where('id', $sqDetail->sales_order_detail_id)
             //             ->first();
 
-            //         if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
-            //             $involvedPrIds[] = $prDetail->sales_quotation_id;
+            //         if ($prDetail && ! in_array($prDetail->sales_order_id, $involvedPrIds)) {
+            //             $involvedPrIds[] = $prDetail->sales_order_id;
             //         }
             //     }
             // }
 
             // 4. Update Status PR Master berdasarkan akumulasi terbaru
             // foreach ($involvedPrIds as $prId) {
-            //     $allDetails = DB::table('sales_quotation_detail_'.date('Y'))
-            //         ->where('sales_quotation_id', $prId)
+            //     $allDetails = DB::table('sales_order_detail_'.date('Y'))
+            //         ->where('sales_order_id', $prId)
             //         ->get();
 
             //     $totalRequested = $allDetails->sum('qty');
@@ -1036,7 +1111,7 @@ class DeliveryOrderController extends Controller
             //         $status = 'processing';
             //     }
 
-            //     DB::table('sales_quotation_'.date('Y'))
+            //     DB::table('sales_order_'.date('Y'))
             //         ->where('id', $prId)
             //         ->update(['status' => $status]);
             // }
@@ -1058,84 +1133,136 @@ class DeliveryOrderController extends Controller
         }
     }
 
+    // public function restore($id)
+    // {
+    //     DB::beginTransaction();
+
+    //     try {
+    //         // 1. Aktifkan kembali SO
+    //         $po = DeliveryOrder::findOrFail($id);
+    //         $po->update(['active' => 1, 'updated_by' => Auth::id()]);
+
+    //         // 2. Aktifkan kembali Detail SO
+    //         // DeliveryOrderDetail::where('delivery_order_id', $po->id)->update(['active' => 1]);
+
+    //         // 3. Ambil semua detail SO yang baru saja diaktifkan
+    //         // $poDetails = DeliveryOrderDetail::where('delivery_order_id', $po->id)->get();
+    //         // $involvedPrIds = [];
+
+    //         // // 4. Update ulang sq_qty di PR Detail
+    //         // foreach ($poDetails as $poDetail) {
+    //         //     if ($poDetail->sales_order_detail_id) {
+    //         //         // Hitung total dari semua SO yang aktif
+    //         //         $totalPoForThisItem = DeliveryOrderDetail::where('sales_order_detail_id', $poDetail->sales_order_detail_id)
+    //         //             ->where('active', 1)
+    //         //             ->sum('qty');
+
+    //         //         // Update ke tabel PR Detail
+    //         //         DB::table('sales_order_detail_'.date('Y'))
+    //         //             ->where('id', $poDetail->sales_order_detail_id)
+    //         //             ->update(['sq_qty' => $totalPoForThisItem]);
+
+    //         //         // Simpan ID PR untuk update status
+    //         //         $prDetail = DB::table('sales_order_detail_'.date('Y'))
+    //         //             ->where('id', $poDetail->sales_order_detail_id)
+    //         //             ->first();
+
+    //         //         if ($prDetail && ! in_array($prDetail->sales_order_id, $involvedPrIds)) {
+    //         //             $involvedPrIds[] = $prDetail->sales_order_id;
+    //         //         }
+    //         //     }
+    //         // }
+
+    //         // // 5. Update Status PR Master
+    //         // foreach ($involvedPrIds as $prId) {
+    //         //     $allDetails = DB::table('sales_order_detail_'.date('Y'))
+    //         //         ->where('sales_order_id', $prId)
+    //         //         ->get();
+
+    //         //     $totalRequested = $allDetails->sum('qty');
+    //         //     $totalOrdered = $allDetails->sum('sq_qty');
+
+    //         //     if ($totalOrdered >= $totalRequested) {
+    //         //         $status = 'closed';
+    //         //     } elseif ($totalOrdered > 0) {
+    //         //         $status = 'partial';
+    //         //     } else {
+    //         //         $status = 'processing';
+    //         //     }
+
+    //         //     DB::table('sales_order_'.date('Y'))
+    //         //         ->where('id', $prId)
+    //         //         ->update(['status' => $status]);
+    //         // }
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Delivery Order berhasil dikembalikan (restored).',
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Gagal merestore data: '.$e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
     public function restore($id)
-    {
-        DB::beginTransaction();
+{
+    DB::beginTransaction();
 
-        try {
-            // 1. Aktifkan kembali SO
-            $po = DeliveryOrder::findOrFail($id);
-            $po->update(['active' => 1, 'updated_by' => Auth::id()]);
+    try {
+        $do = DeliveryOrder::with('details')->findOrFail($id);
 
-            // 2. Aktifkan kembali Detail SO
-            // DeliveryOrderDetail::where('delivery_order_id', $po->id)->update(['active' => 1]);
+        $do->update([
+            'active' => 1,
+            'updated_by' => Auth::id(),
+        ]);
 
-            // 3. Ambil semua detail SO yang baru saja diaktifkan
-            // $poDetails = DeliveryOrderDetail::where('delivery_order_id', $po->id)->get();
-            // $involvedPrIds = [];
+        foreach ($do->details as $detail) {
 
-            // // 4. Update ulang sq_qty di PR Detail
-            // foreach ($poDetails as $poDetail) {
-            //     if ($poDetail->sales_quotation_detail_id) {
-            //         // Hitung total dari semua SO yang aktif
-            //         $totalPoForThisItem = DeliveryOrderDetail::where('sales_quotation_detail_id', $poDetail->sales_quotation_detail_id)
-            //             ->where('active', 1)
-            //             ->sum('qty');
-
-            //         // Update ke tabel PR Detail
-            //         DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $poDetail->sales_quotation_detail_id)
-            //             ->update(['sq_qty' => $totalPoForThisItem]);
-
-            //         // Simpan ID PR untuk update status
-            //         $prDetail = DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $poDetail->sales_quotation_detail_id)
-            //             ->first();
-
-            //         if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
-            //             $involvedPrIds[] = $prDetail->sales_quotation_id;
-            //         }
-            //     }
-            // }
-
-            // // 5. Update Status PR Master
-            // foreach ($involvedPrIds as $prId) {
-            //     $allDetails = DB::table('sales_quotation_detail_'.date('Y'))
-            //         ->where('sales_quotation_id', $prId)
-            //         ->get();
-
-            //     $totalRequested = $allDetails->sum('qty');
-            //     $totalOrdered = $allDetails->sum('sq_qty');
-
-            //     if ($totalOrdered >= $totalRequested) {
-            //         $status = 'closed';
-            //     } elseif ($totalOrdered > 0) {
-            //         $status = 'partial';
-            //     } else {
-            //         $status = 'processing';
-            //     }
-
-            //     DB::table('sales_quotation_'.date('Y'))
-            //         ->where('id', $prId)
-            //         ->update(['status' => $status]);
-            // }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Delivery Order berhasil dikembalikan (restored).',
-            ], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal merestore data: '.$e->getMessage(),
-            ], 500);
+            StockMutation::create([
+                'data_barang_id'  => $detail->data_barang_id,
+                'unit_id'         => $detail->unit_id,
+                'warehouse_id'    => $detail->warehouse_id,
+                'date_stock'      => $do->delivery_order_date,
+                'qty_transaksi'   => $detail->qty,
+                'total_base_qty'  => $detail->qty,
+                 'keterangan' => sprintf(
+                                'Pengiriman barang ke customer %s melalui DO %s',
+                                 $do->customerID->nama_customer ?? 'Customer Tidak Diketahui',
+                                $do->delivery_order_code
+                            ),
+                'type'            => 'out',
+                'document_id'     => $do->id,
+                'document_number' => $do->delivery_order_code,
+                'document_type'   => 'delivery_order',
+                'created_by'      => Auth::id(),
+            ]);
         }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Delivery Order berhasil direstore.',
+        ]);
+
+    } catch (\Exception $e) {
+
+        DB::rollBack();
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+        ], 500);
     }
+}
 
     public function restoreMultiple(Request $request)
     {
@@ -1163,32 +1290,32 @@ class DeliveryOrderController extends Controller
 
             // // 4. Update sq_qty di PR Detail dan kumpulkan ID PR Master
             // foreach ($poDetails as $poDetail) {
-            //     if ($poDetail->sales_quotation_detail_id) {
+            //     if ($poDetail->sales_order_detail_id) {
             //         // Hitung total dari semua SO yang aktif
-            //         $totalPoForThisItem = DeliveryOrderDetail::where('sales_quotation_detail_id', $poDetail->sales_quotation_detail_id)
+            //         $totalPoForThisItem = DeliveryOrderDetail::where('sales_order_detail_id', $poDetail->sales_order_detail_id)
             //             ->where('active', 1)
             //             ->sum('qty');
 
             //         // Update ke tabel PR Detail
-            //         DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $poDetail->sales_quotation_detail_id)
+            //         DB::table('sales_order_detail_'.date('Y'))
+            //             ->where('id', $poDetail->sales_order_detail_id)
             //             ->update(['sq_qty' => $totalPoForThisItem]);
 
             //         // Simpan ID PR untuk update status nanti (hindari duplikat)
-            //         $prDetail = DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $poDetail->sales_quotation_detail_id)
+            //         $prDetail = DB::table('sales_order_detail_'.date('Y'))
+            //             ->where('id', $poDetail->sales_order_detail_id)
             //             ->first();
 
-            //         if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
-            //             $involvedPrIds[] = $prDetail->sales_quotation_id;
+            //         if ($prDetail && ! in_array($prDetail->sales_order_id, $involvedPrIds)) {
+            //             $involvedPrIds[] = $prDetail->sales_order_id;
             //         }
             //     }
             // }
 
             // // 5. Update Status PR Master berdasarkan akumulasi terbaru
             // foreach ($involvedPrIds as $prId) {
-            //     $allDetails = DB::table('sales_quotation_detail_'.date('Y'))
-            //         ->where('sales_quotation_id', $prId)
+            //     $allDetails = DB::table('sales_order_detail_'.date('Y'))
+            //         ->where('sales_order_id', $prId)
             //         ->get();
 
             //     $totalRequested = $allDetails->sum('qty');
@@ -1202,7 +1329,7 @@ class DeliveryOrderController extends Controller
             //         $status = 'processing';
             //     }
 
-            //     DB::table('sales_quotation_'.date('Y'))
+            //     DB::table('sales_order_'.date('Y'))
             //         ->where('id', $prId)
             //         ->update(['status' => $status]);
             // }
@@ -1231,7 +1358,7 @@ class DeliveryOrderController extends Controller
         if (empty($ids)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tidak ada data PO yang dipilih.',
+                'message' => 'Tidak ada data SO yang dipilih.',
                 'data' => [],
             ]);
         }
@@ -1240,6 +1367,7 @@ class DeliveryOrderController extends Controller
             'produkID',
             'unitID',
             'salesOrder',
+            'warehouseID', 
         ])
             ->whereIn('sales_order_id', $ids)
             ->where('active', 1)
@@ -1274,10 +1402,10 @@ class DeliveryOrderController extends Controller
                 'received_qty' => $receivedQty,
                 'unit_id' => $item->unit_id,
                 'unit_name' => $item->unitID->detail ?? '-',
-                'order_code' => $item->salesOrder->code ?? '',
+                'order_code' => $item->salesOrder->sales_order_code ?? '',
                 'pr_status' => $item->salesOrder->status ?? '',
-                'warehouse_id' => $item->warehouseID->warehouse_id,
-                'warehouse' => '-',
+                'warehouse_id' => $item->warehouse_id,
+                'warehouse'    => $item->warehouseID?->nama_gudang ?? '-',
             ];
         })->filter()->values();
         //    dd($details);

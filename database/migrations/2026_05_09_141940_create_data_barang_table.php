@@ -85,7 +85,7 @@ return new class extends Migration
             $table->decimal('total_base_qty', 15, 4);
             $table->enum('type', ['in', 'out']);
             $table->string('keterangan')->nullable();
-
+            $table->unsignedBigInteger('document_id')->nullable();
             // Tambahkan kolom ini untuk melacak siapa yang melakukan transaksi
             $table->string('document_number')->nullable(); // Nomor dokumen (misal: RI-001, DO-999)
             $table->enum('document_type', ['receive_item', 'delivery_order', 'initial_stock', 'adjustment', 'item_transfer'])->default('initial_stock');

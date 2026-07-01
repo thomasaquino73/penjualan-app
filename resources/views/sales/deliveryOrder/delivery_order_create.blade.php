@@ -22,16 +22,15 @@
 
             <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
 
-            <div class="col-12 col-lg-5">
+            {{-- <div class="col-12 col-lg-5">
                 <div
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
                     <button class="btn btn-success btn-sm " id="showModalpr">
                         <i class="ti ti-clipboard me-1"></i>SALES ORDER
                     </button>
-
                 </div>
-            </div>
+            </div> --}}
 
         </div>
         <div class="card-body table-responsive p-3">
@@ -261,8 +260,8 @@
                         data: "data_produk",
                         render: function(data, type, row) {
                             // Menampilkan kode referensi PR di bawah nama produk jika ada
-                            if (row.quotation_code) {
-                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.quotation_code}</small>`;
+                            if (row.order_code) {
+                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.order_code}</small>`;
                             }
                             return `<strong>${data}</strong>`;
                         }
@@ -350,7 +349,7 @@
                                     // // --- AMANKAN DATA ID RELASI DI SINI ---
                                     // $("#modal_purchase_quotation_detail_id").val(data.detail_id ||
                                     //     data.purchase_quotation_detail_id || "");
-                                    // $("#modal_quotation_code").val(data.quotation_code || "");
+                                    // $("#modal_order_code").val(data.order_code || "");
 
                                     // // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
                                     // if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
@@ -939,11 +938,12 @@
                                             sisa_pr: sisaPr,
                                             unit_id: item.unit_id,
                                             unit: item.unit_name,
-                                            warehouse_id: null,
-                                            warehouse: '-', // Sesuaikan dengan controller Anda
+                                            warehouse: item.warehouse,
+                                            warehouse_id: item
+                                                .warehouse_id, // Sesuaikan dengan controller Anda
 
-                                            quotation_code: item
-                                                .quotation_code
+                                            order_code: item
+                                                .order_code
                                         });
                                     });
 
