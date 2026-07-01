@@ -332,14 +332,14 @@
                 });
 
             });
-            $(document).on('click', '.btn-submit-po', function() {
+            $(document).on('click', '.btn-process', function() {
                 let id = $(this).data('id');
-                let url = "{{ route('purchase-order.submit', ':id') }}".replace(':id', id);
+                let url = "{{ route('purchase-order.process', ':id') }}".replace(':id', id);
 
                 Swal.fire({
                     title: 'Are you sure?',
                     // PERBAIKAN: Mengubah kata "Purchase Requisition" menjadi "Purchase Order"
-                    text: "This Purchase Order will be submitted for approval!",
+                    text: "This Purchase Order will be submitted for proccess!",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, submit it!',
@@ -407,171 +407,246 @@
                     }
                 });
             });
+            // $(document).on('click', '.btn-submit-po', function() {
+            //     let id = $(this).data('id');
+            //     let url = "{{ route('purchase-order.submit', ':id') }}".replace(':id', id);
 
-            $(document).on('click', '.btn-approval-po', function() {
-                let id = $(this).data('id');
-                let statusTarget = $(this).data('status'); // Nilai dari HTML: 'approved' atau 'rejected'
+            //     Swal.fire({
+            //         title: 'Are you sure?',
+            //         // PERBAIKAN: Mengubah kata "Purchase Requisition" menjadi "Purchase Order"
+            //         text: "This Purchase Order will be submitted for approval!",
+            //         icon: 'warning',
+            //         showCancelButton: true,
+            //         confirmButtonText: 'Yes, submit it!',
+            //         cancelButtonText: 'Cancel',
+            //         customClass: {
+            //             confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+            //             cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+            //         },
+            //         buttonsStyling: false
+            //     }).then((result) => {
+            //         if (result.isConfirmed) {
+            //             $.ajax({
+            //                 url: url,
+            //                 type: 'POST',
+            //                 data: {
+            //                     _token: '{{ csrf_token() }}'
+            //                 },
+            //                 success: function(response) {
+            //                     if (response.success) {
+            //                         // Menggunakan toastr untuk notifikasi sukses yang sleek
+            //                         toastr.success(response.message ||
+            //                             'Submitted Data Successfully', '', {
+            //                                 timeOut: 1500,
+            //                                 progressBar: true,
+            //                                 closeButton: false,
+            //                                 positionClass: 'toast-top-right',
+            //                             });
 
-                // =========================================================================
-                // PERBAIKAN: Mengubah acuan kata 'processing' menjadi 'approved'
-                // =========================================================================
-                let isApprove = statusTarget === 'approved';
-                let textKeterangan = isApprove ? 'approve' : 'reject';
-                let confirmBtnColor = isApprove ? '#28a745' : '#dc3545';
-                let confirmBtnText = isApprove ? 'Yes, Approve!' : 'Yes, Reject!';
-                let confirmBtnClass = isApprove ?
-                    'btn btn-success me-3 waves-effect waves-light' :
-                    'btn btn-danger me-3 waves-effect waves-light';
+            //                         // Reload data server-side tanpa merusak pagination halaman
+            //                         // NOTE: Pastikan ID tabel Anda cocok (misal '#po-table' atau '#table')
+            //                         if ($.fn.DataTable.isDataTable('#table')) {
+            //                             $('#table').DataTable().ajax.reload(null,
+            //                                 false);
+            //                         }
+            //                     } else {
+            //                         Swal.fire({
+            //                             title: 'Warning!',
+            //                             text: response.message ||
+            //                                 'Failed to submit data.',
+            //                             icon: 'warning',
+            //                             customClass: {
+            //                                 confirmButton: 'btn btn-primary waves-effect waves-light'
+            //                             },
+            //                             buttonsStyling: false
+            //                         });
+            //                     }
+            //                 },
+            //                 error: function(xhr) {
+            //                     let errorMsg = xhr.responseJSON && xhr.responseJSON
+            //                         .message ?
+            //                         xhr.responseJSON.message :
+            //                         'Failed to submit data.';
 
-                Swal.fire({
-                    title: 'Are you sure?',
-                    // PERBAIKAN: Mengubah teks berkas menjadi Purchase Order
-                    text: `You are about to ${textKeterangan} this Purchase Order document.`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: confirmBtnColor,
-                    confirmButtonText: confirmBtnText,
-                    customClass: {
-                        confirmButton: confirmBtnClass,
-                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
-                    },
-                    buttonsStyling: false
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: '/purchase-order/change-status/' + id,
-                            type: "POST",
-                            data: {
-                                _token: "{{ csrf_token() }}",
-                                id: id,
-                                status: statusTarget
-                            },
-                            success: function(response) {
-                                Swal.fire({
-                                    title: 'Success!',
-                                    text: response.message ||
-                                        'The status has been updated successfully.',
-                                    icon: 'success',
-                                    showCancelButton: false,
-                                    confirmButtonColor: '#28a745',
-                                    confirmButtonText: 'OK',
-                                    customClass: {
-                                        confirmButton: 'btn btn-success'
-                                    },
-                                    buttonsStyling: false
-                                });
+            //                     Swal.fire({
+            //                         title: 'Error!',
+            //                         text: errorMsg,
+            //                         icon: 'error',
+            //                         customClass: {
+            //                             confirmButton: 'btn btn-primary waves-effect waves-light'
+            //                         },
+            //                         buttonsStyling: false
+            //                     });
+            //                 }
+            //             });
+            //         }
+            //     });
+            // });
 
-                                // Reload table tanpa melompat ke page 1 lagi
-                                if ($.fn.DataTable.isDataTable('#table')) {
-                                    $('#table').DataTable().ajax.reload(null, false);
-                                }
-                            },
-                            error: function(err) {
-                                let errorMessage = 'Something went wrong.';
-                                if (err.responseJSON && err.responseJSON.error) {
-                                    errorMessage = err.responseJSON.error;
-                                } else if (err.responseJSON && err.responseJSON
-                                    .message) {
-                                    errorMessage = err.responseJSON.message;
-                                }
+            // $(document).on('click', '.btn-approval-po', function() {
+            //     let id = $(this).data('id');
+            //     let statusTarget = $(this).data('status'); // Nilai dari HTML: 'approved' atau 'rejected'
 
-                                Swal.fire({
-                                    title: 'Failed!',
-                                    text: errorMessage,
-                                    icon: 'error',
-                                    showCancelButton: false,
-                                    confirmButtonColor: '#3085d6',
-                                    confirmButtonText: 'OK',
-                                    customClass: {
-                                        confirmButton: 'btn btn-primary'
-                                    },
-                                    buttonsStyling: false
-                                });
-                            }
-                        });
-                    }
-                });
-            });
+            //     // =========================================================================
+            //     // PERBAIKAN: Mengubah acuan kata 'processing' menjadi 'approved'
+            //     // =========================================================================
+            //     let isApprove = statusTarget === 'approved';
+            //     let textKeterangan = isApprove ? 'approve' : 'reject';
+            //     let confirmBtnColor = isApprove ? '#28a745' : '#dc3545';
+            //     let confirmBtnText = isApprove ? 'Yes, Approve!' : 'Yes, Reject!';
+            //     let confirmBtnClass = isApprove ?
+            //         'btn btn-success me-3 waves-effect waves-light' :
+            //         'btn btn-danger me-3 waves-effect waves-light';
 
-            $(document).on('click', '.btn-send-supplier', function() {
+            //     Swal.fire({
+            //         title: 'Are you sure?',
+            //         // PERBAIKAN: Mengubah teks berkas menjadi Purchase Order
+            //         text: `You are about to ${textKeterangan} this Purchase Order document.`,
+            //         icon: 'warning',
+            //         showCancelButton: true,
+            //         confirmButtonColor: confirmBtnColor,
+            //         confirmButtonText: confirmBtnText,
+            //         customClass: {
+            //             confirmButton: confirmBtnClass,
+            //             cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+            //         },
+            //         buttonsStyling: false
+            //     }).then((result) => {
+            //         if (result.isConfirmed) {
+            //             $.ajax({
+            //                 url: '/purchase-order/change-status/' + id,
+            //                 type: "POST",
+            //                 data: {
+            //                     _token: "{{ csrf_token() }}",
+            //                     id: id,
+            //                     status: statusTarget
+            //                 },
+            //                 success: function(response) {
+            //                     Swal.fire({
+            //                         title: 'Success!',
+            //                         text: response.message ||
+            //                             'The status has been updated successfully.',
+            //                         icon: 'success',
+            //                         showCancelButton: false,
+            //                         confirmButtonColor: '#28a745',
+            //                         confirmButtonText: 'OK',
+            //                         customClass: {
+            //                             confirmButton: 'btn btn-success'
+            //                         },
+            //                         buttonsStyling: false
+            //                     });
 
-                let id = $(this).data('id');
+            //                     // Reload table tanpa melompat ke page 1 lagi
+            //                     if ($.fn.DataTable.isDataTable('#table')) {
+            //                         $('#table').DataTable().ajax.reload(null, false);
+            //                     }
+            //                 },
+            //                 error: function(err) {
+            //                     let errorMessage = 'Something went wrong.';
+            //                     if (err.responseJSON && err.responseJSON.error) {
+            //                         errorMessage = err.responseJSON.error;
+            //                     } else if (err.responseJSON && err.responseJSON
+            //                         .message) {
+            //                         errorMessage = err.responseJSON.message;
+            //                     }
 
-                Swal.fire({
-                    title: 'Send PO to Supplier?',
-                    text: "This PO will be marked as sent.",
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, Send',
-                    cancelButtonText: 'Cancel',
-                    customClass: {
-                        confirmButton: 'btn btn-success',
-                        cancelButton: 'btn btn-secondary'
-                    },
-                    buttonsStyling: false
-                }).then((result) => {
+            //                     Swal.fire({
+            //                         title: 'Failed!',
+            //                         text: errorMessage,
+            //                         icon: 'error',
+            //                         showCancelButton: false,
+            //                         confirmButtonColor: '#3085d6',
+            //                         confirmButtonText: 'OK',
+            //                         customClass: {
+            //                             confirmButton: 'btn btn-primary'
+            //                         },
+            //                         buttonsStyling: false
+            //                     });
+            //                 }
+            //             });
+            //         }
+            //     });
+            // });
 
-                    if (result.isConfirmed) {
+            // $(document).on('click', '.btn-send-supplier', function() {
 
-                        $.ajax({
-                            url: '/purchase-order/send-supplier/' + id,
-                            type: 'POST',
-                            data: {
-                                _token: $('meta[name="csrf-token"]').attr('content')
-                            },
+            //     let id = $(this).data('id');
 
-                            beforeSend: function() {
+            //     Swal.fire({
+            //         title: 'Send PO to Supplier?',
+            //         text: "This PO will be marked as sent.",
+            //         icon: 'question',
+            //         showCancelButton: true,
+            //         confirmButtonText: 'Yes, Send',
+            //         cancelButtonText: 'Cancel',
+            //         customClass: {
+            //             confirmButton: 'btn btn-success',
+            //             cancelButton: 'btn btn-secondary'
+            //         },
+            //         buttonsStyling: false
+            //     }).then((result) => {
 
-                                Swal.fire({
-                                    title: 'Processing...',
-                                    text: 'Please wait...',
-                                    allowOutsideClick: false,
-                                    allowEscapeKey: false,
-                                    showConfirmButton: false,
-                                    showCancelButton: false,
-                                    didOpen: () => {
-                                        Swal.showLoading();
-                                    },
-                                    customClass: {
-                                        confirmButton: false
-                                    },
-                                    buttonsStyling: false
-                                });
+            //         if (result.isConfirmed) {
 
-                            },
+            //             $.ajax({
+            //                 url: '/purchase-order/send-supplier/' + id,
+            //                 type: 'POST',
+            //                 data: {
+            //                     _token: $('meta[name="csrf-token"]').attr('content')
+            //                 },
 
-                            success: function(response) {
+            //                 beforeSend: function() {
 
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Success',
-                                    text: response.message,
-                                    customClass: {
-                                        confirmButton: 'btn btn-success'
-                                    },
-                                    buttonsStyling: false
-                                });
+            //                     Swal.fire({
+            //                         title: 'Processing...',
+            //                         text: 'Please wait...',
+            //                         allowOutsideClick: false,
+            //                         allowEscapeKey: false,
+            //                         showConfirmButton: false,
+            //                         showCancelButton: false,
+            //                         didOpen: () => {
+            //                             Swal.showLoading();
+            //                         },
+            //                         customClass: {
+            //                             confirmButton: false
+            //                         },
+            //                         buttonsStyling: false
+            //                     });
 
-                                $('#table').DataTable().ajax.reload(null, false);
-                            },
+            //                 },
 
-                            error: function(xhr) {
+            //                 success: function(response) {
 
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: xhr.responseJSON.message,
-                                    customClass: {
-                                        confirmButton: 'btn btn-danger'
-                                    },
-                                    buttonsStyling: false
-                                });
-                            }
-                        });
+            //                     Swal.fire({
+            //                         icon: 'success',
+            //                         title: 'Success',
+            //                         text: response.message,
+            //                         customClass: {
+            //                             confirmButton: 'btn btn-success'
+            //                         },
+            //                         buttonsStyling: false
+            //                     });
 
-                    }
-                });
-            });
+            //                     $('#table').DataTable().ajax.reload(null, false);
+            //                 },
+
+            //                 error: function(xhr) {
+
+            //                     Swal.fire({
+            //                         icon: 'error',
+            //                         title: 'Error',
+            //                         text: xhr.responseJSON.message,
+            //                         customClass: {
+            //                             confirmButton: 'btn btn-danger'
+            //                         },
+            //                         buttonsStyling: false
+            //                     });
+            //                 }
+            //             });
+
+            //         }
+            //     });
+            // });
 
             $('body').on('click', '#close', function() {
                 let id = $(this).data('id');

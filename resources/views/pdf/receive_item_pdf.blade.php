@@ -299,34 +299,35 @@
     <table class="w-100 info-table">
         <tr>
             <td style="padding-right: 25px;">
-                <div class="section-title">Kepada</div>
+                <div class="section-title">Supplier</div>
                 <div class="recipient-box">
-                    <strong>{{ $model->supplier->nama_supplier }}</strong><br>
+                    <strong>{{ $model->supplierId->nama_supplier }}</strong><br>
                     {{ $model->shipping_address }}
 
                 </div>
             </td>
             <td style="padding-left: 25px;">
-                <div class="po-box-title">Purchase Order</div>
+                <div class="po-box-title">Receive Item</div>
                 <table class="po-details-table">
                     <tr>
                         <td class="label">Nomor</td>
                         <td class="colon">:</td>
-                        <td class="value">{{ $model->code }}</td>
+                        <td class="value">{{ $model->receive_item_code }}</td>
                     </tr>
                     <tr>
                         <td class="label">Tanggal</td>
                         <td class="colon">:</td>
                         <td class="value">
-                            {{ date('d M Y', strtotime($model->datePO)) }}</td>
+                            {{ date('d M Y', strtotime($model->receive_item_date)) }}</td>
                     </tr>
                     <tr>
-                        <td class="label">Tanggal Kirim</td>
+                        <td class="label">No. Dokumen</td>
                         <td class="colon">:</td>
                         <td class="value">
-                            {{ isset($model->tanggal_kirim) ? date('d M Y', strtotime($model->tanggal_kirim)) : '' }}
+                            {{ $model->no_dokumen }}
                         </td>
                     </tr>
+
                 </table>
             </td>
         </tr>
@@ -338,9 +339,8 @@
                 <th style="width: 14%;">Kode Barang</th>
                 <th style="width: 40%;">Nama Barang</th>
                 <th style="width: 8%; text-align: center;">Kts.</th>
-                <th style="width: 12%; text-align: right;">@Harga</th>
-                <th style="width: 12%; text-align: right;">Diskon</th>
-                <th style="width: 14%; text-align: right;">Total</th>
+                <th style="width: 8%; text-align: center;">Sat.</th>
+                <th style="width: 40%;">Gudang</th>
             </tr>
         </thead>
         <tbody>
@@ -349,9 +349,8 @@
                     <td>{{ $detail->produkID->id_barang }}</td>
                     <td>{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}</td>
                     <td class="text-center">{{ rtrim(rtrim(number_format($detail->qty, 2, ',', '.'), '0'), ',') }}</td>
-                    <td class="text-right">{{ number_format($detail->unit_price, 0, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detail->discount, 0, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detail->amount, 0, ',', '.') }}</td>
+                    <td>{{ $detail->unitID ? $detail->unitID->detail : 'Unit Not Found' }}</td>
+                    <td>{{ $detail->warehouseID ? $detail->warehouseID->nama_gudang : 'Warehouse Not Found' }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -363,84 +362,45 @@
                 <div class="keterangan-title">Keterangan</div>
                 <div class="keterangan-content">{{ $model->description }}</div>
             </td>
-            <td class="summary-box">
-                <table class="summary-table">
-                    <tr>
-                        <td>Sub Total</td>
-                        <td class="text-right">
-                            {{ isset($model) ? format_uang(convert_currency($model->sub_total, $detail->currency_id ?? 1)) : '' }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Diskon</td>
-                        <td class="text-right">
-                            {{ isset($model) ? format_uang(convert_currency($model->disc_nominal, $detail->currency_id ?? 1)) : '' }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>PPN (11%)</td>
-                        <td class="text-right">
-                            {{ isset($model) ? format_uang(convert_currency($model->tax_amount, $detail->currency_id ?? 1)) : '' }}
-                        </td>
-                    </tr>
-                    {{-- <tr>
-                        <td>Biaya Lain-lain</td>
-                        <td class="text-right">0</td>
-                    </tr> --}}
-                    <tr class="total-row">
-                        <td>Total</td>
-                        <td class="text-right">
-                            {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1)) : '' }}
-                        </td>
-                    </tr>
-                </table>
-            </td>
         </tr>
     </table>
 
     <div class="signature-section">
         <table class="signature-table">
             <tr>
-                <td style="width: 60%;">
+                <td style="width:50%;">
                     <div class="dots-line"></div>
                 </td>
-                <td class="text-center" style="width: 40%;">
-                    @php
-                        $title = '';
-                        $user = '';
 
-                        if ($model->status == 'rejected') {
-                            $title = 'Ditolak Oleh,';
-                            $user = $model->rejectedBy?->fullname;
-                        } elseif (in_array($model->status, ['approved', 'sent', 'partially_received', 'completed'])) {
-                            $title = 'Disetujui Oleh,';
-                            $user = $model->approvedBy?->fullname;
-                        }
-                    @endphp
-                    @if ($model->status == 'processing')
-                        <div class="approval-title">
-                            Disetujui Oleh
-                        </div>
-                        <div style="height: 65px;">
-                            <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height: 80px;">
-                        </div>
-                        <div style="font-weight: bold; text-decoration: underline;">
-                            Yohanes Lukman
-                        </div>
-                    @else
-                        <div class="approval-title">
-                            Dibuat oleh,
-                        </div>
-                        <div style="height: 65px;">
-                            <img src="{{ public_path('image/logo/69fd6d6ab719c1778216298.png') }}"
-                                style="height: 80px;">
-                        </div>
-                        <div style="font-weight: bold; text-decoration: underline;">
-                            {{ $model->creator->fullname }}
-                        </div>
-                    @endif
+                <td style="width:50%; padding:0;">
+                    <table style="width:100%;">
+                        <tr>
+                            <td style="width:50%; text-align:center;">
+                                <div class="approval-title">Diterima oleh</div>
 
+                                <div style="height:65px;">
+                                    <img src="{{ public_path('image/logo/69fd6d6ab719c1778216298.png') }}"
+                                        style="height:80px;">
+                                </div>
 
+                                <div style="font-weight:bold;text-decoration:underline;">
+                                    {{ $model->creator->fullname }}
+                                </div>
+                            </td>
+
+                            <td style="width:50%; text-align:center;">
+                                <div class="approval-title">Disetujui Oleh</div>
+
+                                <div style="height:65px;">
+                                    <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height:80px;">
+                                </div>
+
+                                <div style="font-weight:bold;text-decoration:underline;">
+                                    Yohanes Lukman
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
         </table>

@@ -22,6 +22,7 @@ use App\Http\Controllers\Sales\Customer\CustomerController;
 use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
 use App\Http\Controllers\Sales\DeliveryOrderController;
 use App\Http\Controllers\Sales\KasirController;
+use App\Http\Controllers\Sales\ProformaInvoiceController;
 use App\Http\Controllers\Sales\SalesInvoiceController;
 use App\Http\Controllers\Sales\SalesOrderController;
 use App\Http\Controllers\Sales\SalesQuotationController;
@@ -250,6 +251,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/trash', [PurchaseOrderController::class, 'trash'])->name('trash');
         Route::get('/get-processing-requisitions', [PurchaseOrderController::class, 'getProcessingData'])->name('requisitions.processing');
         Route::post('/{id}/submit', [PurchaseOrderController::class, 'submitToPending'])->name('submit');
+        Route::post('/{id}/process', [PurchaseOrderController::class, 'processData'])->name('process');
         Route::post('/change-status/{id}', [PurchaseOrderController::class, 'changeStatus']);
         Route::get('/print/{id}', [PurchaseOrderController::class, 'print'])->name('print');
         Route::get('/po/price-history', [PurchaseOrderController::class, 'getPriceHistory']);
@@ -324,6 +326,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('delivery-order', DeliveryOrderController::class);
 
     // INVOICE
+    Route::get('/sales-invoice/wh/get-stock', [SalesInvoiceController::class, 'getStock'])->name('sales-invoice.wh.get-stock');
     Route::post('/sales-invoice/restore-multiple', [SalesInvoiceController::class, 'restoreMultiple']);
     Route::put('/sales-invoice/restore/{id}', [SalesInvoiceController::class, 'restore'])->name('sales-invoice.restore');
     Route::post('/sales-invoice/delete-multiple', [SalesInvoiceController::class, 'deleteMultiple']);
@@ -333,6 +336,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/sales-invoice/{id}/submit', [SalesInvoiceController::class, 'submitToPending'])->name('sales-invoice.submit');
     Route::get('/sales-invoice/trash', [SalesInvoiceController::class, 'trash'])->name('sales-invoice.trash');
     Route::resource('sales-invoice', SalesInvoiceController::class);
+
+    Route::get('/proforma-invoice/wh/get-stock', [ProformaInvoiceController::class, 'getStock'])->name('proforma-invoice.wh.get-stock');
+    Route::post('/proforma-invoice/restore-multiple', [ProformaInvoiceController::class, 'restoreMultiple']);
+    Route::put('/proforma-invoice/restore/{id}', [ProformaInvoiceController::class, 'restore'])->name('proforma-invoice.restore');
+    Route::post('/proforma-invoice/delete-multiple', [ProformaInvoiceController::class, 'deleteMultiple']);
+    Route::get('/proforma-invoice/print/{id}', [ProformaInvoiceController::class, 'print'])->name('proforma-invoice.print');
+    Route::get('/proforma-invoice/get-units-by-product/{id}', [ProformaInvoiceController::class, 'getUnitsByProduct'])->name('proforma-invoice.get_units');
+    Route::get('/proforma-invoice/sq/price-history', [ProformaInvoiceController::class, 'getPriceHistory']);
+    Route::post('/proforma-invoice/{id}/submit', [ProformaInvoiceController::class, 'submitToPending'])->name('proforma-invoice.submit');
+    Route::get('/proforma-invoice/trash', [ProformaInvoiceController::class, 'trash'])->name('proforma-invoice.trash');
+    Route::resource('proforma-invoice', ProformaInvoiceController::class);
 
 });
 

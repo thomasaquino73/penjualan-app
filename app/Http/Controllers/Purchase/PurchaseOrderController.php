@@ -97,9 +97,9 @@ class PurchaseOrderController extends Controller
                             $text = 'Draft';
                             break;
 
-                        case 'pending':
+                        case 'processing':
                             $badge = 'bg-label-warning';
-                            $text = 'Pending Approval';
+                            $text = 'Processing';
                             break;
 
                         case 'approved':
@@ -243,15 +243,27 @@ class PurchaseOrderController extends Controller
                     if ($row->created_by == $currentUserId) {
 
                         // SEND TO APPROVAL
+                        // if ($row->status == 'draft') {
+
+                        //     $btn .= '
+                        //         <a class="dropdown-item btn-submit-po"
+                        //             href="javascript:void(0)"
+                        //             data-id="'.$row->id.'">
+
+                        //             <i class="ti ti-send me-1"></i>
+                        //             Send To Approval
+                        //         </a>
+                        //     ';
+                        // }
                         if ($row->status == 'draft') {
 
                             $btn .= '
-                                <a class="dropdown-item btn-submit-po"
+                                <a class="dropdown-item btn-process"
                                     href="javascript:void(0)"
                                     data-id="'.$row->id.'">
 
                                     <i class="ti ti-send me-1"></i>
-                                    Send To Approval
+                                    Send To Process
                                 </a>
                             ';
                         }
@@ -259,7 +271,7 @@ class PurchaseOrderController extends Controller
                         // EDIT
                         if (
                             $user->can('purchase_order-edit') &&
-                            in_array($row->status, ['draft', 'rejected', 'pending'])
+                            in_array($row->status, ['draft', 'pending', 'processing'])
                         ) {
 
                             $btn .= '
@@ -298,36 +310,36 @@ class PurchaseOrderController extends Controller
                     |--------------------------------------------------------------------------
                     */
 
-                    if (
-                        $row->created_by != $currentUserId &&
-                        $user->can('purchase_order-approval')
-                    ) {
+                    // if (
+                    //     $row->created_by != $currentUserId &&
+                    //     $user->can('purchase_order-approval')
+                    // ) {
 
-                        if ($row->status == 'pending') {
+                    //     if ($row->status == 'pending') {
 
-                            $btn .= '
-                                    <a class="dropdown-item text-success btn-approval-po"
-                                        href="javascript:void(0)"
-                                        data-status="approved"
-                                        data-id="'.$row->id.'">
+                    //         $btn .= '
+                    //                 <a class="dropdown-item text-success btn-approval-po"
+                    //                     href="javascript:void(0)"
+                    //                     data-status="approved"
+                    //                     data-id="'.$row->id.'">
 
-                                        <i class="ti ti-check me-1"></i>
-                                        Approve PO
-                                    </a>
-                                ';
+                    //                     <i class="ti ti-check me-1"></i>
+                    //                     Approve PO
+                    //                 </a>
+                    //             ';
 
-                            $btn .= '
-                                    <a class="dropdown-item text-danger btn-approval-po"
-                                        href="javascript:void(0)"
-                                        data-status="rejected"
-                                        data-id="'.$row->id.'">
+                    //         $btn .= '
+                    //                 <a class="dropdown-item text-danger btn-approval-po"
+                    //                     href="javascript:void(0)"
+                    //                     data-status="rejected"
+                    //                     data-id="'.$row->id.'">
 
-                                        <i class="ti ti-x me-1"></i>
-                                        Reject PO
-                                    </a>
-                                ';
-                        }
-                    }
+                    //                     <i class="ti ti-x me-1"></i>
+                    //                     Reject PO
+                    //                 </a>
+                    //             ';
+                    //     }
+                    // }
 
                     /*
                     |--------------------------------------------------------------------------
@@ -1756,8 +1768,7 @@ class PurchaseOrderController extends Controller
             ], 500);
         }
     }
-
-    public function submitToPending($id)
+    public function processData($id)
     {
         // 1. Ambil tahun berjalan secara dinamis
         $year = date('Y');
@@ -1781,7 +1792,7 @@ class PurchaseOrderController extends Controller
 
         // 4. Lakukan pembaruan status menggunakan Query Builder demi stabilitas tabel dinamis
         DB::table($tableName)->where('id', $id)->update([
-            'status' => 'pending',
+            'status' => 'processing',
             'updated_by' => Auth::user()->id,
             'updated_at' => now(), // Mengisi timestamp bawaan laravel secara manual karena menggunakan Query Builder
         ]);
@@ -1789,62 +1800,94 @@ class PurchaseOrderController extends Controller
         return response()->json(['success' => true, 'message' => 'Purchase Order berhasil diajukan!']);
     }
 
-    public function changeStatus(Request $request, $id)
-    {
-        // 1. Ambil tahun berjalan secara dinamis untuk dynamic table
-        $year = date('Y');
-        $tableName = "purchase_order_{$year}";
+    // public function submitToPending($id)
+    // {
+    //     // 1. Ambil tahun berjalan secara dinamis
+    //     $year = date('Y');
+    //     $tableName = "purchase_order_{$year}";
 
-        // 2. Cari data PO berdasarkan ID menggunakan Query Builder
-        $poData = DB::table($tableName)->where('id', $id)->first();
+    //     // 2. Gunakan Query Builder dengan nama tabel dinamis agar pencarian ID aman
+    //     $poData = DB::table($tableName)->where('id', $id)->first();
 
-        // Validasi jika data tidak ditemukan
-        if (! $poData) {
-            return response()->json(['error' => 'Data Purchase Order tidak ditemukan.'], 404);
-        }
+    //     // Jika data memang benar-benar tidak ditemukan di database
+    //     if (! $poData) {
+    //         return response()->json(['success' => false, 'message' => 'Data Purchase Order tidak ditemukan.'], 404);
+    //     }
 
-        // 3. Validasi Keamanan: Pastikan yang mengubah status BUKAN orang yang membuat dokumen (Anti Self-Approval)
-        if ($poData->created_by === Auth::user()->id) {
-            return response()->json(['error' => 'You may not approve/reject documents you create yourself!'], 403);
-        }
+    //     // 3. Validasi Keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
+    //     if ($poData->status !== 'draft' || $poData->created_by != Auth::id()) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.',
+    //         ], 403);
+    //     }
 
-        // 4. Validasi Input Status (Memastikan hanya menerima 'approved' atau 'rejected')
-        $statusTarget = $request->input('status');
-        if (! in_array($statusTarget, ['approved', 'rejected'])) {
-            return response()->json(['error' => 'Status target tidak valid.'], 400);
-        }
+    //     // 4. Lakukan pembaruan status menggunakan Query Builder demi stabilitas tabel dinamis
+    //     DB::table($tableName)->where('id', $id)->update([
+    //         'status' => 'pending',
+    //         'updated_by' => Auth::user()->id,
+    //         'updated_at' => now(), // Mengisi timestamp bawaan laravel secara manual karena menggunakan Query Builder
+    //     ]);
 
-        // 5. Eksekusi Update ke Database
-        DB::table($tableName)->where('id', $id)->update([
-            'status' => $statusTarget,
-            'pic_by' => Auth::id(),
-            'pic_at' => now(), // Isi timestamp manual karena menggunakan Query Builder
-        ]);
+    //     return response()->json(['success' => true, 'message' => 'Purchase Order berhasil diajukan!']);
+    // }
 
-        // ==========================================
-        // 5b. OTOMATISASI: Kirim dokumen hanya jika statusnya 'approved'
-        // ==========================================
-        if ($statusTarget === 'approved') {
-            try {
-                // Panggil fungsi atau service pengiriman dokumen Anda di sini.
-                // Contoh jika menggunakan Mail Laravel:
-                // Mail::to($poData->vendor_email)->send(new PurchaseOrderMail($poData));
+    // public function changeStatus(Request $request, $id)
+    // {
+    //     // 1. Ambil tahun berjalan secara dinamis untuk dynamic table
+    //     $year = date('Y');
+    //     $tableName = "purchase_order_{$year}";
 
-                // Atau jika menggunakan job queue (Sangat disarankan agar performa aplikasi tetap cepat):
-                // SendPurchaseOrderJob::dispatch($poData);
+    //     // 2. Cari data PO berdasarkan ID menggunakan Query Builder
+    //     $poData = DB::table($tableName)->where('id', $id)->first();
 
-            } catch (\Exception $e) {
-            }
-        }
+    //     // Validasi jika data tidak ditemukan
+    //     if (! $poData) {
+    //         return response()->json(['error' => 'Data Purchase Order tidak ditemukan.'], 404);
+    //     }
 
-        // 6. Return response dengan pesan dinamis sesuai aksi (Approve / Reject)
-        $messageText = $statusTarget === 'approved' ? 'approved' : 'rejected';
+    //     // 3. Validasi Keamanan: Pastikan yang mengubah status BUKAN orang yang membuat dokumen (Anti Self-Approval)
+    //     if ($poData->created_by === Auth::user()->id) {
+    //         return response()->json(['error' => 'You may not approve/reject documents you create yourself!'], 403);
+    //     }
 
-        return response()->json([
-            'success' => true,
-            'message' => "Purchase Order status successfully {$messageText}!",
-        ], 200);
-    }
+    //     // 4. Validasi Input Status (Memastikan hanya menerima 'approved' atau 'rejected')
+    //     $statusTarget = $request->input('status');
+    //     if (! in_array($statusTarget, ['approved', 'rejected'])) {
+    //         return response()->json(['error' => 'Status target tidak valid.'], 400);
+    //     }
+
+    //     // 5. Eksekusi Update ke Database
+    //     DB::table($tableName)->where('id', $id)->update([
+    //         'status' => $statusTarget,
+    //         'pic_by' => Auth::id(),
+    //         'pic_at' => now(), // Isi timestamp manual karena menggunakan Query Builder
+    //     ]);
+
+    //     // ==========================================
+    //     // 5b. OTOMATISASI: Kirim dokumen hanya jika statusnya 'approved'
+    //     // ==========================================
+    //     if ($statusTarget === 'approved') {
+    //         try {
+    //             // Panggil fungsi atau service pengiriman dokumen Anda di sini.
+    //             // Contoh jika menggunakan Mail Laravel:
+    //             // Mail::to($poData->vendor_email)->send(new PurchaseOrderMail($poData));
+
+    //             // Atau jika menggunakan job queue (Sangat disarankan agar performa aplikasi tetap cepat):
+    //             // SendPurchaseOrderJob::dispatch($poData);
+
+    //         } catch (\Exception $e) {
+    //         }
+    //     }
+
+    //     // 6. Return response dengan pesan dinamis sesuai aksi (Approve / Reject)
+    //     $messageText = $statusTarget === 'approved' ? 'approved' : 'rejected';
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => "Purchase Order status successfully {$messageText}!",
+    //     ], 200);
+    // }
 
     public function show(string $id) {}
 

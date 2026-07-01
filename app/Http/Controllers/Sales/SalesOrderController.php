@@ -1076,7 +1076,7 @@ class SalesOrderController extends Controller
 
                     return '';
                 })
-                    ->addColumn('total', function ($row) {
+                ->addColumn('total', function ($row) {
                     return format_uang(convert_currency($row->grand_total, $row->currency_id ?? 1));
                 })
                 ->addColumn('action', function ($row) {

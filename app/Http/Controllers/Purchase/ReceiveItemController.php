@@ -15,6 +15,7 @@ use App\Models\Purchase\Supplier;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\StockMutation;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -184,12 +185,12 @@ class ReceiveItemController extends Controller
                      </a>';
                     }
 
-                    if ($row->status != 'closed') {
-                        $btn .= '<a class="dropdown-item"
-                href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->receive_item_code.'">
-                <i class="ti ti-lock"></i> Close RI
-             </a>';
-                    }
+            //         if ($row->status != 'closed') {
+            //             $btn .= '<a class="dropdown-item"
+            //     href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->receive_item_code.'">
+            //     <i class="ti ti-lock"></i> Close RI
+            //  </a>';
+            //         }
 
                     $btn .= '<a class="dropdown-item"
                 href="'.route('receive-item.show', $row->id).'">
@@ -434,7 +435,7 @@ class ReceiveItemController extends Controller
             ->where('active', 1)
             ->whereHas('purchaseOrder', function ($q) {
                 // Sesuaikan dengan status yang valid di database Anda
-                $q->whereIn('status', ['approved', 'partial']);
+                $q->whereIn('status', ['processing', 'partial'])->where('active','<>','0');
             })
             ->get();
 
@@ -488,7 +489,8 @@ class ReceiveItemController extends Controller
         ])
             ->where('supplier_id', $request->supplier_id)
         // ->whereNotIn('status', ['draft', 'closed', 'completed'])
-            ->whereIn('status', ['approved', 'partial'])
+            ->whereIn('status', ['processing', 'partial'])
+            ->where('active','<>','0')
             ->get();
 
         return response()->json($orders);
@@ -707,7 +709,41 @@ class ReceiveItemController extends Controller
 
     public function show($id) {}
 
-    public function print($id) {}
+    public function print($id)
+    {
+        $receiveItem = ReceiveItem::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $company = Company::first();
+        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+        $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+            }
+        }
+        $data = [
+            'model' => $receiveItem,
+            'company' => $company,
+            'modelDetail' => $receiveItem->details,
+            'logoBase64' => $logoBase64,
+        ];
+
+        $pdf = Pdf::loadView('pdf.receive_item_pdf', $data)
+            ->setPaper('a4', 'portrait');
+
+        // preview di browser
+        $filename = $receiveItem->receive_item_code.'-'.$receiveItem->supplierID->nama_supplier;
+
+        // replace forbidden filename chars
+        $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
+
+        return $pdf->stream($filename.'.pdf');
+
+        // kalau mau download:
+        // return $pdf->download('purchase-order.pdf');
+    }
 
     public function destroy(Request $request, $id)
     {

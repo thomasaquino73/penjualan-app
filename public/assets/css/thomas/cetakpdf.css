@@ -1,0 +1,243 @@
+  /* Pengaturan Kertas Cetak A4 */
+        @page {
+            size: A4;
+            margin: 15mm 12mm;
+            background-color: #ffffff;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+            line-height: 1.3;
+        }
+
+        .w-100 {
+            width: 100%;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        /* Bagian KOP / Header */
+        .header-table td {
+            vertical-align: top;
+        }
+
+        .logo-box {
+            width: 65px;
+            padding-right: 10px;
+        }
+
+        .logo-box svg {
+            width: 60px;
+            height: auto;
+        }
+
+        .company-contact {
+            width: 220px;
+            font-size: 10px;
+            line-height: 1.4;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .company-title {
+            font-size: 20pt;
+            font-weight: bold;
+            text-align: right;
+            letter-spacing: -0.5px;
+            margin: 0;
+        }
+
+        .company-address {
+            font-size: 9.5pt;
+            text-align: right;
+            line-height: 1.2;
+            color: #111111;
+        }
+
+        .divider {
+            border-top: 1.5px solid #000000;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        /* Detail Kepada & Nomor PO */
+        .info-table {
+            margin-bottom: 15px;
+        }
+
+        .info-table td {
+            vertical-align: top;
+            width: 50%;
+        }
+
+        .section-title {
+            font-size: 11pt;
+            font-weight: bold;
+            border-bottom: 1.5px solid #000000;
+            padding-bottom: 3px;
+            margin-bottom: 5px;
+        }
+
+        .recipient-box {
+            background-color: #e9ecef;
+            padding: 8px 10px;
+            min-height: 85px;
+            font-size: 10pt;
+            line-height: 1.25;
+        }
+
+        .po-box-title {
+            font-size: 18pt;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1.5px solid #000000;
+            padding-bottom: 2px;
+            margin-bottom: 5px;
+        }
+
+        .po-details-table {
+            width: 100%;
+            font-size: 10pt;
+        }
+
+        .po-details-table td {
+            padding: 2px 0;
+        }
+
+        .po-details-table td.label {
+            width: 32%;
+        }
+
+        .po-details-table td.colon {
+            width: 5%;
+            text-align: center;
+        }
+
+        .po-details-table td.value {
+            width: 63%;
+            background-color: #e9ecef;
+            padding-left: 6px;
+        }
+
+        /* Tabel Utama Barang */
+        .items-table {
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+
+        .items-table th {
+            background-color: #1a446c;
+            /* Warna Biru Navy Almex */
+            color: #ffffff;
+            font-weight: normal;
+            font-size: 10.5pt;
+            padding: 6px 8px;
+            text-align: left;
+        }
+
+        .items-table td {
+            padding: 5px 8px;
+            font-size: 10pt;
+            vertical-align: middle;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        /* Ringkasan Total (Summary) */
+        .footer-table {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .footer-table td {
+            vertical-align: top;
+        }
+
+        .keterangan-box {
+            width: 50%;
+            padding-right: 40px;
+        }
+
+        .keterangan-title {
+            font-weight: bold;
+            border-bottom: 1.5px solid #000000;
+            padding-bottom: 3px;
+            margin-bottom: 6px;
+        }
+
+        .summary-box {
+            width: 50%;
+        }
+
+        .summary-table {
+            width: 100%;
+            background-color: #e9ecef;
+        }
+
+        .summary-table td {
+            padding: 4px 10px;
+            font-size: 10pt;
+        }
+
+        .summary-table tr.total-row {
+            background-color: #1a446c;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .summary-table tr.total-row td {
+            border-top: 1.5px solid #000000;
+            padding: 5px 10px;
+        }
+
+        /* Garis Tanda Tangan */
+        .signature-section {
+            margin-top: 40px;
+            width: 100%;
+        }
+
+        .signature-table {
+            width: 100%;
+        }
+
+        .signature-table td {
+            vertical-align: bottom;
+        }
+
+        .dots-line {
+            border-bottom: 1px dotted #000000;
+            width: 85%;
+            margin-top: 70px;
+        }
+
+        .approval-title {
+            font-weight: bold;
+            font-size: 10pt;
+            margin-bottom: 5px;
+        }
+
+        /* Pencegahan Yatim Piatu (Orphaned row) saat cetak */
+        .items-table tr {
+            page-break-inside: avoid;
+        }

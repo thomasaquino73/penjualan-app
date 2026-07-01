@@ -15,10 +15,10 @@ return new class extends Migration
 
     public function up(): void
     {
-        Schema::create("sales_invoice_{$this->year}", function (Blueprint $table) {
+        Schema::create("proforma_invoice_{$this->year}", function (Blueprint $table) {
             $table->id();
-            $table->string('sales_invoice_code')->unique();
-            $table->date('sales_invoice_date');
+            $table->string('proforma_invoice_code')->unique();
+            $table->date('proforma_invoice_date');
             $table->unsignedBigInteger('sales_order_id')->nullable();
             $table->unsignedBigInteger('payment_term_id')->nullable();
             $table->unsignedBigInteger('salesman_id')->nullable();
@@ -31,8 +31,7 @@ return new class extends Migration
             $table->boolean('total_termasuk_pajak')->default(1)->comment('harga total termasuk pajak')->nullable();
             $table->enum('status', [
                 'draft',
-                'unpaid',
-                'partial',
+                'processing',
                 'paid',
                 'cancelled',
                 'closed',
@@ -41,8 +40,6 @@ return new class extends Migration
             $table->decimal('disc_percent', 5, 2)->default(0)->nullable();
             $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();
             $table->decimal('grand_total', 18, 2)->default(0)->nullable();
-            $table->decimal('paid_amount', 18, 2)->default(0)->nullable();
-            $table->decimal('outstanding_amount', 18, 2)->default(0)->nullable();
             $table->unsignedBigInteger('tax_id')->nullable();
             $table->decimal('tax_percent', 5, 2)->default(0)->nullable();
             $table->decimal('tax_amount', 15, 2)->default(0)->nullable();
@@ -59,10 +56,10 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create("sales_invoice_detail_{$this->year}", function (Blueprint $table) {
+        Schema::create("proforma_invoice_detail_{$this->year}", function (Blueprint $table) {
             $table->id();
 
-            $table->unsignedBigInteger('sales_invoice_id');
+            $table->unsignedBigInteger('proforma_invoice_id');
             $table->unsignedBigInteger('sales_order_detail_id')->nullable();
 
             $table->unsignedBigInteger('product_id');
@@ -96,7 +93,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists("sales_invoice_{$this->year}");
-        Schema::dropIfExists("sales_invoice_detail_{$this->year}");
+        Schema::dropIfExists("proforma_invoice_{$this->year}");
+        Schema::dropIfExists("proforma_invoice_detail_{$this->year}");
     }
 };

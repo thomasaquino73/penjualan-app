@@ -35,7 +35,7 @@
 
         </div>
         <div class="card-body table-responsive p-3">
-            <form action="{{ route('sales-order.update', $model->id) }}" method="POST" id="postForm"
+            <form action="{{ route('sales-invoice.update', $model->id) }}" method="POST" id="postForm"
                 enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
@@ -67,10 +67,10 @@
                                 <label class="form-label">SO Number <small class="text-danger">*</small> </label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
-                                    <input type="text" name="sales_order_code" id="sales_order_code" class="form-control"
-                                        value="{{ $model->sales_order_code }}">
+                                    <input type="text" name="sales_invoice_code" id="sales_invoice_code"
+                                        class="form-control" value="{{ $model->sales_invoice_code }}">
                                 </div>
-                                <span class="error text-danger" id="sales_order_codeError"></span>
+                                <span class="error text-danger" id="sales_invoice_codeError"></span>
 
                             </div>
                         </div>
@@ -83,10 +83,11 @@
                                 <label class="form-label">Date<small class="text-danger">*</small> </label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
-                                    <input type="text" name="sales_order_date" id="sales_order_date" class="form-control"
-                                        value="{{ Carbon\Carbon::parse($model->sales_order_date)->format('d-m-Y') }}">
+                                    <input type="text" name="sales_invoice_date" id="sales_invoice_date"
+                                        class="form-control"
+                                        value="{{ Carbon\Carbon::parse($model->sales_invoice_date)->format('d-m-Y') }}">
                                 </div>
-                                <span class="error text-danger" id="sales_order_dateError"></span>
+                                <span class="error text-danger" id="sales_invoice_dateError"></span>
 
                             </div>
                             <div class="col-md-6 mb-3">
@@ -127,11 +128,11 @@
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane fade active show" id="navs-pills-left-home" role="tabpanel">
-                                @include('sales.salesOrder.part.table_sales_order')
+                                @include('sales.salesInvoice.part.table_sales_invoice')
 
                             </div>
                             <div class="tab-pane fade" id="navs-pills-left-profile" role="tabpanel">
-                                @include('sales.salesOrder.part.info_sales_order_edit')
+                                @include('sales.salesInvoice.part.info_sales_invoice_edit')
 
                             </div>
 
@@ -200,13 +201,13 @@
                     <button type="submit" id="savedata" class="btn btn-primary">
                         <i class="fa fa-save me-1"></i> Update
                     </button>
-                    <a href="{{ route('sales-order.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{{ route('sales-invoice.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>
     </div>
-    @include('sales.salesOrder.part.modal_sales_order')
-    @include('sales.salesOrder.part.modalQuotationDetail')
+    @include('sales.salesInvoice.part.modal_sales_invoice')
+    @include('sales.salesInvoice.part.modalDeliveryDetail')
 @endsection
 @push('style')
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
@@ -262,93 +263,19 @@
                         'discount_percent': '{{ $detail['discount_percent'] }}',
                         'discount': '{{ $detail['discount'] }}',
                         'amount': '{{ $detail['amount'] }}',
-                        'sisa_pr': '{{ $detail['sisa_pr'] }}',
-                        'kuota_asli': '{{ $detail['kuota_asli'] }}',
-                        'total_diambil_lainnya': '{{ $detail['total_diambil_lainnya'] }}'
                     }
                     {{ !$loop->last ? ',' : '' }}
                 @endforeach
             @endif
         ];
-
+        const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
         $(function() {
-            const datePicker = flatpickr("#sales_order_date", {
+            const datePicker = flatpickr("#sales_invoice_date", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
             });
         });
-        $("#showModalpr").on("click", function(e) {
-            e.preventDefault();
 
-            let tbody = $("#quotationTableBody");
-            var customerId = $("#customer_id").val();
-
-            // Validasi wajib pilih customer dulu
-            if (!customerId || customerId === "") {
-                Swal.fire({
-                    icon: "warning",
-                    title: "Warning!",
-                    text: "Please select Customer first before adding new data.",
-                    confirmButtonColor: "#3085d6",
-                    confirmButtonText: "OK",
-                    customClass: {
-                        confirmButton: "btn btn-danger",
-                    },
-                    buttonsStyling: false,
-                });
-                return false;
-            }
-
-            // Reset checkbox 'Check All' menjadi tidak tercentang saat modal dibuka
-            $("#checkAll").prop("checked", false);
-
-            tbody.html(
-                '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>',
-            );
-            $("#modalQuotationDetail").modal("show");
-
-            // Ambil data PR berstatus processing
-            $.ajax({
-                url: "{{ route('sales-order.quotation.processing') }}",
-                type: "GET",
-                dataType: "json",
-                data: {
-                    customer_id: customerId
-                },
-                success: function(response) {
-                    tbody.empty();
-
-                    if (response && response.length > 0) {
-                        $.each(response, function(key, item) {
-                            let dateFormatted = new Date(item.created_at).toLocaleDateString(
-                                "id-ID");
-
-                            // Tambahkan baris PR ke tabel modal
-                            tbody.append(`
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input class="form-check-input checkItem" type="checkbox" value="${item.id}">
-                                    </div>
-                                </td>
-                                <td><strong>${item.sales_quotation_code}</strong></td>
-                                <td>${dateFormatted}</td>
-                            </tr>
-                        `);
-                        });
-                    } else {
-                        tbody.html(
-                            '<tr><td colspan="3" class="text-center text-muted">No processing data found.</td></tr>',
-                        );
-                    }
-                },
-                error: function(xhr) {
-                    tbody.html(
-                        '<tr><td colspan="3" class="text-center text-danger">Failed to fetch data.</td></tr>',
-                    );
-                },
-            });
-        });
 
         //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
         $("#checkAll").on("change", function() {
@@ -554,6 +481,7 @@
 
                                     $("#formPrDetail")[0].reset();
                                     $("#detail_id").val("");
+                                    $("#warehouse_id").val("").trigger("change");
 
                                     if ($.fn.select2) {
                                         $("#product_id").val("").trigger("change");
@@ -591,10 +519,13 @@
                                     let qtySekarang = parseFloat(data.quantity || 0);
 
                                     // 3. Update Title & UI Modal dengan informasi total serapan lain
+                                    // $("#modalTitle").html(`
+                                //         Edit Entry |
+                                //         <span class="badge bg-primary">SQ Awal: ${kuotaAwalPr}</span>
+                                //         <span class="badge bg-warning text-dark">Sudah diambil SO lain: ${totalLain}</span>
+                                //     `);
                                     $("#modalTitle").html(`
-                                            Edit Entry |
-                                            <span class="badge bg-primary">SQ Awal: ${kuotaAwalPr}</span>
-                                            <span class="badge bg-warning text-dark">Sudah diambil SO lain: ${totalLain}</span>
+                                            Edit Entry
                                         `);
 
                                     // 4. Bersihkan Form (Kecuali Hidden Fields)
@@ -725,7 +656,7 @@
                 }
 
                 $.ajax({
-                    url: "{{ route('sales-order.wh.get-stock') }}",
+                    url: "{{ route('sales-invoice.wh.get-stock') }}",
                     type: "GET",
                     data: {
                         product_id: productId,
@@ -767,7 +698,7 @@
                 }
 
                 $.ajax({
-                    url: '/sales-order/' + customerId + '/data',
+                    url: '/sales-invoice/' + customerId + '/data',
                     type: 'GET',
                     dataType: 'json',
                     success: function(data) {
@@ -888,7 +819,7 @@
                 // 2. AJAX History PO + Fallback Harga Master
                 // ==========================================
                 $.ajax({
-                    url: `/sales-order/sq/price-history?product_id=${productId}&customer_id=${customerId}`,
+                    url: `/sales-invoice/sq/price-history?product_id=${productId}&customer_id=${customerId}`,
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -988,59 +919,6 @@
                 });
             });
 
-            // function calculateGrandTotal() {
-            //     let grandSubTotal = 0;
-
-            //     // 1. Iterasi/looping semua data amount yang ada di array lokal
-            //     $.each(prDetailsData, function(index, item) {
-            //         grandSubTotal += parseFloat(item.amount) || 0;
-            //     });
-
-            //     // 2. Masukkan hasil penjumlahan ke input field Sub Total
-            //     $("#sub_total").val(Math.round(grandSubTotal));
-
-            //     // 3. Hitung ulang diskon global secara otomatis saat isi tabel berubah
-            //     let currentPercent = parseFloat($("#percent").val()) || 0;
-
-            //     if (currentPercent > 0) {
-            //         // Jika awalnya diisi persen, hitung ulang nominal Rupiahnya berdasarkan Sub Total baru
-            //         let newDiscountNominal = grandSubTotal * (currentPercent / 100);
-            //         $("#discount_all").val(Math.round(newDiscountNominal));
-            //     } else {
-            //         // Jika awalnya diisi nominal Rupiah, validasi agar tidak melebihi Sub Total baru
-            //         let currentNominal = parseFloat($("#discount_all").val()) || 0;
-            //         if (currentNominal > grandSubTotal) {
-            //             currentNominal = grandSubTotal;
-            //             $("#discount_all").val(Math.round(grandSubTotal));
-            //         }
-            //         // Set ulang nilai persen barunya
-            //         let newPercent =
-            //             grandSubTotal > 0 ? (currentNominal / grandSubTotal) * 100 : 0;
-            //         $("#percent").val(
-            //             newPercent % 1 === 0 ? newPercent : newPercent.toFixed(2),
-            //         );
-            //     }
-
-            //     // 4. Update hasil akhir ke Total Order
-            //     calculateTotalOrder();
-            // }
-
-            // function calculateTotalOrder() {
-            //     // Ambil nilai dari input, jika kosong atau bukan angka, default ke 0
-            //     let subTotal = parseFloat($("#sub_total").val()) || 0;
-            //     let discount = parseFloat($("#discount_all").val()) || 0;
-
-            //     // Rumus: Total Order = Sub Total - Discount
-            //     let totalOrder = subTotal - discount;
-
-            //     // Cegah nilai total order menjadi minus jika discount lebih besar dari subtotal
-            //     if (totalOrder < 0) {
-            //         totalOrder = 0;
-            //     }
-
-            //     // Masukkan hasil kalkulasi ke input Total Order
-            //     $("#total_order").val(Math.round(totalOrder));
-            // }
             $("#btnSubmitModal").on("click", function(e) {
                 let qtyInput = $("#quantity");
                 let currentQty = parseFloat(qtyInput.val()) || 0;
@@ -1122,7 +1000,7 @@
                         success: function(response) {
                             Swal.fire({
                                 icon: "success",
-                                title: "Data Created Successfully",
+                                title: "Data Updated Successfully",
                                 text: response.message,
                                 customClass: {
                                     confirmButton: "btn btn-primary waves-effect waves-light"
@@ -1340,151 +1218,7 @@
                 calculateTotalOrder();
             });
 
-            $("#btnSubmitSelected").on("click", function() {
-                let checkedBoxes = $(".checkItem:checked");
 
-                // 1. Validasi jika tidak ada PR yang dicentang
-                if (checkedBoxes.length === 0) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Peringatan",
-                        text: "Silakan pilih minimal satu data quotation!",
-                        customClass: {
-                            confirmButton: "btn btn-danger",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return;
-                }
-
-                // 2. Ambil ID quotation yang dicentang
-                let ids = [];
-                checkedBoxes.each(function() {
-                    ids.push($(this).val());
-                });
-
-                // 3. Tampilkan konfirmasi SweetAlert sebelum memproses
-                Swal.fire({
-                    title: "Proses data terpilih?",
-                    text: `Anda memilih ${checkedBoxes.length} data untuk dimasukkan ke tabel.`,
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonText: "Ya, Masukkan!",
-                    cancelButtonText: "Batal",
-                    customClass: {
-                        confirmButton: "btn btn-primary",
-                        cancelButton: "btn btn-secondary",
-                    },
-                    buttonsStyling: false,
-                }).then((result) => {
-                    if (result.isConfirmed) {
-
-                        // 4. Kirim request AJAX ke backend
-                        $.ajax({
-                            url: "{{ route('sales-order.get-quotation-detail') }}",
-                            type: "POST",
-                            data: {
-                                ids: ids,
-                                _token: "{{ csrf_token() }}"
-                            },
-                            beforeSend: function() {
-                                $("#btnSubmitSelected")
-                                    .html(
-                                        '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
-                                    )
-                                    .prop("disabled", true);
-                            },
-                            success: function(response) {
-                                if (response.success) {
-
-                                    // Bersihkan atau siapkan array penampung global jika belum didefinisikan sebelumnya
-                                    if (typeof prDetailsData === 'undefined') {
-                                        window.prDetailsData = [];
-                                    }
-
-                                    // 5. Looping data response backend untuk dimasukkan ke array DataTables
-                                    response.data.forEach(function(item) {
-                                        console.log(response.data);
-                                        let qtyAwal = parseFloat(item.qty || 0);
-                                        let sudahPO = parseFloat(item.sq_qty ||
-                                            0);
-                                        let sisaPr = qtyAwal -
-                                            sudahPO; // Batas maksimal kuantitas PR
-
-                                        if (sisaPr <= 0) {
-                                            return; // Jika sisa PR habis, jangan masukkan ke list
-                                        }
-
-                                        let unitPrice = item.unit_price;
-                                        let discount = item.discount;
-                                        let amount = item.amount;
-
-                                        prDetailsData.push({
-                                            detail_id: item
-                                                .id, // ID Detail PR tersimpan di sini
-                                            product_id: item.product_id,
-                                            data_produk: item
-                                                .product_name,
-                                            quantity: sisaPr,
-                                            sisa_pr: sisaPr, // <--- TAMBAHKAN INI: Sebagai acuan validasi batas maksimal
-                                            unit_id: item.unit_id,
-                                            unit: item.unit_name,
-                                            unit_price: unitPrice,
-                                            discount: discount,
-                                            amount: amount,
-                                            quotation_code: item
-                                                .quotation_code,
-                                        });
-                                    });
-
-                                    // 6. Refresh dan gambar ulang DataTables kamu
-                                    $('#table').DataTable()
-                                        .clear()
-                                        .rows.add(prDetailsData)
-                                        .draw();
-
-                                    // 7. Hitung ulang total matematika PO
-                                    if (typeof calculateGrandTotal === "function") {
-                                        calculateGrandTotal();
-                                    }
-                                    if (typeof calculateTotalOrder === "function") {
-                                        calculateTotalOrder();
-                                    }
-
-                                    // 8. Tutup Modal Requisition
-                                    $("#modalQuotationDetail").modal("hide");
-
-                                    // 9. Beri feedback sukses ke user
-                                    Swal.fire({
-                                        icon: "success",
-                                        title: "Success",
-                                        text: "Data quotation berhasil dimasukkan.",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary",
-                                        },
-                                        buttonsStyling: false,
-                                    });
-                                }
-                            },
-                            error: function(xhr) {
-                                Swal.fire({
-                                    icon: "error",
-                                    title: "Error",
-                                    text: "Terjadi kesalahan saat mengambil data.",
-                                });
-                            },
-                            complete: function() {
-                                // Kembalikan kondisi tombol submit ke semula
-                                $("#btnSubmitSelected")
-                                    .html(
-                                        '<i class="ti ti-check me-1"></i> Process Selected'
-                                    )
-                                    .prop("disabled", false);
-                            }
-                        });
-                    }
-                });
-            });
 
             function submitUpdate(callback) {
                 let items = typeof prDetailsData !== "undefined" ? prDetailsData : [];

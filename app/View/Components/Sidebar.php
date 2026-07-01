@@ -211,10 +211,10 @@ class Sidebar extends Component
                 'children' => [
                     [
                         'name' => 'Proforma Invoice',
-                        'route' => 'customer.index',
-                        'pattern' => 'customer.*',
+                        'route' => 'proforma-invoice.index',
+                        'pattern' => 'proforma-invoice.*',
                         'roles' => ['Super Admin'],
-                        'permissions' => ['barang-browse'],
+                        'permissions' => ['proforma_invoice-browse'],
                     ],
                     [
                         'name' => 'Sales Invoice',

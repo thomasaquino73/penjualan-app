@@ -42,7 +42,7 @@ class CompanyInfoSeeder extends Seeder
         ]);
         Company::create([
             'nama_perusahaan' => 'PT Almex Bintang Timur',
-            'alamat' => 'Green Lake City Ruko Food City RKFC-005 Petir Cipondoh',
+            'alamat' => 'Jalan Raya Serpong - Cisauk, Jalan Raya Lapan No.KM. 5 Ruko F dan G Sukamulya, Kecamatan Rumpin, Kabupaten Bogor',
             'kodepos' => '16424',
             'nomor_telepon' => '081382397429',
             'negara' => 'Indonesia',

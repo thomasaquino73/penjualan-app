@@ -9,11 +9,11 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SalesInvoiceDetail extends Model
+class ProformaInvoiceDetail extends Model
 {
     use HasFactory;
 
-    protected $table = 'sales_invoice_detail';
+    protected $table = 'proforma_invoice_detail';
 
     protected $guarded = [];
 
@@ -22,7 +22,7 @@ class SalesInvoiceDetail extends Model
         parent::__construct($attributes);
 
         $year = date('Y');
-        $this->table = "sales_invoice_detail_{$year}";
+        $this->table = "proforma_invoice_detail_{$year}";
     }
 
     public function creator()

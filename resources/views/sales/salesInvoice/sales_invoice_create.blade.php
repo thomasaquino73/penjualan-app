@@ -1082,6 +1082,7 @@
                     .val(); // Ini adalah index row array (kosong jika barang baru)
 
                 let unitPrice = parseFloat($("#unit_price").val()) || 0;
+                let discountPercent = $("#discount_percent").val() || 0;
                 let discount = parseFloat($("#discount").val()) || 0;
                 let tax = parseFloat($("#tax").val()) || 0;
 
@@ -1149,6 +1150,7 @@
                     warehouse_id: warehouseId,
                     warehouse: warehouseName,
                     unit_price: unitPrice,
+                    discount_percent: discountPercent,
                     discount: discount,
                     tax: tax,
                     amount: amount,

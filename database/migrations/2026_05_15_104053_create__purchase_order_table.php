@@ -40,6 +40,7 @@ return new class extends Migration
             $table->enum('status', [
                 'draft',               // Baru dibuat
                 'pending',             // Menunggu approval
+                'processing',          // Sedang diproses
                 'approved',            // Sudah approve
                 'rejected',            // Ditolak
                 'sent',                // Sudah dikirim ke supplier

@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\SalesInvoiceRequest;
+use App\Http\Requests\ProformaInvoiceRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
-use App\Models\Sales\SalesInvoice;
-use App\Models\Sales\SalesInvoiceDetail;
+use App\Models\Sales\ProformaInvoice;
+use App\Models\Sales\ProformaInvoiceDetail;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
-class SalesInvoiceController extends Controller
+class ProformaInvoiceController extends Controller
 {
     public function __construct()
     {
@@ -31,15 +31,15 @@ class SalesInvoiceController extends Controller
             $routeName = $request->route()->getName();
 
             $permissionMap = [
-                'sales-invoice.index' => 'sales_invoice-browse',
-                'sales-invoice.show' => 'sales_invoice-read',
-                'sales-invoice.create' => 'sales_invoice-create',
-                'sales-invoice.store' => 'sales_invoice-create',
-                'sales-invoice.edit' => 'sales_invoice-edit',
-                'sales-invoice.update' => 'sales_invoice-edit',
-                'sales-invoice.destroy' => 'sales_invoice-delete',
-                'sales-invoice.trash' => 'sales_invoice-trash',
-                'sales-invoice.restore' => 'sales_invoice-restore',
+                'proforma-invoice.index' => 'proforma_invoice-browse',
+                'proforma-invoice.show' => 'proforma_invoice-read',
+                'proforma-invoice.create' => 'proforma_invoice-create',
+                'proforma-invoice.store' => 'proforma_invoice-create',
+                'proforma-invoice.edit' => 'proforma_invoice-edit',
+                'proforma-invoice.update' => 'proforma_invoice-edit',
+                'proforma-invoice.destroy' => 'proforma_invoice-delete',
+                'proforma-invoice.trash' => 'proforma_invoice-trash',
+                'proforma-invoice.restore' => 'proforma_invoice-restore',
             ];
 
             if (isset($permissionMap[$routeName])) {
@@ -59,7 +59,7 @@ class SalesInvoiceController extends Controller
             $userId = Auth::user()->id;
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
-            $query = SalesInvoice::where('active', '<>', 0)
+            $query = ProformaInvoice::where('active', '<>', 0)
                 ->where(function ($q) use ($userId) {
                     $q->where('status', '<>', 'draft')
                         ->orWhere(function ($subQ) use ($userId) {
@@ -67,7 +67,7 @@ class SalesInvoiceController extends Controller
                                 ->where('created_by', $userId);
                         });
                 })
-                ->orderBy('sales_invoice_code', 'desc');
+                ->orderBy('proforma_invoice_code', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);
             }
@@ -91,8 +91,8 @@ class SalesInvoiceController extends Controller
 
                     return 'N/A';
                 })
-                ->addColumn('sales_invoice_date', function ($row) {
-                    return $row->sales_invoice_date ? Carbon::parse($row->sales_invoice_date)->format('d M Y') : 'N/A';
+                ->addColumn('proforma_invoice_date', function ($row) {
+                    return $row->proforma_invoice_date ? Carbon::parse($row->proforma_invoice_date)->format('d M Y') : 'N/A';
                 })
                 ->addColumn('customer', function ($row) {
                     return $row->customerID->nama_customer ?? 'N/A';
@@ -198,7 +198,7 @@ class SalesInvoiceController extends Controller
                 ->addColumn('cekbok', function ($row) {
 
                     if (
-                        auth()->user()->can('sales_invoice-delete') &&
+                        auth()->user()->can('proforma_invoice-delete') &&
                         $row->status === 'draft'
                     ) {
                         return '
@@ -256,13 +256,13 @@ class SalesInvoiceController extends Controller
 
                         // EDIT
                         if (
-                            $user->can('sales_invoice-edit') &&
+                            $user->can('proforma_invoice-edit') &&
                             in_array($row->status, ['draft'])
                         ) {
 
                             $btn .= '
                                 <a class="dropdown-item"
-                                    href="'.route('sales-invoice.edit', $row->id).'">
+                                    href="'.route('proforma-invoice.edit', $row->id).'">
 
                                     <i class="far fa-edit me-1"></i>
                                     Edit
@@ -272,7 +272,7 @@ class SalesInvoiceController extends Controller
 
                         // DELETE
                         if (
-                            $user->can('sales_invoice-delete') &&
+                            $user->can('proforma_invoice-delete') &&
                             $row->status == 'draft'
                         ) {
 
@@ -281,7 +281,7 @@ class SalesInvoiceController extends Controller
                                     href="javascript:void(0)"
                                     id="delete"
                                     data-id="'.$row->id.'"
-                                    data-name="'.$row->sales_invoice_code.'">
+                                    data-name="'.$row->proforma_invoice_code.'">
 
                                     <i class="ti ti-trash me-1"></i>
                                     Delete
@@ -312,7 +312,7 @@ class SalesInvoiceController extends Controller
                     }
                     if ($row->status != 'closed') {
                         $btn .= '<a class="dropdown-item"
-                href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->sales_invoice_code.'">
+                href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->proforma_invoice_code.'">
                 <i class="ti ti-lock"></i> Close
              </a>';
                     }
@@ -325,7 +325,7 @@ class SalesInvoiceController extends Controller
                     $btn .= '
         <a class="dropdown-item"
             target="_blank"
-            href="'.route('sales-invoice.print', $row->id).'">
+            href="'.route('proforma-invoice.print', $row->id).'">
 
             <i class="ti ti-printer me-1"></i>
             Print / PDF
@@ -339,19 +339,19 @@ class SalesInvoiceController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_invoice_date', 'total', 'customer'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'proforma_invoice_date', 'total', 'customer'])
                 ->make(true);
         }
 
         $x = [
-            'title' => 'Sales Invoice List',
+            'title' => 'Proforma Invoice List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Sales Invoice', 'url' => ''],
+                ['label' => 'Proforma Invoice', 'url' => ''],
             ],
         ];
 
-        return view('sales.salesInvoice.sales_invoice_index', $x);
+        return view('sales.proformaInvoice.proforma_invoice_index', $x);
     }
 
     public function bulanRomawi($bulan)
@@ -371,15 +371,15 @@ class SalesInvoiceController extends Controller
         $month = $this->bulanRomawi(date('n'));
 
         // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
-        $last = SalesInvoice::where('sales_invoice_code', 'like', "SI/$year/$month/%")
+        $last = ProformaInvoice::where('proforma_invoice_code', 'like', "PRO/$year/$month/%")
             ->orderBy('id', 'desc')
             ->first();
 
         if (! $last) {
-            return "SI/$year/$month/0001";
+            return "PRO/$year/$month/0001";
         }
 
-        $lastId = $last->sales_invoice_code;
+        $lastId = $last->proforma_invoice_code;
 
         // 🔥 ambil angka terakhir
         preg_match('/(\d+)$/', $lastId, $matches);
@@ -416,10 +416,10 @@ class SalesInvoiceController extends Controller
         $company = Company::with('defaultCurrency')->first();
 
         $x = [
-            'title' => 'Sales Invoice New',
+            'title' => 'Proforma Invoice New',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Sales Invoice', 'url' => ''],
+                ['label' => 'Proforma Invoice', 'url' => ''],
             ],
             'customer' => Customer::where('status', '<>', 0)->get(),
             'idNumber' => $this->generateNumberId(),
@@ -435,10 +435,10 @@ class SalesInvoiceController extends Controller
 
         ];
 
-        return view('sales.salesInvoice.sales_invoice_create', $x);
+        return view('sales.proformaInvoice.proforma_invoice_create', $x);
     }
 
-    public function store(SalesInvoiceRequest $request)
+    public function store(ProformaInvoiceRequest $request)
     {
         DB::beginTransaction();
 
@@ -448,9 +448,9 @@ class SalesInvoiceController extends Controller
             $itemsDetailRaw = $request->input('items_detail');
             unset($data['items_detail']);
 
-            // Persiapan data header Sales Invoice
+            // Persiapan data header Proforma Invoice
             $data['created_by'] = Auth::id();
-            $data['sales_invoice_date'] = Carbon::parse($request->sales_invoice_date)->format('Y-m-d');
+            $data['proforma_invoice_date'] = Carbon::parse($request->proforma_invoice_date)->format('Y-m-d');
             $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
             $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
             $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
@@ -464,11 +464,11 @@ class SalesInvoiceController extends Controller
             // Generate kode SO
             do {
                 $generatedCode = $this->generateNumberId();
-                $exists = SalesInvoice::where('sales_invoice_code', $generatedCode)->exists();
+                $exists = ProformaInvoice::where('proforma_invoice_code', $generatedCode)->exists();
             } while ($exists);
 
-            $data['sales_invoice_code'] = $generatedCode;
-            $salesInvoice = SalesInvoice::create($data);
+            $data['proforma_invoice_code'] = $generatedCode;
+            $proformaInvoice = ProformaInvoice::create($data);
 
             if ($itemsDetailRaw) {
                 $items = json_decode($itemsDetailRaw, true);
@@ -483,9 +483,9 @@ class SalesInvoiceController extends Controller
                         $discountPercent = $item['discount_percent'] ?? 0;
                         $amount = ($qtyInputForm * $unitPrice) - $discount;
 
-                        // 1. Simpan ke Sales Invoice Detail
-                        $soDetail = SalesInvoiceDetail::create([
-                            'sales_invoice_id' => $salesInvoice->id,
+                        // 1. Simpan ke Proforma Invoice Detail
+                        $soDetail = ProformaInvoiceDetail::create([
+                            'proforma_invoice_id' => $proformaInvoice->id,
                             // 'sales_quotation_detail_id' => $sqDetailId,
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
@@ -508,7 +508,7 @@ class SalesInvoiceController extends Controller
 
                         //     if ($sqDetail) {
                         //         // Hitung total akumulasi qty yang sudah masuk SO untuk item ini
-                        //         $totalSoForThisItem = SalesInvoiceDetail::where('sales_quotation_detail_id', $sqDetailId)
+                        //         $totalSoForThisItem = ProformaInvoiceDetail::where('sales_quotation_detail_id', $sqDetailId)
                         //             ->where('active', 1)
                         //             ->sum('qty');
 
@@ -556,12 +556,12 @@ class SalesInvoiceController extends Controller
             DB::commit();
 
             $redirectUrl = $request->save_and_new == 1
-                ? route('sales-invoice.create') // Kembali kosongkan form untuk input data PR baru lagi
-                : route('sales-invoice.index');  // Selesai dan kembali ke tabel index utama
+                ? route('proforma-invoice.create') // Kembali kosongkan form untuk input data PR baru lagi
+                : route('proforma-invoice.index');  // Selesai dan kembali ke tabel index utama
 
             return response()->json([
                 'success' => true,
-                'message' => 'Sales Invoice saved successfully!',
+                'message' => 'Proforma Invoice saved successfully!',
                 'redirect' => $redirectUrl,
             ], 200);
 
@@ -590,7 +590,7 @@ class SalesInvoiceController extends Controller
 
         // 1. Load data PO beserta relasinya
         // Pastikan model PurchaseOrder dan Detail sudah mendukung table name dinamis jika diperlukan
-        $salesInvoice = SalesInvoice::with([
+        $proformaInvoice = ProformaInvoice::with([
             // 'salesQuotation',
             'details.produkID',
             'details.unitID',
@@ -598,10 +598,10 @@ class SalesInvoiceController extends Controller
         ])->findOrFail($id);
 
         // 2. Cek status PO global: Apakah mengandung minimal satu item hasil serapan PR?
-        // $isFromPR = $salesInvoice->details->whereNotNull('sales_quotation_detail_id')->count() > 0;
+        // $isFromPR = $proformaInvoice->details->whereNotNull('sales_quotation_detail_id')->count() > 0;
 
         // 3. Mapping data detail
-        $detailDataMapped = $salesInvoice->details->map(function ($detail) {
+        $detailDataMapped = $proformaInvoice->details->map(function ($detail) {
 
             // $quotationCode = null;
             // $sisaPr = null;
@@ -619,9 +619,9 @@ class SalesInvoiceController extends Controller
 
             //         // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
             //         // Menggunakan DB::table karena tabel bersifat dinamis per tahun
-            //         $totalDiambilLainnya = DB::table("sales_invoice_detail_{$year}")
+            //         $totalDiambilLainnya = DB::table("proforma_invoice_detail_{$year}")
             //             ->where('sales_quotation_detail_id', $detail->sales_quotation_detail_id)
-            //             ->where('sales_invoice_id', '<>', $salesInvoice->id) // Kecuali PO ini sendiri
+            //             ->where('proforma_invoice_id', '<>', $proformaInvoice->id) // Kecuali PO ini sendiri
             //             ->where('active', 1)
             //             ->sum('qty');
 
@@ -633,7 +633,7 @@ class SalesInvoiceController extends Controller
 
             return [
                 'id' => $detail->id,
-                'sales_invoice_id' => $detail->sales_invoice_id,
+                'proforma_invoice_id' => $detail->proforma_invoice_id,
                 // 'sales_quotation_detail_id' => $detail->sales_quotation_detail_id,
                 // 'quotation_code' => $quotationCode,
                 'product_id' => $detail->product_id,
@@ -663,10 +663,10 @@ class SalesInvoiceController extends Controller
             ->whereIn('usage', ['purchase', 'both'])
             ->first();
         $x = [
-            'title' => 'Edit Sales Invoice ',
+            'title' => 'Edit Proforma Invoice ',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Edit Sales Invoice', 'url' => ''],
+                ['label' => 'Edit Proforma Invoice', 'url' => ''],
             ],
             'customer' => Customer::where('status', '<>', 0)->get(),
             'idNumber' => $this->generateNumberId(),
@@ -676,17 +676,17 @@ class SalesInvoiceController extends Controller
             'salesman' => User::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
-            'model' => $salesInvoice,
+            'model' => $proformaInvoice,
             // 'isFromPR' => $isFromPR,
             'jsonDetails' => $detailDataMapped,
             'taxes' => $taxes,
             'defaultTax' => $defaultTax,
         ];
 
-        return view('sales.salesInvoice.sales_invoice_edit', $x);
+        return view('sales.proformaInvoice.proforma_invoice_edit', $x);
     }
 
-    public function update(SalesInvoiceRequest $request, $id)
+    public function update(ProformaInvoiceRequest $request, $id)
     {
         $validated = $request->validated();
 
@@ -696,17 +696,17 @@ class SalesInvoiceController extends Controller
             $currentYear = date('Y');
 
             // 1. Cek data master
-            $salesOrder = SalesInvoice::where('id', $id)->first();
+            $salesOrder = ProformaInvoice::where('id', $id)->first();
             if (! $salesOrder) {
-                throw new \Exception('Sales Order tidak ditemukan.');
+                throw new \Exception('Proforma Invoice tidak ditemukan.');
             }
 
             // 2. UPDATE MASTER
-            SalesInvoice::where('id', $id)->update([
+            ProformaInvoice::where('id', $id)->update([
                 'customer_id' => $request->customer_id,
-                'sales_invoice_code' => $request->sales_invoice_code,
+                'proforma_invoice_code' => $request->proforma_invoice_code,
                 'salesman_id' => $request->salesman_id,
-                'sales_invoice_date' => Carbon::parse($request->sales_invoice_date)->format('Y-m-d'),
+                'proforma_invoice_date' => Carbon::parse($request->proforma_invoice_date)->format('Y-m-d'),
                 'tanggal_pengiriman' => Carbon::parse($request->shipping_date)->format('Y-m-d'),
                 'sub_total' => $request->sub_total,
                 'disc_percent' => $request->percent,
@@ -732,7 +732,7 @@ class SalesInvoiceController extends Controller
             }
 
             // 4. REVERT QTY LAMA (Kembalikan stok/kuota ke SQ Detail)
-            // $oldDetails = DB::table("sales_invoice_detail_{$currentYear}")->where('sales_invoice_id', $id)->get();
+            // $oldDetails = DB::table("proforma_invoice_detail_{$currentYear}")->where('proforma_invoice_id', $id)->get();
             // foreach ($oldDetails as $old) {
             //     if ($old->sales_quotation_detail_id) {
             //         DB::table("sales_quotation_detail_{$currentYear}")
@@ -744,7 +744,7 @@ class SalesInvoiceController extends Controller
             // }
 
             // 5. HAPUS DETAIL LAMA
-            DB::table("sales_invoice_detail_{$currentYear}")->where('sales_invoice_id', $id)->delete();
+            DB::table("proforma_invoice_detail_{$currentYear}")->where('proforma_invoice_id', $id)->delete();
 
             // 6. SIMPAN DETAIL BARU
             $affectedSqIds = [];
@@ -753,8 +753,8 @@ class SalesInvoiceController extends Controller
                 //             ? $item['sales_quotation_detail_id'] : null;
                 $qty = floatval($item['quantity'] ?? $item['qty'] ?? 0);
 
-                DB::table("sales_invoice_detail_{$currentYear}")->insert([
-                    'sales_invoice_id' => $id,
+                DB::table("proforma_invoice_detail_{$currentYear}")->insert([
+                    'proforma_invoice_id' => $id,
                     // 'sales_quotation_detail_id' => $sqDetailId,
                     'product_id' => $item['product_id'],
                     'qty' => $qty,
@@ -807,8 +807,8 @@ class SalesInvoiceController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Sales Order berhasil diupdate',
-                'redirect' => route('sales-invoice.index'),
+                'message' => 'Proforma Invoice berhasil diupdate',
+                'redirect' => route('proforma-invoice.index'),
             ]);
 
         } catch (\Exception $e) {
@@ -827,10 +827,10 @@ class SalesInvoiceController extends Controller
 
         try {
             // 1. Cari SO yang akan dihapus
-            $po = SalesInvoice::findOrFail($id);
+            $po = ProformaInvoice::findOrFail($id);
 
             // 2. Ambil detail SO untuk mendapatkan referensi PR Detail yang terkait
-            // $sqDetails = SalesInvoiceDetail::where('sales_invoice_id', $po->id)->get();
+            // $sqDetails = ProformaInvoiceDetail::where('proforma_invoice_id', $po->id)->get();
             // $involvedPrIds = [];
 
             // foreach ($sqDetails as $sqDetail) {
@@ -847,13 +847,13 @@ class SalesInvoiceController extends Controller
 
             // 3. Nonaktifkan SO dan Detail SO
             $po->update(['active' => 0, 'updated_by' => Auth::id()]);
-            SalesInvoiceDetail::where('sales_invoice_id', $po->id)->update(['active' => 0]);
+            ProformaInvoiceDetail::where('proforma_invoice_id', $po->id)->update(['active' => 0]);
 
             // 4. Update Ulang sq_qty di setiap PR Detail yang terdampak
             // Kita hitung ulang berdasarkan sisa SO yang masih 'active' = 1
             // foreach ($sqDetails as $sqDetail) {
             //     if ($sqDetail->sales_quotation_detail_id) {
-            //         $totalRemainingPo = SalesInvoiceDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
+            //         $totalRemainingPo = ProformaInvoiceDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
             //             ->where('active', 1)
             //             ->sum('qty');
 
@@ -897,8 +897,8 @@ class SalesInvoiceController extends Controller
     public function trash(Request $r)
     {
         if ($r->ajax()) {
-            $query = SalesInvoice::where('active', '0')
-                ->orderby('sales_invoice_code', 'desc')->get();
+            $query = ProformaInvoice::where('active', '0')
+                ->orderby('proforma_invoice_code', 'desc')->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -919,8 +919,8 @@ class SalesInvoiceController extends Controller
 
                     return 'N/A';
                 })
-                ->addColumn('sales_invoice_date', function ($row) {
-                    return $row->sales_invoice_date ? Carbon::parse($row->sales_invoice_date)->format('d M Y') : 'N/A';
+                ->addColumn('proforma_invoice_date', function ($row) {
+                    return $row->proforma_invoice_date ? Carbon::parse($row->proforma_invoice_date)->format('d M Y') : 'N/A';
                 })
                 ->addColumn('customer', function ($row) {
                     return $row->customerID->nama_customer ?? 'N/A';
@@ -964,7 +964,7 @@ class SalesInvoiceController extends Controller
                 ->addColumn('cekbok', function ($row) {
 
                     if (
-                        auth()->user()->can('sales_invoice-delete') &&
+                        auth()->user()->can('proforma_invoice-delete') &&
                         $row->status === 'draft'
                     ) {
                         return '
@@ -988,26 +988,26 @@ class SalesInvoiceController extends Controller
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('sales_invoice-restore')) {
+                    if (auth()->user()->can('proforma_invoice-restore')) {
                         $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
                     }
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_invoice_date', 'total', 'customer'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'proforma_invoice_date', 'total', 'customer'])
                 ->make(true);
         }
 
         $x = [
-            'title' => 'Deleted Sales Invoice List',
+            'title' => 'Deleted Proforma Invoice List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Deleted Sales Invoice', 'url' => ''],
+                ['label' => 'Deleted Proforma Invoice', 'url' => ''],
             ],
         ];
 
-        return view('sales.salesInvoice.sales_invoice_trash', $x);
+        return view('sales.salesInvoice.proforma_invoice_trash', $x);
     }
 
     public function deleteMultiple(Request $request)
@@ -1022,21 +1022,21 @@ class SalesInvoiceController extends Controller
             }
 
             // 1. Ambil semua detail dari SO yang akan dihapus untuk sinkronisasi PR
-            $sqDetails = SalesInvoiceDetail::whereIn('sales_invoice_id', $ids)->get();
+            $sqDetails = ProformaInvoiceDetail::whereIn('proforma_invoice_id', $ids)->get();
             $involvedPrIds = [];
 
             // 2. Tandai SO dan Detail SO sebagai tidak aktif (active = 0)
-            SalesInvoice::whereIn('id', $ids)->update([
+            ProformaInvoice::whereIn('id', $ids)->update([
                 'active' => 0,
                 'updated_by' => Auth::id(),
             ]);
-            SalesInvoiceDetail::whereIn('sales_invoice_id', $ids)->update(['active' => 0]);
+            ProformaInvoiceDetail::whereIn('proforma_invoice_id', $ids)->update(['active' => 0]);
 
             // 3. Update sq_qty di PR Detail dan kumpulkan ID PR Master
             // foreach ($sqDetails as $sqDetail) {
             //     if ($sqDetail->sales_quotation_detail_id) {
             //         // Hitung total dari SO yang tersisa (yang masih aktif)
-            //         $totalRemainingPo = SalesInvoiceDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
+            //         $totalRemainingPo = ProformaInvoiceDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
             //             ->where('active', 1)
             //             ->sum('qty');
 
@@ -1082,8 +1082,8 @@ class SalesInvoiceController extends Controller
 
             return response()->json([
                 'success' => true,
-                // 'message' => 'Sales Invoice berhasil dihapus dan status PR telah diperbarui.',
-                'message' => 'Sales Invoice berhasil dihapus .',
+                // 'message' => 'Proforma Invoice berhasil dihapus dan status PR telah diperbarui.',
+                'message' => 'Proforma Invoice berhasil dihapus .',
             ], 200);
 
         } catch (\Exception $e) {
@@ -1102,21 +1102,21 @@ class SalesInvoiceController extends Controller
 
         try {
             // 1. Aktifkan kembali SO
-            $po = SalesInvoice::findOrFail($id);
+            $po = ProformaInvoice::findOrFail($id);
             $po->update(['active' => 1, 'updated_by' => Auth::id()]);
 
             // 2. Aktifkan kembali Detail SO
-            SalesInvoiceDetail::where('sales_invoice_id', $po->id)->update(['active' => 1]);
+            ProformaInvoiceDetail::where('proforma_invoice_id', $po->id)->update(['active' => 1]);
 
             // 3. Ambil semua detail SO yang baru saja diaktifkan
-            // $poDetails = SalesInvoiceDetail::where('sales_invoice_id', $po->id)->get();
+            // $poDetails = ProformaInvoiceDetail::where('proforma_invoice_id', $po->id)->get();
             // $involvedPrIds = [];
 
             // 4. Update ulang sq_qty di PR Detail
             // foreach ($poDetails as $poDetail) {
             //     if ($poDetail->sales_quotation_detail_id) {
             //         // Hitung total dari semua SO yang aktif
-            //         $totalPoForThisItem = SalesInvoiceDetail::where('sales_quotation_detail_id', $poDetail->sales_quotation_detail_id)
+            //         $totalPoForThisItem = ProformaInvoiceDetail::where('sales_quotation_detail_id', $poDetail->sales_quotation_detail_id)
             //             ->where('active', 1)
             //             ->sum('qty');
 
@@ -1162,7 +1162,7 @@ class SalesInvoiceController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Sales Invoice berhasil dikembalikan (restored).',
+                'message' => 'Proforma Invoice berhasil dikembalikan (restored).',
             ], 200);
 
         } catch (\Exception $e) {
@@ -1187,23 +1187,23 @@ class SalesInvoiceController extends Controller
             }
 
             // 1. Update status SO jadi aktif
-            SalesInvoice::whereIn('id', $ids)->update([
+            ProformaInvoice::whereIn('id', $ids)->update([
                 'active' => 1,
                 'updated_by' => Auth::id(),
             ]);
 
             // 2. Aktifkan kembali semua detail SO yang berkaitan dengan SO-SO tersebut
-            SalesInvoiceDetail::whereIn('sales_invoice_id', $ids)->update(['active' => 1]);
+            ProformaInvoiceDetail::whereIn('proforma_invoice_id', $ids)->update(['active' => 1]);
 
             // 3. Ambil semua detail SO yang baru saja diaktifkan untuk sinkronisasi
-            // $poDetails = SalesInvoiceDetail::whereIn('sales_invoice_id', $ids)->get();
+            // $poDetails = ProformaInvoiceDetail::whereIn('proforma_invoice_id', $ids)->get();
             // $involvedPrIds = [];
 
             // 4. Update sq_qty di PR Detail dan kumpulkan ID PR Master
             // foreach ($poDetails as $poDetail) {
             //     if ($poDetail->sales_quotation_detail_id) {
             //         // Hitung total dari semua SO yang aktif
-            //         $totalPoForThisItem = SalesInvoiceDetail::where('sales_quotation_detail_id', $poDetail->sales_quotation_detail_id)
+            //         $totalPoForThisItem = ProformaInvoiceDetail::where('sales_quotation_detail_id', $poDetail->sales_quotation_detail_id)
             //             ->where('active', 1)
             //             ->sum('qty');
 
@@ -1249,7 +1249,7 @@ class SalesInvoiceController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Sales Invoice terpilih berhasil dikembalikan.',
+                'message' => 'Proforma Invoice terpilih berhasil dikembalikan.',
             ], 200);
 
         } catch (\Exception $e) {
@@ -1264,7 +1264,7 @@ class SalesInvoiceController extends Controller
 
     public function print($id)
     {
-        $salesInvoice = SalesInvoice::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $salesInvoice = ProformaInvoice::with(['details.produkID', 'details.unitID'])->findOrFail($id);
         $company = Company::first();
         // 1. LOGIKA LOGO PERUSAHAAN (Base64)
         $logoBase64 = null;
@@ -1283,11 +1283,11 @@ class SalesInvoiceController extends Controller
             'logoBase64' => $logoBase64,
         ];
 
-        $pdf = Pdf::loadView('pdf.sales_invoice_pdf', $data)
+        $pdf = Pdf::loadView('pdf.proforma_invoice_pdf', $data)
             ->setPaper('a4', 'portrait');
 
         // preview di browser
-        $filename = $salesInvoice->sales_invoice_code.'-'.$salesInvoice->customerID->nama_customer;
+        $filename = $salesInvoice->proforma_invoice_code.'-'.$salesInvoice->customerID->nama_customer;
 
         // replace forbidden filename chars
         $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
@@ -1295,7 +1295,7 @@ class SalesInvoiceController extends Controller
         return $pdf->stream($filename.'.pdf');
 
         // kalau mau download:
-        // return $pdf->download('sales-invoice.pdf');
+        // return $pdf->download('proforma-invoice.pdf');
     }
 
     public function getPriceHistory(Request $request)
@@ -1304,18 +1304,18 @@ class SalesInvoiceController extends Controller
         $customerId = $request->get('customer_id');
 
         $year = date('Y');
-        $tableDetail = "sales_invoice_detail_{$year}";
-        $tableMaster = "sales_invoice_{$year}";
+        $tableDetail = "proforma_invoice_detail_{$year}";
+        $tableMaster = "proforma_invoice_{$year}";
 
         // Mengambil harga unik langsung dari database
         $history = DB::table($tableDetail)
-            ->join($tableMaster, "{$tableDetail}.sales_invoice_id", '=', "{$tableMaster}.id")
+            ->join($tableMaster, "{$tableDetail}.proforma_invoice_id", '=', "{$tableMaster}.id")
             ->where("{$tableDetail}.product_id", $productId)
             ->where("{$tableMaster}.customer_id", $customerId)
             // Kuncinya di sini: kelompokkan berdasarkan harga, lalu ambil tanggal terbaru dengan MAX()
             ->select(
                 "{$tableDetail}.unit_price as harga",
-                DB::raw("MAX({$tableMaster}.sales_invoice_date) as tanggal")
+                DB::raw("MAX({$tableMaster}.proforma_invoice_date) as tanggal")
             )
             ->groupBy("{$tableDetail}.unit_price")
             // Urutkan berdasarkan tanggal terbaru (hasil dari MAX tanggal di atas)

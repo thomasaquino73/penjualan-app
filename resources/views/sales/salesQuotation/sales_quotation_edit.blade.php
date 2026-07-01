@@ -251,7 +251,7 @@
                         'unit_id': '{{ $detail->unit_id }}',
                         'unit': '{{ $detail->unitID ? $detail->unitID->name ?? ($detail->unitID->detail ?? ($detail->unitID->nama ?? 'Unit')) : 'Unit' }}',
                         'unit_price': '{{ $detail->unit_price ?? 0 }}',
-                        'discount_percent': '{{ $detail['discount_percent'] }}',
+                        // 'discount_percent': '{{ $detail['discount_percent'] }}',
                         'discount': '{{ $detail->discount ?? 0 }}',
                         'amount': '{{ $detail->amount ?? 0 }}',
                     }
