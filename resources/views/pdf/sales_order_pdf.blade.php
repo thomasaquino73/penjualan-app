@@ -1,320 +1,209 @@
 <!DOCTYPE html>
 <html lang="id">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/css/bootstrap.min.css">
 
 <head>
     <meta charset="UTF-8">
-    <title>Purchase Order - PT. Almex Bintang Timur</title>
+    <title>Penawaran Harga - {{ $model->sales_quotation_code }}</title>
     <style>
-        /* Pengaturan Kertas Cetak A4 */
+        /* Pengaturan Halaman */
         @page {
-            size: A4;
-            margin: 15mm 12mm;
-            background-color: #ffffff;
+            margin: 140px 40px 60px 40px;
+            /* Atas, Kanan, Bawah, Kiri */
         }
 
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
+        /* Header Fixed - Akan muncul di setiap halaman */
+        header {
+            position: fixed;
+            top: -120px;
+            left: 0;
+            right: 0;
+            height: 100px;
+        }
+
+        /* Footer Fixed */
+        footer {
+            position: fixed;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            height: 30px;
+            font-size: 7pt;
+            color: #999;
+            text-align: right;
+            border-top: 1px solid #eee;
         }
 
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10pt;
-            color: #000000;
-            margin: 0;
-            padding: 0;
-            line-height: 1.3;
-        }
-
-        .w-100 {
-            width: 100%;
+            font-size: 8.5pt;
+            line-height: 1.2;
+            color: #000;
         }
 
         table {
+            width: 100%;
             border-collapse: collapse;
         }
 
-        /* Bagian KOP / Header */
+        /* Styling Header */
         .header-table td {
             vertical-align: top;
         }
 
-        .logo-box {
-            width: 65px;
-            padding-right: 10px;
-        }
-
-        .logo-box svg {
-            width: 60px;
-            height: auto;
-        }
-
-        .company-contact {
-            font-size: 7.5pt;
-            color: #444444;
-            line-height: 1.2;
-        }
-
         .company-title {
-            font-size: 20pt;
+            font-size: 16pt;
             font-weight: bold;
             text-align: right;
-            letter-spacing: -0.5px;
-            margin: 0;
         }
 
         .company-address {
-            font-size: 9.5pt;
+            font-size: 8pt;
             text-align: right;
-            line-height: 1.2;
-            color: #111111;
         }
 
+        /* Styling Umum */
         .divider {
-            border-top: 1.5px solid #000000;
-            margin-top: 5px;
-            margin-bottom: 15px;
-        }
-
-        /* Detail Kepada & Nomor PO */
-        .info-table {
-            margin-bottom: 15px;
-        }
-
-        .info-table td {
-            vertical-align: top;
-            width: 50%;
+            border-top: 1.5px solid #000;
+            margin: 5px 0 15px 0;
         }
 
         .section-title {
-            font-size: 11pt;
+            font-size: 9pt;
             font-weight: bold;
-            border-bottom: 1.5px solid #000000;
-            padding-bottom: 3px;
+            border-bottom: 1px solid #000;
             margin-bottom: 5px;
         }
 
         .recipient-box {
-            background-color: #e9ecef;
-            padding: 8px 10px;
-            min-height: 85px;
-            font-size: 10pt;
-            line-height: 1.25;
+            background-color: #f8f9fa;
+            padding: 5px;
+            font-size: 8.5pt;
         }
 
         .po-box-title {
-            font-size: 18pt;
+            font-size: 14pt;
             font-weight: bold;
             text-align: center;
-            border-bottom: 1.5px solid #000000;
-            padding-bottom: 2px;
+            border-bottom: 1.5px solid #000;
             margin-bottom: 5px;
         }
 
-        .po-details-table {
-            width: 100%;
-            font-size: 10pt;
-        }
-
-        .po-details-table td {
-            padding: 2px 0;
-        }
-
-        .po-details-table td.label {
-            width: 32%;
-        }
-
-        .po-details-table td.colon {
-            width: 5%;
-            text-align: center;
-        }
-
-        .po-details-table td.value {
-            width: 63%;
-            background-color: #e9ecef;
-            padding-left: 6px;
-        }
-
-        /* Tabel Utama Barang */
+        /* Tabel Barang */
         .items-table {
-            width: 100%;
             margin-top: 10px;
-            margin-bottom: 15px;
+            width: 100%;
         }
 
         .items-table th {
             background-color: #1a446c;
-            /* Warna Biru Navy Almex */
-            color: #ffffff;
-            font-weight: normal;
-            font-size: 10.5pt;
-            padding: 6px 8px;
-            text-align: left;
+            color: #fff;
+            padding: 5px;
+            font-size: 8.5pt;
         }
 
         .items-table td {
-            padding: 5px 8px;
-            font-size: 10pt;
-            vertical-align: middle;
-        }
-
-        .text-center {
-            text-align: center;
+            padding: 4px;
+            border-bottom: 1px solid #ddd;
         }
 
         .text-right {
             text-align: right;
         }
 
-        /* Ringkasan Total (Summary) */
-        .footer-table {
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .footer-table td {
-            vertical-align: top;
-        }
-
-        .keterangan-box {
-            width: 50%;
-            padding-right: 40px;
-        }
-
-        .keterangan-title {
-            font-weight: bold;
-            border-bottom: 1.5px solid #000000;
-            padding-bottom: 3px;
-            margin-bottom: 6px;
-        }
-
-        .summary-box {
-            width: 50%;
+        .text-center {
+            text-align: center;
         }
 
         .summary-table {
             width: 100%;
-            background-color: #e9ecef;
+            background-color: #f8f9fa;
+            margin-top: 10px;
         }
 
         .summary-table td {
-            padding: 4px 10px;
-            font-size: 10pt;
+            padding: 3px 10px;
         }
 
-        .summary-table tr.total-row {
-            background-color: #1a446c;
-            color: #ffffff;
+        .keterangan-content {
+            white-space: pre-line;
+            /* Ini kuncinya: agar enter/newline tetap terbaca */
+            font-size: 8pt;
+            margin-top: 5px;
+        }
+    </style>
+    <style>
+        /* Tambahkan atau perbarui CSS ini */
+        .total-row {
+            background-color: #1a446c !important;
+            /* Biru */
+            color: #ffffff !important;
+            /* Tulisan putih */
             font-weight: bold;
         }
 
-        .summary-table tr.total-row td {
-            border-top: 1.5px solid #000000;
-            padding: 5px 10px;
+        /* Agar teks di dalam total row terlihat jelas */
+        .total-row td {
+            padding: 8px 10px !important;
         }
 
-        /* Garis Tanda Tangan */
-        .signature-section {
-            margin-top: 40px;
-            width: 100%;
+        /* Penting: Memaksa header tabel berulang di setiap halaman */
+        thead {
+            display: table-header-group;
         }
 
-        .signature-table {
-            width: 100%;
-        }
-
-        .signature-table td {
-            vertical-align: bottom;
-        }
-
-        .dots-line {
-            border-bottom: 1px dotted #000000;
-            width: 85%;
-            margin-top: 70px;
-        }
-
-        .approval-title {
-            font-weight: bold;
-            font-size: 10pt;
-            margin-bottom: 5px;
-        }
-
-        /* Pencegahan Yatim Piatu (Orphaned row) saat cetak */
-        .items-table tr {
+        /* Opsional: Jika tabel terpotong di tengah baris, cegah dengan ini */
+        tr {
             page-break-inside: avoid;
-        }
-
-        .footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            font-size: 7.5pt;
-            color: #999;
-            text-align: right;
-            border-top: 1px solid #eee;
-            padding-top: 5px;
         }
     </style>
 </head>
 
 <body>
 
-    <table class="w-100 header-table">
+    <header>
+        <table class="header-table">
+            <tr>
+                <td>
+                    <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 350px;" height="100px"
+                        alt="Logo Perusahaan">
+                </td>
+                <td>
+                    <div class="company-title">{{ $company->nama_perusahaan }}</div>
+                    <div class="company-address">{{ $company->alamat }}</div>
+                </td>
+            </tr>
+        </table>
+        <div class="divider"></div>
+    </header>
+
+    <footer>
+        Printed on: {{ date('Y-m-d H:i:s') }} | Page
+        <script type="text/php">if (isset($pdf)) { $font = $fontMetrics->getFont("Arial", "bold"); $pdf->page_text(520, 800, "Page {PAGE_NUM} of {PAGE_COUNT}", $font, 7, array(0,0,0)); }</script>
+    </footer>
+
+    <table class="info-table">
         <tr>
-            <td style="width: 55%;">
-                <table>
-                    <tr>
-                        <td class="logo-box">
-                            <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 340px;">
-
-                        </td>
-                    </tr>
-                </table>
-            </td>
-            <td style="width: 45%;">
-                <div class="company-title">{{ $company->nama_perusahaan }}</div>
-                <div class="company-address">
-                    {{ $company->alamat }}
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    <div class="divider"></div>
-
-    <table class="w-100 info-table">
-        <tr>
-            <td style="padding-right: 25px;">
+            <td style="width: 50%; vertical-align: top;">
                 <div class="section-title">Kepada</div>
                 <div class="recipient-box">
                     <strong>{{ $model->customerID->nama_customer }}</strong><br>
                     {{ $model->address }}
-
                 </div>
             </td>
-            <td style="padding-left: 25px;">
+            <td style="width: 50%; vertical-align: top; padding-left: 20px;">
                 <div class="po-box-title">Sales Order</div>
-                <table class="po-details-table">
+                <table>
                     <tr>
-                        <td class="label">Nomor</td>
-                        <td class="colon">:</td>
-                        <td class="value">{{ $model->sales_order_code }}</td>
+                        <td>Nomor</td>
+                        <td>: {{ $model->sales_order_code }}</td>
                     </tr>
                     <tr>
-                        <td class="label">Tanggal</td>
-                        <td class="colon">:</td>
-                        <td class="value">
-                            {{ date('d M Y', strtotime($model->sales_order_date)) }}</td>
+                        <td>Tanggal</td>
+                        <td>: {{ date('d M Y', strtotime($model->sales_order_date)) }}</td>
                     </tr>
                     <tr>
-                        <td class="label">Tanggal Kirim</td>
-                        <td class="colon">:</td>
-                        <td class="value">
-                            {{ isset($model->tanggal_pengiriman) ? date('d M Y', strtotime($model->tanggal_pengiriman)) : '' }}
-                        </td>
+                        <td>Pembayaran</td>
+                        <td>: {{ $model->paymentTermID?->nama ?? '-' }}</td>
                     </tr>
                 </table>
             </td>
@@ -324,20 +213,20 @@
     <table class="items-table">
         <thead>
             <tr>
-                <th style="width: 14%;">Kode Barang</th>
-                <th style="width: 40%;">Nama Barang</th>
-                <th style="width: 8%; text-align: center;">Kts.</th>
-                <th style="width: 8%; text-align: center;">Satuan</th>
-                <th style="width: 12%; text-align: right;">@Harga</th>
-                <th style="width: 12%; text-align: right;">Diskon</th>
-                <th style="width: 14%; text-align: right;">Total</th>
+                <th>Kode</th>
+                <th>Nama Barang</th>
+                <th class="text-center">Kts.</th>
+                <th class="text-center">Satuan</th>
+                <th class="text-right">Harga</th>
+                <th class="text-right">Diskon</th>
+                <th class="text-right">Total</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($model->details as $detail)
                 <tr>
                     <td>{{ $detail->produkID->id_barang }}</td>
-                    <td>{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}</td>
+                    <td>{{ $detail->produkID->nama_barang }}</td>
                     <td class="text-center">{{ rtrim(rtrim(number_format($detail->qty, 2, ',', '.'), '0'), ',') }}</td>
                     <td class="text-center">{{ $detail->unitID->detail }}</td>
                     <td class="text-right">{{ number_format($detail->unit_price, 0, ',', '.') }}</td>
@@ -352,9 +241,8 @@
         <tr>
             <td class="keterangan-box">
                 <div class="keterangan-title">Keterangan</div>
-                <div class="keterangan-content">{{ $model->description }}</div>
+                <div class="keterangan-content">{!! nl2br(e($model->description)) !!}</div>
             </td>
-
             <td class="summary-box">
                 <table class="summary-table">
                     <tr>
@@ -375,18 +263,20 @@
                             {{ isset($model) ? format_uang(convert_currency($model->tax_amount, $detail->currency_id ?? 1)) : '' }}
                         </td>
                     </tr>
+                    {{-- <tr>
+                        <td>Biaya Lain-lain</td>
+                        <td class="text-right">0</td>
+                    </tr> --}}
                     <tr class="total-row">
                         <td>Total</td>
                         <td class="text-right">
                             {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1)) : '' }}
-                        </td>
                     </tr>
                 </table>
             </td>
-
         </tr>
     </table>
-    <table class="w-100 footer-table">
+    <table class="w-70 footer-table" style="margin-top: 10px;margin-bottom: 10px; width:60%">
         <tr>
             <td class="keterangan-box">
                 @php
@@ -400,7 +290,6 @@
             </td>
         </tr>
     </table>
-
     <div class="signature-section">
         <table class="signature-table">
             <tr>
@@ -446,9 +335,8 @@
             </tr>
         </table>
     </div>
-    <div class="footer">
-        Printed on: {{ date('Y-m-d H:i:s') }} | Confidential Document
-    </div>
+
+
 </body>
 
 </html>
