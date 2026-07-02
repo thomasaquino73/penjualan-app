@@ -317,6 +317,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/item-transfer/{id}/submit', [ItemTransferController::class, 'submitToPending'])->name('item-transfer.submit');
     Route::resource('item-transfer', ItemTransferController::class);
 
+    Route::get('/delivery-order/get-kontak/{customer_id}', [DeliveryOrderController::class, 'getKontakByCustomer']);
     Route::get('/delivery-order/wh/get-stock', [DeliveryOrderController::class, 'getStock'])->name('delivery-order.wh.get-stock');
     Route::post('/delivery-order/get-order-detail', [DeliveryOrderController::class, 'getOrderDetail'])->name('delivery-order.get-order-detail');
     Route::get('/delivery-order/get-processing-so', [DeliveryOrderController::class, 'getProcessingData'])->name('delivery-order.so.processing');

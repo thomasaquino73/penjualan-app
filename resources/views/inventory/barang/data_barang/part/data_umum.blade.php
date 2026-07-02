@@ -61,7 +61,7 @@
                            </div>
                            <span class="error text-danger" id="nama_barangError"></span>
                        </div>
-                       <div class="col-12 mb-3" id="barcodeField">
+                       {{-- <div class="col-12 mb-3" id="barcodeField">
                            <label class="form-label">Barcode <small class="text-danger">*</small> </label>
                            <div class="input-group input-group-merge">
                                <span class="input-group-text">
@@ -71,7 +71,7 @@
                                    min="0">
                            </div>
                            <span class="error text-danger" id="barcodeError"></span>
-                       </div>
+                       </div> --}}
                    </div>
                    <div class="col-lg-6">
                        <div class="col-md-12  mb-3">
@@ -122,7 +122,7 @@
 
                            <span class="error text-danger" id="unit_idError"></span>
                        </div>
-                       <div class="col-md-12 mb-3">
+                       {{-- <div class="col-md-12 mb-3">
                            <label class="form-label">Brand<small class="text-danger">*</small></label>
                            <div class="input-group input-group-merge">
                                <span class="input-group-text"> <i class="ti ti-medal"></i>
@@ -137,7 +137,7 @@
                            </div>
 
                            <span class="error text-danger" id="brand_idError"></span>
-                       </div>
+                       </div> --}}
                    </div>
                </div>
            </div>

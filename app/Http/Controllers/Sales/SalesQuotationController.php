@@ -509,6 +509,7 @@ class SalesQuotationController extends Controller
             // Update data utama
             $data['updated_by'] = Auth::id();
             $data['sales_quotation_date'] = Carbon::parse($request->sales_quotation_date)->format('Y-m-d');
+            $data['sales_quotation_code'] = $request->sales_quotation_code;
             $data['salesman_id'] = $request->salesman_id;
             $data['customer_contact_id'] = $request->customer_contact_id;
             $data['sub_total'] = $request->sub_total;

@@ -66,7 +66,7 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-xl-4 col-md-6 mb-4">
+        {{-- <div class="col-xl-4 col-md-6 mb-4">
             <div class="row">
                 <div class="col-xl-12 mb-4 col-md-3 col-6">
                     <div class="card h-100">
@@ -302,7 +302,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
         <div class="col-xl-8 col-sm-12">
             <div class="row">
                 <div class="col-md-6 col-xl-6 mb-4">
@@ -645,7 +645,7 @@
             </div>
         </div>
     </div>
-    <div class="marquee-container">
+    {{-- <div class="marquee-container">
         <div class="marquee-text" id="content">
             @foreach ($brandName as $bn)
                 <span class="brand-item">{{ $bn->detail }} </span>
@@ -654,7 +654,7 @@
                 <span class="brand-item">{{ $bn->detail }} </span>
             @endforeach
         </div>
-    </div>
+    </div> --}}
 @endsection
 @push('style')
     <style>

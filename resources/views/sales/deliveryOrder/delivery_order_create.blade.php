@@ -566,22 +566,26 @@
 
                 if (customerId) {
                     $.ajax({
-                        url: '/get-kontak/' + customerId,
+                        url: '/delivery-order/get-kontak/' + customerId,
                         type: "GET",
                         dataType: "json",
                         success: function(data) {
+
                             contactDropdown.empty();
                             contactDropdown.append('<option value="">Pilih Kontak</option>');
 
-                            $.each(data, function(key, value) {
+                            $.each(data.kontak, function(index, value) {
+
                                 contactDropdown.append(
-                                    '<option value="' + value.id + '">' + value
-                                    .sapaan + ' ' +
-                                    value.contact_person + ' (' + value
-                                    .posisi_jabatan + ')' +
+                                    '<option value="' + value.id + '">' +
+                                    value.sapaan + ' ' +
+                                    value.contact_person + ' (' +
+                                    value.posisi_jabatan + ')' +
                                     '</option>'
                                 );
+
                             });
+
                         }
                     });
                 } else {

@@ -17,6 +17,7 @@ use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\StockMutation;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -1278,63 +1279,34 @@ class DeliveryOrderController extends Controller
             }
 
             // 1. Update status SO jadi aktif
-            DeliveryOrder::whereIn('id', $ids)->update([
+           DeliveryOrder::whereIn('id', $ids)->update([
                 'active' => 1,
                 'updated_by' => Auth::id(),
             ]);
 
-            // 2. Aktifkan kembali semua detail SO yang berkaitan dengan SO-SO tersebut
-            // DeliveryOrderDetail::whereIn('delivery_order_id', $ids)->update(['active' => 1]);
+            $do = DeliveryOrder::whereIn('id', $ids)->first();
 
-            // 3. Ambil semua detail SO yang baru saja diaktifkan untuk sinkronisasi
-            // $poDetails = DeliveryOrderDetail::whereIn('delivery_order_id', $ids)->get();
-            // $involvedPrIds = [];
+            foreach ($do->details as $detail) {
 
-            // // 4. Update sq_qty di PR Detail dan kumpulkan ID PR Master
-            // foreach ($poDetails as $poDetail) {
-            //     if ($poDetail->sales_order_detail_id) {
-            //         // Hitung total dari semua SO yang aktif
-            //         $totalPoForThisItem = DeliveryOrderDetail::where('sales_order_detail_id', $poDetail->sales_order_detail_id)
-            //             ->where('active', 1)
-            //             ->sum('qty');
-
-            //         // Update ke tabel PR Detail
-            //         DB::table('sales_order_detail_'.date('Y'))
-            //             ->where('id', $poDetail->sales_order_detail_id)
-            //             ->update(['sq_qty' => $totalPoForThisItem]);
-
-            //         // Simpan ID PR untuk update status nanti (hindari duplikat)
-            //         $prDetail = DB::table('sales_order_detail_'.date('Y'))
-            //             ->where('id', $poDetail->sales_order_detail_id)
-            //             ->first();
-
-            //         if ($prDetail && ! in_array($prDetail->sales_order_id, $involvedPrIds)) {
-            //             $involvedPrIds[] = $prDetail->sales_order_id;
-            //         }
-            //     }
-            // }
-
-            // // 5. Update Status PR Master berdasarkan akumulasi terbaru
-            // foreach ($involvedPrIds as $prId) {
-            //     $allDetails = DB::table('sales_order_detail_'.date('Y'))
-            //         ->where('sales_order_id', $prId)
-            //         ->get();
-
-            //     $totalRequested = $allDetails->sum('qty');
-            //     $totalOrdered = $allDetails->sum('sq_qty');
-
-            //     if ($totalOrdered >= $totalRequested) {
-            //         $status = 'closed';
-            //     } elseif ($totalOrdered > 0) {
-            //         $status = 'partial';
-            //     } else {
-            //         $status = 'processing';
-            //     }
-
-            //     DB::table('sales_order_'.date('Y'))
-            //         ->where('id', $prId)
-            //         ->update(['status' => $status]);
-            // }
+                StockMutation::create([
+                    'data_barang_id' => $detail->data_barang_id,
+                    'unit_id' => $detail->unit_id,
+                    'warehouse_id' => $detail->warehouse_id,
+                    'date_stock' => $do->delivery_order_date,
+                    'qty_transaksi' => $detail->qty,
+                    'total_base_qty' => $detail->qty,
+                    'keterangan' => sprintf(
+                        'Pengiriman barang ke customer %s melalui DO %s',
+                        $do->customerID->nama_customer ?? 'Customer Tidak Diketahui',
+                        $do->delivery_order_code
+                    ),
+                    'type' => 'out',
+                    'document_id' => $do->id,
+                    'document_number' => $do->delivery_order_code,
+                    'document_type' => 'delivery_order',
+                    'created_by' => Auth::id(),
+                ]);
+            }
 
             DB::commit();
 
@@ -1486,5 +1458,71 @@ class DeliveryOrderController extends Controller
             as stock
         ")
             ->value('stock') ?? 0;
+    }
+
+    public function print($id)
+    {
+        $deliveryOrder = DeliveryOrder::with([
+            'customerID',
+            'details.produkID',
+            'details.unitID',
+            'details.warehouseID'
+        ])->findOrFail($id);
+        $company = Company::first();
+        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+        $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+            }
+        }
+        $pdf = Pdf::loadView('pdf.deliveryOrder.delivery_order', [
+            'model' => $deliveryOrder,
+            'company' => $company,
+            'logoBase64' => $logoBase64,    
+        ]);
+
+        $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $deliveryOrder->delivery_order_code);
+
+        return $pdf->setPaper('a5', 'landscape')
+            ->stream($filename . '.pdf');
+    }
+
+    public function getKontakByCustomer($customer_id)
+    {
+        $customer = Customer::find($customer_id);
+        if (!$customer_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer tidak ditemukan.'
+            ]);
+        }
+
+        $address = collect([
+            $customer->alamat_tagihan,
+            collect([
+                $customer->kota_tagihan,
+                $customer->provinsi_tagihan,
+                $customer->kodepos_tagihan,
+            ])->filter()->implode(', '),
+            $customer->negara_tagihan,
+        ])->filter()->implode("\n");
+
+        $kontak = DB::table('customer_kontak')
+            ->where('customer_id', $customer_id)
+            ->get();
+
+        $pajak = DB::table('customer_pajak')
+            ->where('customer_id', $customer_id)
+            ->first();
+
+        return response()->json([
+            'kontak' => $kontak,
+            'pajak' => $pajak,
+            'address' => $address,
+        ]);
     }
 }
