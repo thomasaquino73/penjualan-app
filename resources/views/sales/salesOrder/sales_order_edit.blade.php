@@ -577,11 +577,10 @@
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
                                 action: function(e, dt, node, config) {
-                                    let rowSelected = dt.row({
-                                        selected: true
-                                    });
-                                    let data = rowSelected.data();
-                                    let rowIndex = rowSelected.index();
+
+
+
+
 
                                     // 1. TANDAI BAHWA SEDANG PROSES EDIT
                                     window.isPopulating = true;
@@ -653,6 +652,13 @@
                                     // 8. Tampilkan Modal
                                     $("#btnSubmitModal").text("Update");
                                     $("#modalPrDetail").modal("show");
+                                    let rowSelected = dt.row({
+                                        selected: true
+                                    });
+                                    let data = rowSelected.data();
+                                    let rowIndex = rowSelected.index();
+
+
                                 }
                             },
                             {
@@ -719,11 +725,7 @@
                 let warehouseId = $('#warehouse_id').val();
                 let unitId = $('#unit_id').val();
 
-                console.log({
-                    productId,
-                    warehouseId,
-                    unitId
-                });
+
 
                 if (!productId || !warehouseId || !unitId) {
                     $('#available_stok').val('');
@@ -846,7 +848,7 @@
                 // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
                 // ==========================================
                 $.ajax({
-                    url: `/get-units-by-product/${productId}`,
+                    url: `/sales-order/get-units-by-product/${productId}`,
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -881,7 +883,6 @@
                         }
                     },
                     error: function() {
-                        console.error("Gagal memuat list unit dari Controller.");
                         unitSelect
                             .empty()
                             .append("<option></option>")
@@ -986,7 +987,6 @@
                         }
                     },
                     error: function(xhr) {
-                        console.error("Gagal mengambil data riwayat harga:", xhr);
                         helperText
                             .attr("class", "form-text text-danger")
                             .text("Gagal memuat riwayat harga.");
@@ -1399,6 +1399,7 @@
                                         '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
                                     )
                                     .prop("disabled", true);
+
                             },
                             success: function(response) {
                                 if (response.success) {
@@ -1410,7 +1411,6 @@
 
                                     // 5. Looping data response backend untuk dimasukkan ke array DataTables
                                     response.data.forEach(function(item) {
-                                        console.log(response.data);
                                         let qtyAwal = parseFloat(item.qty || 0);
                                         let sudahPO = parseFloat(item.sq_qty ||
                                             0);

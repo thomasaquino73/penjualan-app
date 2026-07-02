@@ -1,5 +1,19 @@
 @extends('layouts.app')
 @section('title', 'Detail Permintaan Pembelian')
+@push('style')
+    <style>
+        .company-title {
+            font-size: 26pt;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .company-address {
+            font-size: 12pt;
+            text-align: right;
+        }
+    </style>
+@endpush
 @section('konten')
     <h4>
         <span class="text-muted fw-light">
@@ -73,69 +87,33 @@
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="navs-pills-left-home" role="tabpanel">
                         <div class="table-responsive p-3">
-                            <table class="top-layout">
-                                <tr>
-                                    <td style="width: 50%;">
-                                        <table style="width: 100%;">
-                                            <tr>
-                                                <td style="width: 75px; padding-right: 10px;">
-                                                    @if (isset($company) && $company->logo)
-                                                        <img src="{{ $logoBase64 }}" style="height: 80px;">
-                                                    @else
-                                                        <div
-                                                            style="width: 70px; height: 70px; border: 1px dashed #ccc; background: #fafafa; text-align: center; line-height: 70px; color: #aaa; font-size: 8pt;">
-                                                            No Logo
-                                                        </div>
-                                                    @endif
-                                                </td>
-                                                <td class="company-details">
-                                                    <div class="company-name">{{ $company->nama_perusahaan }}</div>
-                                                    <div class="company-info">
-                                                        {{ $company->alamat }}<br>
-                                                        {{ $company->negara }} {{ $company->kodepos ?? '16424' }}<br>
-                                                        {{ $company->nomor_telepon }}<br>
-                                                        {{ $company->email }}<br>
-                                                        <span style="color: #3085d6;">{{ $company->website }}</span>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <img src="{{ asset('image/logo/logo_print.png') }}" style="width: 550px;" height="200px"
+                                        alt="Logo Perusahaan">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="company-title">{{ $company->nama_perusahaan }}</div>
+                                    <div class="company-address">{{ $company->alamat }}</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Kepada </h6>
+                                    <div class="form-textarea-mock">
+                                        <strong>{{ $model->customerID->nama_customer ?? '' }}</strong>
+                                    </div>
+                                    <span> {{ $model->address }}</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="row">
+                                        <span>Nomor : {{ $model->sales_quotation_code }}</span>
+                                        <span>Tanggal : {{ date('d M Y', strtotime($model->sales_quotation_date)) }}</span>
+                                        <span>Pembayaran : {{ $model->paymentTermID?->nama ?? '-' }}</span>
+                                    </div>
 
-                                    <td style="width: 5%;"></td>
-
-                                    <td style="width: 45%;">
-                                        <table style="width: 100%;">
-                                            <tr>
-                                                <td style="width: 50%; padding-right: 10px;">
-                                                    <div class="form-group-box">
-                                                        <div class="form-label"><strong>SQ Number :</strong></div>
-                                                        <div class="form-input-mock">{{ $model->sales_quotation_code }}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td style="width: 50%;">
-                                                    <div class="form-group-box">
-                                                        <div class="form-label"><strong>SQ Date :</strong></div>
-                                                        <div class="form-input-mock">
-                                                            {{ Carbon\Carbon::parse($model->sales_quotation_date)->format('d-m-Y') }}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="2">
-                                                    <div class="form-group-box" style="margin-top: 5px;">
-                                                        <div class="form-label"><strong>Description :</strong></div>
-                                                        <div class="form-textarea-mock">{{ $model->description ?? '' }}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
+                                </div>
+                            </div>
                             <table class="table table-bordered nowrap mt-5" id="table" style="width:100%">
                                 <thead class="border-top" style="background-color: #AEDEFC;">
                                     <thead class="border-top" style="background-color: #AEDEFC; ">
@@ -189,7 +167,7 @@
                                     <tr>
                                         <td colspan="5"></td>
                                         <td style="text-align: right !important;"><strong>Tax (11%) :</strong></td>
-                                        <td> {{ isset($model) ? format_uang(convert_currency($model->ppn, $item->currency_id ?? 1)) : '' }}
+                                        <td> {{ isset($model) ? format_uang(convert_currency($model->tax_amount, $detail->currency_id ?? 1)) : '' }}
                                         </td>
                                     </tr>
                                     <tr>
@@ -222,89 +200,36 @@
                             </table>
                             <div class="row mt-5">
                                 <div class="col-md-6">
-                                    <h6><strong>Additional Information</strong></h6>
-                                    <div class="mb-3 row">
-                                        <label class="col-md-4 col-form-label">Payment Term</label>
-                                        <div class="col-md-8">
-                                            <div class="input-group input-group-merge">
-                                                <select name="payment_term_id" id="payment_term_id" class="form-control"
-                                                    disabled>
-                                                    <option></option>
-                                                    @foreach ($paymentTerm as $pay)
-                                                        <option value="{{ $pay->id }}"
-                                                            {{ $model->payment_term_id == $pay->id ? 'selected' : '' }}>
-                                                            {{ $pay->nama }}
-                                                        </option>
-                                                    @endforeach
-                                                    <option></option>
-                                                </select>
-                                            </div>
-                                            <span class="error text-danger" id="payment_term_idError"></span>
-
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label class="col-md-4 col-form-label">Address</label>
-                                        <div class="col-md-8">
-                                            <div class="input-group input-group-merge">
-
-                                                <textarea name="address" id="address" class="form-control" placeholder="Enter address" disabled>{{ $model->address ?? '' }}</textarea>
-                                            </div>
-                                            <span class="error text-danger" id="addressError"></span>
-
-                                        </div>
-                                    </div>
                                     <div class="mb-3 row">
                                         <label class="col-md-4 col-form-label">Description</label>
                                         <div class="col-md-8">
-                                            <textarea name="description" id="description" class="form-control" rows="8" placeholder="Enter description"
-                                                disabled>{{ $model->description ?? '' }}</textarea>
-                                            <span class="error text-danger" id="descriptionError"></span>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label class="col-md-4 col-form-label">Contact</label>
-                                        <div class="col-md-8">
-                                            <div class="input-group input-group-merge">
-                                                <select name="customer_contact_id" id="customer_contact_id"
-                                                    class="form-control" disabled>
-                                                    <option></option>
-                                                </select>
-                                            </div>
-                                            <span class="error text-danger" id="customer_contact_idError"></span>
-
+                                            {!! nl2br(e($model->description)) !!}
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <h6><strong>Tax Information</strong></h6>
-                                    <div class="mb-3 row">
-                                        <label class="col-md-4 col-form-label">Tax</label>
-                                        <div class="col-md-8">
-                                            <div class="row">
-                                                <div class="col-6">
-                                                    <div class="form-check form-check-primary">
-                                                        <input class="form-check-input" type="checkbox" value="1"
-                                                            name="kena_pajak" id="kena_pajak"
-                                                            {{ $model->kena_pajak ? 'checked' : '' }} disabled>
-                                                        <label class="form-check-label" for="kena_pajak">Including
-                                                            Tax</label>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-6">
-                                                    <div class="form-check form-check-primary">
-                                                        <input class="form-check-input" type="checkbox" value="1"
-                                                            name="total_termasuk_pajak" id="total_termasuk_pajak"
-                                                            {{ $model->total_termasuk_pajak ? 'checked' : '' }} disabled>
-                                                        <label class="form-check-label" for="total_termasuk_pajak">Total
-                                                            Including Tax</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-
+                                    @if ($model->status == 'processing')
+                                        <div class="approval-title">
+                                            Disetujui Oleh
                                         </div>
-                                    </div>
+                                        <div style="height: 65px;">
+                                            <img src="{{ asset('image/logo/STEMPEL.png') }}" style="height: 80px;">
+                                        </div>
+                                        <div style="font-weight: bold; text-decoration: underline;">
+                                            Yohanes Lukman
+                                        </div>
+                                    @else
+                                        <div class="approval-title">
+                                            Dibuat oleh,
+                                        </div>
+                                        <div style="height: 65px;">
+                                            <img src="{{ asset('image/logo/69fd6d6ab719c1778216298.png') }}"
+                                                style="height: 80px;">
+                                        </div>
+                                        <div style="font-weight: bold; text-decoration: underline;">
+                                            {{ $model->creator->fullname }}
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>

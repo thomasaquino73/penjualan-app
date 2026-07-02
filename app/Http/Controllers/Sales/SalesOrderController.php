@@ -629,7 +629,7 @@ class SalesOrderController extends Controller
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
-                            'warehouse_id' => $item['warehouse_id'],
+                             'warehouse_id' => !empty($item['warehouse_id']) ? $item['warehouse_id'] : null,
                             'unit_price' => $unitPrice,
                             'discount_percent' => $discountPercent,
                             'discount' => $discount,

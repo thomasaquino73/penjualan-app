@@ -213,7 +213,7 @@
             const datePicker = flatpickr("#sales_quotation_date", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                minDate: "today",
+                // minDate: "today",
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
             });
         });

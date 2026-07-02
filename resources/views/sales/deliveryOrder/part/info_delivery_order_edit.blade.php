@@ -39,7 +39,6 @@
                     </select>
                     <span class="error text-danger" id="customer_contact_idError"></span>
                 </div>
-
             </div>
         </div>
     </div>

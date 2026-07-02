@@ -1,37 +1,55 @@
 <!DOCTYPE html>
 <html lang="id">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/css/bootstrap.min.css">
 
 <head>
     <meta charset="UTF-8">
     <title>Purchase Order - PT. Almex Bintang Timur</title>
     <style>
-        /* Pengaturan Kertas Cetak A4 */
+        /* Pengaturan Kertas Cetak A5 Landscape */
         @page {
             size: A5 landscape;
-
-            margin-top: 105px;
-            margin-bottom: 60px;
+            margin-top: 120px;
+            /* Sesuaikan dengan tinggi header */
+            margin-bottom: 50px;
+            /* Sesuaikan dengan tinggi footer */
             margin-left: 12px;
             margin-right: 12px;
         }
 
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
+        /* Definisi Header di setiap halaman */
+        header {
+            position: fixed;
+            top: -110px;
+            left: 0;
+            right: 0;
+            height: 100px;
         }
 
+        /* Definisi Footer di setiap halaman */
+        footer {
+            position: fixed;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            height: 30px;
+            font-size: 7pt;
+            color: #777;
+            text-align: right;
+            border-top: 1px solid #eee;
+        }
+
+        /* Base Typography */
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10pt;
+            font-size: 8.5pt;
+            /* Font dikecilkan */
             color: #000000;
             margin: 0;
             padding: 0;
-            line-height: 1.3;
+            line-height: 1.2;
         }
 
+        /* Utilitas Dasar */
         .w-100 {
             width: 100%;
         }
@@ -40,51 +58,16 @@
             border-collapse: collapse;
         }
 
-        /* Bagian KOP / Header */
-        .header-table td {
-            vertical-align: top;
-        }
-
-        .logo-box {
-            width: 65px;
-            padding-right: 10px;
-        }
-
-        .logo-box svg {
-            width: 60px;
-            height: auto;
-        }
-
-        .company-contact {
-            font-size: 7.5pt;
-            color: #444444;
-            line-height: 1.2;
-        }
-
-        .company-title {
-            font-size: 20pt;
-            font-weight: bold;
-            text-align: right;
-            letter-spacing: -0.5px;
-            margin: 0;
-        }
-
-        .company-address {
-            font-size: 9.5pt;
-            text-align: right;
-            line-height: 1.2;
-            color: #111111;
-        }
-
         .divider {
-            border-top: 1.5px solid #000000;
-            margin-top: 5px;
-            margin-bottom: 15px;
+            border-top: 1.2px solid #000000;
+            margin-top: 2px;
+            margin-bottom: 10px;
         }
 
-        /* Detail Kepada & Nomor PO */
+        /* Bagian Info (Kepada & PO) */
         .info-table {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            width: 100%;
         }
 
         .info-table td {
@@ -93,41 +76,44 @@
         }
 
         .section-title {
-            font-size: 11pt;
+            font-size: 9pt;
             font-weight: bold;
-            border-bottom: 1.5px solid #000000;
-            padding-bottom: 3px;
-            margin-bottom: 5px;
+            border-bottom: 1.2px solid #000000;
+            padding-bottom: 2px;
+            margin-bottom: 4px;
         }
 
         .recipient-box {
-            background-color: #e9ecef;
-            padding: 8px 10px;
-            min-height: 85px;
-            font-size: 10pt;
-            line-height: 1.25;
+            background-color: #f8f9fa;
+            padding: 5px 8px;
+            min-height: 60px;
+            font-size: 8.5pt;
         }
 
         .po-box-title {
-            font-size: 18pt;
+            font-size: 14pt;
+            /* Judul DO dikecilkan */
             font-weight: bold;
             text-align: center;
-            border-bottom: 1.5px solid #000000;
+            border-bottom: 1.2px solid #000000;
             padding-bottom: 2px;
             margin-bottom: 5px;
         }
 
-        .po-details-table {
+        /* .po-details-table {
             width: 100%;
-            font-size: 10pt;
+            font-size: 8.5pt;
+            border-collapse: collapse;
         }
 
         .po-details-table td {
-            padding: 2px 0;
+            padding: 0px 2px;
+            vertical-align: middle;
         }
 
         .po-details-table td.label {
-            width: 32%;
+            width: 30%;
+            white-space: nowrap;
         }
 
         .po-details-table td.colon {
@@ -136,284 +122,228 @@
         }
 
         .po-details-table td.value {
-            width: 63%;
-            background-color: #e9ecef;
-            padding-left: 6px;
-        }
+            width: 65%;
+            background-color: #f8f9fa;
+            padding-left: 5px;
+        } */
 
         /* Tabel Utama Barang */
         .items-table {
             width: 100%;
-            margin-top: 10px;
-            margin-bottom: 15px;
+            margin-top: 5px;
+            font-size: 8.5pt;
         }
 
         .items-table th {
             background-color: #1a446c;
-            /* Warna Biru Navy Almex */
             color: #ffffff;
             font-weight: normal;
-            font-size: 10.5pt;
-            padding: 6px 8px;
-            text-align: left;
+            padding: 4px 6px;
         }
 
         .items-table td {
-            padding: 5px 8px;
-            font-size: 10pt;
-            vertical-align: middle;
+            padding: 3px 6px;
+            border-bottom: 1px solid #eee;
         }
 
-        .text-center {
-            text-align: center;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        /* Ringkasan Total (Summary) */
+        /* Ringkasan & Footer Table */
         .footer-table {
             width: 100%;
             margin-top: 10px;
-        }
-
-        .footer-table td {
-            vertical-align: top;
-        }
-
-        .keterangan-box {
-            width: 50%;
-            padding-right: 40px;
-        }
-
-        .keterangan-title {
-            font-weight: bold;
-            border-bottom: 1.5px solid #000000;
-            padding-bottom: 3px;
-            margin-bottom: 6px;
-        }
-
-        .summary-box {
-            width: 50%;
+            font-size: 8.5pt;
         }
 
         .summary-table {
             width: 100%;
-            background-color: #e9ecef;
+            background-color: #f8f9fa;
         }
 
         .summary-table td {
-            padding: 4px 10px;
-            font-size: 10pt;
+            padding: 3px 8px;
         }
 
-        .summary-table tr.total-row {
+        .total-row {
             background-color: #1a446c;
             color: #ffffff;
             font-weight: bold;
         }
 
-        .summary-table tr.total-row td {
-            border-top: 1.5px solid #000000;
-            padding: 5px 10px;
-        }
-
-        /* Garis Tanda Tangan */
+        /* Tanda Tangan */
         .signature-section {
-            margin-top: 40px;
+            margin-top: 20px;
             width: 100%;
-        }
-
-        .signature-table {
-            width: 100%;
-        }
-
-        .signature-table td {
-            vertical-align: bottom;
         }
 
         .dots-line {
-            border-bottom: 1px dotted #000000;
-            width: 85%;
-            margin-top: 70px;
+            border-bottom: 1px dotted #000;
+            width: 80%;
+            margin-top: 40px;
         }
 
         .approval-title {
+            font-size: 8.5pt;
             font-weight: bold;
-            font-size: 10pt;
-            margin-bottom: 5px;
         }
 
-        /* Pencegahan Yatim Piatu (Orphaned row) saat cetak */
-        .items-table tr {
-            page-break-inside: avoid;
-        }
-
-        .footer {
+        header {
             position: fixed;
-            bottom: 0;
+            top: -110px;
+            /* Sesuaikan dengan margin-top di @page */
+            left: 0;
+            right: 0;
+            height: 100px;
+        }
+
+        .header-table {
             width: 100%;
-            font-size: 7.5pt;
-            color: #999;
+            border-collapse: collapse;
+        }
+
+        .logo-box {
+            width: 250px;
+            /* Sesuai dengan lebar gambar logo */
+            padding-right: 15px;
+            vertical-align: middle;
+        }
+
+        .company-title {
+            font-size: 16pt;
+            /* Dikecilkan agar pas untuk A5 */
+            font-weight: bold;
             text-align: right;
-            border-top: 1px solid #eee;
-            padding-top: 5px;
+            line-height: 1.1;
+            color: #1a446c;
+            /* Warna navy perusahaan */
+            margin-bottom: 3px;
+        }
+
+        .company-address {
+            font-size: 8pt;
+            /* Font kecil untuk alamat */
+            text-align: right;
+            line-height: 1.2;
+            color: #555;
+            font-style: italic;
         }
     </style>
 </head>
 
 <body>
-    @include('pdf.deliveryOrder.partials.header')
-    <div class="divider"></div>
+    <header>
+        <div class="header-content">
+            @include('pdf.deliveryOrder.partials.header')
+            <div class="divider"></div>
+        </div>
+    </header>
 
-    <table class="w-100 info-table">
-        <tr>
-            <td style="padding-right: 25px;">
-                <div class="section-title">Kepada</div>
-                <div class="recipient-box">
-                    <strong>{{ $model->customerID->nama_customer }}</strong><br>
-                    {{ $model->address }}
+    <footer>
+        Printed on: {{ date('Y-m-d H:i:s') }} | Confidential Document
+    </footer>
 
-                </div>
-            </td>
-            <td style="padding-left: 25px;">
-                <div class="po-box-title">Delivery Order</div>
-                <table class="po-details-table">
-                    <tr>
-                        <td class="label">Nomor</td>
-                        <td class="colon">:</td>
-                        <td class="value">{{ $model->delivery_order_code }}</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Tanggal</td>
-                        <td class="colon">:</td>
-                        <td class="value">
-                            {{ date('d M Y', strtotime($model->delivery_order_date)) }}</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Tanggal Kirim</td>
-                        <td class="colon">:</td>
-                        <td class="value">
-                            {{ isset($model->tanggal_pengiriman) ? date('d M Y', strtotime($model->tanggal_pengiriman)) : '' }}
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-
-    <table class="items-table">
-        <thead>
+    <main>
+        <table class="w-100 info-table">
             <tr>
-                <th style="width: 14%;">Kode Barang</th>
-                <th style="width: 40%;">Nama Barang</th>
-                <th style="width: 8%; text-align: center;">Kts.</th>
-                <th style="width: 8%; text-align: center;">Satuan</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($model->details as $detail)
-                <tr>
-                    <td>{{ $detail->produkID->id_barang }}</td>
-                    <td>{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}</td>
-                    <td class="text-center">{{ rtrim(rtrim(number_format($detail->qty, 2, ',', '.'), '0'), ',') }}</td>
-                    <td class="text-center">{{ $detail->unitID->detail }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <table class="w-100 footer-table">
-        <tr>
-            <td class="keterangan-box">
-                <div class="keterangan-title">Keterangan</div>
-                <div class="keterangan-content">{{ $model->description }}</div>
-            </td>
-
-            <td class="summary-box">
-                <table class="summary-table">
-
-                    <tr>
-                        <td>PPN (11%)</td>
-                        <td class="text-right">
-                            {{ isset($model) ? format_uang(convert_currency($model->tax_amount, $detail->currency_id ?? 1)) : '' }}
-                        </td>
-                    </tr>
-                    <tr class="total-row">
-                        <td>Total</td>
-                        <td class="text-right">
-                            {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1)) : '' }}
-                        </td>
-                    </tr>
-                </table>
-            </td>
-
-        </tr>
-    </table>
-    <table class="w-100 footer-table">
-        <tr>
-            <td class="keterangan-box">
-                @php
-                    $currencyId = session('currency_id') ?? \App\Models\Setting\Company::first()->default_currency_id;
-                    $currencyCode = \App\Models\Setting\Currency::find($currencyId)?->code ?? 'IDR';
-
-                    // Gunakan nilai asli (jangan di-round agar sen tidak hilang)
-                    $grandTotalConvert = convert_currency($model->grand_total, $model->currency_id ?? 1);
-                @endphp
-                <div>Terbilang: {{ terbilang($grandTotalConvert, $currencyCode) }}</div>
-            </td>
-        </tr>
-    </table>
-
-    <div class="signature-section">
-        <table class="signature-table">
-            <tr>
-                <td style="width: 60%;">
-                    <div class="dots-line"></div>
+                <td style="padding-right: 25px;">
+                    <div class="section-title">Kepada</div>
+                    <div class="recipient-box">
+                        <strong>{{ $model->customerID->nama_customer }}</strong><br>
+                        {{ $model->address }}
+                    </div>
                 </td>
-                <td class="text-center" style="width: 40%;">
-                    @php
-                        $title = '';
-                        $user = '';
-
-                        if ($model->status == 'rejected') {
-                            $title = 'Ditolak Oleh,';
-                            $user = $model->rejectedBy?->fullname;
-                        } elseif (in_array($model->status, ['approved', 'sent', 'partially_received', 'completed'])) {
-                            $title = 'Disetujui Oleh,';
-                            $user = $model->approvedBy?->fullname;
-                        }
-                    @endphp
-                    @if ($model->status == 'processing')
-                        <div class="approval-title">
-                            Disetujui Oleh
-                        </div>
-                        <div style="height: 65px;">
-                            <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height: 80px;">
-                        </div>
-                        <div style="font-weight: bold; text-decoration: underline;">
-                            Yohanes Lukman
-                        </div>
-                    @else
-                        <div class="approval-title">
-                            Dibuat oleh,
-                        </div>
-                        <div style="height: 65px;">
-                            <img src="{{ public_path('image/logo/69fd6d6ab719c1778216298.png') }}"
-                                style="height: 80px;">
-                        </div>
-                        <div style="font-weight: bold; text-decoration: underline;">
-                            {{ $model->creator->fullname }}
-                        </div>
-                    @endif
+                <td style="width: 50%; vertical-align: top; padding-left: 20px;">
+                    <div class="po-box-title">Surat Jalan</div>
+                    <table style="width: auto; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 80px; padding: 2px;">Nomor</td>
+                            <td style="width: 10px; padding: 2px;">:</td>
+                            <td style="padding: 2px;">{{ $model->delivery_order_code }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 2px;">Tanggal</td>
+                            <td style="padding: 2px;">:</td>
+                            <td style="padding: 2px;">{{ date('d M Y', strtotime($model->delivery_order_date)) }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 2px;">Ekspedisi</td>
+                            <td style="padding: 2px;">:</td>
+                            <td style="padding: 2px;">{{ $model->shippingID?->nama ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 2px;">PO No.</td>
+                            <td style="padding: 2px;">:</td>
+                            <td style="padding: 2px;">{{ $model->no_document }}</td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
         </table>
-    </div>
-    <div class="footer">
-        Printed on: {{ date('Y-m-d H:i:s') }} | Confidential Document
-    </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 14%;">Kode Barang</th>
+                    <th style="width: 40%;">Nama Barang</th>
+                    <th style="width: 8%; text-align: center;">Kts.</th>
+                    <th style="width: 8%; text-align: center;">Satuan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($model->details as $detail)
+                    <tr>
+                        <td>{{ $detail->produkID->id_barang }}</td>
+                        <td>{{ $detail->produkID?->nama_barang ?? 'Product Not Found' }}</td>
+                        <td class="text-center">{{ rtrim(rtrim(number_format($detail->qty, 2, ',', '.'), '0'), ',') }}
+                        </td>
+                        <td class="text-center">{{ $detail->unitID?->detail }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <table class="footer-table" style="width:100%;">
+            <tr>
+                <td style="width:50%; vertical-align:top;">
+                    <div class="section-title">Keterangan</div>
+                    <div>{{ $model->description }}</div>
+                </td>
+                <td style="width:20%;">
+                </td>
+                <td style="width:30%; vertical-align:top;">
+                    <table class="summary-table" style="width:100%;">
+                        <tr>
+                            <td>Total Kuantitas</td>
+                            <td class="text-right">{{ $totalQty }}</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>Total Barang</td>
+                            <td class="text-right">{{ $totalBarang }}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <div class="signature-section">
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 60%;">
+                        <div class="dots-line"></div>
+                    </td>
+                    <td style="width: 40%; text-align: center;">
+                        <div class="approval-title">
+                            {{ $model->status == 'processing' ? 'Disetujui Oleh' : 'Dibuat oleh' }}</div>
+                        <div style="height: 65px;">
+                            <img src="{{ public_path($model->status == 'processing' ? 'image/logo/STEMPEL.png' : 'image/logo/69fd6d6ab719c1778216298.png') }}"
+                                style="height: 80px;">
+                        </div>
+                        <div style="font-weight: bold; text-decoration: underline;">
+                            {{ $model->status == 'processing' ? 'Yohanes Lukman' : $model->creator->fullname }}
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </main>
 </body>
 
 </html>

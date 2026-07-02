@@ -164,7 +164,7 @@
         <table class="header-table">
             <tr>
                 <td>
-                    <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 350px;" height="100px"
+                    <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 380px;" height="120px"
                         alt="Logo Perusahaan">
                 </td>
                 <td>
@@ -181,7 +181,7 @@
         <script type="text/php">if (isset($pdf)) { $font = $fontMetrics->getFont("Arial", "bold"); $pdf->page_text(520, 800, "Page {PAGE_NUM} of {PAGE_COUNT}", $font, 7, array(0,0,0)); }</script>
     </footer>
 
-    <table class="info-table">
+    <table class="info-table" style="margin-top: 20px; width:100%">
         <tr>
             <td style="width: 50%; vertical-align: top;">
                 <div class="section-title">Kepada</div>
@@ -192,18 +192,21 @@
             </td>
             <td style="width: 50%; vertical-align: top; padding-left: 20px;">
                 <div class="po-box-title">Penawaran Harga</div>
-                <table>
+                <table style="width:100%;">
                     <tr>
-                        <td>Nomor</td>
-                        <td>: {{ $model->sales_quotation_code }}</td>
+                        <td width="70">Nomor</td>
+                        <td width="10">:</td>
+                        <td>{{ $model->sales_quotation_code }}</td>
                     </tr>
                     <tr>
-                        <td>Tanggal</td>
-                        <td>: {{ date('d M Y', strtotime($model->sales_quotation_date)) }}</td>
+                        <td width="70">Tanggal</td>
+                        <td width="10">:</td>
+                        <td>{{ date('d M Y', strtotime($model->sales_quotation_date)) }}</td>
                     </tr>
                     <tr>
-                        <td>Pembayaran</td>
-                        <td>: {{ $model->paymentTermID?->nama ?? '-' }}</td>
+                        <td width="70">Pembayaran</td>
+                        <td width="10">:</td>
+                        <td>{{ $model->paymentTermID?->nama ?? '-' }}</td>
                     </tr>
                 </table>
             </td>

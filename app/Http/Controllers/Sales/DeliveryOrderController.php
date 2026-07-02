@@ -1482,13 +1482,28 @@ class DeliveryOrderController extends Controller
         $pdf = Pdf::loadView('pdf.deliveryOrder.delivery_order', [
             'model' => $deliveryOrder,
             'company' => $company,
-            'logoBase64' => $logoBase64,    
+            'logoBase64' => $logoBase64,  
+               'totalQty'    => $this->hitungTotalQty($deliveryOrder),
+        'totalBarang' => $this->hitungTotalBarang($deliveryOrder),
         ]);
 
         $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $deliveryOrder->delivery_order_code);
 
         return $pdf->setPaper('a5', 'landscape')
             ->stream($filename . '.pdf');
+    }
+
+    private function hitungTotalQty($deliveryOrder)
+    {
+        return $deliveryOrder->details->sum('qty');
+    }
+
+    private function hitungTotalBarang($deliveryOrder)
+    {
+        return $deliveryOrder->details->count();
+
+        // Jika ingin menghitung jenis barang unik:
+        // return $deliveryOrder->details->unique('data_barang_id')->count();
     }
 
     public function getKontakByCustomer($customer_id)

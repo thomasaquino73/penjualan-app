@@ -6,8 +6,8 @@
                 <table>
                     <tr>
                         <td class="logo-box">
-                            <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 340px;">
-
+                            <img src="{{ public_path('image/logo/logo_print.png') }}" alt="Logo Perusahaan"
+                                style="width: 300px; height: 100px;margin-top:10px">
                         </td>
                     </tr>
                 </table>

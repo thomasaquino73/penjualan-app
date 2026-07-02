@@ -2,6 +2,7 @@
 
 namespace App\Models\Sales;
 
+use App\Models\Setting\Shipping;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
@@ -27,6 +28,10 @@ class DeliveryOrder extends Model
     public function customerID()
     {
         return $this->belongsTo(Customer::class, 'customer_id');
+    }
+    public function shippingID()
+    {
+        return $this->belongsTo(Shipping::class, 'shipping_id');
     }
 
     public function updater()

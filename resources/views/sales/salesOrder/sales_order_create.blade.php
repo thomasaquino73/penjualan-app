@@ -222,7 +222,6 @@
             const datePicker = flatpickr("#sales_order_date", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                minDate: "today",
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
             });
         });
@@ -524,13 +523,19 @@
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
                                 action: function(e, dt, node, config) {
+
                                     let data = dt.row({
                                         selected: true
                                     }).data();
                                     let rowIndex = dt.row({
                                         selected: true
                                     }).index();
-
+                                    console.log("========== DATA EDIT ==========");
+                                    console.dir(data);
+                                    console.log("unit_price :", data.unit_price);
+                                    console.log("amount :", data.amount);
+                                    console.log("discount :", data.discount);
+                                    console.log("quantity :", data.quantity);
                                     window.isEditingMode = true;
 
                                     // Menyimpan index baris array untuk penanda update
@@ -552,11 +557,11 @@
                                     $("#quantity").val(data.quantity);
                                     $("#unit_id").data("pending-val", data.unit_id);
                                     $("#warehouse_id").val(data.warehouse_id).trigger("change");
-                                    $("#product_id").val(data.product_id).trigger("change");
                                     $("#unit_price").val(data.unit_price);
                                     $("#discount").val(data.discount || 0);
                                     $("#total_price").val(data.amount || 0);
                                     $("#tax").val(data.tax || 0);
+                                    $("#product_id").val(data.product_id).trigger("change");
 
                                     $("#modalTitle").text("Edit entry");
                                     $("#btnSubmitModal").text("Update");
@@ -629,11 +634,7 @@
                 let warehouseId = $('#warehouse_id').val();
                 let unitId = $('#unit_id').val();
 
-                console.log({
-                    productId,
-                    warehouseId,
-                    unitId
-                });
+
 
                 if (!productId || !warehouseId || !unitId) {
                     $('#available_stok').val('');
@@ -650,7 +651,6 @@
                     },
                     success: function(res) {
                         $('#available_stok').val(res.stock);
-                        console.log('RESPONSE STOCK:', res.stock);
 
                         $('#modalTitle').text(
                             `Create new entry (Available Stock: ${res.stock} ${res.unit})`
@@ -723,6 +723,10 @@
             });
 
             $(document).on("change", "#product_id", function() {
+                console.log("=== CHANGE PRODUCT ===");
+                console.log("isEditingMode =", window.isEditingMode);
+                console.log("isPopulating =", window.isPopulating);
+                console.log("harga sebelum =", $("#unit_price").val());
                 let productId = $(this).val();
                 let unitSelect = $("#unit_id");
                 let priceInput = $("#unit_price");
@@ -787,8 +791,10 @@
                         unitSelect.trigger("change");
 
                         // Gunakan response.default_price
-                        priceInput.val(response.default_price || 0);
-
+                        // priceInput.val(response.default_price || 0);
+                        if (!window.isEditingMode) {
+                            priceInput.val(response.default_price || 0);
+                        }
                         let pendingUnitId = unitSelect.data("pending-val");
                         if (pendingUnitId) {
                             unitSelect.val(pendingUnitId).trigger("change");
@@ -796,7 +802,6 @@
                         }
                     },
                     error: function() {
-                        console.error("Gagal memuat list unit dari Controller.");
                         unitSelect
                             .empty()
                             .append("<option></option>")
@@ -901,7 +906,6 @@
                         }
                     },
                     error: function(xhr) {
-                        console.error("Gagal mengambil data riwayat harga:", xhr);
                         helperText
                             .attr("class", "form-text text-danger")
                             .text("Gagal memuat riwayat harga.");
@@ -1349,7 +1353,6 @@
 
                                     // 5. Looping data response backend untuk dimasukkan ke array DataTables
                                     response.data.forEach(function(item) {
-                                        console.log(response.data);
                                         let qtyAwal = parseFloat(item.qty || 0);
                                         let sudahPO = parseFloat(item.sq_qty ||
                                             0);
@@ -1374,6 +1377,8 @@
                                             sisa_pr: sisaPr, // <--- TAMBAHKAN INI: Sebagai acuan validasi batas maksimal
                                             unit_id: item.unit_id,
                                             unit: item.unit_name,
+                                            warehouse_id: null,
+                                            warehouse: null,
                                             unit_price: unitPrice,
                                             discount: discount,
                                             amount: amount,

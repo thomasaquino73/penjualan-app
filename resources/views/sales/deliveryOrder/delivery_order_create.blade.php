@@ -574,17 +574,17 @@
                             contactDropdown.empty();
                             contactDropdown.append('<option value="">Pilih Kontak</option>');
 
-                            $.each(data.kontak, function(index, value) {
-
+                            $.each(data.kontak, function(key, value) {
                                 contactDropdown.append(
-                                    '<option value="' + value.id + '">' +
-                                    value.sapaan + ' ' +
-                                    value.contact_person + ' (' +
-                                    value.posisi_jabatan + ')' +
-                                    '</option>'
+                                    `<option value="${value.id}">
+                        ${value.sapaan} ${value.contact_person}
+                        (${value.posisi_jabatan})
+                    </option>`
                                 );
 
                             });
+
+                            $('#address').val(data.address);
 
                         }
                     });
