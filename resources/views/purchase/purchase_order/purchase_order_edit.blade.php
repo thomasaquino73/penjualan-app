@@ -615,53 +615,49 @@
 
         // Ketika tombol map/history alamat diklik
         $(document).on("click", "#btn-history-address", function() {
-            // Ambil nilai company_id yang sedang terpilih saat ini
-            let companyId = $("#company_id").val("1");
-            // Jalankan fungsi AJAX bawaanmu
-            loadAddressHistory(companyId);
+            let supplierId = $("#supplier_id").val();
+            loadSupplierAddress(supplierId);
         });
-
-        // Event ketika salah satu list alamat di dalam dropdown diklik
         $(document).on("click", ".select-address", function() {
-            let chosenAddress = $(this).data("address");
-
-            $("#shipping_address").val(chosenAddress);
+            $("#shipping_address").val($(this).data("address"));
         });
 
-        function loadAddressHistory(companyId) {
-            if (!companyId) return;
-
+        function loadSupplierAddress(supplierId) {
+            if (!supplierId) return;
             $.ajax({
-                url: `/purchase-order/get-company-addresses/${companyId}`,
+                url: `/purchase-order/get-supplier-address/${supplierId}`,
                 type: "GET",
                 dataType: "json",
                 success: function(response) {
                     let dropdownMenu = $("#address-dropdown-menu");
                     dropdownMenu.empty();
-
-                    if (response.success && response.data.length > 0) {
-                        response.data.forEach(function(item) {
-                            // Ditambahkan class p-2, text-dark, dan w-100 agar warna tulisan muncul dan areanya lebar
-                            let listItem = `
-                        <li class="w-100">
-                            <a class="dropdown-item select-address p-2 d-block text-dark" href="javascript:void(0);" data-address="${item.address}" style="white-space: normal;">
-                                <strong class="text-dark d-block mb-1">${item.address_name}</strong>
-                                <span class="text-muted small d-block">${item.address}</span>
-                            </a>
-                        </li>
-                    `;
-                            dropdownMenu.append(listItem);
-                        });
+                    if (response.success) {
+                        let item = response.data;
+                        dropdownMenu.append(`
+                    <li class="w-100">
+                        <a class="dropdown-item select-address p-2 d-block text-dark"
+                           href="javascript:void(0);"
+                           data-address="${item.address.replace(/\n/g,'&#10;')}"
+                           style="white-space: normal;">
+                            <strong class="d-block">${item.address_name}</strong>
+                            <span class="text-muted small" style="white-space: pre-line;">
+                                ${item.address}
+                            </span>
+                        </a>
+                    </li>
+                `);
                     } else {
-                        dropdownMenu.append(
-                            '<li><span class="dropdown-item text-muted p-2">No address history found</span></li>',
-                        );
+                        dropdownMenu.append(`
+                    <li>
+                        <span class="dropdown-item text-muted">
+                            Tidak ada alamat.
+                        </span>
+                    </li>
+                `);
                     }
-                },
-                error: function(xhr) {
-                    console.error("Gagal memuat alamat:", xhr.responseText);
-                },
+                }
             });
+
         }
     </script>
     <script>
@@ -1883,7 +1879,7 @@
                         ${item.bank_name} - ${item.nomor_rekening}
                         (${item.nama_rekening})
                     </option>
-                `);
+                    `);
 
                         });
 
@@ -1893,6 +1889,23 @@
                         if (response.pajak) {
                             $('#taxpayer_data').val(response.pajak.tipe_id_pajak + ' :' +
                                 response.pajak.nomor_wajib_pajak);
+                        }
+                        if (response.supplier) {
+                            let alamat = [];
+                            if (response.supplier.alamat_pembayaran)
+                                alamat.push(response.supplier.alamat_pembayaran);
+                            let kotaProvinsi = [];
+                            if (response.supplier.kota)
+                                kotaProvinsi.push(response.supplier.kota);
+                            if (response.supplier.provinsi)
+                                kotaProvinsi.push(response.supplier.provinsi);
+                            if (response.supplier.kodepos)
+                                kotaProvinsi.push(response.supplier.kodepos);
+                            if (kotaProvinsi.length > 0)
+                                alamat.push(kotaProvinsi.join(', '));
+                            if (response.supplier.negara)
+                                alamat.push(response.supplier.negara);
+                            $('#shipping_address').val(alamat.join('\n'));
                         }
 
                     }

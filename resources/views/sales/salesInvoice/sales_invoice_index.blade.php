@@ -288,9 +288,9 @@
                 });
             });
 
-            $(document).on('click', '.btn-submit-po', function() {
+            $(document).on('click', '.btn-processing', function() {
                 let id = $(this).data('id');
-                let url = "{{ route('sales-invoice.submit', ':id') }}".replace(':id', id);
+                let url = "{{ route('sales-invoice.process', ':id') }}".replace(':id', id);
 
                 Swal.fire({
                     title: 'Are you sure?',
@@ -360,123 +360,123 @@
                 });
             });
 
-            $(document).on('click', '.btn-processing-pr', function() {
-                let id = $(this).data('id');
-                let statusTarget = $(this).data('status'); // langsung 'processing'
+            // $(document).on('click', '.btn-processing-pr', function() {
+            //     let id = $(this).data('id');
+            //     let statusTarget = $(this).data('status'); // langsung 'processing'
 
-                $.ajax({
-                    url: '/sales-invoice/change-status/' + id,
-                    type: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        id: id,
-                        status: statusTarget
-                    },
-                    success: function(response) {
-                        Swal.fire({
-                            title: 'Success!',
-                            text: response.message ||
-                                'Status berhasil diubah ke processing.',
-                            icon: 'success'
-                        });
+            //     $.ajax({
+            //         url: '/sales-invoice/change-status/' + id,
+            //         type: "POST",
+            //         data: {
+            //             _token: "{{ csrf_token() }}",
+            //             id: id,
+            //             status: statusTarget
+            //         },
+            //         success: function(response) {
+            //             Swal.fire({
+            //                 title: 'Success!',
+            //                 text: response.message ||
+            //                     'Status berhasil diubah ke processing.',
+            //                 icon: 'success'
+            //             });
 
-                        if ($.fn.DataTable.isDataTable('#table')) {
-                            $('#table').DataTable().ajax.reload();
-                        }
-                    },
-                    error: function(err) {
-                        Swal.fire({
-                            title: 'Failed!',
-                            text: 'Gagal update status',
-                            icon: 'error'
-                        });
-                    }
-                });
-            });
-            $(document).on('click', '.btn-approval-po', function() {
-                let id = $(this).data('id');
-                let statusTarget = $(this).data('status'); // Nilai dari HTML: 'approved' atau 'rejected'
+            //             if ($.fn.DataTable.isDataTable('#table')) {
+            //                 $('#table').DataTable().ajax.reload();
+            //             }
+            //         },
+            //         error: function(err) {
+            //             Swal.fire({
+            //                 title: 'Failed!',
+            //                 text: 'Gagal update status',
+            //                 icon: 'error'
+            //             });
+            //         }
+            //     });
+            // });
+            // $(document).on('click', '.btn-approval-po', function() {
+            //     let id = $(this).data('id');
+            //     let statusTarget = $(this).data('status'); // Nilai dari HTML: 'approved' atau 'rejected'
 
-                // =========================================================================
-                // PERBAIKAN: Mengubah acuan kata 'processing' menjadi 'approved'
-                // =========================================================================
-                let isApprove = statusTarget === 'approved';
-                let textKeterangan = isApprove ? 'approve' : 'reject';
-                let confirmBtnColor = isApprove ? '#28a745' : '#dc3545';
-                let confirmBtnText = isApprove ? 'Yes, Approve!' : 'Yes, Reject!';
-                let confirmBtnClass = isApprove ?
-                    'btn btn-success me-3 waves-effect waves-light' :
-                    'btn btn-danger me-3 waves-effect waves-light';
+            //     // =========================================================================
+            //     // PERBAIKAN: Mengubah acuan kata 'processing' menjadi 'approved'
+            //     // =========================================================================
+            //     let isApprove = statusTarget === 'approved';
+            //     let textKeterangan = isApprove ? 'approve' : 'reject';
+            //     let confirmBtnColor = isApprove ? '#28a745' : '#dc3545';
+            //     let confirmBtnText = isApprove ? 'Yes, Approve!' : 'Yes, Reject!';
+            //     let confirmBtnClass = isApprove ?
+            //         'btn btn-success me-3 waves-effect waves-light' :
+            //         'btn btn-danger me-3 waves-effect waves-light';
 
-                Swal.fire({
-                    title: 'Are you sure?',
-                    // PERBAIKAN: Mengubah teks berkas menjadi Purchase Invoice
-                    text: `You are about to ${textKeterangan} this Purchase Invoice document.`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: confirmBtnColor,
-                    confirmButtonText: confirmBtnText,
-                    customClass: {
-                        confirmButton: confirmBtnClass,
-                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
-                    },
-                    buttonsStyling: false
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: '/sales-invoice/change-status/' + id,
-                            type: "POST",
-                            data: {
-                                _token: "{{ csrf_token() }}",
-                                id: id,
-                                status: statusTarget
-                            },
-                            success: function(response) {
-                                Swal.fire({
-                                    title: 'Success!',
-                                    text: response.message ||
-                                        'The status has been updated successfully.',
-                                    icon: 'success',
-                                    showCancelButton: false,
-                                    confirmButtonColor: '#28a745',
-                                    confirmButtonText: 'OK',
-                                    customClass: {
-                                        confirmButton: 'btn btn-success'
-                                    },
-                                    buttonsStyling: false
-                                });
+            //     Swal.fire({
+            //         title: 'Are you sure?',
+            //         // PERBAIKAN: Mengubah teks berkas menjadi Purchase Invoice
+            //         text: `You are about to ${textKeterangan} this Purchase Invoice document.`,
+            //         icon: 'warning',
+            //         showCancelButton: true,
+            //         confirmButtonColor: confirmBtnColor,
+            //         confirmButtonText: confirmBtnText,
+            //         customClass: {
+            //             confirmButton: confirmBtnClass,
+            //             cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+            //         },
+            //         buttonsStyling: false
+            //     }).then((result) => {
+            //         if (result.isConfirmed) {
+            //             $.ajax({
+            //                 url: '/sales-invoice/change-status/' + id,
+            //                 type: "POST",
+            //                 data: {
+            //                     _token: "{{ csrf_token() }}",
+            //                     id: id,
+            //                     status: statusTarget
+            //                 },
+            //                 success: function(response) {
+            //                     Swal.fire({
+            //                         title: 'Success!',
+            //                         text: response.message ||
+            //                             'The status has been updated successfully.',
+            //                         icon: 'success',
+            //                         showCancelButton: false,
+            //                         confirmButtonColor: '#28a745',
+            //                         confirmButtonText: 'OK',
+            //                         customClass: {
+            //                             confirmButton: 'btn btn-success'
+            //                         },
+            //                         buttonsStyling: false
+            //                     });
 
-                                // Reload table tanpa melompat ke page 1 lagi
-                                if ($.fn.DataTable.isDataTable('#table')) {
-                                    $('#table').DataTable().ajax.reload(null, false);
-                                }
-                            },
-                            error: function(err) {
-                                let errorMessage = 'Something went wrong.';
-                                if (err.responseJSON && err.responseJSON.error) {
-                                    errorMessage = err.responseJSON.error;
-                                } else if (err.responseJSON && err.responseJSON
-                                    .message) {
-                                    errorMessage = err.responseJSON.message;
-                                }
+            //                     // Reload table tanpa melompat ke page 1 lagi
+            //                     if ($.fn.DataTable.isDataTable('#table')) {
+            //                         $('#table').DataTable().ajax.reload(null, false);
+            //                     }
+            //                 },
+            //                 error: function(err) {
+            //                     let errorMessage = 'Something went wrong.';
+            //                     if (err.responseJSON && err.responseJSON.error) {
+            //                         errorMessage = err.responseJSON.error;
+            //                     } else if (err.responseJSON && err.responseJSON
+            //                         .message) {
+            //                         errorMessage = err.responseJSON.message;
+            //                     }
 
-                                Swal.fire({
-                                    title: 'Failed!',
-                                    text: errorMessage,
-                                    icon: 'error',
-                                    showCancelButton: false,
-                                    confirmButtonColor: '#3085d6',
-                                    confirmButtonText: 'OK',
-                                    customClass: {
-                                        confirmButton: 'btn btn-primary'
-                                    },
-                                    buttonsStyling: false
-                                });
-                            }
-                        });
-                    }
-                });
-            });
+            //                     Swal.fire({
+            //                         title: 'Failed!',
+            //                         text: errorMessage,
+            //                         icon: 'error',
+            //                         showCancelButton: false,
+            //                         confirmButtonColor: '#3085d6',
+            //                         confirmButtonText: 'OK',
+            //                         customClass: {
+            //                             confirmButton: 'btn btn-primary'
+            //                         },
+            //                         buttonsStyling: false
+            //                     });
+            //                 }
+            //             });
+            //         }
+            //     });
+            // });
 
             $('body').on('click', '#close', function() {
                 let id = $(this).data('id');

@@ -406,10 +406,10 @@ class PurchaseOrderController extends Controller
             </a>
                  ';
                     }
-                    if ($row->status == 'completed' ) {
-                      
-                    }else {
-  $btn .= '<a class="dropdown-item"
+                    if ($row->status == 'completed') {
+
+                    } else {
+                        $btn .= '<a class="dropdown-item"
                 href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->code.'">
                 <i class="ti ti-lock"></i> Close PO
              </a>';
@@ -1961,16 +1961,46 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-    public function getCompanyAddresses($companyId)
-    {
+    // public function getCompanyAddresses($companyId)
+    // {
 
-        $addresses = CompanyDeliveryAddress::where('company_id', 1)->where('active', 1)->get();
+    //     $addresses = CompanyDeliveryAddress::where('company_id', 1)->where('active', 1)->get();
 
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $addresses,
+    //     ]);
+    // }
+
+    public function getSupplierAddress($supplierId)
+{
+    $supplier = Supplier::find($supplierId);
+
+    if (!$supplier) {
         return response()->json([
-            'success' => true,
-            'data' => $addresses,
+            'success' => false,
+            'message' => 'Supplier tidak ditemukan.'
         ]);
     }
+
+    $address = collect([
+        $supplier->alamat_pembayaran,
+        collect([
+            $supplier->kota,
+            $supplier->provinsi,
+            $supplier->kodepos,
+        ])->filter()->implode(', '),
+        $supplier->negara,
+    ])->filter()->implode("\n");
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'address_name' => $supplier->nama_supplier,
+            'address' => $address,
+        ]
+    ]);
+}
 
     public function sendSupplier($id)
     {
@@ -2082,6 +2112,7 @@ class PurchaseOrderController extends Controller
 
     public function getSupplierData($supplierId)
     {
+          $supplier = Supplier::findOrFail($supplierId);
         // Rekening
         $rekening = DB::table('supplier_rekening')
             ->leftJoin(
@@ -2108,6 +2139,13 @@ class PurchaseOrderController extends Controller
         return response()->json([
             'rekening' => $rekening,
             'pajak' => $pajak,
+                'supplier' => [
+            'alamat_pembayaran' => $supplier->alamat_pembayaran,
+            'kota'              => $supplier->kota,
+            'kodepos'           => $supplier->kodepos,
+            'provinsi'          => $supplier->provinsi,
+            'negara'            => $supplier->negara,
+        ]
         ]);
     }
 }

@@ -940,12 +940,14 @@ class DeliveryOrderController extends Controller
             $do = DeliveryOrder::findOrFail($id);
             $do->update(['active' => 0, 'updated_by' => Auth::id()]);
             StockMutation::where('document_type', 'delivery_order')
-            ->where('document_id', $do->id)
-            ->delete();
+                ->where('document_id', $do->id)
+                ->delete();
             DB::commit();
+
             return response()->json(['status' => 'success', 'message' => 'DO berhasil dibatalkan.'], 200);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan DO: '.$e->getMessage()], 500);
         }
     }
@@ -1213,56 +1215,56 @@ class DeliveryOrderController extends Controller
     // }
 
     public function restore($id)
-{
-    DB::beginTransaction();
+    {
+        DB::beginTransaction();
 
-    try {
-        $do = DeliveryOrder::with('details')->findOrFail($id);
+        try {
+            $do = DeliveryOrder::with('details')->findOrFail($id);
 
-        $do->update([
-            'active' => 1,
-            'updated_by' => Auth::id(),
-        ]);
-
-        foreach ($do->details as $detail) {
-
-            StockMutation::create([
-                'data_barang_id'  => $detail->data_barang_id,
-                'unit_id'         => $detail->unit_id,
-                'warehouse_id'    => $detail->warehouse_id,
-                'date_stock'      => $do->delivery_order_date,
-                'qty_transaksi'   => $detail->qty,
-                'total_base_qty'  => $detail->qty,
-                 'keterangan' => sprintf(
-                                'Pengiriman barang ke customer %s melalui DO %s',
-                                 $do->customerID->nama_customer ?? 'Customer Tidak Diketahui',
-                                $do->delivery_order_code
-                            ),
-                'type'            => 'out',
-                'document_id'     => $do->id,
-                'document_number' => $do->delivery_order_code,
-                'document_type'   => 'delivery_order',
-                'created_by'      => Auth::id(),
+            $do->update([
+                'active' => 1,
+                'updated_by' => Auth::id(),
             ]);
+
+            foreach ($do->details as $detail) {
+
+                StockMutation::create([
+                    'data_barang_id' => $detail->data_barang_id,
+                    'unit_id' => $detail->unit_id,
+                    'warehouse_id' => $detail->warehouse_id,
+                    'date_stock' => $do->delivery_order_date,
+                    'qty_transaksi' => $detail->qty,
+                    'total_base_qty' => $detail->qty,
+                    'keterangan' => sprintf(
+                        'Pengiriman barang ke customer %s melalui DO %s',
+                        $do->customerID->nama_customer ?? 'Customer Tidak Diketahui',
+                        $do->delivery_order_code
+                    ),
+                    'type' => 'out',
+                    'document_id' => $do->id,
+                    'document_number' => $do->delivery_order_code,
+                    'document_type' => 'delivery_order',
+                    'created_by' => Auth::id(),
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Delivery Order berhasil direstore.',
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Delivery Order berhasil direstore.',
-        ]);
-
-    } catch (\Exception $e) {
-
-        DB::rollBack();
-
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-        ], 500);
     }
-}
 
     public function restoreMultiple(Request $request)
     {
@@ -1367,7 +1369,7 @@ class DeliveryOrderController extends Controller
             'produkID',
             'unitID',
             'salesOrder',
-            'warehouseID', 
+            'warehouseID',
         ])
             ->whereIn('sales_order_id', $ids)
             ->where('active', 1)
@@ -1405,7 +1407,7 @@ class DeliveryOrderController extends Controller
                 'order_code' => $item->salesOrder->sales_order_code ?? '',
                 'pr_status' => $item->salesOrder->status ?? '',
                 'warehouse_id' => $item->warehouse_id,
-                'warehouse'    => $item->warehouseID?->nama_gudang ?? '-',
+                'warehouse' => $item->warehouseID?->nama_gudang ?? '-',
             ];
         })->filter()->values();
         //    dd($details);

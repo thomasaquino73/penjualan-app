@@ -471,11 +471,11 @@
                         $.each(response.kontak, function(key, value) {
 
                             contactDropdown.append(`
-                    <option value="${value.id}">
-                        ${value.sapaan} ${value.contact_person}
-                        (${value.posisi_jabatan})
-                    </option>
-                `);
+                            <option value="${value.id}">
+                                ${value.sapaan} ${value.contact_person}
+                                (${value.posisi_jabatan})
+                            </option>
+                            `);
 
                         });
 
@@ -489,6 +489,8 @@
                             $('#taxpayer_data').val('');
 
                         }
+
+                        $('#address').val(response.address ?? '');
 
                     }
                 });
@@ -589,6 +591,8 @@
                         helperText.text("Mencari riwayat harga...");
                     },
                     success: function(response) {
+                        calculateTotalOrder();
+                        calculateGrandTotal();
                         if (response.success && response.history.length > 0) {
                             dropdownBtn.prop("disabled", false);
                             helperText
@@ -649,11 +653,14 @@
                                 a.on("click", function(e) {
                                     e.preventDefault();
                                     priceInput.val(harga);
+                                    calculateTotal();
+
                                 });
 
                                 li.append(a);
                                 dropdownMenu.append(li);
                             });
+
                         } else {
                             helperText
                                 .attr("class", "form-text text-muted")

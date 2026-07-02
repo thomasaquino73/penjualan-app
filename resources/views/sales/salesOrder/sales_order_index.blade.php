@@ -27,7 +27,7 @@
                         </div>
                         <h4 class="ms-1 mb-0">{{ $totalPurchase }}</h4>
                     </div>
-                    <p class="mb-1">Total Purchase</p>
+                    <p class="mb-1">Total Sales</p>
                 </div>
             </div>
         </div>
@@ -43,7 +43,7 @@
                         </div>
                         <h4 class="ms-1 mb-0">{{ $completedReceived }}</h4>
                     </div>
-                    <p class="mb-1">Completed Purchase</p>
+                    <p class="mb-1">Completed Sales</p>
                 </div>
             </div>
         </div>
@@ -59,7 +59,7 @@
                         </div>
                         <h4 class="ms-1 mb-0">{{ $partiallyReceived }}</h4>
                     </div>
-                    <p class="mb-1">Partially Receive</p>
+                    <p class="mb-1">Partially Delivered</p>
                 </div>
             </div>
         </div>

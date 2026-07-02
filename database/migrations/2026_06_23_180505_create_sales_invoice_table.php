@@ -31,6 +31,7 @@ return new class extends Migration
             $table->boolean('total_termasuk_pajak')->default(1)->comment('harga total termasuk pajak')->nullable();
             $table->enum('status', [
                 'draft',
+                'processing',
                 'unpaid',
                 'partial',
                 'paid',

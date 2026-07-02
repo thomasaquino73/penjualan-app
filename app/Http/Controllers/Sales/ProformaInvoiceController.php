@@ -106,20 +106,12 @@ class ProformaInvoiceController extends Controller
                             $text = 'Draft';
                             break;
 
-                        case 'pending':
+                        case 'processing':
                             $badge = 'bg-label-warning';
-                            $text = 'Pending Approval';
+                            $text = 'Processing';
                             break;
 
-                        case 'approved':
-                            $badge = 'bg-label-success';
-                            $text = 'Approved';
-                            break;
-
-                        case 'sent':
-                            $badge = 'bg-label-primary';
-                            $text = 'Sent To Supplier';
-                            break;
+                        
 
                         case 'partially_received':
                             $badge = 'bg-label-info';
@@ -158,25 +150,7 @@ class ProformaInvoiceController extends Controller
                             </span>
                     ';
 
-                    // APPROVED INFO
-                    if ($row->status == 'approved' && $row->approvedBy) {
-
-                        $html .= '
-                        <small class="text-muted mt-1">
-                            Approved By : '.$row->approvedBy->fullname.'
-                        </small>
-                    ';
-                    }
-
-                    // REJECTED INFO
-                    if ($row->status == 'rejected' && $row->rejectedBy) {
-
-                        $html .= '
-                            <small class="text-muted mt-1">
-                                Rejected By : '.$row->rejectedBy->fullname.'
-                            </small>
-                        ';
-                    }
+                    
 
                     // OUTSTANDING INFO
                     if (
@@ -244,7 +218,7 @@ class ProformaInvoiceController extends Controller
                         if ($row->status == 'draft') {
 
                             $btn .= '
-                                <a class="dropdown-item btn-submit-po"
+                                <a class="dropdown-item btn-processing"
                                     href="javascript:void(0)"
                                     data-id="'.$row->id.'">
 
@@ -1264,7 +1238,7 @@ class ProformaInvoiceController extends Controller
 
     public function print($id)
     {
-        $salesInvoice = ProformaInvoice::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $proformaInvoice = ProformaInvoice::with(['details.produkID', 'details.unitID'])->findOrFail($id);
         $company = Company::first();
         // 1. LOGIKA LOGO PERUSAHAAN (Base64)
         $logoBase64 = null;
@@ -1277,9 +1251,9 @@ class ProformaInvoiceController extends Controller
             }
         }
         $data = [
-            'model' => $salesInvoice,
+            'model' => $proformaInvoice,
             'company' => $company,
-            'modelDetail' => $salesInvoice->details,
+            'modelDetail' => $proformaInvoice->details,
             'logoBase64' => $logoBase64,
         ];
 
@@ -1287,7 +1261,7 @@ class ProformaInvoiceController extends Controller
             ->setPaper('a4', 'portrait');
 
         // preview di browser
-        $filename = $salesInvoice->proforma_invoice_code.'-'.$salesInvoice->customerID->nama_customer;
+        $filename = $proformaInvoice->proforma_invoice_code.'-'.$proformaInvoice->customerID->nama_customer;
 
         // replace forbidden filename chars
         $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
@@ -1458,5 +1432,37 @@ class ProformaInvoiceController extends Controller
             as stock
         ")
             ->value('stock') ?? 0;
+    }
+
+    public function processData($id)
+    {
+        // 1. Ambil tahun berjalan secara dinamis
+        $year = date('Y');
+        $tableName = "proforma_invoice_{$year}";
+
+        // 2. Gunakan Query Builder dengan nama tabel dinamis agar pencarian ID aman
+        $poData = DB::table($tableName)->where('id', $id)->first();
+
+        // Jika data memang benar-benar tidak ditemukan di database
+        if (! $poData) {
+            return response()->json(['success' => false, 'message' => 'Data Proforma Invoice tidak ditemukan.'], 404);
+        }
+
+        // 3. Validasi Keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
+        if ($poData->status !== 'draft' || $poData->created_by != Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.',
+            ], 403);
+        }
+
+        // 4. Lakukan pembaruan status menggunakan Query Builder demi stabilitas tabel dinamis
+        DB::table($tableName)->where('id', $id)->update([
+            'status' => 'processing',
+            'updated_by' => Auth::user()->id,
+            'updated_at' => now(), // Mengisi timestamp bawaan laravel secara manual karena menggunakan Query Builder
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Proforma Invoice berhasil diajukan!']);
     }
 }

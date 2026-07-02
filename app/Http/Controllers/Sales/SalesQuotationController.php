@@ -792,6 +792,24 @@ class SalesQuotationController extends Controller
 
     public function getKontakByCustomer($customer_id)
     {
+        $customer = Customer::find($customer_id);
+        if (!$customer_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer tidak ditemukan.'
+            ]);
+        }
+
+        $address = collect([
+            $customer->alamat_tagihan,
+            collect([
+                $customer->kota_tagihan,
+                $customer->provinsi_tagihan,
+                $customer->kodepos_tagihan,
+            ])->filter()->implode(', '),
+            $customer->negara_tagihan,
+        ])->filter()->implode("\n");
+
         $kontak = DB::table('customer_kontak')
             ->where('customer_id', $customer_id)
             ->get();
@@ -803,6 +821,7 @@ class SalesQuotationController extends Controller
         return response()->json([
             'kontak' => $kontak,
             'pajak' => $pajak,
+            'address' => $address,
         ]);
     }
 

@@ -1083,195 +1083,7 @@
                 $("#modalPrDetail").modal("hide");
             });
 
-            // Jalankan fungsi setiap kali user mengetik sesuatu di Sub Total atau Discount
-            // $("#sub_total, #discount_all").on("input", function() {
-            //     calculateTotalOrder();
-            // });
 
-            // function calculateGrandTotal() {
-            //     let grandSubTotal = 0;
-
-            //     // 1. Iterasi/looping semua data amount yang ada di array lokal
-            //     $.each(prDetailsData, function(index, item) {
-            //         grandSubTotal += parseFloat(item.amount) || 0;
-            //     });
-
-            //     // 2. Masukkan hasil penjumlahan ke input field Sub Total
-            //     $("#sub_total").val(Math.round(grandSubTotal));
-
-            //     // 3. Hitung ulang diskon global secara otomatis saat isi tabel berubah
-            //     let currentPercent = parseFloat($("#percent").val()) || 0;
-
-            //     if (currentPercent > 0) {
-            //         // Jika awalnya diisi persen, hitung ulang nominal Rupiahnya berdasarkan Sub Total baru
-            //         let newDiscountNominal = grandSubTotal * (currentPercent / 100);
-            //         $("#discount_all").val(Math.round(newDiscountNominal));
-            //     } else {
-            //         // Jika awalnya diisi nominal Rupiah, validasi agar tidak melebihi Sub Total baru
-            //         let currentNominal = parseFloat($("#discount_all").val()) || 0;
-            //         if (currentNominal > grandSubTotal) {
-            //             currentNominal = grandSubTotal;
-            //             $("#discount_all").val(Math.round(grandSubTotal));
-            //         }
-            //         // Set ulang nilai persen barunya
-            //         let newPercent =
-            //             grandSubTotal > 0 ? (currentNominal / grandSubTotal) * 100 : 0;
-            //         $("#percent").val(
-            //             newPercent % 1 === 0 ? newPercent : newPercent.toFixed(2),
-            //         );
-            //     }
-
-            //     // 4. Update hasil akhir ke Total Order
-            //     calculateTotalOrder();
-            // }
-
-            // const TAXES = @json($taxes);
-            // const DEFAULT_TAX_ID = {{ $defaultTax->id ?? 'null' }};
-
-            // function calculateTotalOrder() {
-            //     let subTotal = parseFloat($("#sub_total").val()) || 0;
-            //     let discount = parseFloat($("#discount_all").val()) || 0;
-
-            //     let kenaPajak = $("#kena_pajak").is(":checked");
-            //     let totalInclude = $("#total_termasuk_pajak").is(":checked");
-
-            //     let selectedTaxId = $("#tax_id").val();
-
-            //     let taxPercent = 0;
-
-            //     // 🚫 STOP kalau kena pajak tapi belum pilih tax
-            //     if (kenaPajak && !selectedTaxId) {
-            //         let dpp = subTotal - discount;
-
-            //         $("#taxes").text("0");
-            //         $("#total_order").val(dpp);
-            //         $("#tax_amount").val(0); // 🔥 reset
-
-            //         return;
-            //     }
-
-            //     // ambil tax
-            //     if (typeof TAXES !== "undefined" && selectedTaxId) {
-            //         let selectedTax = TAXES.find(t => t.id == selectedTaxId);
-            //         if (selectedTax) {
-            //             taxPercent = parseFloat(selectedTax.percentage) || 0;
-            //         }
-            //     }
-
-            //     let dpp = subTotal - discount;
-            //     if (dpp < 0) dpp = 0;
-
-            //     let tax = 0;
-            //     let totalOrder = dpp;
-
-            //     // if (kenaPajak && taxPercent > 0) {
-
-            //     //     if (totalInclude) {
-            //     //         tax = (dpp * taxPercent) / (100 + taxPercent);
-            //     //         totalOrder = dpp;
-            //     //     } else {
-            //     //         tax = (dpp * taxPercent) / 100;
-            //     //         totalOrder = dpp + tax;
-            //     //     }
-
-            //     //     $("#ppn_container").show();
-
-            //     // } else {
-            //     //     tax = 0;
-            //     //     totalOrder = dpp;
-            //     //     $("#ppn_container").hide();
-            //     // }
-            //     if (kenaPajak && taxPercent > 0) {
-
-            //         $("#ppn_container").show();
-
-            //         if (totalInclude) {
-
-            //             // ===========================
-            //             // TAX INCLUSIVE
-            //             // Harga yang diketahui sudah termasuk PPN
-            //             // ===========================
-
-            //             let totalIncludeTax = dpp;
-
-            //             let dppOnly = totalIncludeTax / (1 + (taxPercent / 100));
-
-            //             tax = totalIncludeTax - dppOnly;
-
-            //             totalOrder = totalIncludeTax;
-
-            //             // tampilkan DPP
-            //             $("#sub_total").val(Math.round(dppOnly));
-
-            //         } else {
-
-            //             // ===========================
-            //             // TAX EXCLUSIVE
-            //             // Harga belum termasuk PPN
-            //             // ===========================
-
-            //             tax = dpp * taxPercent / 100;
-
-            //             totalOrder = dpp + tax;
-
-            //             // subtotal tetap
-            //             $("#sub_total").val(Math.round(dpp));
-            //         }
-
-            //     } else {
-
-            //         tax = 0;
-            //         totalOrder = dpp;
-
-            //         $("#sub_total").val(Math.round(dpp));
-
-            //         $("#ppn_container").hide();
-            //     }
-
-            //     // 🔥 tampilkan ke UI
-            //     $("#taxes").text(
-            //         taxPercent > 0 ?
-            //         `Tax (${taxPercent}%)` :
-            //         "0"
-            //     );
-
-            //     // 🔥 simpan ke hidden input (INI PENTING)
-            //     $("#tax_amount").val(Math.round(tax));
-
-            //     $("#total_order").val(Math.round(totalOrder));
-            // }
-
-            // $("#kena_pajak").on("change", function() {
-
-            //     if ($(this).is(":checked")) {
-            //         $("#tax_container").show();
-
-            //         // optional: set default tax
-            //         if (DEFAULT_TAX_ID) {
-            //             $("#tax_id").val(DEFAULT_TAX_ID).trigger("change");
-            //         }
-
-            //     } else {
-            //         $("#tax_container").hide();
-
-            //         // reset tax
-            //         $("#tax_id").val("").trigger("change");
-            //         $("#total_termasuk_pajak").prop("checked", false);
-            //     }
-
-            //     calculateTotalOrder();
-            // });
-            // $("#tax_id").on("change", function() {
-            //     calculateTotalOrder();
-            // });
-            // $("#total_termasuk_pajak").on("change", function() {
-
-            //     // 🔥 kalau include dicentang, otomatis kena pajak harus aktif
-            //     if ($(this).is(":checked")) {
-            //         $("#kena_pajak").prop("checked", true);
-            //     }
-            //     calculateTotalOrder();
-            // });
 
 
             // A. Jika User Mengetik di Kolom PERSEN (%)
@@ -1720,7 +1532,7 @@
                         ${item.bank_name} - ${item.nomor_rekening}
                         (${item.nama_rekening})
                     </option>
-                `);
+                    `);
 
                         });
 
@@ -1731,63 +1543,125 @@
                             $('#taxpayer_data').val(response.pajak.tipe_id_pajak + ' :' +
                                 response.pajak.nomor_wajib_pajak);
                         }
+                        if (response.supplier) {
+                            let alamat = [];
+                            if (response.supplier.alamat_pembayaran)
+                                alamat.push(response.supplier.alamat_pembayaran);
+                            let kotaProvinsi = [];
+                            if (response.supplier.kota)
+                                kotaProvinsi.push(response.supplier.kota);
+                            if (response.supplier.provinsi)
+                                kotaProvinsi.push(response.supplier.provinsi);
+                            if (response.supplier.kodepos)
+                                kotaProvinsi.push(response.supplier.kodepos);
+                            if (kotaProvinsi.length > 0)
+                                alamat.push(kotaProvinsi.join(', '));
+                            if (response.supplier.negara)
+                                alamat.push(response.supplier.negara);
+                            $('#shipping_address').val(alamat.join('\n'));
+                        }
 
                     }
                 });
 
             });
         });
-
-        // Ketika tombol map/history alamat diklik
         $(document).on("click", "#btn-history-address", function() {
-            // Ambil nilai company_id yang sedang terpilih saat ini
-            let companyId = $("#company_id").val("1");
-            // Jalankan fungsi AJAX bawaanmu
-            loadAddressHistory(companyId);
+            let supplierId = $("#supplier_id").val();
+            loadSupplierAddress(supplierId);
         });
-
-        // Event ketika salah satu list alamat di dalam dropdown diklik
         $(document).on("click", ".select-address", function() {
-            let chosenAddress = $(this).data("address");
-
-            $("#shipping_address").val(chosenAddress);
+            $("#shipping_address").val($(this).data("address"));
         });
 
-        function loadAddressHistory(companyId) {
-            if (!companyId) return;
-
+        function loadSupplierAddress(supplierId) {
+            if (!supplierId) return;
             $.ajax({
-                url: `/purchase-order/get-company-addresses/${companyId}`,
+                url: `/purchase-order/get-supplier-address/${supplierId}`,
                 type: "GET",
                 dataType: "json",
                 success: function(response) {
                     let dropdownMenu = $("#address-dropdown-menu");
                     dropdownMenu.empty();
-
-                    if (response.success && response.data.length > 0) {
-                        response.data.forEach(function(item) {
-                            // Ditambahkan class p-2, text-dark, dan w-100 agar warna tulisan muncul dan areanya lebar
-                            let listItem = `
-                        <li class="w-100">
-                            <a class="dropdown-item select-address p-2 d-block text-dark" href="javascript:void(0);" data-address="${item.address}" style="white-space: normal;">
-                                <strong class="text-dark d-block mb-1">${item.address_name}</strong>
-                                <span class="text-muted small d-block">${item.address}</span>
-                            </a>
-                        </li>
-                    `;
-                            dropdownMenu.append(listItem);
-                        });
+                    if (response.success) {
+                        let item = response.data;
+                        dropdownMenu.append(`
+                    <li class="w-100">
+                        <a class="dropdown-item select-address p-2 d-block text-dark"
+                           href="javascript:void(0);"
+                           data-address="${item.address.replace(/\n/g,'&#10;')}"
+                           style="white-space: normal;">
+                            <strong class="d-block">${item.address_name}</strong>
+                            <span class="text-muted small" style="white-space: pre-line;">
+                                ${item.address}
+                            </span>
+                        </a>
+                    </li>
+                `);
                     } else {
-                        dropdownMenu.append(
-                            '<li><span class="dropdown-item text-muted p-2">No address history found</span></li>',
-                        );
+                        dropdownMenu.append(`
+                    <li>
+                        <span class="dropdown-item text-muted">
+                            Tidak ada alamat.
+                        </span>
+                    </li>
+                `);
                     }
-                },
-                error: function(xhr) {
-                    console.error("Gagal memuat alamat:", xhr.responseText);
-                },
+                }
             });
+
         }
+
+        // Ketika tombol map/history alamat diklik
+        // $(document).on("click", "#btn-history-address", function() {
+        //     // Ambil nilai company_id yang sedang terpilih saat ini
+        //     let companyId = $("#company_id").val("1");
+        //     // Jalankan fungsi AJAX bawaanmu
+        //     loadAddressHistory(companyId);
+        // });
+
+        // // Event ketika salah satu list alamat di dalam dropdown diklik
+        // $(document).on("click", ".select-address", function() {
+        //     let chosenAddress = $(this).data("address");
+
+        //     $("#shipping_address").val(chosenAddress);
+        // });
+
+        // function loadAddressHistory(companyId) {
+        //     if (!companyId) return;
+
+        //     $.ajax({
+        //         url: `/purchase-order/get-company-addresses/${companyId}`,
+        //         type: "GET",
+        //         dataType: "json",
+        //         success: function(response) {
+        //             let dropdownMenu = $("#address-dropdown-menu");
+        //             dropdownMenu.empty();
+
+        //             if (response.success && response.data.length > 0) {
+        //                 response.data.forEach(function(item) {
+        //                     // Ditambahkan class p-2, text-dark, dan w-100 agar warna tulisan muncul dan areanya lebar
+        //                     let listItem = `
+    //                 <li class="w-100">
+    //                     <a class="dropdown-item select-address p-2 d-block text-dark" href="javascript:void(0);" data-address="${item.address}" style="white-space: normal;">
+    //                         <strong class="text-dark d-block mb-1">${item.address_name}</strong>
+    //                         <span class="text-muted small d-block">${item.address}</span>
+    //                     </a>
+    //                 </li>
+    //             `;
+        //                     dropdownMenu.append(listItem);
+        //                 });
+        //             } else {
+        //                 dropdownMenu.append(
+        //                     '<li><span class="dropdown-item text-muted p-2">No address history found</span></li>',
+        //                 );
+        //             }
+        //         },
+        //         error: function(xhr) {
+        //             console.error("Gagal memuat alamat:", xhr.responseText);
+        //         },
+        //     });
+        // }
     </script>
     <script>
         function calculateTotal() {

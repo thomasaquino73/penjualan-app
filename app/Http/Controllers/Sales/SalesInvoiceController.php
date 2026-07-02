@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Sales;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SalesInvoiceRequest;
 use App\Models\BasicCodeDetail;
+use App\Models\DocumentTransactionHistory;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\Warehouse;
@@ -106,9 +107,9 @@ class SalesInvoiceController extends Controller
                             $text = 'Draft';
                             break;
 
-                        case 'pending':
+                        case 'processing':
                             $badge = 'bg-label-warning';
-                            $text = 'Pending Approval';
+                            $text = 'Processing';
                             break;
 
                         case 'approved':
@@ -241,10 +242,10 @@ class SalesInvoiceController extends Controller
                     if ($row->created_by == $currentUserId) {
 
                         // SEND TO APPROVAL
-                        if ($row->status == 'draft') {
+                      if ($row->status == 'draft') {
 
                             $btn .= '
-                                <a class="dropdown-item btn-submit-po"
+                                <a class="dropdown-item btn-processing"
                                     href="javascript:void(0)"
                                     data-id="'.$row->id.'">
 
@@ -484,7 +485,7 @@ class SalesInvoiceController extends Controller
                         $amount = ($qtyInputForm * $unitPrice) - $discount;
 
                         // 1. Simpan ke Sales Invoice Detail
-                        $soDetail = SalesInvoiceDetail::create([
+                        $salesInvoiceDetail = SalesInvoiceDetail::create([
                             'sales_invoice_id' => $salesInvoice->id,
                             // 'sales_quotation_detail_id' => $sqDetailId,
                             'product_id' => $item['product_id'],
@@ -501,55 +502,29 @@ class SalesInvoiceController extends Controller
                             'active' => 1,
                             'created_by' => Auth::id(),
                         ]);
+                        DocumentTransactionHistory::create([
+                            'module' => 'sales',
+                            'from_type' => 'SalesOrder',
+                            'from_id' => null,
+                            'from_detail_id' => null,
+                            'to_type' => 'SalesInvoice',
+                            'to_id' => $salesInvoice->id,
+                            'to_detail_id' => $salesInvoiceDetail->id,
+                            'transaction_type' => 'invoice',
+                            'qty' => $salesInvoiceDetail->qty,
+                            'unit_price' => $salesInvoiceDetail->unit_price,
+                            'discount' => $salesInvoiceDetail->discount,
+                            'amount' => $salesInvoiceDetail->amount,
+                            'transaction_date' => $salesInvoice->sales_invoice_date,
+                            'metadata' => json_encode([
+                                'warehouse_id' => $salesInvoiceDetail->warehouse_id,
+                                'product_id' => $salesInvoiceDetail->product_id,
+                                'unit_id' => $salesInvoiceDetail->unit_id,
+                            ]),
+                        ]);
 
-                        // 2. Sinkronisasi ke Sales Quotation Detail (PR)
-                        // if ($sqDetailId) {
-                        //     $sqDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
-
-                        //     if ($sqDetail) {
-                        //         // Hitung total akumulasi qty yang sudah masuk SO untuk item ini
-                        //         $totalSoForThisItem = SalesInvoiceDetail::where('sales_quotation_detail_id', $sqDetailId)
-                        //             ->where('active', 1)
-                        //             ->sum('qty');
-
-                        //         // Update sq_qty dan outstanding_qty di SQ Detail
-                        //         $newOutstanding = max(0, ($sqDetail->qty - $totalSoForThisItem));
-
-                        //         DB::table("sales_quotation_detail_{$currentYear}")
-                        //             ->where('id', $sqDetailId)
-                        //             ->update([
-                        //                 'sq_qty' => $totalSoForThisItem,
-                        //                 'outstanding_qty' => $newOutstanding,
-                        //             ]);
-
-                        //         if (! in_array($sqDetail->sales_quotation_id, $involvedSqIds)) {
-                        //             $involvedSqIds[] = $sqDetail->sales_quotation_id;
-                        //         }
-                        //     }
-                        // }
                     }
 
-                    // 3. Otomasi status Sales Quotation Master
-                    // foreach ($involvedSqIds as $sqId) {
-                    //     $allDetails = DB::table("sales_quotation_detail_{$currentYear}")
-                    //         ->where('sales_quotation_id', $sqId)
-                    //         ->get();
-
-                    //     $totalRequested = $allDetails->sum('qty');
-                    //     $totalOrdered = $allDetails->sum('sq_qty');
-
-                    //     if ($totalOrdered >= $totalRequested) {
-                    //         $newStatus = 'closed';
-                    //     } elseif ($totalOrdered > 0) {
-                    //         $newStatus = 'partial';
-                    //     } else {
-                    //         $newStatus = 'processing';
-                    //     }
-
-                    //     DB::table("sales_quotation_{$currentYear}")
-                    //         ->where('id', $sqId)
-                    //         ->update(['status' => $newStatus]);
-                    // }
                 }
             }
 
@@ -574,6 +549,162 @@ class SalesInvoiceController extends Controller
             ], 500);
         }
     }
+
+    // public function store(SalesInvoiceRequest $request)
+    // {
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $currentYear = date('Y');
+    //         $data = $request->validated();
+    //         $itemsDetailRaw = $request->input('items_detail');
+    //         unset($data['items_detail']);
+
+    //         // Persiapan data header Sales Invoice
+    //         $data['created_by'] = Auth::id();
+    //         $data['sales_invoice_date'] = Carbon::parse($request->sales_invoice_date)->format('Y-m-d');
+    //         $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
+    //         $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
+    //         $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
+    //         $data['sub_total'] = $request->sub_total;
+    //         $data['disc_percent'] = $request->percent;
+    //         $data['disc_nominal'] = $request->discount_all;
+    //         $data['grand_total'] = $request->total_order;
+    //         $data['taxpayer_data'] = $request->taxpayer_data;
+    //         $data['tax_id'] = $request->tax_id;
+    //         $data['tax_amount'] = $request->tax_amount;
+    //         // Generate kode SO
+    //         do {
+    //             $generatedCode = $this->generateNumberId();
+    //             $exists = SalesInvoice::where('sales_invoice_code', $generatedCode)->exists();
+    //         } while ($exists);
+
+    //         $data['sales_invoice_code'] = $generatedCode;
+    //         $salesInvoice = SalesInvoice::create($data);
+
+    //         if ($itemsDetailRaw) {
+    //             $items = json_decode($itemsDetailRaw, true);
+    //             $involvedSqIds = [];
+
+    //             if (is_array($items) && count($items) > 0) {
+    //                 foreach ($items as $item) {
+    //                     // $sqDetailId = $item['sales_quotation_detail_id'] ?? $item['detail_id'] ?? null;
+    //                     $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
+    //                     $unitPrice = floatval($item['unit_price'] ?? 0);
+    //                     $discount = floatval($item['discount'] ?? 0);
+    //                     $discountPercent = $item['discount_percent'] ?? 0;
+    //                     $amount = ($qtyInputForm * $unitPrice) - $discount;
+
+    //                     // 1. Simpan ke Sales Invoice Detail
+    //                     $soDetail = SalesInvoiceDetail::create([
+    //                         'sales_invoice_id' => $salesInvoice->id,
+    //                         // 'sales_quotation_detail_id' => $sqDetailId,
+    //                         'product_id' => $item['product_id'],
+    //                         'qty' => $qtyInputForm,
+    //                         'unit_id' => $item['unit_id'],
+    //                         'warehouse_id' => $item['warehouse_id'],
+    //                         'unit_price' => $unitPrice,
+    //                         'discount_percent' => $discountPercent,
+    //                         'discount' => $discount,
+    //                         'amount' => $item['amount'] ?? $amount,
+    //                         'so_qty' => $qtyInputForm, // Sinkronisasi: sq_qty di SO = qty SO
+    //                         'outstanding_qty' => 0, // Karena SO adalah tahap akhir, outstanding di SO biasanya 0
+    //                         'status' => 'open',
+    //                         'active' => 1,
+    //                         'created_by' => Auth::id(),
+    //                     ]);
+    //                     DocumentTransactionHistory::create([
+    //                         'module' => 'sales',
+    //                         'from_type' => 'SalesOrder',
+    //                         'from_id' => $salesInvoice->sales_order_id,
+    //                         'from_detail_id' => $salesInvoiceDetail->sales_order_detail_id,
+    //                         'to_type' => 'SalesInvoice',
+    //                         'to_id' => $salesInvoice->id,
+    //                         'to_detail_id' => $salesInvoiceDetail->id,
+    //                         'transaction_type' => 'invoice',
+    //                         'qty' => $salesInvoiceDetail->qty,
+    //                         'unit_price' => $salesInvoiceDetail->unit_price,
+    //                         'discount' => $salesInvoiceDetail->discount,
+    //                         'amount' => $salesInvoiceDetail->amount,
+    //                         'transaction_date' => $salesInvoice->sales_invoice_date,
+    //                         'metadata' => json_encode([
+    //                             'warehouse_id' => $salesInvoiceDetail->warehouse_id,
+    //                             'product_id' => $salesInvoiceDetail->product_id,
+    //                             'unit_id' => $salesInvoiceDetail->unit_id,
+    //                         ]),
+    //                     ]);
+    //                     // 2. Sinkronisasi ke Sales Quotation Detail (PR)
+    //                     // if ($sqDetailId) {
+    //                     //     $sqDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
+
+    //                     //     if ($sqDetail) {
+    //                     //         // Hitung total akumulasi qty yang sudah masuk SO untuk item ini
+    //                     //         $totalSoForThisItem = SalesInvoiceDetail::where('sales_quotation_detail_id', $sqDetailId)
+    //                     //             ->where('active', 1)
+    //                     //             ->sum('qty');
+
+    //                     //         // Update sq_qty dan outstanding_qty di SQ Detail
+    //                     //         $newOutstanding = max(0, ($sqDetail->qty - $totalSoForThisItem));
+
+    //                     //         DB::table("sales_quotation_detail_{$currentYear}")
+    //                     //             ->where('id', $sqDetailId)
+    //                     //             ->update([
+    //                     //                 'sq_qty' => $totalSoForThisItem,
+    //                     //                 'outstanding_qty' => $newOutstanding,
+    //                     //             ]);
+
+    //                     //         if (! in_array($sqDetail->sales_quotation_id, $involvedSqIds)) {
+    //                     //             $involvedSqIds[] = $sqDetail->sales_quotation_id;
+    //                     //         }
+    //                     //     }
+    //                     // }
+    //                 }
+
+    //                 // 3. Otomasi status Sales Quotation Master
+    //                 // foreach ($involvedSqIds as $sqId) {
+    //                 //     $allDetails = DB::table("sales_quotation_detail_{$currentYear}")
+    //                 //         ->where('sales_quotation_id', $sqId)
+    //                 //         ->get();
+
+    //                 //     $totalRequested = $allDetails->sum('qty');
+    //                 //     $totalOrdered = $allDetails->sum('sq_qty');
+
+    //                 //     if ($totalOrdered >= $totalRequested) {
+    //                 //         $newStatus = 'closed';
+    //                 //     } elseif ($totalOrdered > 0) {
+    //                 //         $newStatus = 'partial';
+    //                 //     } else {
+    //                 //         $newStatus = 'processing';
+    //                 //     }
+
+    //                 //     DB::table("sales_quotation_{$currentYear}")
+    //                 //         ->where('id', $sqId)
+    //                 //         ->update(['status' => $newStatus]);
+    //                 // }
+    //             }
+    //         }
+
+    //         DB::commit();
+
+    //         $redirectUrl = $request->save_and_new == 1
+    //             ? route('sales-invoice.create') // Kembali kosongkan form untuk input data PR baru lagi
+    //             : route('sales-invoice.index');  // Selesai dan kembali ke tabel index utama
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Sales Invoice saved successfully!',
+    //             'redirect' => $redirectUrl,
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Gagal menyimpan data: '.$e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
 
     /**
      * Display the specified resource.
@@ -688,24 +819,25 @@ class SalesInvoiceController extends Controller
 
     public function update(SalesInvoiceRequest $request, $id)
     {
-        $validated = $request->validated();
-
         DB::beginTransaction();
 
         try {
-            $currentYear = date('Y');
 
-            // 1. Cek data master
-            $salesOrder = SalesInvoice::where('id', $id)->first();
-            if (! $salesOrder) {
-                throw new \Exception('Sales Order tidak ditemukan.');
+            $salesInvoice = SalesInvoice::find($id);
+
+            if (! $salesInvoice) {
+                throw new \Exception('Sales Invoice tidak ditemukan.');
             }
 
-            // 2. UPDATE MASTER
-            SalesInvoice::where('id', $id)->update([
+            // ==========================
+            // UPDATE HEADER
+            // ==========================
+            $salesInvoice->update([
                 'customer_id' => $request->customer_id,
+                'sales_order_id' => $request->sales_order_id,
                 'sales_invoice_code' => $request->sales_invoice_code,
                 'salesman_id' => $request->salesman_id,
+                'payment_term_id' => $request->payment_term_id,
                 'sales_invoice_date' => Carbon::parse($request->sales_invoice_date)->format('Y-m-d'),
                 'tanggal_pengiriman' => Carbon::parse($request->shipping_date)->format('Y-m-d'),
                 'sub_total' => $request->sub_total,
@@ -722,102 +854,144 @@ class SalesInvoiceController extends Controller
                 'tax_id' => $request->tax_id,
                 'tax_amount' => $request->tax_amount,
                 'updated_by' => Auth::id(),
-                'updated_at' => now(),
             ]);
 
-            // 3. DECODE ITEMS
+            // ==========================
+            // DETAIL
+            // ==========================
             $items = json_decode($request->items_detail, true);
+
             if (! is_array($items) || count($items) == 0) {
                 throw new \Exception('Detail item tidak boleh kosong.');
             }
 
-            // 4. REVERT QTY LAMA (Kembalikan stok/kuota ke SQ Detail)
-            // $oldDetails = DB::table("sales_invoice_detail_{$currentYear}")->where('sales_invoice_id', $id)->get();
-            // foreach ($oldDetails as $old) {
-            //     if ($old->sales_quotation_detail_id) {
-            //         DB::table("sales_quotation_detail_{$currentYear}")
-            //             ->where('id', $old->sales_quotation_detail_id)
-            //             ->update([
-            //                 'sq_qty' => DB::raw("sq_qty - {$old->qty}"),
-            //             ]);
-            //     }
-            // }
+            // ==========================
+            // HAPUS HISTORY LAMA
+            // ==========================
+            DocumentTransactionHistory::where('to_type', 'SalesInvoice')
+                ->where('to_id', $salesInvoice->id)
+                ->delete();
 
-            // 5. HAPUS DETAIL LAMA
-            DB::table("sales_invoice_detail_{$currentYear}")->where('sales_invoice_id', $id)->delete();
+            // ==========================
+            // HAPUS DETAIL LAMA
+            // ==========================
+            SalesInvoiceDetail::where('sales_invoice_id', $salesInvoice->id)->delete();
 
-            // 6. SIMPAN DETAIL BARU
-            $affectedSqIds = [];
+            // ==========================
+            // SIMPAN DETAIL BARU
+            // ==========================
             foreach ($items as $item) {
-                // $sqDetailId = (! empty($item['sales_quotation_detail_id']) && $item['sales_quotation_detail_id'] != 'null')
-                //             ? $item['sales_quotation_detail_id'] : null;
+
                 $qty = floatval($item['quantity'] ?? $item['qty'] ?? 0);
 
-                DB::table("sales_invoice_detail_{$currentYear}")->insert([
-                    'sales_invoice_id' => $id,
-                    // 'sales_quotation_detail_id' => $sqDetailId,
+                $salesInvoiceDetail = SalesInvoiceDetail::create([
+
+                    'sales_invoice_id' => $salesInvoice->id,
+
+                    'sales_order_detail_id' => $item['sales_order_detail_id'] ?? null,
+
                     'product_id' => $item['product_id'],
+
                     'qty' => $qty,
+
                     'unit_id' => $item['unit_id'],
+
                     'warehouse_id' => $item['warehouse_id'],
+
                     'unit_price' => floatval($item['unit_price'] ?? 0),
+
                     'discount_percent' => $item['discount_percent'] ?? 0,
+
                     'discount' => floatval($item['discount'] ?? 0),
-                    'amount' => $item['amount'] ?? 0,
-                    'so_qty' => $qty, // Sinkronisasi: SO sudah menyerap qty ini
-                    'outstanding_qty' => 0,    // SO adalah tahap akhir
+
+                    'amount' => floatval($item['amount'] ?? 0),
+
+                    'so_qty' => $qty,
+
+                    'outstanding_qty' => 0,
+
+                    'status' => 'open',
+
                     'active' => 1,
+
                     'created_by' => Auth::id(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
                 ]);
 
-                // if ($sqDetailId) {
-                //     DB::table("sales_quotation_detail_{$currentYear}")
-                //         ->where('id', $sqDetailId)
-                //         ->update(['sq_qty' => DB::raw("sq_qty + {$qty}")]);
-                //     $affectedSqIds[] = $sqDetailId;
-                // }
+                /*
+                |--------------------------------------------------------------------------
+                | DOCUMENT HISTORY
+                |--------------------------------------------------------------------------
+                */
+
+                if ($salesInvoice->sales_order_id) {
+
+                    $fromType = 'SalesOrder';
+                    $fromId = $salesInvoice->sales_order_id;
+                    $fromDetailId = $salesInvoiceDetail->sales_order_detail_id;
+
+                } else {
+
+                    // Direct Invoice
+                    $fromType = 'SalesInvoice';
+                    $fromId = $salesInvoice->id;
+                    $fromDetailId = $salesInvoiceDetail->id;
+
+                }
+
+                DocumentTransactionHistory::create([
+
+                    'module' => 'sales',
+
+                    'from_type' => $fromType,
+
+                    'from_id' => $fromId,
+
+                    'from_detail_id' => $fromDetailId,
+
+                    'to_type' => 'SalesInvoice',
+
+                    'to_id' => $salesInvoice->id,
+
+                    'to_detail_id' => $salesInvoiceDetail->id,
+
+                    'transaction_type' => 'invoice',
+
+                    'qty' => $salesInvoiceDetail->qty,
+
+                    'unit_price' => $salesInvoiceDetail->unit_price,
+
+                    'discount' => $salesInvoiceDetail->discount,
+
+                    'amount' => $salesInvoiceDetail->amount,
+
+                    'transaction_date' => $salesInvoice->sales_invoice_date,
+
+                    'metadata' => [
+                        'warehouse_id' => $salesInvoiceDetail->warehouse_id,
+                        'product_id' => $salesInvoiceDetail->product_id,
+                        'unit_id' => $salesInvoiceDetail->unit_id,
+                    ],
+
+                ]);
             }
-
-            // 7. UPDATE STATUS MASTER QUOTATION
-            // $affectedMasterSqIds = [];
-            // foreach (array_unique($affectedSqIds) as $sqDetailId) {
-            //     $sqDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
-            //     if ($sqDetail) {
-            //         $outstanding = max(0, $sqDetail->qty - $sqDetail->sq_qty);
-            //         DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->update([
-            //             'outstanding_qty' => $outstanding,
-            //         ]);
-            //         $affectedMasterSqIds[] = $sqDetail->sales_quotation_id;
-            //     }
-            // }
-
-            // foreach (array_unique($affectedMasterSqIds) as $sqId) {
-            //     $details = DB::table("sales_quotation_detail_{$currentYear}")->where('sales_quotation_id', $sqId)->get();
-            //     $allCompleted = $details->every(fn ($d) => $d->sq_qty >= $d->qty);
-            //     $anyPartial = $details->some(fn ($d) => $d->sq_qty > 0);
-
-            //     DB::table("sales_quotation_{$currentYear}")->where('id', $sqId)->update([
-            //         'status' => $allCompleted ? 'closed' : ($anyPartial ? 'partial' : 'processing'),
-            //     ]);
-            // }
 
             DB::commit();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Sales Order berhasil diupdate',
+                'message' => 'Sales Invoice berhasil diupdate.',
                 'redirect' => route('sales-invoice.index'),
             ]);
 
         } catch (\Exception $e) {
+
             DB::rollBack();
 
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], 500);
+
         }
     }
 
@@ -1458,5 +1632,37 @@ class SalesInvoiceController extends Controller
             as stock
         ")
             ->value('stock') ?? 0;
+    }
+
+     public function processData($id)
+    {
+        // 1. Ambil tahun berjalan secara dinamis
+        $year = date('Y');
+        $tableName = "sales_invoice_{$year}";
+
+        // 2. Gunakan Query Builder dengan nama tabel dinamis agar pencarian ID aman
+        $poData = DB::table($tableName)->where('id', $id)->first();
+
+        // Jika data memang benar-benar tidak ditemukan di database
+        if (! $poData) {
+            return response()->json(['success' => false, 'message' => 'Data Sales Invoice tidak ditemukan.'], 404);
+        }
+
+        // 3. Validasi Keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
+        if ($poData->status !== 'draft' || $poData->created_by != Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.',
+            ], 403);
+        }
+
+        // 4. Lakukan pembaruan status menggunakan Query Builder demi stabilitas tabel dinamis
+        DB::table($tableName)->where('id', $id)->update([
+            'status' => 'processing',
+            'updated_by' => Auth::user()->id,
+            'updated_at' => now(), // Mengisi timestamp bawaan laravel secara manual karena menggunakan Query Builder
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Sales Invoice berhasil diajukan!']);
     }
 }

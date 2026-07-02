@@ -41,7 +41,6 @@
                     <textarea name="address" id="address" class="form-control" placeholder="Enter address"></textarea>
                 </div>
                 <span class="error text-danger" id="addressError"></span>
-
             </div>
         </div>
         <div class="mb-3 row">

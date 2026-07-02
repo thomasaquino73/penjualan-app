@@ -255,7 +255,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/change-status/{id}', [PurchaseOrderController::class, 'changeStatus']);
         Route::get('/print/{id}', [PurchaseOrderController::class, 'print'])->name('print');
         Route::get('/po/price-history', [PurchaseOrderController::class, 'getPriceHistory']);
-        Route::get('/get-company-addresses/{companyId}', [PurchaseOrderController::class, 'getCompanyAddresses']);
+        Route::get('/get-supplier-address/{supplier}', [PurchaseOrderController::class, 'getSupplierAddress']);
+        // Route::get('/get-company-addresses/{companyId}', [PurchaseOrderController::class, 'getCompanyAddresses']);
         Route::post('/send-supplier/{id}', [PurchaseOrderController::class, 'sendSupplier'])->name('send-supplier');
         Route::post('/get-requisition-detail', [PurchaseOrderController::class, 'getRequisitionDetail'])->name('get-requisition-detail');
         Route::resource('', PurchaseOrderController::class)->parameters(['' => 'purchase_order']);
@@ -327,6 +328,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('delivery-order', DeliveryOrderController::class);
 
     // INVOICE
+    Route::post('/sales-invoice/{id}/process', [SalesInvoiceController::class, 'processData'])->name('sales-invoice.process');
     Route::get('/sales-invoice/wh/get-stock', [SalesInvoiceController::class, 'getStock'])->name('sales-invoice.wh.get-stock');
     Route::post('/sales-invoice/restore-multiple', [SalesInvoiceController::class, 'restoreMultiple']);
     Route::put('/sales-invoice/restore/{id}', [SalesInvoiceController::class, 'restore'])->name('sales-invoice.restore');
@@ -338,6 +340,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales-invoice/trash', [SalesInvoiceController::class, 'trash'])->name('sales-invoice.trash');
     Route::resource('sales-invoice', SalesInvoiceController::class);
 
+    Route::post('/proforma-invoice/{id}/process', [ProformaInvoiceController::class, 'processData'])->name('proforma-invoice.process');
     Route::get('/proforma-invoice/wh/get-stock', [ProformaInvoiceController::class, 'getStock'])->name('proforma-invoice.wh.get-stock');
     Route::post('/proforma-invoice/restore-multiple', [ProformaInvoiceController::class, 'restoreMultiple']);
     Route::put('/proforma-invoice/restore/{id}', [ProformaInvoiceController::class, 'restore'])->name('proforma-invoice.restore');

@@ -57,24 +57,23 @@ class SalesOrderController extends Controller
 
     public function index(Request $r)
     {
-                   // Ambil ID user yang sedang login
-            $userId = Auth::user()->id;
+        // Ambil ID user yang sedang login
+        $userId = Auth::user()->id;
 
-            // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
-            $query = SalesOrder::where('active', '<>', 0)
-                ->where(function ($q) use ($userId) {
-                    $q->where('status', '<>', 'draft')
-                        ->orWhere(function ($subQ) use ($userId) {
-                            $subQ->where('status', 'draft')
-                                ->where('created_by', $userId);
-                        });
-                })
-                ->orderby('sales_order_code', 'desc');
-            if ($r->status) {
-                $query->where('status', $r->status);
-            }
+        // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
+        $query = SalesOrder::where('active', '<>', 0)
+            ->where(function ($q) use ($userId) {
+                $q->where('status', '<>', 'draft')
+                    ->orWhere(function ($subQ) use ($userId) {
+                        $subQ->where('status', 'draft')
+                            ->where('created_by', $userId);
+                    });
+            })
+            ->orderby('sales_order_code', 'desc');
+        if ($r->status) {
+            $query->where('status', $r->status);
+        }
         if ($r->ajax()) {
- 
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -417,10 +416,10 @@ class SalesOrderController extends Controller
             </a>
         ';
                     }
-                       if ($row->status == 'completed' ) {
-                      
-                    }else {
-  $btn .= '<a class="dropdown-item"
+                    if ($row->status == 'completed') {
+
+                    } else {
+                        $btn .= '<a class="dropdown-item"
                 href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->code.'">
                 <i class="ti ti-lock"></i> Close PO
              </a>';
@@ -459,7 +458,7 @@ class SalesOrderController extends Controller
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Sales Order', 'url' => ''],
             ],
-               'totalPurchase' => $stats['totalPurchase'],
+            'totalPurchase' => $stats['totalPurchase'],
             'partiallyReceived' => $stats['partiallyReceived'],
             'grandTotal' => $stats['grandTotal'],
             'completedReceived' => $stats['completedReceived'],
@@ -467,7 +466,8 @@ class SalesOrderController extends Controller
 
         return view('sales.salesOrder.sales_order_index', $x);
     }
-     private function getStatistics($query)
+
+    private function getStatistics($query)
     {
         $month = now()->month;
         $year = now()->year;
@@ -484,7 +484,7 @@ class SalesOrderController extends Controller
             'grandTotal' => SalesOrder::where('active', '<>', 0)
                 ->whereMonth('sales_order_date', $month)
                 ->whereYear('sales_order_date', $year)
-                ->whereNotIn('status', ['rejected', 'draft', 'processing'])
+                ->whereNotIn('status', ['rejected', 'draft'])
                 ->sum('grand_total'),
 
             'completedReceived' => SalesOrder::where('status', 'completed')
@@ -492,7 +492,6 @@ class SalesOrderController extends Controller
                 ->count(),
         ];
     }
-
 
     public function bulanRomawi($bulan)
     {

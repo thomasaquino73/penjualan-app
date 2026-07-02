@@ -288,9 +288,9 @@
                 });
             });
 
-            $(document).on('click', '.btn-submit-po', function() {
+            $(document).on('click', '.btn-processing', function() {
                 let id = $(this).data('id');
-                let url = "{{ route('proforma-invoice.submit', ':id') }}".replace(':id', id);
+                let url = "{{ route('proforma-invoice.process', ':id') }}".replace(':id', id);
 
                 Swal.fire({
                     title: 'Are you sure?',

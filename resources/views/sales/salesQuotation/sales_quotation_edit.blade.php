@@ -531,6 +531,7 @@
                             $('#taxpayer_data').val('');
 
                         }
+                        $('#address').val(response.address ?? '');
 
                     }
                 });
@@ -691,6 +692,8 @@
                                 a.on("click", function(e) {
                                     e.preventDefault();
                                     priceInput.val(harga);
+                                    calculateTotal();
+
                                 });
 
                                 li.append(a);

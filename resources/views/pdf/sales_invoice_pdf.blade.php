@@ -432,15 +432,15 @@
                             $user = $model->approvedBy?->fullname;
                         }
                     @endphp
-                    @if ($model->pic_by !== null)
+                    @if ($model->status == 'processing')
                         <div class="approval-title">
-                            {{ $title }}
+                            Disetujui Oleh
                         </div>
                         <div style="height: 65px;">
                             <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height: 80px;">
                         </div>
                         <div style="font-weight: bold; text-decoration: underline;">
-                            {{ $user }}
+                            Yohanes Lukman
                         </div>
                     @else
                         <div class="approval-title">
@@ -454,8 +454,6 @@
                             {{ $model->creator->fullname }}
                         </div>
                     @endif
-
-
                 </td>
             </tr>
         </table>

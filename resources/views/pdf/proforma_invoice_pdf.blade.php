@@ -268,9 +268,21 @@
                 <table>
                     <tr>
                         <td class="logo-box">
-                            <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 340px;">
-
+                            <img src="{{ public_path('image/logo/logo_print.png') }}" style="height: 80px;">
+                            {{-- @if (isset($company) && $company->logo)
+                            @else
+                                <div
+                                    style="width: 70px; height: 70px; border: 1px dashed #ccc; background: #fafafa; text-align: center; line-height: 70px; color: #aaa; font-size: 8pt;">
+                                    No Logo
+                                </div>
+                            @endif --}}
                         </td>
+                        {{-- <td class="company-contact">
+                            {{ $company->nomor_telepon }}<br>
+                            {{ $company->alamat }}<br>
+                            {{ $company->email }}<br>
+                            {{ $company->website }}<br>
+                        </td> --}}
                     </tr>
                 </table>
             </td>
@@ -296,25 +308,24 @@
                 </div>
             </td>
             <td style="padding-left: 25px;">
-                {{-- <div class="po-box-title">Sales Quotation</div> --}}
-                <div class="po-box-title">Penawaran Harga</div>
+                <div class="po-box-title">Proforma Invoice</div>
                 <table class="po-details-table">
                     <tr>
                         <td class="label">Nomor</td>
                         <td class="colon">:</td>
-                        <td class="value">{{ $model->sales_quotation_code }}</td>
+                        <td class="value">{{ $model->proforma_invoice_code }}</td>
                     </tr>
                     <tr>
                         <td class="label">Tanggal</td>
                         <td class="colon">:</td>
                         <td class="value">
-                            {{ date('d M Y', strtotime($model->sales_quotation_date)) }}</td>
+                            {{ date('d M Y', strtotime($model->proforma_invoice_date)) }}</td>
                     </tr>
                     <tr>
-                        <td class="label">Pembayaran</td>
+                        <td class="label">Tanggal Kirim</td>
                         <td class="colon">:</td>
                         <td class="value">
-                            {{ $model->paymentTermID ? $model->paymentTermID->nama : '-' }}
+                            {{ isset($model->tanggal_pengiriman) ? date('d M Y', strtotime($model->tanggal_pengiriman)) : '' }}
                         </td>
                     </tr>
                 </table>
@@ -355,6 +366,7 @@
                 <div class="keterangan-title">Keterangan</div>
                 <div class="keterangan-content">{{ $model->description }}</div>
             </td>
+
             <td class="summary-box">
                 <table class="summary-table">
                     <tr>
@@ -375,17 +387,15 @@
                             {{ isset($model) ? format_uang(convert_currency($model->tax_amount, $detail->currency_id ?? 1)) : '' }}
                         </td>
                     </tr>
-                    {{-- <tr>
-                        <td>Biaya Lain-lain</td>
-                        <td class="text-right">0</td>
-                    </tr> --}}
                     <tr class="total-row">
                         <td>Total</td>
                         <td class="text-right">
                             {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1)) : '' }}
+                        </td>
                     </tr>
                 </table>
             </td>
+
         </tr>
     </table>
     <table class="w-100 footer-table">
@@ -402,6 +412,7 @@
             </td>
         </tr>
     </table>
+
     <div class="signature-section">
         <table class="signature-table">
             <tr>

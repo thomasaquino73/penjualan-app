@@ -56,7 +56,7 @@ class CompanyDeliveryAddressController extends Controller
 
         try {
 
-            $data = $request->all();
+            $data = $request->except('_token');
             $data['company_id'] = 1;
 
             if (! empty($id)) {
