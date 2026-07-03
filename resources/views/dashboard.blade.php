@@ -439,7 +439,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-xl-6 mb-4">
+                {{-- <div class="col-md-6 col-xl-6 mb-4">
                     <div class="card h-100">
                         <div class="card-header d-flex justify-content-between">
                             <div class="card-title m-0 me-2">
@@ -553,7 +553,7 @@
                             </ul>
                         </div>
                     </div>
-                </div>
+                </div> --}}
             </div>
         </div>
     </div>

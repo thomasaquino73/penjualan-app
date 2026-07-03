@@ -22,7 +22,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'section',
-                'label' => 'PURCHASE',
+                'label' => 'PEMBELIAN',
                 'roles' => ['Super Admin'],
             ],
             [
@@ -52,7 +52,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'TRANSACTION',
+                'name' => 'TRANSAKSI',
                 'icon' => 'ti ti-shopping-cart',
                 'roles' => ['Super Admin'],
                 'permissions' => [
@@ -102,7 +102,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'PAYMENT',
+                'name' => 'PEMBAYARAN',
                 'icon' => 'ti ti-file-invoice',
                 'roles' => ['Super Admin'],
                 'permissions' => [
@@ -131,19 +131,19 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'section',
-                'label' => 'SALES',
+                'label' => 'PENJUALAN',
                 'roles' => ['Super Admin'],
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'Customer',
+                'name' => 'Konsumen',
                 'icon' => 'ti ti-users-group',
                 'roles' => ['Super Admin'],
                 'permissions' => ['customer-browse', 'kategori_customer-browse'],
                 'children' => [
 
                     [
-                        'name' => 'Customer List',
+                        'name' => 'Daftar Konsumen',
                         'route' => 'customer.index',
                         'pattern' => 'customer.*',
                         'roles' => ['Super Admin'],
@@ -151,7 +151,7 @@ class Sidebar extends Component
                     ],
 
                     [
-                        'name' => 'Customer Category',
+                        'name' => 'Kategori Konsumen',
                         'route' => 'kategori-customer.index',
                         'pattern' => 'kategori-customer.*',
                         'roles' => ['Super Admin'],
@@ -161,20 +161,20 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'TRANSACTION',
+                'name' => 'TRANSAKSI',
                 'icon' => 'ti ti-moneybag',
                 'roles' => ['Super Admin'],
                 'permissions' => ['sales_quotation-browse', 'sales_order-browse'],
                 'children' => [
                     [
-                        'name' => 'Sales Quotation',
+                        'name' => 'Penawaran Harga',
                         'route' => 'sales-quotation.index',
                         'pattern' => 'sales-quotation.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['sales_quotation-browse'],
                     ],
                     [
-                        'name' => 'Sales Order',
+                        'name' => 'Penjualan',
                         'route' => 'sales-order.index',
                         'pattern' => 'sales-order.*',
                         'roles' => ['Super Admin'],
@@ -313,8 +313,99 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'section',
-                'label' => 'REPORTS',
+                'label' => 'LAPORAN',
                 'roles' => ['Super Admin'],
+            ],
+            [
+                'type' => 'section',
+                'label' => 'ARSIP',
+                'roles' => ['Super Admin'],
+            ],
+            [
+                'type' => 'dropdown',
+                'name' => 'PEMBELIAN',
+                'icon' => 'ti ti-file-invoice',
+                'roles' => ['Super Admin'],
+                'permissions' => [
+                    'permintaan_pembelian-browse',
+                    'purchase_order-browse',
+                    'receive_item-browse',
+                    'purchase_invoice-browse',
+                ],
+                'children' => [
+                    [
+                        'name' => 'Arsip Permintaan Pembelian',
+                        'route' => 'archive.purchase-requisition',
+                        'pattern' => 'archive.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['proforma_invoice-browse'],
+                    ],
+                    [
+                        'name' => 'Arsip Pembelian',
+                        'route' => 'sales-invoice.index',
+                        'pattern' => 'sales-invoice.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['sales_invoice-browse'],
+                    ],
+                    [
+                        'name' => 'Arsip Purchase Invoice',
+                        'route' => 'sales-invoice.index',
+                        'pattern' => 'sales-invoice.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['sales_invoice-browse'],
+                    ],
+                    [
+                        'name' => 'Arsip Pembayaran',
+                        'route' => 'sales-invoice.index',
+                        'pattern' => 'sales-invoice.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['sales_invoice-browse'],
+                    ],
+
+                ],
+            ],
+            [
+                'type' => 'dropdown',
+                'name' => 'PENJUALAN',
+                'icon' => 'ti ti-file-invoice',
+                'roles' => ['Super Admin'],
+                'permissions' => [
+                    'permintaan_pembelian-browse',
+                    'purchase_order-browse',
+                    'receive_item-browse',
+                    'purchase_invoice-browse',
+                ],
+                'children' => [
+                    [
+                        'name' => 'Arsip Penawaran Harga',
+                        'route' => 'proforma-invoice.index',
+                        'pattern' => 'proforma-invoice.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['proforma_invoice-browse'],
+                    ],
+                    [
+                        'name' => 'Arsip Penjualan',
+                        'route' => 'sales-invoice.index',
+                        'pattern' => 'sales-invoice.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['sales_invoice-browse'],
+                    ],
+                    [
+                        'name' => 'Arsip Proforma Invoice',
+                        'route' => 'sales-invoice.index',
+                        'pattern' => 'sales-invoice.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['sales_invoice-browse'],
+                    ],
+                    [
+                        'name' => 'Arsip Sales Invoice',
+                        'route' => 'sales-invoice.index',
+                        'pattern' => 'sales-invoice.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['sales_invoice-browse'],
+                    ],
+
+                ],
             ],
             [
                 'type' => 'section',

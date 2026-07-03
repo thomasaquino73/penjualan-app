@@ -86,7 +86,7 @@
         .recipient-box {
             background-color: #f8f9fa;
             padding: 5px 8px;
-            min-height: 60px;
+            min-height: 30px;
             font-size: 8.5pt;
         }
 
@@ -250,9 +250,40 @@
                         {{ $model->address }}
                     </div>
                 </td>
+
                 <td style="width: 50%; vertical-align: top; padding-left: 20px;">
-                    <div class="po-box-title">Surat Jalan</div>
-                    <table style="width: auto; border-collapse: collapse;">
+                    <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
+                        <tr>
+                            <td style="border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 5px;">
+                                <div style="display: flex;">
+                                    <span style="width: 70px;">Tanggal</span>
+                                    <span>: {{ date('d M Y', strtotime($model->delivery_order_date)) }}</span>
+                                </div>
+                            </td>
+                            <td style="border-bottom: 1px solid #000; padding: 5px;">
+                                <div style="display: flex;">
+                                    <span style="width: 70px;">Nomor</span>
+                                    <span style="font-weight: bold;">: {{ $model->delivery_order_code }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border-right: 1px solid #000; padding: 5px;">
+                                <div style="display: flex;">
+                                    <span style="width: 70px;">Ekspedisi</span>
+                                    <span>: {{ $model->shippingID?->nama ?? '-' }}</span>
+                                </div>
+                            </td>
+                            <td style="padding: 5px;">
+                                <div style="display: flex;">
+                                    <span style="width: 70px;">PO No.</span>
+                                    <span>: {{ $model->no_document }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                {{-- <table style="width: auto; border-collapse: collapse;">
                         <tr>
                             <td style="width: 80px; padding: 2px;">Nomor</td>
                             <td style="width: 10px; padding: 2px;">:</td>
@@ -273,8 +304,8 @@
                             <td style="padding: 2px;">:</td>
                             <td style="padding: 2px;">{{ $model->no_document }}</td>
                         </tr>
-                    </table>
-                </td>
+                    </table> --}}
+                {{-- </td> --}}
             </tr>
         </table>
 
@@ -324,20 +355,54 @@
         </table>
 
         <div class="signature-section">
-            <table style="width: 100%;">
+            <table style="width:100%; table-layout:fixed;">
                 <tr>
-                    <td style="width: 60%;">
-                        <div class="dots-line"></div>
-                    </td>
-                    <td style="width: 40%; text-align: center;">
-                        <div class="approval-title">
-                            {{ $model->status == 'processing' ? 'Disetujui Oleh' : 'Dibuat oleh' }}</div>
-                        <div style="height: 65px;">
-                            <img src="{{ public_path($model->status == 'processing' ? 'image/logo/STEMPEL.png' : 'image/logo/69fd6d6ab719c1778216298.png') }}"
-                                style="height: 80px;">
+                    <td style="width:25%; text-align:center; vertical-align:top;">
+                        <div class="approval-title">Dibuat,</div>
+                        <div style="height:40px;"></div>
+                        <div style="font-weight:bold; text-decoration:underline;">
+                            {{ $model->status == 'processing' ? $model->creator->fullname : '' }}
                         </div>
-                        <div style="font-weight: bold; text-decoration: underline;">
+                    </td>
+
+                    <td style="width:25%; text-align:center; vertical-align:top;">
+                        <div class="approval-title">
+                            {{ $model->status == 'processing' ? 'Disetujui' : 'Dibuat oleh' }}
+                        </div>
+                        <div style="height:40px;">
+                            <img src="{{ public_path($model->status == 'processing' ? 'image/logo/STEMPEL.png' : 'image/logo/69fd6d6ab719c1778216298.png') }}"
+                                style="height:40px;">
+                        </div>
+                        <div style="font-weight:bold; text-decoration:underline;">
                             {{ $model->status == 'processing' ? 'Yohanes Lukman' : $model->creator->fullname }}
+                        </div>
+                    </td>
+
+                    <td style="width:25%; text-align:center; vertical-align:top;">
+                        <div class="approval-title">Pengirim,</div>
+                        <div style="height:40px;"></div>
+
+                        <div
+                            style="
+        width:80%;
+        margin:0 auto;
+        border-bottom:1px solid #000;
+        height:10px;
+    ">
+                        </div>
+                    </td>
+
+                    <td style="width:25%; text-align:center; vertical-align:top;">
+                        <div class="approval-title">Penerima,</div>
+                        <div style="height:40px;"></div>
+
+                        <div
+                            style="
+        width:80%;
+        margin:0 auto;
+        border-bottom:1px solid #000;
+        height:10px;
+    ">
                         </div>
                     </td>
                 </tr>

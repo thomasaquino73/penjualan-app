@@ -150,17 +150,7 @@ class SalesQuotationController extends Controller
                     return '';
                 })
                 ->addColumn('total', function ($row) {
-                    // 1. Hitung total kotor (sum amount) dari detail item PO
-                    $subTotal = SalesQuotationDetail::where('sales_quotation_id', $row->id)
-                        ->where('active', 1)
-                        ->sum('amount');
-
-                    // 2. Hitung grand total: Subtotal dikurangi diskon nominal yang ada di tabel induk ($row)
-                    // Gunakan ?? 0 jika kolom disc_nominal di database bisa bernilai null
-                    $grandTotal = $subTotal - ($row->disc_nominal ?? 0);
-
-                    // 3. Kembalikan nilai yang sudah dikonversi dan diformat
-                    return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
+                    return format_uang(convert_currency($row->grand_total, $row->currency_id ?? 1));
                 })
                 ->addColumn('action', function ($row) {
                     $currentUserId = Auth::user()->id;
@@ -374,6 +364,7 @@ class SalesQuotationController extends Controller
                             // 'purchase_requisition_detail_id' => $prDetailId,
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
+                            'outstanding_qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
                             'unit_price' => $unitPrice,
                             'discount_percent' => $item['discount_percent'],
@@ -546,6 +537,7 @@ class SalesQuotationController extends Controller
                             'sales_quotation_id' => $salesQuotation->id,
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
+                            'outstanding_qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
                             'unit_price' => $unitPrice,
                             'discount_percent' => $discountPercent,
@@ -794,10 +786,10 @@ class SalesQuotationController extends Controller
     public function getKontakByCustomer($customer_id)
     {
         $customer = Customer::find($customer_id);
-        if (!$customer_id) {
+        if (! $customer_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Customer tidak ditemukan.'
+                'message' => 'Customer tidak ditemukan.',
             ]);
         }
 

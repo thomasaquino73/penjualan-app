@@ -337,6 +337,7 @@ class PurchaseRequisitionController extends Controller
                         'product_id' => $item['product_id'],
                         'qty' => $item['quantity'] ?? $item['qty'],
                         'unit_id' => $item['unit_id'],
+                        'outstanding_qty' => $item['quantity'] ?? $item['qty'],
                         'required_date' => $requiredDate,
                         'notes' => ! empty($item['notes']) ? $item['notes'] : null,
                         'active' => 1,
@@ -415,7 +416,7 @@ class PurchaseRequisitionController extends Controller
                 ['label' => 'Purchase Requisition', 'url' => route('permintaan-pembelian.index')],
                 ['label' => 'Edit', 'url' => ''],
             ],
-            'product' => Customer::where('status', '<>', 0)->get(),
+            'product' => Barang::where('status', '<>', 0)->get(),
             'model' => $purchaseRequisition,
         ];
 
@@ -467,6 +468,7 @@ class PurchaseRequisitionController extends Controller
                         'purchase_requisition_id' => $prMaster->id,
                         'product_id' => $item['product_id'],
                         'qty' => $item['quantity'] ?? $item['qty'],
+                        'outstanding_qty' => $item['quantity'] ?? $item['qty'],
                         'unit_id' => $item['unit_id'],
                         'required_date' => $requiredDate,
                         'notes' => $item['notes'] ?? null,

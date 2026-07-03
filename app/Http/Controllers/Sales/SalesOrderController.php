@@ -629,7 +629,7 @@ class SalesOrderController extends Controller
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
-                             'warehouse_id' => !empty($item['warehouse_id']) ? $item['warehouse_id'] : null,
+                            'warehouse_id' => ! empty($item['warehouse_id']) ? $item['warehouse_id'] : null,
                             'unit_price' => $unitPrice,
                             'discount_percent' => $discountPercent,
                             'discount' => $discount,
@@ -1809,10 +1809,21 @@ class SalesOrderController extends Controller
         $kontak = DB::table('customer_kontak')
             ->where('customer_id', $customerId)
             ->get();
+        $customer = Customer::find($customerId);
+        $address = collect([
+            $customer->alamat_tagihan,
+            collect([
+                $customer->kota_tagihan,
+                $customer->provinsi_tagihan,
+                $customer->kodepos_tagihan,
+            ])->filter()->implode(', '),
+            $customer->negara_tagihan,
+        ])->filter()->implode("\n");
 
         return response()->json([
             'pajak' => $pajak,
             'kontak' => $kontak,
+            'address' => $address,
         ]);
     }
 

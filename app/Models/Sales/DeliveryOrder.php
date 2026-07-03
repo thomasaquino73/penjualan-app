@@ -29,6 +29,7 @@ class DeliveryOrder extends Model
     {
         return $this->belongsTo(Customer::class, 'customer_id');
     }
+
     public function shippingID()
     {
         return $this->belongsTo(Shipping::class, 'shipping_id');

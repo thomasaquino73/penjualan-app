@@ -242,7 +242,7 @@ class SalesInvoiceController extends Controller
                     if ($row->created_by == $currentUserId) {
 
                         // SEND TO APPROVAL
-                      if ($row->status == 'draft') {
+                        if ($row->status == 'draft') {
 
                             $btn .= '
                                 <a class="dropdown-item btn-processing"
@@ -1634,7 +1634,7 @@ class SalesInvoiceController extends Controller
             ->value('stock') ?? 0;
     }
 
-     public function processData($id)
+    public function processData($id)
     {
         // 1. Ambil tahun berjalan secara dinamis
         $year = date('Y');

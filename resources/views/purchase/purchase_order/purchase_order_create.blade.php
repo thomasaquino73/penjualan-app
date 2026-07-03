@@ -1324,10 +1324,165 @@
                 width: "100%",
             });
 
+            // $("#btnSubmitSelected").on("click", function() {
+            //     let checkedBoxes = $(".checkItem:checked");
+
+            //     // 1. Validasi jika tidak ada PR yang dicentang
+            //     if (checkedBoxes.length === 0) {
+            //         Swal.fire({
+            //             icon: "warning",
+            //             title: "Peringatan",
+            //             text: "Silakan pilih minimal satu data requisition!",
+            //             customClass: {
+            //                 confirmButton: "btn btn-danger",
+            //             },
+            //             buttonsStyling: false,
+            //         });
+            //         return;
+            //     }
+
+            //     // 2. Ambil ID requisition yang dicentang
+            //     let ids = [];
+            //     checkedBoxes.each(function() {
+            //         ids.push($(this).val());
+            //     });
+
+            //     // 3. Tampilkan konfirmasi SweetAlert sebelum memproses
+            //     Swal.fire({
+            //         title: "Proses data terpilih?",
+            //         text: `Anda memilih ${checkedBoxes.length} data untuk dimasukkan ke tabel.`,
+            //         icon: "question",
+            //         showCancelButton: true,
+            //         confirmButtonText: "Ya, Masukkan!",
+            //         cancelButtonText: "Batal",
+            //         customClass: {
+            //             confirmButton: "btn btn-primary",
+            //             cancelButton: "btn btn-secondary",
+            //         },
+            //         buttonsStyling: false,
+            //     }).then((result) => {
+            //         if (result.isConfirmed) {
+
+            //             // 4. Kirim request AJAX ke backend
+            //             $.ajax({
+            //                 url: "{{ route('purchase-order.get-requisition-detail') }}",
+            //                 type: "POST",
+            //                 data: {
+            //                     ids: ids,
+            //                     _token: "{{ csrf_token() }}"
+            //                 },
+            //                 beforeSend: function() {
+            //                     $("#btnSubmitSelected")
+            //                         .html(
+            //                             '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
+            //                         )
+            //                         .prop("disabled", true);
+            //                 },
+            //                 success: function(response) {
+            //                     if (response.success) {
+
+            //                         // Bersihkan atau siapkan array penampung global jika belum didefinisikan sebelumnya
+            //                         if (typeof prDetailsData === 'undefined') {
+            //                             window.prDetailsData = [];
+            //                         }
+
+            //                         // 5. Looping data response backend untuk dimasukkan ke array DataTables
+            //                         response.data.forEach(function(item) {
+            //                             let qtyAwal = parseFloat(item.qty || 0);
+            //                             let sudahPO = parseFloat(item.po_qty ||
+            //                                 0);
+            //                             let sisaPr = qtyAwal -
+            //                                 sudahPO; // Batas maksimal kuantitas PR
+
+            //                             if (sisaPr <= 0) {
+            //                                 return; // Jika sisa PR habis, jangan masukkan ke list
+            //                             }
+
+            //                             let unitPrice = 0;
+            //                             let discount = 0;
+            //                             let amount = sisaPr * unitPrice;
+
+            //                             prDetailsData.push({
+            //                                 detail_id: item
+            //                                     .id, // ID Detail PR tersimpan di sini
+            //                                 product_id: item.product_id,
+            //                                 data_produk: item
+            //                                     .product_name,
+            //                                 quantity: sisaPr,
+            //                                 sisa_pr: sisaPr,
+            //                                 unit_id: item.unit_id,
+            //                                 unit: item.unit_name,
+            //                                 warehouse_id: item
+            //                                     .warehouse_id || null,
+            //                                 warehouse: item
+            //                                     .warehouse_name || '-',
+            //                                 unit_price: unitPrice,
+            //                                 discount: discount,
+            //                                 amount: amount,
+            //                                 requisition_code: item
+            //                                     .requisition_code,
+            //                                 required_date: item
+            //                                     .required_date,
+            //                                 notes: item.notes
+            //                             });
+            //                         });
+
+            //                         // 6. Refresh dan gambar ulang DataTables kamu
+            //                         $('#table').DataTable()
+            //                             .clear()
+            //                             .rows.add(prDetailsData)
+            //                             .draw();
+
+            //                         // 7. Hitung ulang total matematika PO
+            //                         if (typeof calculateGrandTotal === "function") {
+            //                             calculateGrandTotal();
+            //                         }
+            //                         if (typeof calculateTotalOrder === "function") {
+            //                             calculateTotalOrder();
+            //                         }
+
+            //                         // 8. Tutup Modal Requisition
+            //                         $("#modalRequisitionDetail").modal("hide");
+
+            //                         // 9. Beri feedback sukses ke user
+            //                         Swal.fire({
+            //                             icon: "success",
+            //                             title: "Success",
+            //                             text: "Data requisition berhasil dimasukkan.",
+            //                             customClass: {
+            //                                 confirmButton: "btn btn-primary",
+            //                             },
+            //                             buttonsStyling: false,
+            //                         });
+            //                     }
+            //                 },
+            //                 error: function(xhr) {
+            //                     Swal.fire({
+            //                         icon: "error",
+            //                         title: "Error",
+            //                         text: "Terjadi kesalahan saat mengambil data.",
+            //                     });
+            //                 },
+            //                 complete: function() {
+            //                     // Kembalikan kondisi tombol submit ke semula
+            //                     $("#btnSubmitSelected")
+            //                         .html(
+            //                             '<i class="ti ti-check me-1"></i> Process Selected'
+            //                         )
+            //                         .prop("disabled", false);
+            //                 }
+            //             });
+            //         }
+            //     });
+            // });
+
             $("#btnSubmitSelected").on("click", function() {
+
                 let checkedBoxes = $(".checkItem:checked");
 
-                // 1. Validasi jika tidak ada PR yang dicentang
+                // ==========================
+                // Validasi
+                // ==========================
                 if (checkedBoxes.length === 0) {
                     Swal.fire({
                         icon: "warning",
@@ -1341,16 +1496,39 @@
                     return;
                 }
 
-                // 2. Ambil ID requisition yang dicentang
+                // ==========================
+                // Ambil ID Header PR
+                // ==========================
                 let ids = [];
+
                 checkedBoxes.each(function() {
                     ids.push($(this).val());
                 });
 
-                // 3. Tampilkan konfirmasi SweetAlert sebelum memproses
+                // ==========================
+                // Ambil Detail PR yang sudah ada di tabel
+                // ==========================
+                let usedDetailIds = [];
+
+                if (typeof prDetailsData !== "undefined") {
+                    prDetailsData.forEach(function(item) {
+
+                        if (item.purchase_requisition_detail_id) {
+                            usedDetailIds.push(item.purchase_requisition_detail_id);
+                        }
+
+                        // kompatibel jika sebelumnya memakai detail_id
+                        else if (item.detail_id) {
+                            usedDetailIds.push(item.detail_id);
+                        }
+
+                    });
+                }
+
                 Swal.fire({
                     title: "Proses data terpilih?",
-                    text: `Anda memilih ${checkedBoxes.length} data untuk dimasukkan ke tabel.`,
+                    text: "Anda memilih " + checkedBoxes.length +
+                        " data untuk dimasukkan ke tabel.",
                     icon: "question",
                     showCancelButton: true,
                     confirmButtonText: "Ya, Masukkan!",
@@ -1361,119 +1539,197 @@
                     },
                     buttonsStyling: false,
                 }).then((result) => {
-                    if (result.isConfirmed) {
 
-                        // 4. Kirim request AJAX ke backend
-                        $.ajax({
-                            url: "{{ route('purchase-order.get-requisition-detail') }}",
-                            type: "POST",
-                            data: {
-                                ids: ids,
-                                _token: "{{ csrf_token() }}"
-                            },
-                            beforeSend: function() {
-                                $("#btnSubmitSelected")
-                                    .html(
-                                        '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
-                                    )
-                                    .prop("disabled", true);
-                            },
-                            success: function(response) {
-                                if (response.success) {
-
-                                    // Bersihkan atau siapkan array penampung global jika belum didefinisikan sebelumnya
-                                    if (typeof prDetailsData === 'undefined') {
-                                        window.prDetailsData = [];
-                                    }
-
-                                    // 5. Looping data response backend untuk dimasukkan ke array DataTables
-                                    response.data.forEach(function(item) {
-                                        let qtyAwal = parseFloat(item.qty || 0);
-                                        let sudahPO = parseFloat(item.po_qty ||
-                                            0);
-                                        let sisaPr = qtyAwal -
-                                            sudahPO; // Batas maksimal kuantitas PR
-
-                                        if (sisaPr <= 0) {
-                                            return; // Jika sisa PR habis, jangan masukkan ke list
-                                        }
-
-                                        let unitPrice = 0;
-                                        let discount = 0;
-                                        let amount = sisaPr * unitPrice;
-
-                                        prDetailsData.push({
-                                            detail_id: item
-                                                .id, // ID Detail PR tersimpan di sini
-                                            product_id: item.product_id,
-                                            data_produk: item
-                                                .product_name,
-                                            quantity: sisaPr,
-                                            sisa_pr: sisaPr,
-                                            unit_id: item.unit_id,
-                                            unit: item.unit_name,
-                                            warehouse_id: item
-                                                .warehouse_id || null,
-                                            warehouse: item
-                                                .warehouse_name || '-',
-                                            unit_price: unitPrice,
-                                            discount: discount,
-                                            amount: amount,
-                                            requisition_code: item
-                                                .requisition_code,
-                                            required_date: item
-                                                .required_date,
-                                            notes: item.notes
-                                        });
-                                    });
-
-                                    // 6. Refresh dan gambar ulang DataTables kamu
-                                    $('#table').DataTable()
-                                        .clear()
-                                        .rows.add(prDetailsData)
-                                        .draw();
-
-                                    // 7. Hitung ulang total matematika PO
-                                    if (typeof calculateGrandTotal === "function") {
-                                        calculateGrandTotal();
-                                    }
-                                    if (typeof calculateTotalOrder === "function") {
-                                        calculateTotalOrder();
-                                    }
-
-                                    // 8. Tutup Modal Requisition
-                                    $("#modalRequisitionDetail").modal("hide");
-
-                                    // 9. Beri feedback sukses ke user
-                                    Swal.fire({
-                                        icon: "success",
-                                        title: "Success",
-                                        text: "Data requisition berhasil dimasukkan.",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary",
-                                        },
-                                        buttonsStyling: false,
-                                    });
-                                }
-                            },
-                            error: function(xhr) {
-                                Swal.fire({
-                                    icon: "error",
-                                    title: "Error",
-                                    text: "Terjadi kesalahan saat mengambil data.",
-                                });
-                            },
-                            complete: function() {
-                                // Kembalikan kondisi tombol submit ke semula
-                                $("#btnSubmitSelected")
-                                    .html(
-                                        '<i class="ti ti-check me-1"></i> Process Selected'
-                                    )
-                                    .prop("disabled", false);
-                            }
-                        });
+                    if (!result.isConfirmed) {
+                        return;
                     }
+
+                    $.ajax({
+
+                        url: "{{ route('purchase-order.get-requisition-detail') }}",
+                        type: "POST",
+
+                        data: {
+                            ids: ids,
+                            used_detail_ids: usedDetailIds,
+                            _token: "{{ csrf_token() }}"
+                        },
+
+                        beforeSend: function() {
+
+                            $("#btnSubmitSelected")
+                                .html(
+                                    '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
+                                    )
+                                .prop("disabled", true);
+
+                        },
+
+                        success: function(response) {
+
+                            if (!response.success) {
+
+                                Swal.fire({
+                                    icon: "warning",
+                                    title: "Peringatan",
+                                    text: response.message,
+                                });
+
+                                return;
+                            }
+
+                            if (typeof prDetailsData === "undefined") {
+                                window.prDetailsData = [];
+                            }
+
+                            response.data.forEach(function(item) {
+
+                                // ==========================
+                                // Hindari duplikat
+                                // ==========================
+                                let exists = prDetailsData.some(function(row) {
+
+                                    return (
+                                        row
+                                        .purchase_requisition_detail_id ==
+                                        item
+                                        .purchase_requisition_detail_id
+                                    );
+
+                                });
+
+                                if (exists) {
+                                    return;
+                                }
+
+                                let qty = parseFloat(item.outstanding_qty ??
+                                    item.qty ?? 0);
+
+                                let unitPrice = parseFloat(item.unit_price ??
+                                0);
+
+                                let discount = parseFloat(item.discount ?? 0);
+
+                                let amount = qty * unitPrice;
+
+                                prDetailsData.push({
+
+                                    id: item.id,
+
+                                    purchase_requisition_detail_id: item
+                                        .purchase_requisition_detail_id,
+
+                                    purchase_requisition_id: item
+                                        .purchase_requisition_id,
+
+                                    product_id: item.product_id,
+
+                                    data_produk: item.product_name,
+
+                                    product_name: item.product_name,
+
+                                    quantity: qty,
+
+                                    qty: qty,
+
+                                    pr_qty: parseFloat(item.pr_qty),
+
+                                    po_qty: parseFloat(item.po_qty),
+
+                                    outstanding_qty: qty,
+
+                                    sisa_pr: qty,
+
+                                    unit_id: item.unit_id,
+
+                                    unit: item.unit_name,
+
+                                    unit_name: item.unit_name,
+
+                                    warehouse_id: item.warehouse_id ??
+                                        null,
+
+                                    warehouse: item.warehouse_name ??
+                                        "-",
+
+                                    unit_price: unitPrice,
+
+                                    discount: discount,
+
+                                    amount: amount,
+
+                                    tax: parseFloat(item.tax ?? 0),
+
+                                    requisition_code: item
+                                        .requisition_code,
+
+                                    required_date: item.required_date,
+
+                                    pr_status: item.pr_status,
+
+                                    notes: item.notes
+
+                                });
+
+                            });
+
+                            let table = $("#table").DataTable();
+
+                            table.clear();
+                            table.rows.add(prDetailsData);
+                            table.draw();
+
+                            if (typeof calculateGrandTotal === "function") {
+                                calculateGrandTotal();
+                            }
+
+                            if (typeof calculateTotalOrder === "function") {
+                                calculateTotalOrder();
+                            }
+
+                            $("#modalRequisitionDetail").modal("hide");
+
+                            Swal.fire({
+                                icon: "success",
+                                title: "Success",
+                                text: "Data requisition berhasil dimasukkan.",
+                                customClass: {
+                                    confirmButton: "btn btn-primary",
+                                },
+                                buttonsStyling: false,
+                            });
+
+                        },
+
+                        error: function(xhr) {
+
+                            let message = "Terjadi kesalahan saat mengambil data.";
+
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                message = xhr.responseJSON.message;
+                            }
+
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: message,
+                            });
+
+                        },
+
+                        complete: function() {
+
+                            $("#btnSubmitSelected")
+                                .html(
+                                    '<i class="ti ti-check me-1"></i> Process Selected')
+                                .prop("disabled", false);
+
+                        }
+
+                    });
+
                 });
+
             });
 
             $(document).on('input change', '.input-qty', function() {

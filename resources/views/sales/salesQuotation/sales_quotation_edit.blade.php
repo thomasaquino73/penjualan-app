@@ -632,6 +632,8 @@
                         helperText.text("Mencari riwayat harga...");
                     },
                     success: function(response) {
+                        calculateTotalOrder();
+                        calculateGrandTotal();
                         if (response.success && response.history.length > 0) {
                             dropdownBtn.prop("disabled", false);
                             helperText
@@ -1128,7 +1130,7 @@
             document.getElementById('discount').value = totalDiscount.toFixed(2);
 
             // Set total price
-            document.getElementById('amount').value = remaining.toFixed(2);
+            document.getElementById('total_price').value = remaining.toFixed(2);
         }
 
         document.getElementById('discount').addEventListener('input', function() {
@@ -1144,7 +1146,7 @@
 
             let total = subtotal - discountNominal;
 
-            document.getElementById('amount').value = total.toFixed(2);
+            document.getElementById('total_price').value = total.toFixed(2);
         });
 
         document.getElementById('quantity').addEventListener('input', calculateTotal);

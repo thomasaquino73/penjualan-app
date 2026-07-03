@@ -65,15 +65,6 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md">
-                        <select class="form-select select2" id="selectBrand" data-placeholder="Choose brand...">
-                            <option></option>
-                            @foreach ($brand as $brands)
-                                <option value="{{ $brands->id }}">{{ $brands->detail }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
                     <!-- Reset button -->
                     <div class="col-md-auto">
                         <button class="btn btn-outline-secondary w-100" id="resetFilter">
@@ -98,7 +89,6 @@
                         <th>Category</th>
                         <th>Product Name</th>
                         <th>Price</th>
-                        <th>Brand</th>
                         <th>Stock</th>
                         <th>Status</th>
                         <th>Created</th>
@@ -197,9 +187,6 @@
                     },
                     {
                         data: 'harga',
-                    },
-                    {
-                        data: 'brand',
                     },
                     {
                         data: 'stok',

@@ -56,6 +56,53 @@ class PermissionSeeder extends Seeder
             'shipping' => ['alias' => 'Shipping', 'group' => 'Setting'],
             'fob' => ['alias' => 'FOB', 'group' => 'Setting'],
             'syarat_pembayaran' => ['alias' => 'Payment Term', 'group' => 'Setting'],
+            'archive_purchase_requisition' => [
+                'alias' => 'Archive Purchase Requisition',
+                'group' => 'Archive',
+                'actions' => ['browse'],
+            ],
+
+            'archive_purchase_order' => [
+                'alias' => 'Archive Purchase Order',
+                'group' => 'Archive',
+                'actions' => ['browse'],
+            ],
+
+            'archive_sales_quotation' => [
+                'alias' => 'Archive Sales Quotation',
+                'group' => 'Archive',
+                'actions' => ['browse'],
+            ],
+
+            'archive_sales_order' => [
+                'alias' => 'Archive Sales Order',
+                'group' => 'Archive',
+                'actions' => ['browse'],
+            ],
+
+            'archive_delivery_order' => [
+                'alias' => 'Archive Delivery Order',
+                'group' => 'Archive',
+                'actions' => ['browse'],
+            ],
+
+            'archive_receive_item' => [
+                'alias' => 'Archive Receive Item',
+                'group' => 'Archive',
+                'actions' => ['browse'],
+            ],
+
+            'archive_purchase_invoice' => [
+                'alias' => 'Archive Purchase Invoice',
+                'group' => 'Archive',
+                'actions' => ['browse'],
+            ],
+
+            'archive_sales_invoice' => [
+                'alias' => 'Archive Sales Invoice',
+                'group' => 'Archive',
+                'actions' => ['browse'],
+            ],
         ];
 
         $role = Roles::firstOrCreate([

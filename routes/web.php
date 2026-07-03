@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Archive\PembelianArsipController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
@@ -352,7 +353,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/proforma-invoice/{id}/submit', [ProformaInvoiceController::class, 'submitToPending'])->name('proforma-invoice.submit');
     Route::get('/proforma-invoice/trash', [ProformaInvoiceController::class, 'trash'])->name('proforma-invoice.trash');
     Route::resource('proforma-invoice', ProformaInvoiceController::class);
+    Route::prefix('archive')->group(function () {
+        Route::get('/arsip-purchase-requisition', [PembelianArsipController::class, 'indexPurchaseRequisition'])->name('archive.purchase-requisition');
+        Route::get('arsip-purchase-requisition/datatable', [PembelianArsipController::class, 'tabelPurchaseRequisition'])->name('archive.purchase-requisition.datatable');
+        Route::get('arsip-purchase-requisition/{id}/show', [PembelianArsipController::class, 'showPurchaseRequisition'])->name('archive.purchase-requisition.show');
+        Route::get('/arsip-purchase-requisition/{year}/print/{id}', [PembelianArsipController::class, 'printPurchaseRequisition'])->name('archive.purchase-requisition.print');
 
+    });
 });
 
 Route::fallback(function () {

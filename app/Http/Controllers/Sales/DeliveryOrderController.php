@@ -1063,7 +1063,7 @@ class DeliveryOrderController extends Controller
             }
 
             // 1. Ambil semua detail dari SO yang akan dihapus untuk sinkronisasi PR
-            $sqDetails = DeliveryOrderDetail::whereIn('delivery_order_id', $ids)->get();
+            DeliveryOrderDetail::whereIn('delivery_order_id', $ids)->get();
             $involvedPrIds = [];
 
             // 2. Tandai SO dan Detail SO sebagai tidak aktif (active = 0)
@@ -1071,53 +1071,7 @@ class DeliveryOrderController extends Controller
                 'active' => 0,
                 'updated_by' => Auth::id(),
             ]);
-            // DeliveryOrderDetail::whereIn('delivery_order_id', $ids)->update(['active' => 0]);
-
-            // 3. Update sq_qty di PR Detail dan kumpulkan ID PR Master
-            // foreach ($sqDetails as $sqDetail) {
-            //     if ($sqDetail->sales_order_detail_id) {
-            //         // Hitung total dari SO yang tersisa (yang masih aktif)
-            //         $totalRemainingPo = DeliveryOrderDetail::where('sales_order_detail_id', $sqDetail->sales_order_detail_id)
-            //             ->where('active', 1)
-            //             ->sum('qty');
-
-            //         // Update ke tabel PR Detail
-            //         DB::table('sales_order_detail_'.date('Y'))
-            //             ->where('id', $sqDetail->sales_order_detail_id)
-            //             ->update(['sq_qty' => $totalRemainingPo]);
-
-            //         // Simpan ID PR untuk update status nanti
-            //         $prDetail = DB::table('sales_order_detail_'.date('Y'))
-            //             ->where('id', $sqDetail->sales_order_detail_id)
-            //             ->first();
-
-            //         if ($prDetail && ! in_array($prDetail->sales_order_id, $involvedPrIds)) {
-            //             $involvedPrIds[] = $prDetail->sales_order_id;
-            //         }
-            //     }
-            // }
-
-            // 4. Update Status PR Master berdasarkan akumulasi terbaru
-            // foreach ($involvedPrIds as $prId) {
-            //     $allDetails = DB::table('sales_order_detail_'.date('Y'))
-            //         ->where('sales_order_id', $prId)
-            //         ->get();
-
-            //     $totalRequested = $allDetails->sum('qty');
-            //     $totalOrdered = $allDetails->sum('sq_qty');
-
-            //     if ($totalOrdered >= $totalRequested) {
-            //         $status = 'closed';
-            //     } elseif ($totalOrdered > 0) {
-            //         $status = 'partial';
-            //     } else {
-            //         $status = 'processing';
-            //     }
-
-            //     DB::table('sales_order_'.date('Y'))
-            //         ->where('id', $prId)
-            //         ->update(['status' => $status]);
-            // }
+            $this->deleteStockMutation($ids);
 
             DB::commit();
 
@@ -1134,6 +1088,13 @@ class DeliveryOrderController extends Controller
                 'message' => 'Gagal menghapus data: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    private function deleteStockMutation($documentIds)
+    {
+        StockMutation::where('document_type', 'delivery_order')
+            ->whereIn('document_id', (array) $documentIds)
+            ->delete();
     }
 
     // public function restore($id)
@@ -1279,7 +1240,7 @@ class DeliveryOrderController extends Controller
             }
 
             // 1. Update status SO jadi aktif
-           DeliveryOrder::whereIn('id', $ids)->update([
+            DeliveryOrder::whereIn('id', $ids)->update([
                 'active' => 1,
                 'updated_by' => Auth::id(),
             ]);
@@ -1466,7 +1427,7 @@ class DeliveryOrderController extends Controller
             'customerID',
             'details.produkID',
             'details.unitID',
-            'details.warehouseID'
+            'details.warehouseID',
         ])->findOrFail($id);
         $company = Company::first();
         // 1. LOGIKA LOGO PERUSAHAAN (Base64)
@@ -1482,15 +1443,15 @@ class DeliveryOrderController extends Controller
         $pdf = Pdf::loadView('pdf.deliveryOrder.delivery_order', [
             'model' => $deliveryOrder,
             'company' => $company,
-            'logoBase64' => $logoBase64,  
-               'totalQty'    => $this->hitungTotalQty($deliveryOrder),
-        'totalBarang' => $this->hitungTotalBarang($deliveryOrder),
+            'logoBase64' => $logoBase64,
+            'totalQty' => $this->hitungTotalQty($deliveryOrder),
+            'totalBarang' => $this->hitungTotalBarang($deliveryOrder),
         ]);
 
         $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $deliveryOrder->delivery_order_code);
 
         return $pdf->setPaper('a5', 'landscape')
-            ->stream($filename . '.pdf');
+            ->stream($filename.'.pdf');
     }
 
     private function hitungTotalQty($deliveryOrder)
@@ -1509,10 +1470,10 @@ class DeliveryOrderController extends Controller
     public function getKontakByCustomer($customer_id)
     {
         $customer = Customer::find($customer_id);
-        if (!$customer_id) {
+        if (! $customer_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Customer tidak ditemukan.'
+                'message' => 'Customer tidak ditemukan.',
             ]);
         }
 

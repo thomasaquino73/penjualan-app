@@ -9,7 +9,8 @@ class DocumentTransactionHistory extends Model
     protected $table = 'document_transaction_histories';
 
     protected $guarded = [];
-     protected $casts = [
+
+    protected $casts = [
         'metadata' => 'array',
     ];
 }

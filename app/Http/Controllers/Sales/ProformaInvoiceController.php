@@ -111,8 +111,6 @@ class ProformaInvoiceController extends Controller
                             $text = 'Processing';
                             break;
 
-                        
-
                         case 'partially_received':
                             $badge = 'bg-label-info';
                             $text = 'Partially Received';
@@ -149,8 +147,6 @@ class ProformaInvoiceController extends Controller
                                 '.$text.'
                             </span>
                     ';
-
-                    
 
                     // OUTSTANDING INFO
                     if (

@@ -683,26 +683,56 @@ class PurchaseOrderController extends Controller
                         ]);
 
                         // --- LOGIKA SINKRONISASI PO KE PR ---
+
                         if ($prDetailId) {
-                            $prDetail = DB::table("purchase_requisition_detail_{$currentYear}")->where('id', $prDetailId)->first();
+
+                            $prDetail = DB::table("purchase_requisition_detail_{$currentYear}")
+                                ->where('id', $prDetailId)
+                                ->first();
 
                             if ($prDetail) {
-                                // Hitung ulang total qty yang sudah di-PO kan untuk PR detail ini
+
+                                // Hitung total qty PO
                                 $totalPoForThisItem = PurchaseOrderDetail::where('purchase_requisition_detail_id', $prDetailId)
                                     ->where('active', 1)
                                     ->sum('qty');
 
-                                // Update po_qty di tabel PR Detail
+                                // Hitung outstanding
+                                $outstandingQty = max(0, $prDetail->qty - $totalPoForThisItem);
+
                                 DB::table("purchase_requisition_detail_{$currentYear}")
                                     ->where('id', $prDetailId)
-                                    ->update(['po_qty' => $totalPoForThisItem]);
+                                    ->update([
+                                        'po_qty' => $totalPoForThisItem,
+                                        'outstanding_qty' => $outstandingQty,
+                                        'updated_at' => now(),
+                                    ]);
 
-                                // Catat ID PR Master agar statusnya bisa dihitung ulang nanti
                                 if (! in_array($prDetail->purchase_requisition_id, $involvedPrIds)) {
                                     $involvedPrIds[] = $prDetail->purchase_requisition_id;
                                 }
                             }
                         }
+                        // if ($prDetailId) {
+                        //     $prDetail = DB::table("purchase_requisition_detail_{$currentYear}")->where('id', $prDetailId)->first();
+
+                        //     if ($prDetail) {
+                        //         // Hitung ulang total qty yang sudah di-PO kan untuk PR detail ini
+                        //         $totalPoForThisItem = PurchaseOrderDetail::where('purchase_requisition_detail_id', $prDetailId)
+                        //             ->where('active', 1)
+                        //             ->sum('qty');
+
+                        //         // Update po_qty di tabel PR Detail
+                        //         DB::table("purchase_requisition_detail_{$currentYear}")
+                        //             ->where('id', $prDetailId)
+                        //             ->update(['po_qty' => $totalPoForThisItem]);
+
+                        //         // Catat ID PR Master agar statusnya bisa dihitung ulang nanti
+                        //         if (! in_array($prDetail->purchase_requisition_id, $involvedPrIds)) {
+                        //             $involvedPrIds[] = $prDetail->purchase_requisition_id;
+                        //         }
+                        //     }
+                        // }
                     }
 
                     // --- OTOMASI STATUS PR MASTER ---
@@ -1973,34 +2003,34 @@ class PurchaseOrderController extends Controller
     // }
 
     public function getSupplierAddress($supplierId)
-{
-    $supplier = Supplier::find($supplierId);
+    {
+        $supplier = Supplier::find($supplierId);
 
-    if (!$supplier) {
+        if (! $supplier) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Supplier tidak ditemukan.',
+            ]);
+        }
+
+        $address = collect([
+            $supplier->alamat_pembayaran,
+            collect([
+                $supplier->kota,
+                $supplier->provinsi,
+                $supplier->kodepos,
+            ])->filter()->implode(', '),
+            $supplier->negara,
+        ])->filter()->implode("\n");
+
         return response()->json([
-            'success' => false,
-            'message' => 'Supplier tidak ditemukan.'
+            'success' => true,
+            'data' => [
+                'address_name' => $supplier->nama_supplier,
+                'address' => $address,
+            ],
         ]);
     }
-
-    $address = collect([
-        $supplier->alamat_pembayaran,
-        collect([
-            $supplier->kota,
-            $supplier->provinsi,
-            $supplier->kodepos,
-        ])->filter()->implode(', '),
-        $supplier->negara,
-    ])->filter()->implode("\n");
-
-    return response()->json([
-        'success' => true,
-        'data' => [
-            'address_name' => $supplier->nama_supplier,
-            'address' => $address,
-        ]
-    ]);
-}
 
     public function sendSupplier($id)
     {
@@ -2025,9 +2055,80 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
+    // public function getRequisitionDetail(Request $request)
+    // {
+    //     $ids = $request->ids;
+
+    //     if (empty($ids)) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Tidak ada data PR yang dipilih.',
+    //             'data' => [],
+    //         ]);
+    //     }
+
+    //     $details = PurchaseRequisitionDetail::with([
+    //         'produkID',
+    //         'unitID',
+    //         'requisition',
+    //     ])
+    //         ->whereIn('purchase_requisition_id', $ids)
+    //         ->where('active', 1)
+    //         ->whereHas('requisition', function ($q) {
+    //             $q->whereIn('status', ['processing', 'partial']);
+    //         })
+    //         ->get();
+
+    //     $formattedData = $details->map(function ($item) {
+
+    //         return [
+    //             'id' => $item->id,
+
+    //             // relasi PR
+    //             'purchase_requisition_detail_id' => $item->id,
+    //             'purchase_requisition_id' => $item->purchase_requisition_id,
+
+    //             // produk
+    //             'product_id' => $item->product_id,
+    //             'product_name' => $item->produkID->nama_barang ?? '',
+    //             'data_produk' => $item->produkID->nama_barang ?? '',
+
+    //             // qty langsung dari PR
+    //             'quantity' => (float) $item->qty,
+    //             'qty' => (float) $item->qty,
+
+    //             // unit
+    //             'unit_id' => $item->unit_id,
+    //             'unit' => $item->unitID->detail ?? '',
+    //             'unit_name' => $item->unitID->detail ?? '',
+
+    //             // harga default
+    //             'unit_price' => 0,
+    //             'discount' => 0,
+    //             'amount' => 0,
+    //             'tax' => 0,
+
+    //             // informasi PR
+    //             'requisition_code' => $item->requisition->code ?? '',
+    //             'required_date' => optional($item->requisition)->date,
+
+    //             // hanya status
+    //             'pr_status' => $item->requisition->status ?? '',
+
+    //             'notes' => $item->notes ?? '',
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $formattedData,
+    //     ]);
+    // }
+
     public function getRequisitionDetail(Request $request)
     {
         $ids = $request->ids;
+        $usedDetailIds = $request->used_detail_ids ?? [];
 
         if (empty($ids)) {
             return response()->json([
@@ -2044,47 +2145,82 @@ class PurchaseOrderController extends Controller
         ])
             ->whereIn('purchase_requisition_id', $ids)
             ->where('active', 1)
+
+            // hanya yang masih memiliki outstanding
+            ->where('outstanding_qty', '>', 0)
+
+            // jangan tampilkan lagi yang sudah ada di tabel PO saat ini
+            ->when(! empty($usedDetailIds), function ($query) use ($usedDetailIds) {
+                $query->whereNotIn('id', $usedDetailIds);
+            })
+
+            // hanya PR yang masih bisa diproses
             ->whereHas('requisition', function ($q) {
                 $q->whereIn('status', ['processing', 'partial']);
             })
+
+            ->orderBy('purchase_requisition_id')
+            ->orderBy('id')
             ->get();
 
         $formattedData = $details->map(function ($item) {
 
             return [
+
                 'id' => $item->id,
 
-                // relasi PR
+                // ===========================
+                // Relasi Purchase Requisition
+                // ===========================
                 'purchase_requisition_detail_id' => $item->id,
                 'purchase_requisition_id' => $item->purchase_requisition_id,
 
-                // produk
+                // ===========================
+                // Produk
+                // ===========================
                 'product_id' => $item->product_id,
                 'product_name' => $item->produkID->nama_barang ?? '',
                 'data_produk' => $item->produkID->nama_barang ?? '',
 
-                // qty langsung dari PR
-                'quantity' => (float) $item->qty,
-                'qty' => (float) $item->qty,
+                // ===========================
+                // Qty
+                // ===========================
 
-                // unit
+                // Qty yang boleh dipilih = Outstanding
+                'quantity' => (float) $item->outstanding_qty,
+                'qty' => (float) $item->outstanding_qty,
+
+                // Informasi qty
+                'pr_qty' => (float) $item->qty,
+                'po_qty' => (float) $item->po_qty,
+                'outstanding_qty' => (float) $item->outstanding_qty,
+
+                // ===========================
+                // Unit
+                // ===========================
                 'unit_id' => $item->unit_id,
                 'unit' => $item->unitID->detail ?? '',
                 'unit_name' => $item->unitID->detail ?? '',
 
-                // harga default
+                // ===========================
+                // Harga
+                // ===========================
                 'unit_price' => 0,
                 'discount' => 0,
                 'amount' => 0,
                 'tax' => 0,
 
-                // informasi PR
+                // ===========================
+                // Informasi PR
+                // ===========================
                 'requisition_code' => $item->requisition->code ?? '',
-                'required_date' => optional($item->requisition)->date,
-
-                // hanya status
+                'required_date' => $item->required_date,
+                'pr_date' => optional($item->requisition)->date,
                 'pr_status' => $item->requisition->status ?? '',
 
+                // ===========================
+                // Catatan
+                // ===========================
                 'notes' => $item->notes ?? '',
             ];
         });
@@ -2112,7 +2248,7 @@ class PurchaseOrderController extends Controller
 
     public function getSupplierData($supplierId)
     {
-          $supplier = Supplier::findOrFail($supplierId);
+        $supplier = Supplier::findOrFail($supplierId);
         // Rekening
         $rekening = DB::table('supplier_rekening')
             ->leftJoin(
@@ -2139,13 +2275,13 @@ class PurchaseOrderController extends Controller
         return response()->json([
             'rekening' => $rekening,
             'pajak' => $pajak,
-                'supplier' => [
-            'alamat_pembayaran' => $supplier->alamat_pembayaran,
-            'kota'              => $supplier->kota,
-            'kodepos'           => $supplier->kodepos,
-            'provinsi'          => $supplier->provinsi,
-            'negara'            => $supplier->negara,
-        ]
+            'supplier' => [
+                'alamat_pembayaran' => $supplier->alamat_pembayaran,
+                'kota' => $supplier->kota,
+                'kodepos' => $supplier->kodepos,
+                'provinsi' => $supplier->provinsi,
+                'negara' => $supplier->negara,
+            ],
         ]);
     }
 }
