@@ -867,11 +867,11 @@ class SalesQuotationController extends Controller
         $sq->status = 'processing';
         $sq->updated_by = Auth::id(); // Jika Anda mencatat siapa yang melakukan update terakhir
         $sq->save();
-        $users = User::whereHas('roles.permissions', function ($q) {
-            $q->where('name', 'sales_order-approval');
-        })->get();
+        // $users = User::whereHas('roles.permissions', function ($q) {
+        //     $q->where('name', 'sales_order-approval');
+        // })->get();
         // $users = User::all();
-        Notification::send($users, new SalesQuotationNotification($sq));
+        // Notification::send($users, new SalesQuotationNotification($sq));
 
         return response()->json(['success' => true, 'message' => 'Sales Quotation berhasil diproses!']);
     }
@@ -905,6 +905,7 @@ class SalesQuotationController extends Controller
 
         // replace forbidden filename chars
         $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
+        $pdf->getDomPDF()->set_option('isPhpEnabled', true);
 
         return $pdf->stream($filename.'.pdf');
 

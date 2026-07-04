@@ -18,7 +18,7 @@ return new class extends Migration
         Schema::create("purchase_order_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->bigInteger('supplier_id');
-            $table->string('code');
+            $table->string('code')->unique();
             $table->date('datePO');
             $table->date('tanggal_kirim')->nullable();
             $table->bigInteger('vehicle_id')->nullable();

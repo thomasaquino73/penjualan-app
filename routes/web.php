@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Archive\PembelianArsipController;
+use App\Http\Controllers\Archive\PenjualanArsipController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\IdleController;
 use App\Http\Controllers\DashboardController;
@@ -175,6 +176,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('warehouse', WarehouseController::class);
 
     Route::get('/stock-balance/{product}/{warehouse}', [DataBarangController::class, 'getStockBalance']);
+    Route::get('/data-barang/print-stok', [DataBarangController::class, 'print_stok'])->name('data-barang.print_stok');
     Route::get('/data-barang/print-all', [DataBarangController::class, 'print_all'])->name('data-barang.print_all');
     Route::get('/data-barang/print/{id}', [DataBarangController::class, 'print'])->name('data-barang.print');
     Route::post('/data-barang/delete-multiple', [DataBarangController::class, 'deleteMultiple']);
@@ -356,9 +358,19 @@ Route::middleware('auth')->group(function () {
     Route::prefix('archive')->group(function () {
         Route::get('/arsip-purchase-requisition', [PembelianArsipController::class, 'indexPurchaseRequisition'])->name('archive.purchase-requisition');
         Route::get('arsip-purchase-requisition/datatable', [PembelianArsipController::class, 'tabelPurchaseRequisition'])->name('archive.purchase-requisition.datatable');
-        Route::get('arsip-purchase-requisition/{id}/show', [PembelianArsipController::class, 'showPurchaseRequisition'])->name('archive.purchase-requisition.show');
         Route::get('/arsip-purchase-requisition/{year}/print/{id}', [PembelianArsipController::class, 'printPurchaseRequisition'])->name('archive.purchase-requisition.print');
 
+        Route::get('/arsip-purchase-order', [PembelianArsipController::class, 'indexPurchaseOrder'])->name('archive.purchase-order');
+        Route::get('arsip-purchase-order/datatable', [PembelianArsipController::class, 'tabelPurchaseOrder'])->name('archive.purchase-order.datatable');
+        Route::get('/arsip-purchase-order/{year}/print/{id}', [PembelianArsipController::class, 'printPurchaseOrder'])->name('archive.purchase-order.print');
+
+        Route::get('/arsip-sales-order', [PenjualanArsipController::class, 'indexSalesOrder'])->name('archive.sales-order');
+        Route::get('arsip-sales-order/datatable', [PenjualanArsipController::class, 'tabelSalesOrder'])->name('archive.sales-order.datatable');
+        Route::get('/arsip-sales-order/{year}/print/{id}', [PenjualanArsipController::class, 'printSalesOrder'])->name('archive.sales-order.print');
+
+        Route::get('/arsip-sales-quotation', [PenjualanArsipController::class, 'indexSalesQuotation'])->name('archive.sales-quotation');
+        Route::get('arsip-sales-quotation/datatable', [PenjualanArsipController::class, 'tabelSalesQuotation'])->name('archive.sales-quotation.datatable');
+        Route::get('/arsip-sales-quotation/{year}/print/{id}', [PenjualanArsipController::class, 'printSalesQuotation'])->name('archive.sales-quotation.print');
     });
 });
 

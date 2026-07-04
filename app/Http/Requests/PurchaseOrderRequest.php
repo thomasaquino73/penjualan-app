@@ -17,19 +17,30 @@ class PurchaseOrderRequest extends FormRequest
 
     public function rules(): array
     {
-        $id = $this->route('purchase_order');
-
-        return [
-            'code' => [
-                'required',
-                Rule::unique('purchase_order_'.date('Y'), 'code')->ignore($id),
-            ],
-            'supplier_id' => 'required',
-            'datePO' => 'required|date',
+        $rules = [
+            'supplier_id'   => 'required',
+            'datePO'        => 'required|date',
             'tanggal_kirim' => 'nullable|date',
-            'description' => 'nullable|string',
-            'items_detail' => 'required',
+            'description'   => 'nullable|string',
+            'items_detail'  => 'required',
         ];
+
+        if ($this->isMethod('POST')) {
+            // Store
+            // code tidak divalidasi karena dibuat otomatis
+        }
+
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+
+            $id = $this->route('purchase_order');
+
+            $rules['code'] = [
+                'required',
+                Rule::unique('purchase_order_' . date('Y'), 'code')->ignore($id),
+            ];
+        }
+
+        return $rules;
     }
 
     public function message(): array

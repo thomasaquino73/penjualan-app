@@ -43,9 +43,12 @@
                             <i class="ti ti-trash me-1"></i> Delete Selected
                         </button>
                     @endcanany
-                    <a href="{{ route('data-barang.print_all') }}" target="_blank" class="btn btn-sm btn-info ">
+                    <button type="button" class="btn btn-sm btn-info" id="btnPrintAll">
                         <i class="ti ti-printer me-1"></i> Print All
-                    </a>
+                    </button>
+                    {{-- <a href="{{ route('data-barang.print_all') }}" target="_blank" class="btn btn-sm btn-info ">
+                        <i class="ti ti-printer me-1"></i> Print All
+                    </a> --}}
 
                 </div>
             </div>
@@ -99,9 +102,84 @@
             </table>
         </div>
     </div>
+    <div class="modal fade" id="modalstok" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <form id="formPrintStock" method="GET" action="{{ route('data-barang.print_all') }}">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            Print Semua Barang
+                        </h5>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="modal">
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="mb-3">
+                            <label>Tanggal Awal</label>
+
+                            <input type="text" class="form-control" name="start_date" id="start_date"
+                                value="{{ date('Y-m-01') }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Tanggal Akhir</label>
+
+                            <input type="text" class="form-control" name="end_date" id="end_date"
+                                value="{{ date('Y-m-d') }}" required>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button class="btn btn-primary">
+                            Print
+                        </button>
+
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
 @endsection
 @push('scripts')
     <script>
+        $(function() {
+
+            const startDate = flatpickr("#start_date", {
+                enableTime: false,
+                dateFormat: "Y-m-d", // dikirim ke server
+                altInput: true,
+                altFormat: "d-m-Y", // ditampilkan ke user
+                defaultDate: "{{ now()->format('Y-m-d') }}",
+                onChange: function(selectedDates) {
+                    endDate.set('minDate', selectedDates[0]);
+                }
+            });
+
+            const endDate = flatpickr("#end_date", {
+                enableTime: false,
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d-m-Y",
+                defaultDate: "{{ now()->format('Y-m-d') }}",
+                onChange: function(selectedDates) {
+                    startDate.set('maxDate', selectedDates[0]);
+                }
+            });
+
+        });
         $(document).ready(function() {
             $('#checkAll').on('click', function() {
                 $('.checkItem').prop('checked', this.checked);
@@ -113,6 +191,9 @@
                     'checked',
                     $('.checkItem:checked').length === $('.checkItem').length
                 );
+            });
+            $('#btnPrintAll').click(function() {
+                $('#modalstok').modal('show');
             });
             var groupColumn = 3;
             var table = new DataTable('#table', {

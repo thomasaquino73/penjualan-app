@@ -29,8 +29,18 @@
             height: 30px;
             font-size: 7pt;
             color: #999;
-            text-align: right;
             border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-left {
+            float: left;
+        }
+
+        .footer-right {
+            float: right;
         }
 
         body {
@@ -164,7 +174,7 @@
         <table class="header-table">
             <tr>
                 <td>
-                    <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 370px;" height="120px"
+                    <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 330px;" height="120px"
                         alt="Logo Perusahaan">
                 </td>
                 <td>
@@ -177,7 +187,7 @@
     </header>
 
     <footer>
-        Printed on: {{ date('Y-m-d H:i:s') }} | Page
+        Printed on: {{ date('Y-m-d H:i:s') }}
         <script type="text/php">if (isset($pdf)) { $font = $fontMetrics->getFont("Arial", "bold"); $pdf->page_text(520, 800, "Page {PAGE_NUM} of {PAGE_COUNT}", $font, 7, array(0,0,0)); }</script>
     </footer>
 

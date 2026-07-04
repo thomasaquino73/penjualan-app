@@ -20,6 +20,7 @@ use App\Models\Setting\Tax;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Dotenv\Exception\ValidationException;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -493,40 +494,65 @@ class PurchaseOrderController extends Controller
         return $romawi[$bulan] ?? 'I';
     }
 
+    // private function generateNumberId()
+    // {
+    //     $year = date('Y');
+    //     $month = $this->bulanRomawi(date('n'));
+
+    //     // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
+    //     $last = PurchaseOrder::where('code', 'like', "PO/$year/$month/%")
+    //         ->orderBy('id', 'desc')
+    //         ->first();
+
+    //     if (! $last) {
+    //         return "PO/$year/$month/0001";
+    //     }
+
+    //     $lastId = $last->code;
+
+    //     // 🔥 ambil angka terakhir
+    //     preg_match('/(\d+)$/', $lastId, $matches);
+
+    //     if (! $matches) {
+    //         // kalau tidak ada angka → tambahin default
+    //         return $lastId.'01';
+    //     }
+
+    //     $number = (int) $matches[1];
+    //     $number++;
+
+    //     // 🔥 ambil prefix tanpa angka
+    //     $prefix = substr($lastId, 0, -strlen($matches[1]));
+
+    //     // 🔥 padding mengikuti panjang angka sebelumnya
+    //     $length = strlen($matches[1]);
+
+    //     return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+    // }
     private function generateNumberId()
     {
         $year = date('Y');
         $month = $this->bulanRomawi(date('n'));
 
-        // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
         $last = PurchaseOrder::where('code', 'like', "PO/$year/$month/%")
-            ->orderBy('id', 'desc')
+            ->lockForUpdate()
+            ->orderByDesc('id')
             ->first();
 
         if (! $last) {
             return "PO/$year/$month/0001";
         }
 
-        $lastId = $last->code;
+        preg_match('/(\d+)$/', $last->code, $matches);
 
-        // 🔥 ambil angka terakhir
-        preg_match('/(\d+)$/', $lastId, $matches);
+        $next = isset($matches[1]) ? ((int) $matches[1]) + 1 : 1;
 
-        if (! $matches) {
-            // kalau tidak ada angka → tambahin default
-            return $lastId.'01';
-        }
-
-        $number = (int) $matches[1];
-        $number++;
-
-        // 🔥 ambil prefix tanpa angka
-        $prefix = substr($lastId, 0, -strlen($matches[1]));
-
-        // 🔥 padding mengikuti panjang angka sebelumnya
-        $length = strlen($matches[1]);
-
-        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+        return sprintf(
+            'PO/%s/%s/%04d',
+            $year,
+            $month,
+            $next
+        );
     }
 
     public function table_pr(Request $r)
@@ -644,13 +670,36 @@ class PurchaseOrderController extends Controller
             $data['datePO'] = Carbon::parse($request->datePO)->format('Y-m-d');
             $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
 
-            do {
-                $generatedCode = $this->generateNumberId();
-                $exists = PurchaseOrder::where('code', $generatedCode)->exists();
-            } while ($exists);
+            // do {
+            //     $generatedCode = $this->generateNumberId();
+            //     $exists = PurchaseOrder::where('code', $generatedCode)->exists();
+            // } while ($exists);
 
-            $data['code'] = $generatedCode;
-            $purchaseOrder = PurchaseOrder::create($data);
+            // $data['code'] = $generatedCode;
+
+            $purchaseOrder = null;
+            $maxRetry = 10;
+            for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
+                try {
+                    $data['code'] = $this->generateNumberId();
+                    $purchaseOrder = PurchaseOrder::create($data);
+                    break;
+                } catch (QueryException $e) {
+                    if (
+                        isset($e->errorInfo[1]) &&
+                        $e->errorInfo[1] == 1062
+                    ) {
+                        usleep(50000);
+                        continue;
+                    }
+                    throw $e;
+                }
+            }
+            if (! $purchaseOrder) {
+                throw new \Exception('Gagal membuat nomor Purchase Order.');
+            }
+
+            // $purchaseOrder = PurchaseOrder::create($data);
 
             if ($itemsDetailRaw) {
                 $items = json_decode($itemsDetailRaw, true);
@@ -670,6 +719,7 @@ class PurchaseOrderController extends Controller
                             'purchase_requisition_detail_id' => $prDetailId,
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
+                            'outstanding_qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
                             'unit_price' => $unitPrice,
                             'warehouse_id' => $item['warehouse_id'],
@@ -1057,7 +1107,15 @@ class PurchaseOrderController extends Controller
             $purchaseOrder = PurchaseOrder::findOrFail($id);
 
             $syaratPembayaran = SyaratPembayaran::find($request->payment_term);
+            $code = $request->code;
 
+            while (
+                PurchaseOrder::where('code', $code)
+                    ->where('id', '!=', $purchaseOrder->id)
+                    ->exists()
+            ) {
+                $code = $this->generateNumberId();
+            }
             /*
             |--------------------------------------------------------------------------
             | UPDATE MASTER PO
@@ -1065,7 +1123,7 @@ class PurchaseOrderController extends Controller
             */
             $purchaseOrder->update([
                 'supplier_id' => $request->supplier_id,
-                'code' => $request->code,
+                'code' =>  $code,
                 'datePO' => Carbon::parse($request->datePO)->format('Y-m-d'),
                 'tanggal_kirim' => $request->tanggal_kirim
                                             ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d')
@@ -1216,6 +1274,7 @@ class PurchaseOrderController extends Controller
                     'purchase_requisition_detail_id' => $prDetailId,
                     'product_id' => $item['product_id'],
                     'qty' => $qty,
+                    'outstanding_qty' => $qty,
                     'unit_id' => $item['unit_id'],
                     'warehouse_id' => $item['warehouse_id'],
                     'unit_price' => $unitPrice,
@@ -1953,6 +2012,7 @@ class PurchaseOrderController extends Controller
 
         // replace forbidden filename chars
         $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
+        $pdf->getDomPDF()->set_option('isPhpEnabled', true);
 
         return $pdf->stream($filename.'.pdf');
 

@@ -47,11 +47,43 @@
         tr:hover {
             background-color: #f9f9f9;
         }
+
+        @page {
+            margin: 25px 20px 40px 20px;
+        }
+
+        footer {
+            position: fixed;
+            bottom: -20px;
+            left: 0;
+            right: 0;
+            height: 20px;
+            font-size: 9px;
+            color: #555;
+        }
+
+        footer .left {
+            float: left;
+        }
+
+        footer .right {
+            float: right;
+        }
     </style>
 </head>
 
 <body>
 
+    <h1 style="text-align:center">
+        Laporan Stock Barang
+    </h1>
+
+    <p style="text-align:center">
+        Periode :
+        {{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }}
+        s/d
+        {{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }}
+    </p>
     <h2>Product List</h2>
     <table>
         <thead>
@@ -65,7 +97,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($barangs as $index => $item)
+            @forelse ($barangs as $index => $item)
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $item->id_barang }}</td>
@@ -73,14 +105,39 @@
                     <td>{{ format_uang(convert_currency($item->primary_price, $item->currency_id ?? 1)) }}</td>
                     <td>{{ $item->kategoriID?->detail ?? '-' }}</td>
                     <td>
-                        {{ number_format($item->current_stock, 0) }}
+                        {{ number_format($item->report_stock, 0) }}
                         {{ $item->unitID?->detail ?? '-' }}
                     </td>
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td colspan="6" style="text-align: center;">No data available</td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
+    <footer>
+        <div class="left">
+            Printed on: {{ now()->format('d-m-Y H:i:s') }}
+        </div>
 
+        <div class="right">
+            <script type="text/php">
+            if (isset($pdf)) {
+                $font = $fontMetrics->getFont("Arial", "normal");
+                $pdf->page_text(
+                    720,
+                    575,
+                    "Page {PAGE_NUM} of {PAGE_COUNT}",
+                    $font,
+                    9,
+                    array(0,0,0)
+                );
+            }
+        </script>
+        </div>
+    </footer>
 </body>
+
 
 </html>

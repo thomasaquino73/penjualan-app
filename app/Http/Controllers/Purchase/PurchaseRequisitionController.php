@@ -14,6 +14,7 @@ use App\Notifications\PurchaseRequisitionNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Dotenv\Exception\ValidationException;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -240,36 +241,30 @@ class PurchaseRequisitionController extends Controller
         }
     }
 
-    private function generateNumberId()
+       private function generateNumberId()
     {
-        $last = PurchaseRequisition::whereNotNull('code')
-            ->orderBy('id', 'desc')
+        $year = date('Y');
+        $month = $this->bulanRomawi(date('n'));
+
+        $last = PurchaseRequisition::where('code', 'like', "PR/$year/$month/%")
+            ->lockForUpdate()
+            ->orderByDesc('id')
             ->first();
 
         if (! $last) {
-            return 'PR-0001';
+            return "PR/$year/$month/0001";
         }
 
-        $lastId = $last->code;
+        preg_match('/(\d+)$/', $last->code, $matches);
 
-        // 🔥 ambil angka terakhir
-        preg_match('/(\d+)$/', $lastId, $matches);
+        $next = isset($matches[1]) ? ((int) $matches[1]) + 1 : 1;
 
-        if (! $matches) {
-            // kalau tidak ada angka → tambahin default
-            return $lastId.'01';
-        }
-
-        $number = (int) $matches[1];
-        $number++;
-
-        // 🔥 ambil prefix tanpa angka
-        $prefix = substr($lastId, 0, -strlen($matches[1]));
-
-        // 🔥 padding mengikuti panjang angka sebelumnya
-        $length = strlen($matches[1]);
-
-        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+        return sprintf(
+            'PR/%s/%s/%04d',
+            $year,
+            $month,
+            $next
+        );
     }
 
     public function create()
@@ -303,16 +298,32 @@ class PurchaseRequisitionController extends Controller
         try {
             // 🔥 GENERATE CODE OTOMATIS & AMAN DARI RACE CONDITION
             // Melakukan loop otomatis jika nomor kode keduluan diambil user lain
-            do {
-                $generatedCode = $this->generateNumberId();
+            $purchaseRequisition = null;
+            $maxRetry = 10;
+            for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
+                try {
+                    $data['code'] = $this->generateNumberId();
+                    $purchaseRequisition = PurchaseRequisition::create($data);
+                    break;
+                } catch (QueryException $e) {
+                    if (
+                        isset($e->errorInfo[1]) &&
+                        $e->errorInfo[1] == 1062
+                    ) {
+                        usleep(50000);
+                        continue;
+                    }
+                    throw $e;
+                }
+            }
+            if (! $purchaseRequisition) {
+                throw new \Exception('Gagal membuat nomor Purchase Requisition.');
+            }
 
-                // Cek dengan lockForUpdate untuk mengunci baris pengecekan
-                $exists = PurchaseRequisition::where('code', $generatedCode)->lockForUpdate()->exists();
-            } while ($exists);
 
             // 2. Simpan Data Master ke tabel `purchase_requisition`
             $prMaster = PurchaseRequisition::create([
-                'code' => $generatedCode, // Gunakan code yang sudah di-generate secara aman
+                // 'code' => $generatedCode, // Gunakan code yang sudah di-generate secara aman
                 'date' => Carbon::parse($request->date)->format('Y-m-d'),
                 'description' => $request->description,
                 'status' => 'draft', // Default value sesuai skema alur data baru
@@ -443,9 +454,18 @@ class PurchaseRequisitionController extends Controller
         DB::beginTransaction();
 
         try {
+              $code = $request->code;
+
+            while (
+                PurchaseRequisition::where('code', $code)
+                    ->where('id', '!=', $prMaster->id)
+                    ->exists()
+            ) {
+                $code = $this->generateNumberId();
+            }
             // 2. Update Data Master ke tabel `purchase_requisition`
             $prMaster->update([
-                'code' => $request->code,
+                'code' => $code,
                 'date' => Carbon::parse($request->date)->format('Y-m-d'),
                 'description' => $request->description,
                 'status' => $request->has('status') ? 'closed' : 'processing',

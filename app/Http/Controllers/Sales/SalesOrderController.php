@@ -634,8 +634,8 @@ class SalesOrderController extends Controller
                             'discount_percent' => $discountPercent,
                             'discount' => $discount,
                             'amount' => $item['amount'] ?? $amount,
-                            'so_qty' => $qtyInputForm, // Sinkronisasi: sq_qty di SO = qty SO
-                            'outstanding_qty' => 0, // Karena SO adalah tahap akhir, outstanding di SO biasanya 0
+                            // 'so_qty' => 0, // Sinkronisasi: sq_qty di SO = qty SO
+                            'outstanding_qty' => $qtyInputForm, // Karena SO adalah tahap akhir, outstanding di SO biasanya 0
                             'status' => 'open',
                             'active' => 1,
                             'created_by' => Auth::id(),
@@ -906,8 +906,8 @@ class SalesOrderController extends Controller
                     'discount_percent' => $item['discount_percent'] ?? 0,
                     'discount' => floatval($item['discount'] ?? 0),
                     'amount' => $item['amount'] ?? 0,
-                    'so_qty' => $qty, // Sinkronisasi: SO sudah menyerap qty ini
-                    'outstanding_qty' => 0,    // SO adalah tahap akhir
+                    // 'so_qty' => 0, // Sinkronisasi: SO sudah menyerap qty ini
+                    'outstanding_qty' => $qty,    // SO adalah tahap akhir
                     'active' => 1,
                     'created_by' => Auth::id(),
                     'created_at' => now(),
@@ -1647,6 +1647,7 @@ class SalesOrderController extends Controller
 
         // replace forbidden filename chars
         $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
+        $pdf->getDomPDF()->set_option('isPhpEnabled', true);
 
         return $pdf->stream($filename.'.pdf');
 

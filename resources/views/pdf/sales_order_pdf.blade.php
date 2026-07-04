@@ -164,7 +164,7 @@
         <table class="header-table">
             <tr>
                 <td>
-                    <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 380px;" height="120px"
+                    <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 330px;" height="120px"
                         alt="Logo Perusahaan">
                 </td>
                 <td>

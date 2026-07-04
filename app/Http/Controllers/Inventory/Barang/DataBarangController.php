@@ -8,7 +8,6 @@ use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\DataBarangStok;
-use App\Models\Inventory\StockBalance;
 use App\Models\Inventory\Warehouse;
 use App\Models\Purchase\Supplier;
 use App\Models\Setting\Company;
@@ -1200,10 +1199,10 @@ class DataBarangController extends Controller
         //     ->value('total') ?? 0;
 
         /*
-|--------------------------------------------------------------------------
-| OPENING BALANCE
-|--------------------------------------------------------------------------
-*/
+        |--------------------------------------------------------------------------
+        | OPENING BALANCE
+        |--------------------------------------------------------------------------
+        */
         $openingBalance = 0;
 
         /*
@@ -1259,7 +1258,7 @@ class DataBarangController extends Controller
                 ELSE -total_base_qty
             END
         ) as total_qty
-    ")
+         ")
             ->groupBy('warehouse_id')
             ->with('warehouseID')
             ->get()
@@ -1291,106 +1290,106 @@ class DataBarangController extends Controller
         return $pdf->stream('barang.pdf');
     }
 
-    public function print_all()
+    public function print_all(Request $request)
     {
         ini_set('memory_limit', '1024M');
         set_time_limit(300);
 
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+
+        // Ambil Cut Off Date dari Company
         $cutOffDate = Company::value('cut_off_date');
-
-        /*
-        |--------------------------------------------------------------------------
-        | STOCK BERDASARKAN CUT OFF DATE
-        |--------------------------------------------------------------------------
-        */
-        $stock = DB::table('stock_mutations')
-            ->selectRaw("
-            data_barang_id,
-
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN type = 'in'
-                        THEN total_base_qty
-                        ELSE -total_base_qty
-                    END
-                ),
-            0) as stock
-        ")
-            ->when($cutOffDate, function ($q) use ($cutOffDate) {
-                $q->whereDate('date_stock', '>=', $cutOffDate);
-            })
-            ->groupBy('data_barang_id');
 
         /*
         |--------------------------------------------------------------------------
         | DATA BARANG
         |--------------------------------------------------------------------------
         */
-        $barangs = Barang::query()
+
+        $barangs = Barang::with([
+            'kategoriID',
+            'unitID',
+            'brandID',
+            'typeID',
+        ])
             ->where('status', '<>', 0)
-
-            ->leftJoinSub($stock, 'stock', function ($join) {
-                $join->on(
-                    'data_barang.id',
-                    '=',
-                    'stock.data_barang_id'
-                );
-            })
-
-            ->join(
-                'basic_code_detail',
-                'basic_code_detail.id',
-                '=',
-                'data_barang.kategori_id'
-            )
-
-            ->with([
-                'kategoriID',
-                'unitID',
-                'brandID',
-                'typeID',
-            ])
-
-            ->select([
-                'data_barang.*',
-            ])
-
-            ->addSelect(DB::raw('
-            COALESCE(stock.stock, 0) as current_stock
-        '))
-
-            ->orderBy('basic_code_detail.detail')
-            ->orderBy('data_barang.nama_barang')
-
             ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | HITUNG STOCK
+        |--------------------------------------------------------------------------
+        | Yang dihitung adalah SALDO STOCK.
+        | Jadi mutasi dihitung mulai CUT OFF sampai END DATE.
+        | BUKAN mulai START DATE.
+        |--------------------------------------------------------------------------
+        */
+
+        $barangs = $barangs->map(function ($barang) use ($cutOffDate, $endDate) {
+
+            $query = $barang->mutations();
+
+            // Jika ada Cut Off
+            if (! empty($cutOffDate)) {
+                $query->whereDate('date_stock', '>=', $cutOffDate);
+            }
+
+            // Sampai tanggal yang dipilih user
+            $query->whereDate('date_stock', '<=', $endDate);
+
+            $stock = $query
+                ->selectRaw("
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN type = 'in'
+                                THEN total_base_qty
+                            ELSE
+                                -total_base_qty
+                        END
+                    ),
+                0) AS total
+            ")
+                ->value('total');
+
+            // Simpan ke attribute baru
+            $barang->report_stock = (float) $stock;
+
+            return $barang;
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Tampilkan hanya barang yang memiliki stock
+        |--------------------------------------------------------------------------
+        */
+
+        $barangs = $barangs->filter(function ($barang) {
+            return $barang->report_stock != 0;
+        })->values();
 
         /*
         |--------------------------------------------------------------------------
         | PDF
         |--------------------------------------------------------------------------
         */
-        $pdf = Pdf::loadView(
-            'pdf.barang_all_pdf',
-            [
-                'barangs' => $barangs,
-                'cutOffDate' => $cutOffDate,
-            ]
-        );
+
+        $pdf = Pdf::loadView('pdf.barang_all_pdf', [
+            'barangs' => $barangs,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'cutOffDate' => $cutOffDate,
+        ]);
 
         $pdf->setPaper('a4', 'landscape');
+        $pdf->getDomPDF()->set_option('isPhpEnabled', true);
 
         return $pdf->stream('barang_all.pdf');
-    }
-
-    public function getStockBalance($productId, $warehouseId)
-    {
-        $balance = StockBalance::where('product_id', $productId)
-            ->where('warehouse_id', $warehouseId)
-            ->first();
-
-        return response()->json([
-            'qty' => $balance?->qty ?? 0,
-        ]);
     }
 }
