@@ -18,11 +18,11 @@ class PurchaseOrderRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'supplier_id'   => 'required',
-            'datePO'        => 'required|date',
+            'supplier_id' => 'required',
+            'datePO' => 'required|date',
             'tanggal_kirim' => 'nullable|date',
-            'description'   => 'nullable|string',
-            'items_detail'  => 'required',
+            'description' => 'nullable|string',
+            'items_detail' => 'required',
         ];
 
         if ($this->isMethod('POST')) {
@@ -36,7 +36,7 @@ class PurchaseOrderRequest extends FormRequest
 
             $rules['code'] = [
                 'required',
-                Rule::unique('purchase_order_' . date('Y'), 'code')->ignore($id),
+                Rule::unique('purchase_order_'.date('Y'), 'code')->ignore($id),
             ];
         }
 

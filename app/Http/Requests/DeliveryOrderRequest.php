@@ -23,18 +23,29 @@ class DeliveryOrderRequest extends FormRequest
      */
     public function rules()
     {
-        $id = $this->route('delivery_order');
 
-        return [
-            'delivery_order_code' => [
-                'required',
-                Rule::unique('delivery_order_'.date('Y'), 'delivery_order_code')->ignore($id, 'id'),
-            ],
+        $rules =  [
             'delivery_order_date' => 'required|date',
             'customer_id' => 'required',
             'items_detail' => 'required',
 
         ];
+         if ($this->isMethod('POST')) {
+            // Store
+            // code tidak divalidasi karena dibuat otomatis
+        }
+
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+
+            $id = $this->route('delivery_order');
+
+            $rules['code'] = [
+                'required',
+                Rule::unique('delivery_order_'.date('Y'), 'delivery_order_code')->ignore($id),
+            ];
+        }
+
+        return $rules;
     }
 
     public function messages(): array

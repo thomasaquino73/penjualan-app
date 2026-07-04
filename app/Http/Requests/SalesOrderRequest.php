@@ -17,13 +17,12 @@ class SalesOrderRequest extends FormRequest
 
     public function rules(): array
     {
-        $id = $this->route('sales_order');
 
-        return [
-            'sales_order_code' => [
-                'required',
-                Rule::unique('sales_order_'.date('Y'), 'sales_order_code')->ignore($id),
-            ],
+        $rules = [
+            // 'sales_order_code' => [
+            //     'required',
+            //     Rule::unique('sales_order_'.date('Y'), 'sales_order_code')->ignore($id),
+            // ],
             'customer_id' => 'required',
             'sales_order_date' => 'required|date',
             'payment_term_id' => 'required',
@@ -32,6 +31,23 @@ class SalesOrderRequest extends FormRequest
             'description' => 'nullable|string',
             'items_detail' => 'required',
         ];
+
+        if ($this->isMethod('POST')) {
+            // Store
+            // code tidak divalidasi karena dibuat otomatis
+        }
+
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+
+            $id = $this->route('sales_order');
+
+            $rules['sales_order_code'] = [
+                'required',
+                Rule::unique('sales_order_'.date('Y'), 'sales_order_code')->ignore($id),
+            ];
+        }
+
+        return $rules;
     }
 
     public function message(): array

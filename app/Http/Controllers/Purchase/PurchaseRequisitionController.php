@@ -241,7 +241,18 @@ class PurchaseRequisitionController extends Controller
         }
     }
 
-       private function generateNumberId()
+    public function bulanRomawi($bulan)
+    {
+        $romawi = [
+            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',
+            5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII',
+            9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII',
+        ];
+
+        return $romawi[$bulan] ?? 'I';
+    }
+
+    private function generateNumberId()
     {
         $year = date('Y');
         $month = $this->bulanRomawi(date('n'));
@@ -298,6 +309,17 @@ class PurchaseRequisitionController extends Controller
         try {
             // 🔥 GENERATE CODE OTOMATIS & AMAN DARI RACE CONDITION
             // Melakukan loop otomatis jika nomor kode keduluan diambil user lain
+
+            // 2. Simpan Data Master ke tabel `purchase_requisition`
+            $data = [
+                'date' => Carbon::parse($request->date)->format('Y-m-d'),
+                'description' => $request->description,
+                'status' => 'draft',
+                'active' => 1,
+                'created_by' => Auth::id(),
+                'updated_by' => null,
+            ];
+
             $purchaseRequisition = null;
             $maxRetry = 10;
             for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
@@ -311,6 +333,7 @@ class PurchaseRequisitionController extends Controller
                         $e->errorInfo[1] == 1062
                     ) {
                         usleep(50000);
+
                         continue;
                     }
                     throw $e;
@@ -319,18 +342,15 @@ class PurchaseRequisitionController extends Controller
             if (! $purchaseRequisition) {
                 throw new \Exception('Gagal membuat nomor Purchase Requisition.');
             }
-
-
-            // 2. Simpan Data Master ke tabel `purchase_requisition`
-            $prMaster = PurchaseRequisition::create([
-                // 'code' => $generatedCode, // Gunakan code yang sudah di-generate secara aman
-                'date' => Carbon::parse($request->date)->format('Y-m-d'),
-                'description' => $request->description,
-                'status' => 'draft', // Default value sesuai skema alur data baru
-                'active' => 1,       // 1 = Active sesuai comment di blueprint
-                'created_by' => Auth::id(), // ID User yang sedang login
-                'updated_by' => null,
-            ]);
+            // $prMaster = PurchaseRequisition::create([
+            //     // 'code' => $generatedCode, // Gunakan code yang sudah di-generate secara aman
+            //     'date' => Carbon::parse($request->date)->format('Y-m-d'),
+            //     'description' => $request->description,
+            //     'status' => 'draft', // Default value sesuai skema alur data baru
+            //     'active' => 1,       // 1 = Active sesuai comment di blueprint
+            //     'created_by' => Auth::id(), // ID User yang sedang login
+            //     'updated_by' => null,
+            // ]);
 
             // 3. Decode data array string JSON (`items_detail`) yang dikirim dari DataTables lokal
             $items = json_decode($request->items_detail, true);
@@ -344,7 +364,7 @@ class PurchaseRequisitionController extends Controller
 
                     // Simpan setiap baris item ke tabel `purchase_requisition_detail`
                     PurchaseRequisitionDetail::create([
-                        'purchase_requisition_id' => $prMaster->id,
+                        'purchase_requisition_id' => $purchaseRequisition->id,
                         'product_id' => $item['product_id'],
                         'qty' => $item['quantity'] ?? $item['qty'],
                         'unit_id' => $item['unit_id'],
@@ -454,7 +474,7 @@ class PurchaseRequisitionController extends Controller
         DB::beginTransaction();
 
         try {
-              $code = $request->code;
+            $code = $request->code;
 
             while (
                 PurchaseRequisition::where('code', $code)

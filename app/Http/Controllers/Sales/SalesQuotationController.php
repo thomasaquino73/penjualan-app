@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Notifications\SalesQuotationNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -240,40 +241,30 @@ class SalesQuotationController extends Controller
         return $romawi[$bulan] ?? 'I';
     }
 
-    private function generateNumberId()
+   private function generateNumberId()
     {
         $year = date('Y');
         $month = $this->bulanRomawi(date('n'));
 
-        // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
         $last = SalesQuotation::where('sales_quotation_code', 'like', "SQ/$year/$month/%")
-            ->orderBy('id', 'desc')
+            ->lockForUpdate()
+            ->orderByDesc('id')
             ->first();
 
         if (! $last) {
             return "SQ/$year/$month/0001";
         }
 
-        $lastId = $last->sales_quotation_code;
+        preg_match('/(\d+)$/', $last->sales_quotation_code, $matches);
 
-        // 🔥 ambil angka terakhir
-        preg_match('/(\d+)$/', $lastId, $matches);
+        $next = isset($matches[1]) ? ((int) $matches[1]) + 1 : 1;
 
-        if (! $matches) {
-            // kalau tidak ada angka → tambahin default
-            return $lastId.'01';
-        }
-
-        $number = (int) $matches[1];
-        $number++;
-
-        // 🔥 ambil prefix tanpa angka
-        $prefix = substr($lastId, 0, -strlen($matches[1]));
-
-        // 🔥 padding mengikuti panjang angka sebelumnya
-        $length = strlen($matches[1]);
-
-        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+        return sprintf(
+            'SQ/%s/%s/%04d',
+            $year,
+            $month,
+            $next
+        );
     }
 
     public function create()
@@ -339,13 +330,28 @@ class SalesQuotationController extends Controller
             $data['tax_id'] = $request->tax_id;
             $data['tax_amount'] = $request->tax_amount;
 
-            do {
-                $generatedCode = $this->generateNumberId();
-                $exists = SalesQuotation::where('sales_quotation_code', $generatedCode)->exists();
-            } while ($exists);
+           $salesQuotation = null;
+            $maxRetry = 10;
+            for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
+                try {
+                    $data['sales_quotation_code'] = $this->generateNumberId();
+                    $salesQuotation = SalesQuotation::create($data);
+                    break;
+                } catch (QueryException $e) {
+                    if (
+                        isset($e->errorInfo[1]) &&
+                        $e->errorInfo[1] == 1062
+                    ) {
+                        usleep(50000);
 
-            $data['sales_quotation_code'] = $generatedCode;
-            $salesQuotation = SalesQuotation::create($data);
+                        continue;
+                    }
+                    throw $e;
+                }
+            }
+            if (! $salesQuotation) {
+                throw new \Exception('Gagal membuat nomor Sales Quotation.');
+            }
 
             if ($itemsDetailRaw) {
                 $items = json_decode($itemsDetailRaw, true);
@@ -492,8 +498,18 @@ class SalesQuotationController extends Controller
         DB::beginTransaction();
 
         try {
-            $salesQuotation = SalesQuotation::findOrFail($id);
             $data = $request->validated();
+
+            $salesQuotation = SalesQuotation::findOrFail($id);
+             $code = $request->sales_quotation_code;
+
+            while (
+                SalesQuotation::where('sales_quotation_code', $code)
+                    ->where('id', '!=', $salesQuotation->id)
+                    ->exists()
+            ) {
+                $code = $this->generateNumberId();
+            }
             $itemsDetailRaw = $request->input('items_detail');
             unset($data['items_detail']);
 

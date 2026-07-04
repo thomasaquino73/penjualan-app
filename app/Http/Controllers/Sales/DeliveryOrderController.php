@@ -19,6 +19,7 @@ use App\Models\StockMutation;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -462,35 +463,25 @@ class DeliveryOrderController extends Controller
         $year = date('Y');
         $month = $this->bulanRomawi(date('n'));
 
-        // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
         $last = DeliveryOrder::where('delivery_order_code', 'like', "DO/$year/$month/%")
-            ->orderBy('id', 'desc')
+            ->lockForUpdate()
+            ->orderByDesc('id')
             ->first();
 
         if (! $last) {
             return "DO/$year/$month/0001";
         }
 
-        $lastId = $last->delivery_order_code;
+        preg_match('/(\d+)$/', $last->code, $matches);
 
-        // 🔥 ambil angka terakhir
-        preg_match('/(\d+)$/', $lastId, $matches);
+        $next = isset($matches[1]) ? ((int) $matches[1]) + 1 : 1;
 
-        if (! $matches) {
-            // kalau tidak ada angka → tambahin default
-            return $lastId.'01';
-        }
-
-        $number = (int) $matches[1];
-        $number++;
-
-        // 🔥 ambil prefix tanpa angka
-        $prefix = substr($lastId, 0, -strlen($matches[1]));
-
-        // 🔥 padding mengikuti panjang angka sebelumnya
-        $length = strlen($matches[1]);
-
-        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+        return sprintf(
+            'DO/%s/%s/%04d',
+            $year,
+            $month,
+            $next
+        );
     }
 
     public function create()
@@ -521,14 +512,30 @@ class DeliveryOrderController extends Controller
             $data = $r->except('save_and_new', 'items_detail');
             $itemsDetailRaw = $r->input('items_detail');
             unset($data['items_detail']);
-            do {
-                $generatedCode = $this->generateNumberId();
-                $exists = DeliveryOrder::where('delivery_order_code', $generatedCode)->exists();
-            } while ($exists);
-            $data['delivery_order_code'] = $generatedCode;
-            $data['delivery_order_date'] = Carbon::parse($r->delivery_order_date)->format('Y-m-d');
+                 $data['delivery_order_date'] = Carbon::parse($r->delivery_order_date)->format('Y-m-d');
             $data['created_by'] = Auth::id();
-            $deliveryOrder = DeliveryOrder::create($data);
+            $deliveryOrder = null;
+            $maxRetry = 10;
+            for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
+                try {
+                    $data['code'] = $this->generateNumberId();
+                    $deliveryOrder = DeliveryOrder::create($data);
+                    break;
+                } catch (QueryException $e) {
+                    if (
+                        isset($e->errorInfo[1]) &&
+                        $e->errorInfo[1] == 1062
+                    ) {
+                        usleep(50000);
+
+                        continue;
+                    }
+                    throw $e;
+                }
+            }
+            if (! $deliveryOrder) {
+                throw new \Exception('Gagal membuat nomor Delivery Order.');
+            }
             if ($itemsDetailRaw) {
 
                 $items = json_decode($itemsDetailRaw, true);
@@ -720,7 +727,15 @@ class DeliveryOrderController extends Controller
         try {
 
             $deliveryOrder = DeliveryOrder::findOrFail($id);
+            $code = $r->delivery_order_code;
 
+            while (
+                DeliveryOrder::where('delivery_order_code', $code)
+                    ->where('id', '!=', $deliveryOrder->id)
+                    ->exists()
+            ) {
+                $code = $this->generateNumberId();
+            }
             /*
             |--------------------------------------------------------------------------
             | 1. KEMBALIKAN STOCK DARI DATA LAMA
@@ -1097,84 +1112,7 @@ class DeliveryOrderController extends Controller
             ->delete();
     }
 
-    // public function restore($id)
-    // {
-    //     DB::beginTransaction();
-
-    //     try {
-    //         // 1. Aktifkan kembali SO
-    //         $po = DeliveryOrder::findOrFail($id);
-    //         $po->update(['active' => 1, 'updated_by' => Auth::id()]);
-
-    //         // 2. Aktifkan kembali Detail SO
-    //         // DeliveryOrderDetail::where('delivery_order_id', $po->id)->update(['active' => 1]);
-
-    //         // 3. Ambil semua detail SO yang baru saja diaktifkan
-    //         // $poDetails = DeliveryOrderDetail::where('delivery_order_id', $po->id)->get();
-    //         // $involvedPrIds = [];
-
-    //         // // 4. Update ulang sq_qty di PR Detail
-    //         // foreach ($poDetails as $poDetail) {
-    //         //     if ($poDetail->sales_order_detail_id) {
-    //         //         // Hitung total dari semua SO yang aktif
-    //         //         $totalPoForThisItem = DeliveryOrderDetail::where('sales_order_detail_id', $poDetail->sales_order_detail_id)
-    //         //             ->where('active', 1)
-    //         //             ->sum('qty');
-
-    //         //         // Update ke tabel PR Detail
-    //         //         DB::table('sales_order_detail_'.date('Y'))
-    //         //             ->where('id', $poDetail->sales_order_detail_id)
-    //         //             ->update(['sq_qty' => $totalPoForThisItem]);
-
-    //         //         // Simpan ID PR untuk update status
-    //         //         $prDetail = DB::table('sales_order_detail_'.date('Y'))
-    //         //             ->where('id', $poDetail->sales_order_detail_id)
-    //         //             ->first();
-
-    //         //         if ($prDetail && ! in_array($prDetail->sales_order_id, $involvedPrIds)) {
-    //         //             $involvedPrIds[] = $prDetail->sales_order_id;
-    //         //         }
-    //         //     }
-    //         // }
-
-    //         // // 5. Update Status PR Master
-    //         // foreach ($involvedPrIds as $prId) {
-    //         //     $allDetails = DB::table('sales_order_detail_'.date('Y'))
-    //         //         ->where('sales_order_id', $prId)
-    //         //         ->get();
-
-    //         //     $totalRequested = $allDetails->sum('qty');
-    //         //     $totalOrdered = $allDetails->sum('sq_qty');
-
-    //         //     if ($totalOrdered >= $totalRequested) {
-    //         //         $status = 'closed';
-    //         //     } elseif ($totalOrdered > 0) {
-    //         //         $status = 'partial';
-    //         //     } else {
-    //         //         $status = 'processing';
-    //         //     }
-
-    //         //     DB::table('sales_order_'.date('Y'))
-    //         //         ->where('id', $prId)
-    //         //         ->update(['status' => $status]);
-    //         // }
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Delivery Order berhasil dikembalikan (restored).',
-    //         ], 200);
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Gagal merestore data: '.$e->getMessage(),
-    //         ], 500);
-    //     }
-    // }
+   
 
     public function restore($id)
     {

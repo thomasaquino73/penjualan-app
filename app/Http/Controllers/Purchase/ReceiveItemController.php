@@ -17,6 +17,7 @@ use App\Models\Setting\Shipping;
 use App\Models\StockMutation;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -236,35 +237,25 @@ class ReceiveItemController extends Controller
         $year = date('Y');
         $month = $this->bulanRomawi(date('n'));
 
-        // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
         $last = ReceiveItem::where('receive_item_code', 'like', "RI/$year/$month/%")
-            ->orderBy('id', 'desc')
+            ->lockForUpdate()
+            ->orderByDesc('id')
             ->first();
 
         if (! $last) {
             return "RI/$year/$month/0001";
         }
 
-        $lastId = $last->receive_item_code;
+        preg_match('/(\d+)$/', $last->receive_item_code, $matches);
 
-        // 🔥 ambil angka terakhir
-        preg_match('/(\d+)$/', $lastId, $matches);
+        $next = isset($matches[1]) ? ((int) $matches[1]) + 1 : 1;
 
-        if (! $matches) {
-            // kalau tidak ada angka → tambahin default
-            return $lastId.'01';
-        }
-
-        $number = (int) $matches[1];
-        $number++;
-
-        // 🔥 ambil prefix tanpa angka
-        $prefix = substr($lastId, 0, -strlen($matches[1]));
-
-        // 🔥 padding mengikuti panjang angka sebelumnya
-        $length = strlen($matches[1]);
-
-        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+        return sprintf(
+            'RI/%s/%s/%04d',
+            $year,
+            $month,
+            $next
+        );
     }
 
     public function create()
@@ -306,13 +297,28 @@ class ReceiveItemController extends Controller
             $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
 
             // Generate Code
-            do {
-                $generatedCode = $this->generateNumberId();
-                $exists = ReceiveItem::where('receive_item_code', $generatedCode)->exists();
-            } while ($exists);
-            $data['receive_item_code'] = $generatedCode;
+           $ReceiveItem = null;
+            $maxRetry = 10;
+            for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
+                try {
+                    $data['receive_item_code'] = $this->generateNumberId();
+                    $ReceiveItem = ReceiveItem::create($data);
+                    break;
+                } catch (QueryException $e) {
+                    if (
+                        isset($e->errorInfo[1]) &&
+                        $e->errorInfo[1] == 1062
+                    ) {
+                        usleep(50000);
 
-            $ReceiveItem = ReceiveItem::create($data);
+                        continue;
+                    }
+                    throw $e;
+                }
+            }
+            if (! $ReceiveItem) {
+                throw new \Exception('Gagal membuat nomor Receive Item.');
+            }
 
             if ($itemsDetailRaw) {
                 $items = json_decode($itemsDetailRaw, true);

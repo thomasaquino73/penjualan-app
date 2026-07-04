@@ -20,6 +20,7 @@ use App\Models\Setting\Tax;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -504,40 +505,30 @@ class SalesOrderController extends Controller
         return $romawi[$bulan] ?? 'I';
     }
 
-    private function generateNumberId()
+   private function generateNumberId()
     {
         $year = date('Y');
         $month = $this->bulanRomawi(date('n'));
 
-        // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
         $last = SalesOrder::where('sales_order_code', 'like', "SO/$year/$month/%")
-            ->orderBy('id', 'desc')
+            ->lockForUpdate()
+            ->orderByDesc('id')
             ->first();
 
         if (! $last) {
             return "SO/$year/$month/0001";
         }
 
-        $lastId = $last->sales_order_code;
+        preg_match('/(\d+)$/', $last->sales_order_code, $matches);
 
-        // 🔥 ambil angka terakhir
-        preg_match('/(\d+)$/', $lastId, $matches);
+        $next = isset($matches[1]) ? ((int) $matches[1]) + 1 : 1;
 
-        if (! $matches) {
-            // kalau tidak ada angka → tambahin default
-            return $lastId.'01';
-        }
-
-        $number = (int) $matches[1];
-        $number++;
-
-        // 🔥 ambil prefix tanpa angka
-        $prefix = substr($lastId, 0, -strlen($matches[1]));
-
-        // 🔥 padding mengikuti panjang angka sebelumnya
-        $length = strlen($matches[1]);
-
-        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+        return sprintf(
+            'SO/%s/%s/%04d',
+            $year,
+            $month,
+            $next
+        );
     }
 
     public function create()
@@ -601,13 +592,28 @@ class SalesOrderController extends Controller
             $data['tax_id'] = $request->tax_id;
             $data['tax_amount'] = $request->tax_amount;
             // Generate kode SO
-            do {
-                $generatedCode = $this->generateNumberId();
-                $exists = SalesOrder::where('sales_order_code', $generatedCode)->exists();
-            } while ($exists);
+             $salesOrder = null;
+            $maxRetry = 10;
+            for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
+                try {
+                    $data['sales_order_code'] = $this->generateNumberId();
+                    $salesOrder = SalesOrder::create($data);
+                    break;
+                } catch (QueryException $e) {
+                    if (
+                        isset($e->errorInfo[1]) &&
+                        $e->errorInfo[1] == 1062
+                    ) {
+                        usleep(50000);
 
-            $data['sales_order_code'] = $generatedCode;
-            $salesOrder = SalesOrder::create($data);
+                        continue;
+                    }
+                    throw $e;
+                }
+            }
+            if (! $salesOrder) {
+                throw new \Exception('Gagal membuat nomor Sales Order.');
+            }
 
             if ($itemsDetailRaw) {
                 $items = json_decode($itemsDetailRaw, true);
@@ -842,7 +848,15 @@ class SalesOrderController extends Controller
             if (! $salesOrder) {
                 throw new \Exception('Sales Order tidak ditemukan.');
             }
+        $code = $request->sales_order_code;
 
+            while (
+                SalesOrder::where('sales_order_code', $code)
+                    ->where('id', '!=', $salesOrder->id)
+                    ->exists()
+            ) {
+                $code = $this->generateNumberId();
+            }
             // 2. UPDATE MASTER
             SalesOrder::where('id', $id)->update([
                 'customer_id' => $request->customer_id,

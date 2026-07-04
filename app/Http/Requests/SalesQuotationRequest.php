@@ -17,13 +17,9 @@ class SalesQuotationRequest extends FormRequest
 
     public function rules(): array
     {
-        $id = $this->route('sales_quotation');
 
-        return [
-            'sales_quotation_code' => [
-                'required',
-                Rule::unique('sales_quotation_'.date('Y'), 'sales_quotation_code')->ignore($id),
-            ],
+        $rules = [
+          
             'customer_id' => 'required',
             'sales_quotation_date' => 'required|date',
             'payment_term_id' => 'required',
@@ -32,6 +28,23 @@ class SalesQuotationRequest extends FormRequest
             'description' => 'nullable|string',
             'items_detail' => 'required',
         ];
+
+        if ($this->isMethod('POST')) {
+            // Store
+            // code tidak divalidasi karena dibuat otomatis
+        }
+
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+
+            $id = $this->route('sales_quotation');
+
+            $rules['sales_quotation_code'] = [
+                'required',
+                Rule::unique('sales_quotation_'.date('Y'), 'sales_quotation_code')->ignore($id),
+            ];
+        }
+
+        return $rules;
     }
 
     public function message(): array

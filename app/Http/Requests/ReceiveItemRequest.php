@@ -17,13 +17,12 @@ class ReceiveItemRequest extends FormRequest
 
     public function rules(): array
     {
-        $id = $this->route('receive_item');
 
-        return [
-            'receive_item_code' => [
-                'required',
-                Rule::unique('receive_item_'.date('Y'), 'receive_item_code')->ignore($id),
-            ],
+        $rules = [
+            // 'receive_item_code' => [
+            //     'required',
+            //     Rule::unique('receive_item_'.date('Y'), 'receive_item_code')->ignore($id),
+            // ],
             'supplier_id' => 'required',
             'receive_item_date' => 'required|date',
             'no_dokumen' => 'required|string',
@@ -32,6 +31,23 @@ class ReceiveItemRequest extends FormRequest
             'description' => 'nullable|string',
             'items_detail' => 'required',
         ];
+
+        if ($this->isMethod('POST')) {
+            // Store
+            // code tidak divalidasi karena dibuat otomatis
+        }
+
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+
+            $id = $this->route('receive_item');
+
+            $rules['receive_item_code'] = [
+                'required',
+                Rule::unique('receive_item_'.date('Y'), 'receive_item_code')->ignore($id),
+            ];
+        }
+
+         return $rules;
     }
 
     public function message(): array
