@@ -234,28 +234,30 @@ class ReceiveItemController extends Controller
 
     private function generateNumberId()
     {
-        $year = date('Y');
-        $month = $this->bulanRomawi(date('n'));
-
-        $last = ReceiveItem::where('receive_item_code', 'like', "RI/$year/$month/%")
-            ->lockForUpdate()
-            ->orderByDesc('id')
-            ->first();
+        // Ambil record terakhir berdasarkan ID (urutkan dari yang terbaru)
+        $last = ReceiveItem::orderBy('id', 'desc')->lockForUpdate()->first();
 
         if (! $last) {
-            return "RI/$year/$month/0001";
+            // Jika database benar-benar kosong, gunakan format default
+            return 'RI/2026/VII/0001';
         }
 
-        preg_match('/(\d+)$/', $last->receive_item_code, $matches);
+        $lastCode = $last->receive_item_code;
 
-        $next = isset($matches[1]) ? ((int) $matches[1]) + 1 : 1;
+        // Regex untuk memisahkan prefix (semua karakter) dan angka (diakhiri digit)
+        if (preg_match('/^(.*?)(\d+)$/', $lastCode, $matches)) {
+            $prefix = $matches[1];      // Contoh: "PO/2026/VII/"
+            $lastNumber = $matches[2];  // Contoh: "0001"
 
-        return sprintf(
-            'RI/%s/%s/%04d',
-            $year,
-            $month,
-            $next
-        );
+            $length = strlen($lastNumber);
+            $nextNumber = (int) $lastNumber + 1;
+
+            // Gabungkan kembali dengan format padding yang sama
+            return $prefix.str_pad($nextNumber, $length, '0', STR_PAD_LEFT);
+        }
+
+        // Jika tidak ada pola angka, tambahkan -0001
+        return $lastCode.'-0001';
     }
 
     public function create()
@@ -297,27 +299,43 @@ class ReceiveItemController extends Controller
             $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
 
             // Generate Code
-           $ReceiveItem = null;
+            $receiveItem = null;
             $maxRetry = 10;
+            $currentCode = $request->receive_item_code; // Ambil input awal dari user
+
             for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
                 try {
-                    $data['receive_item_code'] = $this->generateNumberId();
-                    $ReceiveItem = ReceiveItem::create($data);
-                    break;
+                    $data['receive_item_code'] = $currentCode;
+                    $receiveItem = ReceiveItem::create($data);
+                    break; // Berhasil, keluar dari loop
                 } catch (QueryException $e) {
-                    if (
-                        isset($e->errorInfo[1]) &&
-                        $e->errorInfo[1] == 1062
-                    ) {
-                        usleep(50000);
+                    // Cek jika error adalah Duplicate Entry (1062)
+                    if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
+
+                        // LOGIKA PENTING: Ubah $currentCode ke nomor berikutnya
+                        // Menggunakan regex untuk mencari angka di akhir string
+                        if (preg_match('/^(.*?)(\d+)$/', $currentCode, $matches)) {
+                            $prefix = $matches[1];
+                            $lastNumber = (int) $matches[2];
+                            $length = strlen($matches[2]);
+
+                            // Tambahkan 1 ke nomor, lalu format ulang
+                            $currentCode = $prefix.str_pad($lastNumber + 1, $length, '0', STR_PAD_LEFT);
+                        } else {
+                            // Jika tidak ada format angka, tambahkan -1
+                            $currentCode .= '-1';
+                        }
+
+                        usleep(50000); // Tunggu sebentar sebelum retry
 
                         continue;
                     }
-                    throw $e;
+                    throw $e; // Jika error bukan 1062, lempar error asli
                 }
             }
-            if (! $ReceiveItem) {
-                throw new \Exception('Gagal membuat nomor Receive Item.');
+
+            if (! $receiveItem) {
+                throw new \Exception('Gagal membuat Receive Item: Nomor sudah penuh atau sistem sibuk.');
             }
 
             if ($itemsDetailRaw) {
@@ -331,7 +349,7 @@ class ReceiveItemController extends Controller
 
                         // 1. Simpan Detail Penerimaan
                         ReceiveItemDetail::create([
-                            'receive_item_id' => $ReceiveItem->id,
+                            'receive_item_id' => $receiveItem->id,
                             'purchase_order_detail_id' => $prDetailId,
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
@@ -377,7 +395,7 @@ class ReceiveItemController extends Controller
                             'qty_transaksi' => $qtyInputForm,
                             'total_base_qty' => $qtyInputForm,
                             'type' => 'in',
-                            'keterangan' => 'Penerimaan Barang dari '.$ReceiveItem->supplierId->nama_supplier.', No.Dokumen : '.$request->no_dokumen,
+                            'keterangan' => 'Penerimaan Barang dari '.$receiveItem->supplierId->nama_supplier.', No.Dokumen : '.$request->no_dokumen,
                             'created_by' => Auth::id(),
                             'document_type' => 'receive_item',
                         ]);

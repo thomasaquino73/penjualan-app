@@ -16,28 +16,47 @@ class ProductRequest extends FormRequest
     public function rules(): array
     {
         $id = $this->route('data_barang');
-        // atau sesuaikan dengan nama route model binding kamu
+        // // atau sesuaikan dengan nama route model binding kamu
 
-        if ($id instanceof Barang) {
-            $id = $id->id;
-        }
+        // if ($id instanceof Barang) {
+        //     $id = $id->id;
+        // }
 
-        return [
-            'id_barang' => [
-                'required',
-                'string',
-                Rule::unique('data_barang', 'id_barang')->ignore($id),
-            ],
-            'nama_barang' => [
-                'required',
-                'string',
-                Rule::unique('data_barang', 'nama_barang')->ignore($id),
-            ],
+        $rules = [
+            // 'id_barang' => [
+            //     'required',
+            //     'string',
+            //     Rule::unique('data_barang', 'id_barang')->ignore($id),
+            // ],
+            // 'nama_barang' => [
+            //     'required',
+            //     'string',
+            //     Rule::unique('data_barang', 'nama_barang')->ignore($id),
+            // ],
             'kategori_id' => ['required'],
             'unit_id' => ['required'],
             'product_type' => ['required'],
             'barcode' => ['unique:data_barang,barcode,'.$id],
         ];
+
+        if ($this->isMethod('POST')) {
+            // Store
+            // code tidak divalidasi karena dibuat otomatis
+        }
+
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+
+            $rules['id_barang'] = [
+                'required',
+                Rule::unique('data_barang', 'id_barang')->ignore($id),
+            ];
+            $rules['nama_barang'] = [
+                'required',
+                Rule::unique('data_barang', 'nama_barang')->ignore($id),
+            ];
+        }
+
+        return $rules;
     }
 
     public function messages(): array

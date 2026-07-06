@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sales\Customer;
+use App\Models\Sales\StoreSales;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
@@ -40,21 +41,64 @@ class KasirController extends Controller
 
     public function index()
     {
-        $x = [];
+        $x = [
+            'title' => 'Store Sales List',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Store Sales', 'url' => ''],
+            ],
+        ];
 
         return view('sales.kasir.kasir_index', $x);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    public function bulanRomawi($bulan)
+    {
+        $romawi = [
+            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',
+            5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII',
+            9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII',
+        ];
+
+        return $romawi[$bulan] ?? 'I';
+    }
+
+    private function generateNumberId()
+    {
+        $date = now()->format('Ymd');
+        $prefix = "TRX{$date}";
+        $last = StoreSales::orderBy('id', 'desc')->lockForUpdate()->first();
+
+        if (! $last) {
+            // Jika database benar-benar kosong, gunakan format default
+            return $prefix.'0001';
+        }
+
+        $lastCode = $last->code;
+
+        // Regex untuk memisahkan prefix (semua karakter) dan angka (diakhiri digit)
+        if (preg_match('/^(.*?)(\d+)$/', $lastCode, $matches)) {
+            $prefix = $matches[1];      // Contoh: "PO/2026/VII/"
+            $lastNumber = $matches[2];  // Contoh: "0001"
+
+            $length = strlen($lastNumber);
+            $nextNumber = (int) $lastNumber + 1;
+
+            // Gabungkan kembali dengan format padding yang sama
+            return $prefix.str_pad($nextNumber, $length, '0', STR_PAD_LEFT);
+        }
+
+        // Jika tidak ada pola angka, tambahkan -0001
+        return $lastCode.'-0001';
+    }
+
     public function create()
     {
         $company = Company::with('defaultCurrency')->first();
 
         return view('sales.kasir.kasir_create', [
             'title' => 'Add Product',
-
+            'idNumber' => $this->generateNumberId(),
             'mataUangDefault' => $company->defaultCurrency,
             'payment' => SyaratPembayaran::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),

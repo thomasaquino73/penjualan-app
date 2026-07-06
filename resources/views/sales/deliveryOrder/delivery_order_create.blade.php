@@ -22,7 +22,7 @@
 
             <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
 
-            {{-- <div class="col-12 col-lg-5">
+            <div class="col-12 col-lg-5">
                 <div
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
@@ -30,7 +30,7 @@
                         <i class="ti ti-clipboard me-1"></i>SALES ORDER
                     </button>
                 </div>
-            </div> --}}
+            </div>
 
         </div>
         <div class="card-body table-responsive p-3">
@@ -558,40 +558,66 @@
             });
 
             $('#customer_id').on('change', function() {
-                var customerId = $(this).val();
-                var contactDropdown = $('#customer_contact_id');
 
-                // Reset dropdown
+                let customerId = $(this).val();
+                let contactDropdown = $('#customer_contact_id');
+
                 contactDropdown.empty().append('<option>Loading...</option>');
 
-                if (customerId) {
-                    $.ajax({
-                        url: '/delivery-order/get-kontak/' + customerId,
-                        type: "GET",
-                        dataType: "json",
-                        success: function(data) {
+                // kosongkan data pajak
+                $('#taxpayer_data').val('');
 
-                            contactDropdown.empty();
-                            contactDropdown.append('<option value="">Pilih Kontak</option>');
+                if (!customerId) {
+                    contactDropdown.empty().append('<option value="">Pilih Kontak</option>');
+                    return;
+                }
 
-                            $.each(data.kontak, function(key, value) {
-                                contactDropdown.append(
-                                    `<option value="${value.id}">
+                $.ajax({
+                    url: '/sales-order/' + customerId + '/data',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+
+                        // ======================
+                        // Kontak
+                        // ======================
+
+                        contactDropdown.empty();
+                        contactDropdown.append('<option value="">Pilih Kontak</option>');
+
+                        $.each(data.kontak, function(key, value) {
+
+                            contactDropdown.append(
+                                `<option value="${value.id}">
                         ${value.sapaan} ${value.contact_person}
                         (${value.posisi_jabatan})
                     </option>`
-                                );
+                            );
 
-                            });
+                        });
 
-                            $('#address').val(data.address);
+                        // ======================
+                        // Pajak
+                        // ======================
 
+                        if (data.pajak) {
+                            $('#taxpayer_data').val(data.pajak.tipe_id_pajak + ' :' + data
+                                .pajak.nomor_wajib_pajak);
+                        } else {
+                            $('#taxpayer_data').val('');
                         }
-                    });
-                } else {
-                    contactDropdown.empty().append('<option></option>');
-                }
+
+                        // ======================
+                        // Alamat
+                        // ======================
+
+                        $('#address').val(data.address ?? '');
+
+                    }
+                });
+
             });
+
 
             $(document).on("change", "#product_id", function() {
                 let productId = $(this).val();
@@ -911,6 +937,23 @@
                             },
                             success: function(response) {
                                 if (response.success) {
+
+                                    // ===========================
+                                    // Isi data header ke form
+                                    // ===========================
+                                    if (response.header.length > 0) {
+                                        let header = response.header[0];
+
+                                        $('#fob_id').val(header.fob_id).trigger(
+                                            'change');
+                                        $('#description').val(header.description);
+
+                                        // Contoh jika ada field lain
+                                        // $('#supplier').val(header.supplier_id).trigger('change');
+                                        // $('#currency').val(header.currency_id).trigger('change');
+                                        // $('#remarks').val(header.remarks);
+                                    }
+
 
                                     // Bersihkan atau siapkan array penampung global jika belum didefinisikan sebelumnya
                                     if (typeof prDetailsData === 'undefined') {

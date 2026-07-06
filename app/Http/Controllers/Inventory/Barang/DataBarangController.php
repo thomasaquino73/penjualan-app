@@ -14,6 +14,7 @@ use App\Models\Setting\Company;
 use App\Models\StockMutation;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -285,36 +286,64 @@ class DataBarangController extends Controller
         );
     }
 
+    // private function generateProductId()
+    // {
+    //     $last = Barang::whereNotNull('id_barang')
+    //         ->orderBy('id', 'desc')
+    //         ->first();
+
+    //     if (! $last) {
+    //         return 'P-0001';
+    //     }
+
+    //     $lastId = $last->id_barang;
+
+    //     // 🔥 ambil angka terakhir
+    //     preg_match('/(\d+)$/', $lastId, $matches);
+
+    //     if (! $matches) {
+    //         // kalau tidak ada angka → tambahin default
+    //         return $lastId.'01';
+    //     }
+
+    //     $number = (int) $matches[1];
+    //     $number++;
+
+    //     // 🔥 ambil prefix tanpa angka
+    //     $prefix = substr($lastId, 0, -strlen($matches[1]));
+
+    //     // 🔥 padding mengikuti panjang angka sebelumnya
+    //     $length = strlen($matches[1]);
+
+    //     return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+    // }
+
     private function generateProductId()
     {
-        $last = Barang::whereNotNull('id_barang')
-            ->orderBy('id', 'desc')
-            ->first();
+        // Ambil record terakhir berdasarkan ID (urutkan dari yang terbaru)
+        $last = Barang::orderBy('id', 'desc')->lockForUpdate()->first();
 
         if (! $last) {
+            // Jika database benar-benar kosong, gunakan format default
             return 'P-0001';
         }
 
-        $lastId = $last->id_barang;
+        $lastCode = $last->id_barang;
 
-        // 🔥 ambil angka terakhir
-        preg_match('/(\d+)$/', $lastId, $matches);
+        // Regex untuk memisahkan prefix (semua karakter) dan angka (diakhiri digit)
+        if (preg_match('/^(.*?)(\d+)$/', $lastCode, $matches)) {
+            $prefix = $matches[1];      // Contoh: "PO/2026/VII/"
+            $lastNumber = $matches[2];  // Contoh: "0001"
 
-        if (! $matches) {
-            // kalau tidak ada angka → tambahin default
-            return $lastId.'01';
+            $length = strlen($lastNumber);
+            $nextNumber = (int) $lastNumber + 1;
+
+            // Gabungkan kembali dengan format padding yang sama
+            return $prefix.str_pad($nextNumber, $length, '0', STR_PAD_LEFT);
         }
 
-        $number = (int) $matches[1];
-        $number++;
-
-        // 🔥 ambil prefix tanpa angka
-        $prefix = substr($lastId, 0, -strlen($matches[1]));
-
-        // 🔥 padding mengikuti panjang angka sebelumnya
-        $length = strlen($matches[1]);
-
-        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+        // Jika tidak ada pola angka, tambahkan -0001
+        return $lastCode.'-0001';
     }
 
     public function generateId()
@@ -404,7 +433,45 @@ class DataBarangController extends Controller
             // =========================
             // 1. SAVE MAIN PRODUCT
             // =========================
-            $barang = Barang::create($data);
+            $barang = null;
+            $maxRetry = 10;
+            $currentCode = $request->id_barang; // Ambil input awal dari user
+
+            for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
+                try {
+                    $data['id_barang'] = $currentCode;
+                    $barang = Barang::create($data);
+                    break; // Berhasil, keluar dari loop
+                } catch (QueryException $e) {
+                    // Cek jika error adalah Duplicate Entry (1062)
+                    if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
+
+                        // LOGIKA PENTING: Ubah $currentCode ke nomor berikutnya
+                        // Menggunakan regex untuk mencari angka di akhir string
+                        if (preg_match('/^(.*?)(\d+)$/', $currentCode, $matches)) {
+                            $prefix = $matches[1];
+                            $lastNumber = (int) $matches[2];
+                            $length = strlen($matches[2]);
+
+                            // Tambahkan 1 ke nomor, lalu format ulang
+                            $currentCode = $prefix.str_pad($lastNumber + 1, $length, '0', STR_PAD_LEFT);
+                        } else {
+                            // Jika tidak ada format angka, tambahkan -1
+                            $currentCode .= '-1';
+                        }
+
+                        usleep(50000); // Tunggu sebentar sebelum retry
+
+                        continue;
+                    }
+                    throw $e; // Jika error bukan 1062, lempar error asli
+                }
+            }
+
+            if (! $barang) {
+                throw new \Exception('Gagal membuat Data Barang: Nomor sudah penuh atau sistem sibuk.');
+            }
+            // $barang = Barang::create($data);
 
             // =========================
             // 2. SAVE CONVERSION DATA

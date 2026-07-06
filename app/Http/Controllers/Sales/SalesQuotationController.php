@@ -54,23 +54,23 @@ class SalesQuotationController extends Controller
 
     public function index(Request $r)
     {
-        if ($r->ajax()) {
-            // Ambil ID user yang sedang login
-            $userId = Auth::user()->id;
+        // Ambil ID user yang sedang login
+        $userId = Auth::user()->id;
 
-            // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
-            $query = SalesQuotation::where('active', '<>', 0)
-                ->where(function ($q) use ($userId) {
-                    $q->where('status', '<>', 'draft')
-                        ->orWhere(function ($subQ) use ($userId) {
-                            $subQ->where('status', 'draft')
-                                ->where('created_by', $userId);
-                        });
-                })
-                ->orderby('sales_quotation_code', 'desc');
-            if ($r->status) {
-                $query->where('status', $r->status);
-            }
+        // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
+        $query = SalesQuotation::where('active', '<>', 0)
+            ->where(function ($q) use ($userId) {
+                $q->where('status', '<>', 'draft')
+                    ->orWhere(function ($subQ) use ($userId) {
+                        $subQ->where('status', 'draft')
+                            ->where('created_by', $userId);
+                    });
+            })
+            ->orderby('sales_quotation_code', 'desc');
+        if ($r->status) {
+            $query->where('status', $r->status);
+        }
+        if ($r->ajax()) {
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -219,15 +219,46 @@ class SalesQuotationController extends Controller
                 ->make(true);
         }
 
+        $stats = $this->getStatistics($query);
         $x = [
             'title' => 'Sales Quotation List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Sales Quotation', 'url' => ''],
             ],
+            'totalPurchase' => $stats['totalPurchase'],
+            'partiallyReceived' => $stats['partiallyReceived'],
+            'grandTotal' => $stats['grandTotal'],
+            'completedReceived' => $stats['completedReceived'],
         ];
 
         return view('sales.salesQuotation.sales_quotation_index', $x);
+    }
+
+    private function getStatistics($query)
+    {
+        $month = now()->month;
+        $year = now()->year;
+
+        return [
+            'totalPurchase' => SalesQuotation::where('active', '<>', 0)
+                ->whereMonth('sales_quotation_date', $month)
+                ->count(),
+
+            'partiallyReceived' => SalesQuotation::where('status', 'partially')
+                ->whereMonth('sales_quotation_date', $month)
+                ->count(),
+
+            'grandTotal' => SalesQuotation::where('active', '<>', 0)
+                ->whereMonth('sales_quotation_date', $month)
+                ->whereYear('sales_quotation_date', $year)
+                ->whereNotIn('status', ['rejected', 'draft'])
+                ->sum('grand_total'),
+
+            'completedReceived' => SalesQuotation::where('status', 'closed')
+                ->whereMonth('sales_quotation_date', $month)
+                ->count(),
+        ];
     }
 
     public function bulanRomawi($bulan)
@@ -241,30 +272,32 @@ class SalesQuotationController extends Controller
         return $romawi[$bulan] ?? 'I';
     }
 
-   private function generateNumberId()
+    private function generateNumberId()
     {
-        $year = date('Y');
-        $month = $this->bulanRomawi(date('n'));
-
-        $last = SalesQuotation::where('sales_quotation_code', 'like', "SQ/$year/$month/%")
-            ->lockForUpdate()
-            ->orderByDesc('id')
-            ->first();
+        // Ambil record terakhir berdasarkan ID (urutkan dari yang terbaru)
+        $last = SalesQuotation::orderBy('id', 'desc')->lockForUpdate()->first();
 
         if (! $last) {
-            return "SQ/$year/$month/0001";
+            // Jika database benar-benar kosong, gunakan format default
+            return 'SQ/2026/VII/0001';
         }
 
-        preg_match('/(\d+)$/', $last->sales_quotation_code, $matches);
+        $lastCode = $last->sales_quotation_code;
 
-        $next = isset($matches[1]) ? ((int) $matches[1]) + 1 : 1;
+        // Regex untuk memisahkan prefix (semua karakter) dan angka (diakhiri digit)
+        if (preg_match('/^(.*?)(\d+)$/', $lastCode, $matches)) {
+            $prefix = $matches[1];      // Contoh: "PO/2026/VII/"
+            $lastNumber = $matches[2];  // Contoh: "0001"
 
-        return sprintf(
-            'SQ/%s/%s/%04d',
-            $year,
-            $month,
-            $next
-        );
+            $length = strlen($lastNumber);
+            $nextNumber = (int) $lastNumber + 1;
+
+            // Gabungkan kembali dengan format padding yang sama
+            return $prefix.str_pad($nextNumber, $length, '0', STR_PAD_LEFT);
+        }
+
+        // Jika tidak ada pola angka, tambahkan -0001
+        return $lastCode.'-0001';
     }
 
     public function create()
@@ -330,27 +363,43 @@ class SalesQuotationController extends Controller
             $data['tax_id'] = $request->tax_id;
             $data['tax_amount'] = $request->tax_amount;
 
-           $salesQuotation = null;
+            $salesQuotation = null;
             $maxRetry = 10;
+            $currentCode = $request->sales_quotation_code; // Ambil input awal dari user
+
             for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
                 try {
-                    $data['sales_quotation_code'] = $this->generateNumberId();
+                    $data['sales_quotation_code'] = $currentCode;
                     $salesQuotation = SalesQuotation::create($data);
-                    break;
+                    break; // Berhasil, keluar dari loop
                 } catch (QueryException $e) {
-                    if (
-                        isset($e->errorInfo[1]) &&
-                        $e->errorInfo[1] == 1062
-                    ) {
-                        usleep(50000);
+                    // Cek jika error adalah Duplicate Entry (1062)
+                    if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
+
+                        // LOGIKA PENTING: Ubah $currentCode ke nomor berikutnya
+                        // Menggunakan regex untuk mencari angka di akhir string
+                        if (preg_match('/^(.*?)(\d+)$/', $currentCode, $matches)) {
+                            $prefix = $matches[1];
+                            $lastNumber = (int) $matches[2];
+                            $length = strlen($matches[2]);
+
+                            // Tambahkan 1 ke nomor, lalu format ulang
+                            $currentCode = $prefix.str_pad($lastNumber + 1, $length, '0', STR_PAD_LEFT);
+                        } else {
+                            // Jika tidak ada format angka, tambahkan -1
+                            $currentCode .= '-1';
+                        }
+
+                        usleep(50000); // Tunggu sebentar sebelum retry
 
                         continue;
                     }
-                    throw $e;
+                    throw $e; // Jika error bukan 1062, lempar error asli
                 }
             }
+
             if (! $salesQuotation) {
-                throw new \Exception('Gagal membuat nomor Sales Quotation.');
+                throw new \Exception('Gagal membuat Sales Quotation: Nomor sudah penuh atau sistem sibuk.');
             }
 
             if ($itemsDetailRaw) {
@@ -501,7 +550,7 @@ class SalesQuotationController extends Controller
             $data = $request->validated();
 
             $salesQuotation = SalesQuotation::findOrFail($id);
-             $code = $request->sales_quotation_code;
+            $code = $request->sales_quotation_code;
 
             while (
                 SalesQuotation::where('sales_quotation_code', $code)

@@ -50,4 +50,13 @@ class DeliveryOrderDetail extends Model
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_id', 'id');
     }
+     public function deliveryOrder()
+    {
+        return $this->belongsTo(DeliveryOrder::class, 'delivery_order_id');
+    }
+
+    public function salesOrderDetail()
+    {
+        return $this->belongsTo(SalesOrderDetail::class, 'sales_order_detail_id', 'id');
+    }
 }

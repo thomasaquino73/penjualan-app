@@ -14,7 +14,71 @@
             @endforeach
         </span>
     </h4>
+<div class="row">
+        <div class="col-sm-6 col-lg-3 mb-4">
+            <div class="card card-border-shadow-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2 pb-1">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-info">
+                                <i class="fa fa-credit-card ti-md"></i>
+                            </span>
+                        </div>
+                        <h4 class="ms-1 mb-0">{{ $totalPurchase }}</h4>
+                    </div>
+                    <p class="mb-1">Total Sales</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3 mb-4">
+            <div class="card card-border-shadow-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2 pb-1">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-primary">
+                                <i class="fa fa-credit-card ti-md"></i>
+                            </span>
+                        </div>
+                        <h4 class="ms-1 mb-0">{{ $completedReceived }}</h4>
+                    </div>
+                    <p class="mb-1">Completed Sales</p>
+                </div>
+            </div>
+        </div>
 
+        <div class="col-sm-6 col-lg-3 mb-4">
+            <div class="card card-border-shadow-warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2 pb-1">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-warning">
+                                <i class="fa fa-credit-card ti-md"></i>
+                            </span>
+                        </div>
+                        <h4 class="ms-1 mb-0">{{ $partiallyReceived }}</h4>
+                    </div>
+                    <p class="mb-1">Partially Delivered</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3 mb-4">
+            <div class="card card-border-shadow-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2 pb-1">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-success">
+                                <i class="fa fa-credit-card ti-md"></i>
+                            </span>
+                        </div>
+                        <h4 class="ms-1 mb-0">{{ format_uang(convert_currency($grandTotal, 1)) }}</h4>
+                    </div>
+                    <p class="mb-1">Estimate Income</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
     <div class="card">
         <div
             class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">

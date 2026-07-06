@@ -47,7 +47,7 @@ class ReceiveItemRequest extends FormRequest
             ];
         }
 
-         return $rules;
+        return $rules;
     }
 
     public function message(): array

@@ -50,7 +50,7 @@ return new class extends Migration
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('amount', 15, 2);
             $table->timestamps();
-            $table->foreign('store_sales_id')->references('id')->on("store_sales_{$this->year}")->onDelete('cascade');
+            // $table->foreign('store_sales_id')->references('id')->on("store_sales_{$this->year}")->onDelete('cascade');
         });
     }
 
@@ -59,7 +59,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists("store_sales_detail_{$this->year}");
         Schema::dropIfExists("store_sales_{$this->year}");
+        Schema::dropIfExists("store_sales_detail_{$this->year}");
     }
 };

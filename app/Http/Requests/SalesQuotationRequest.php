@@ -19,7 +19,7 @@ class SalesQuotationRequest extends FormRequest
     {
 
         $rules = [
-          
+
             'customer_id' => 'required',
             'sales_quotation_date' => 'required|date',
             'payment_term_id' => 'required',

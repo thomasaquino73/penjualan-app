@@ -24,13 +24,13 @@ class DeliveryOrderRequest extends FormRequest
     public function rules()
     {
 
-        $rules =  [
+        $rules = [
             'delivery_order_date' => 'required|date',
             'customer_id' => 'required',
             'items_detail' => 'required',
 
         ];
-         if ($this->isMethod('POST')) {
+        if ($this->isMethod('POST')) {
             // Store
             // code tidak divalidasi karena dibuat otomatis
         }

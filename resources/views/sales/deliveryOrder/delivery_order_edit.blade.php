@@ -22,7 +22,7 @@
 
             <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
 
-            {{-- <div class="col-12 col-lg-5">
+            <div class="col-12 col-lg-5">
                 <div
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
@@ -30,7 +30,7 @@
                         <i class="ti ti-clipboard me-1"></i>SALES ORDER
                     </button>
                 </div>
-            </div> --}}
+            </div>
 
         </div>
         <div class="card-body table-responsive p-3">
@@ -284,8 +284,8 @@
                         data: "data_produk",
                         render: function(data, type, row) {
                             // Menampilkan kode referensi PR di bawah nama produk jika ada
-                            if (row.quotation_code) {
-                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.quotation_code}</small>`;
+                            if (row.order_code) {
+                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.order_code}</small>`;
                             }
                             return `<strong>${data}</strong>`;
                         }
@@ -372,7 +372,7 @@
                                     // // --- AMANKAN DATA ID RELASI DI SINI ---
                                     // $("#modal_purchase_quotation_detail_id").val(data.detail_id ||
                                     //     data.purchase_quotation_detail_id || "");
-                                    // $("#modal_quotation_code").val(data.quotation_code || "");
+                                    // $("#modal_order_code").val(data.order_code || "");
 
                                     // // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
                                     // if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
@@ -581,47 +581,66 @@
             });
 
             $('#customer_id').on('change', function() {
-                var customerId = $(this).val();
-                var contactDropdown = $('#customer_contact_id');
 
-                // Reset dropdown
+                let customerId = $(this).val();
+                let contactDropdown = $('#customer_contact_id');
+
                 contactDropdown.empty().append('<option>Loading...</option>');
 
-                if (customerId) {
-                    $.ajax({
-                        url: '/delivery-order/get-kontak/' + customerId,
-                        type: "GET",
-                        dataType: "json",
-                        success: function(data) {
-                            console.log(data);
-                            console.log(data.kontak);
-                            contactDropdown.empty();
-                            contactDropdown.append('<option value="">Pilih Kontak</option>');
+                // kosongkan data pajak
+                $('#taxpayer_data').val('');
 
-                            $.each(data.kontak, function(key, value) {
-                                contactDropdown.append(
-                                    `<option value="${value.id}">
-                ${value.sapaan} ${value.contact_person}
-                (${value.posisi_jabatan})
-                    </option>`
-                                );
-                            });
-
-                            // pilih kembali kontak yang tersimpan
-                            let selectedId = contactDropdown.data("selected-id");
-
-                            if (selectedId) {
-                                contactDropdown.val(selectedId).trigger("change");
-                                contactDropdown.removeData("selected-id");
-                            }
-
-                            $('#address').val(data.address);
-                        }
-                    });
-                } else {
-                    contactDropdown.empty().append('<option></option>');
+                if (!customerId) {
+                    contactDropdown.empty().append('<option value="">Pilih Kontak</option>');
+                    return;
                 }
+
+                $.ajax({
+                    url: '/sales-order/' + customerId + '/data',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+
+                        // ======================
+                        // Kontak
+                        // ======================
+
+                        contactDropdown.empty();
+                        contactDropdown.append('<option value="">Pilih Kontak</option>');
+
+                        $.each(data.kontak, function(key, value) {
+
+                            contactDropdown.append(
+                                `<option value="${value.id}">
+                        ${value.sapaan} ${value.contact_person}
+                        (${value.posisi_jabatan})
+                    </option>`
+                            );
+
+                        });
+
+                        // ======================
+                        // Pajak
+                        // ======================
+
+                        if (data.pajak) {
+                            $('#taxpayer_data').val(data.pajak.tipe_id_pajak + ' :' + data
+                                .pajak.nomor_wajib_pajak);
+                        } else {
+                            $('#taxpayer_data').val('');
+                        }
+
+                        // ======================
+                        // Alamat
+                        // ======================
+
+                        $('#address').val(data.address ?? '');
+
+                    }
+                });
+
             });
+
 
             $(document).on("change", "#product_id", function() {
                 let productId = $(this).val();
@@ -975,8 +994,8 @@
                                             warehouse_id: null,
                                             warehouse: '-', // Sesuaikan dengan controller Anda
 
-                                            quotation_code: item
-                                                .quotation_code
+                                            order_code: item
+                                                .order_code
                                         });
                                     });
 

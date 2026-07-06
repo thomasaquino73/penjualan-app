@@ -250,14 +250,14 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'Product',
+                'name' => 'Barang',
                 'icon' => 'ti ti-trolley',
                 'roles' => ['Super Admin'],
                 'permissions' => ['barang-browse', 'kategori_barang-browse', 'satuan_barang-browse'],
                 'children' => [
 
                     [
-                        'name' => 'Product List',
+                        'name' => 'Daftar Barang',
                         'route' => 'data-barang.index',
                         'pattern' => 'data-barang.*',
                         'roles' => ['Super Admin'],
@@ -265,14 +265,14 @@ class Sidebar extends Component
                     ],
 
                     [
-                        'name' => 'Product Category',
+                        'name' => 'Kategori Barang',
                         'route' => 'kategori-barang.index',
                         'pattern' => 'kategori-barang.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['kategori_barang-browse'],
                     ],
                     [
-                        'name' => 'Units',
+                        'name' => 'Satuan Barang',
                         'route' => 'satuan-barang.index',
                         'pattern' => 'satuan-barang.*',
                         'roles' => ['Super Admin'],
@@ -290,7 +290,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'single',
-                'name' => 'Warehouse',
+                'name' => 'Gudang',
                 'route' => 'warehouse.index',
                 'icon' => 'ti ti-building-warehouse',
                 'pattern' => 'warehouse.*',
@@ -300,7 +300,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'single',
-                'name' => 'Item Transfers',
+                'name' => 'Transfer Barang',
                 'route' => 'item-transfer.index',
                 'icon' => 'ti ti-forklift',
                 'pattern' => 'item-transfer.*',

@@ -43,7 +43,8 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"> <i class="ti ti-barcode"></i>
                                 </span>
-                                <input type="text" name="id_barang" id="id_barang" class="form-control" value="">
+                                <input type="text" name="id_barang" id="id_barang" class="form-control"
+                                    value="{{ $idNumber }}">
                             </div>
                             <span class="error text-danger" id="id_barangError"></span>
                         </div>
