@@ -984,18 +984,19 @@
                                             data_produk: item
                                                 .product_name,
                                             // Pastikan key ini ada agar render di DataTable tidak error
-                                            requisition_code: item
+                                            order_code: item
                                                 .order_code,
                                             // quantity: sisaPr,
                                             quantity: sisaPr,
                                             sisa_pr: sisaPr,
                                             unit_id: item.unit_id,
                                             unit: item.unit_name,
-                                            warehouse_id: null,
-                                            warehouse: '-', // Sesuaikan dengan controller Anda
+                                            warehouse_id: item
+                                                .warehouse_id,
+                                            warehouse: item
+                                                .warehouse_name, // Sesuaikan dengan controller Anda
 
-                                            order_code: item
-                                                .order_code
+
                                         });
                                     });
 

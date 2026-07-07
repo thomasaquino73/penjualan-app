@@ -6,11 +6,11 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CashBank extends Model
+class BankList extends Model
 {
     use HasFactory;
 
-    protected $table = 'bank_account';
+    protected $table = 'bank_list';
 
     protected $guarded = [];
 

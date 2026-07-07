@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class CashBankRequest extends FormRequest
+class BankListRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,7 +22,7 @@ class CashBankRequest extends FormRequest
         return [
             'bank_name' => [
                 'required',
-                Rule::unique('bank_account', 'bank_name')->ignore($id),
+                Rule::unique('bank_list', 'bank_name')->ignore($id),
             ],
             'account_name' => 'required',
             'account_number' => 'required',

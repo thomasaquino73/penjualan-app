@@ -28,14 +28,13 @@ return new class extends Migration
             $table->decimal('grand_total', 18, 2)->default(0)->nullable();
             $table->decimal('amount_receive', 18, 2)->default(0)->nullable();
             $table->decimal('change', 18, 2)->default(0)->nullable();
-            $table->string('payment_method');
-            $table->string('shipping_method');
+            $table->enum('payment_method',['Cash', 'Transfer', 'Qris'])->default('Cash');
+            $table->enum('shipping_method', ['Pick Up', 'Delivery'])->default('Pick Up');
             $table->string('notes');
             $table->enum('status', [
-                'draft',
                 'pending',
                 'paid',
-            ])->default('draft');
+            ])->default('pending');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();

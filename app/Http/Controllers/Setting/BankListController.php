@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Setting;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\CashBankRequest;
-use App\Models\Setting\CashBank;
+use App\Http\Requests\BankListRequest;
+use App\Models\Setting\BankList;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
-class CashBankController extends Controller
+class BankListController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -19,7 +19,7 @@ class CashBankController extends Controller
     public function index(Request $r)
     {
         if ($r->ajax()) {
-            $query = CashBank::orderBy('created_at', 'desc')->get();
+            $query = BankList::orderBy('created_at', 'desc')->get();
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -57,7 +57,7 @@ class CashBankController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(CashBankRequest $request)
+    public function store(BankListRequest $request)
     {
         $id = $request->input('id');
 
@@ -86,7 +86,7 @@ class CashBankController extends Controller
                 $data['created_at'] = now();
                 $data['created_by'] = Auth::id();
 
-                DB::table('bank_account')->insert($data);
+                DB::table('bank_list')->insert($data);
 
                 return response()->json([
                     'action' => 'create',
@@ -112,7 +112,7 @@ class CashBankController extends Controller
 
     public function edit($id)
     {
-        $data = CashBank::find($id);
+        $data = BankList::find($id);
 
         if (! $data) {
             return response()->json(['message' => 'Data tidak ditemukan'], 404);
@@ -135,7 +135,7 @@ class CashBankController extends Controller
     public function destroy($id)
     {
         try {
-            $currency = CashBank::findOrFail($id);
+            $currency = BankList::findOrFail($id);
             $currency->delete();
 
             return response()->json([

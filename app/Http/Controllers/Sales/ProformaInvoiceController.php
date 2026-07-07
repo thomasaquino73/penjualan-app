@@ -335,40 +335,32 @@ class ProformaInvoiceController extends Controller
         return $romawi[$bulan] ?? 'I';
     }
 
-    private function generateNumberId()
+     private function generateNumberId()
     {
-        $year = date('Y');
-        $month = $this->bulanRomawi(date('n'));
-
-        // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
-        $last = ProformaInvoice::where('proforma_invoice_code', 'like', "PRO/$year/$month/%")
-            ->orderBy('id', 'desc')
-            ->first();
+        // Ambil record terakhir berdasarkan ID (urutkan dari yang terbaru)
+        $last = ProformaInvoice::orderBy('id', 'desc')->lockForUpdate()->first();
 
         if (! $last) {
-            return "PRO/$year/$month/0001";
+            // Jika database benar-benar kosong, gunakan format default
+            return 'PRO/2026/VII/0001';
         }
 
-        $lastId = $last->proforma_invoice_code;
+        $lastCode = $last->code;
 
-        // 🔥 ambil angka terakhir
-        preg_match('/(\d+)$/', $lastId, $matches);
+        // Regex untuk memisahkan prefix (semua karakter) dan angka (diakhiri digit)
+        if (preg_match('/^(.*?)(\d+)$/', $lastCode, $matches)) {
+            $prefix = $matches[1];      // Contoh: "PO/2026/VII/"
+            $lastNumber = $matches[2];  // Contoh: "0001"
 
-        if (! $matches) {
-            // kalau tidak ada angka → tambahin default
-            return $lastId.'01';
+            $length = strlen($lastNumber);
+            $nextNumber = (int) $lastNumber + 1;
+
+            // Gabungkan kembali dengan format padding yang sama
+            return $prefix.str_pad($nextNumber, $length, '0', STR_PAD_LEFT);
         }
 
-        $number = (int) $matches[1];
-        $number++;
-
-        // 🔥 ambil prefix tanpa angka
-        $prefix = substr($lastId, 0, -strlen($matches[1]));
-
-        // 🔥 padding mengikuti panjang angka sebelumnya
-        $length = strlen($matches[1]);
-
-        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+        // Jika tidak ada pola angka, tambahkan -0001
+        return $lastCode.'-0001';
     }
 
     public function create()

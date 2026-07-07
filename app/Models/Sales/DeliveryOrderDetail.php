@@ -59,4 +59,5 @@ class DeliveryOrderDetail extends Model
     {
         return $this->belongsTo(SalesOrderDetail::class, 'sales_order_detail_id', 'id');
     }
+ 
 }

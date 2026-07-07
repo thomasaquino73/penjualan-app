@@ -504,146 +504,6 @@ class DeliveryOrderController extends Controller
         return view('sales.deliveryOrder.delivery_order_create', $x);
     }
 
-    // public function store(DeliveryOrderRequest $r)
-    // {
-    //     DB::beginTransaction();
-
-    //     try {
-    //         $data = $r->except('save_and_new', 'items_detail');
-    //         $itemsDetailRaw = $r->input('items_detail');
-    //         unset($data['items_detail']);
-    //         $data['delivery_order_date'] = Carbon::parse($r->delivery_order_date)->format('Y-m-d');
-    //         $data['created_by'] = Auth::id();
-    //         $deliveryOrder = null;
-    //         $maxRetry = 10;
-    //         $currentCode = $r->delivery_order_code; // Ambil input awal dari user
-
-    //         for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
-    //             try {
-    //                 $data['delivery_order_code'] = $currentCode;
-    //                 $deliveryOrder = DeliveryOrder::create($data);
-    //                 break; // Berhasil, keluar dari loop
-    //             } catch (QueryException $e) {
-    //                 // Cek jika error adalah Duplicate Entry (1062)
-    //                 if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
-
-    //                     // LOGIKA PENTING: Ubah $currentCode ke nomor berikutnya
-    //                     // Menggunakan regex untuk mencari angka di akhir string
-    //                     if (preg_match('/^(.*?)(\d+)$/', $currentCode, $matches)) {
-    //                         $prefix = $matches[1];
-    //                         $lastNumber = (int) $matches[2];
-    //                         $length = strlen($matches[2]);
-
-    //                         // Tambahkan 1 ke nomor, lalu format ulang
-    //                         $currentCode = $prefix.str_pad($lastNumber + 1, $length, '0', STR_PAD_LEFT);
-    //                     } else {
-    //                         // Jika tidak ada format angka, tambahkan -1
-    //                         $currentCode .= '-1';
-    //                     }
-
-    //                     usleep(50000); // Tunggu sebentar sebelum retry
-
-    //                     continue;
-    //                 }
-    //                 throw $e; // Jika error bukan 1062, lempar error asli
-    //             }
-    //         }
-
-    //         if (! $deliveryOrder) {
-    //             throw new \Exception('Gagal membuat Delivery Order: Nomor sudah penuh atau sistem sibuk.');
-    //         }
-    //         if ($itemsDetailRaw) {
-
-    //             $items = json_decode($itemsDetailRaw, true);
-
-    //             if (is_array($items) && count($items) > 0) {
-
-    //                 foreach ($items as $item) {
-
-    //                     $qty = $item['quantity'] ?? $item['qty'];
-    //                     // $togudang = Warehouse::find($r->to_warehouse_id);
-    //                     // $tonamaGudang = $togudang ? $togudang->nama_gudang : 'Unknown';
-    //                     /*
-    //                     |--------------------------------------------------------------------------
-    //                     | Transfer Detail
-    //                     |--------------------------------------------------------------------------
-    //                     */
-    //                     DeliveryOrderDetail::create([
-    //                         'delivery_order_id' => $deliveryOrder->id,
-    //                         'data_barang_id' => $item['product_id'],
-    //                         'qty' => $qty,
-    //                         'unit_id' => $item['unit_id'],
-    //                         'warehouse_id' => $item['warehouse_id'],
-    //                         'created_at' => now(),
-    //                         'updated_at' => now(),
-    //                     ]);
-
-    //                     /*
-    //                     |--------------------------------------------------------------------------
-    //                     | Stock Mutation OUT
-    //                     |--------------------------------------------------------------------------
-    //                     */
-    //                     $customer = Customer::find($r->customer_id);
-    //                     $namaCustomer = $customer
-    //                         ? $customer->nama_customer
-    //                         : 'Customer Tidak Diketahui';
-    //                     StockMutation::create([
-    //                         'data_barang_id' => $item['product_id'],
-    //                         'document_id' => $deliveryOrder->id,
-    //                         'unit_id' => $item['unit_id'],
-    //                         'warehouse_id' => $item['warehouse_id'],
-    //                         'date_stock' => Carbon::parse($r->delivery_order_date)->format('Y-m-d'),
-    //                         'qty_transaksi' => $qty,
-    //                         'total_base_qty' => $qty,
-    //                         'type' => 'out',
-    //                         'document_number' => $deliveryOrder->delivery_order_code,
-    //                         'document_type' => 'delivery_order',
-    //                         'keterangan' => sprintf(
-    //                             'Pengiriman barang ke customer %s melalui DO %s',
-    //                             $namaCustomer,
-    //                             $deliveryOrder->delivery_order_code
-    //                         ),
-    //                         'created_by' => Auth::id(),
-    //                     ]);
-
-    //                     /*
-    //                     |--------------------------------------------------------------------------
-    //                     | Kurangi Stock Balance Gudang Asal
-    //                     |--------------------------------------------------------------------------
-    //                     */
-    //                     // $stock = StockBalance::where([
-    //                     //     'product_id' => $item['product_id'],
-    //                     //     'warehouse_id' => $item['warehouse_id'],
-    //                     // ])->first();
-
-    //                     // if (! $stock) {
-    //                     //     throw new \Exception('Stock barang tidak ditemukan');
-    //                     // }
-
-    //                     // if ($stock->qty < $qty) {
-    //                     //     throw new \Exception('Stock tidak mencukupi');
-    //                     // }
-
-    //                     // $stock->decrement('qty', $qty);
-    //                 }
-    //             }
-    //         }
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'status' => 'success',
-    //             'message' => 'Data created successfully',
-    //             'redirect' => route('delivery-order.index'), // Sesuaikan route
-    //         ], 200);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => 'Gagal menyimpan data: '.$e->getMessage(),
-    //         ], 500);
-    //     }
-    // }
 
      public function store(DeliveryOrderRequest $r, StockService $stockService)
     {
@@ -700,7 +560,7 @@ class DeliveryOrderController extends Controller
                 if (is_array($items) && count($items) > 0) {
 
                     foreach ($items as $item) {
-                        $soDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
+                        $soDetailId = $item['sales_order_detail_id'] ?? null;
                         $qty = $item['quantity'] ?? $item['qty'];
                         // $togudang = Warehouse::find($r->to_warehouse_id);
                         // $tonamaGudang = $togudang ? $togudang->nama_gudang : 'Unknown';
@@ -861,14 +721,15 @@ class DeliveryOrderController extends Controller
 
                     // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
                     // Menggunakan DB::table karena tabel bersifat dinamis per tahun
-                    $totalDiambilLainnya = DB::table("sales_order_detail_{$year}")
-                        ->where('sales_order_detail_id', $detail->sales_order_detail_id)
-                        ->where('sales_order_id', '<>', $deliveryOrder->id) // Kecuali PO ini sendiri
-                        ->where('active', 1)
-                        ->sum('qty');
+                    $totalDiambilLainnya = DB::table("delivery_order_detail_{$year} as dod")
+                    ->join("delivery_order_{$year} as do", 'do.id', '=', 'dod.delivery_order_id')
+                    ->where('dod.sales_order_detail_id', $detail->sales_order_detail_id)
+                    ->where('dod.delivery_order_id', '<>', $deliveryOrder->id)
+                    ->where('do.active', 1)
+                    ->sum('dod.qty');
 
                     if ($prDetail->salesOrder) {
-                        $orderCode = $prDetail->salesOrder->code;
+                        $orderCode = $prDetail->salesOrder->sales_order_code;
                     }
                 }
             }
@@ -878,7 +739,7 @@ class DeliveryOrderController extends Controller
                 'sales_order_id' => $detail->sales_order_id,
                 'sales_order_detail_id' => $detail->sales_order_detail_id,
                 'order_code' => $orderCode,
-                'product_id' => $detail->product_id,
+                'product_id' => $detail->data_barang_id,
                 'data_produk' => $detail->produkID->nama_barang ?? 'Product Not Found',
                 'quantity' => (float) $detail->qty,
                 'unit_id' => $detail->unit_id,

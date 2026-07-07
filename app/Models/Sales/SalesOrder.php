@@ -2,6 +2,7 @@
 
 namespace App\Models\Sales;
 
+use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -56,5 +57,9 @@ class SalesOrder extends Model
     {
         // Sesuaikan 'sales_quotation_id' dengan nama kolom foreign key yang ada di tabel SO kamu
         return $this->belongsTo(SalesQuotation::class, 'sales_quotation_id', 'id');
+    }
+       public function paymentTermID()
+    {
+        return $this->belongsTo(SyaratPembayaran::class, 'payment_term_id');
     }
 }

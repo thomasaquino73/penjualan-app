@@ -23,7 +23,7 @@
                 <li class="nav-item" role="presentation">
                     <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab"
                         data-bs-target="#navs-pills-top-bank" aria-controls="navs-pills-top-bank" aria-selected="true">
-                        Cash & Bank
+                        Bank List
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -50,7 +50,7 @@
             </ul>
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="navs-pills-top-bank" role="tabpanel">
-                    @include('partials.general.cash_bank_table')
+                    @include('partials.general.bank_list_table')
                 </div>
                 <div class="tab-pane fade" id="navs-pills-top-currency" role="tabpanel">
                     @include('partials.general.currency_table')

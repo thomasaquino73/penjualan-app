@@ -28,7 +28,7 @@ use App\Http\Controllers\Sales\ProformaInvoiceController;
 use App\Http\Controllers\Sales\SalesInvoiceController;
 use App\Http\Controllers\Sales\SalesOrderController;
 use App\Http\Controllers\Sales\SalesQuotationController;
-use App\Http\Controllers\Setting\CashBankController;
+use App\Http\Controllers\Setting\BankListController;
 use App\Http\Controllers\Setting\Company\FobController;
 use App\Http\Controllers\Setting\Company\ShippingController;
 use App\Http\Controllers\Setting\Company\SyaratPembayaranController;
@@ -217,7 +217,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::resource('/mata-uang', CurrencyController::class);
-    Route::resource('/cash-bank', CashBankController::class);
+    Route::resource('/bank-list', BankListController::class);
     Route::resource('/exchange-rate', ExchangeRateController::class);
     Route::resource('/company-delivery', CompanyDeliveryAddressController::class);
     Route::post('/shipping/delete-multiple', [ShippingController::class, 'deleteMultiple']);
@@ -332,6 +332,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('delivery-order', DeliveryOrderController::class);
 
     // INVOICE
+    Route::get('/sales-invoice/{id}/data', [SalesInvoiceController::class, 'getCustomerData'])->name('sales-invoice.getCustomerData');
     Route::post('/sales-invoice/{id}/process', [SalesInvoiceController::class, 'processData'])->name('sales-invoice.process');
     Route::get('/sales-invoice/wh/get-stock', [SalesInvoiceController::class, 'getStock'])->name('sales-invoice.wh.get-stock');
     Route::post('/sales-invoice/restore-multiple', [SalesInvoiceController::class, 'restoreMultiple']);

@@ -18,7 +18,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="postFormBank" name="postFormBank" method="POST" action="{{ route('cash-bank.store') }}">
+                <form id="postFormBank" name="postFormBank" method="POST" action="{{ route('bank-list.store') }}">
                     @csrf
                     <input type="hidden" name="id" id="idBank">
                     <div class="row">
@@ -69,7 +69,7 @@
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
                 ],
-                ajax: '{{ route('cash-bank.index') }}',
+                ajax: '{{ route('bank-list.index') }}',
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -142,7 +142,7 @@
 
                                 $.ajax({
                                     type: "GET",
-                                    url: "/cash-bank/" + id +
+                                    url: "/bank-list/" + id +
                                         "/edit", // Parameter ID masuk ke URL
                                     dataType: 'json',
                                     success: function(data) {
@@ -200,7 +200,7 @@
                                 }).then(function(result) {
                                     if (result.isConfirmed) {
                                         $.ajax({
-                                            url: `/cash-bank/${id}`,
+                                            url: `/bank-list/${id}`,
                                             type: "DELETE",
                                             data: {
                                                 _token: token

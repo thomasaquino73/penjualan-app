@@ -201,7 +201,7 @@
                     <tr>
                         <td width="70">Tanggal</td>
                         <td width="10">:</td>
-                        <td>{{ date('d M Y', strtotime($model->sales_quotation_date)) }}</td>
+                        <td>{{ date('d M Y', strtotime($model->sales_order_date)) }}</td>
                     </tr>
                     <tr>
                         <td width="70">Pembayaran</td>
