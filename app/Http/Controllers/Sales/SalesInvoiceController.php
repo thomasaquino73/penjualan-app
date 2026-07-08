@@ -551,10 +551,8 @@ class SalesInvoiceController extends Controller
             ], 500);
         }
     }
-
     
 
-    /
     public function show(string $id)
     {
         //
@@ -1543,7 +1541,7 @@ class SalesInvoiceController extends Controller
             'unitID',
             'proforma',
         ])
-            ->whereIn('proforma_invoce_id', $ids)
+            ->whereIn('proforma_invoice_id', $ids)
             ->where('active', 1)
             ->whereHas('proforma', function ($q) {
                 $q->whereIn('status', ['processing', 'partial']);
@@ -1560,7 +1558,7 @@ class SalesInvoiceController extends Controller
             return [
                 'id' => $item->id,
                 'proforma_invoce_detail_id' => $item->id,
-                'proforma_invoce_id' => $item->proforma_invoce_id,
+                'proforma_invoice_id' => $item->proforma_invoice_id,
                 'product_id' => $item->product_id,
                 'product_name' => $item->produkID->nama_barang ?? '',
                 'data_produk' => $item->produkID->nama_barang ?? '',
@@ -1570,8 +1568,10 @@ class SalesInvoiceController extends Controller
                 'qty' => $sisaQty,
 
                 'unit_id' => $item->unit_id,
-                'unit' => $item->unitID->detail ?? '',
                 'unit_name' => $item->unitID->detail ?? '',
+                'warehouse_id' => $item->warehouse_id,
+                'warehouse_name' => $item->warehouseID->nama_gudang ?? '',
+                // 'unit' => $item->unitID->detail ?? '',
                 'unit_price' => $item->unit_price,
                 'discount' => $item->discount,
                 'amount' => $item->unit_price * $sisaQty, // Update amount berdasarkan sisa

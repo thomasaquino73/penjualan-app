@@ -445,8 +445,8 @@
                         data: "data_produk",
                         render: function(data, type, row) {
                             // Menampilkan kode referensi PR di bawah nama produk jika ada
-                            if (row.quotation_code) {
-                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.quotation_code}</small>`;
+                            if (row.proforma_code) {
+                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.proforma_code}</small>`;
                             }
                             return `<strong>${data}</strong>`;
                         }
@@ -550,7 +550,7 @@
                                     // --- AMANKAN DATA ID RELASI DI SINI ---
                                     $("#modal_purchase_quotation_detail_id").val(data.detail_id ||
                                         data.purchase_quotation_detail_id || "");
-                                    $("#modal_quotation_code").val(data.quotation_code || "");
+                                    $("#modal_quotation_code").val(data.proforma_code || "");
 
                                     // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
                                     if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
@@ -1287,7 +1287,7 @@
 
                         // 4. Kirim request AJAX ke backend
                         $.ajax({
-                            url: "{{ route('sales-order.get-quotation-detail') }}",
+                            url: "{{ route('sales-invoice.get-proforma-detail') }}",
                             type: "POST",
                             data: {
                                 ids: ids,
@@ -1334,13 +1334,15 @@
                                             sisa_pr: sisaPr, // <--- TAMBAHKAN INI: Sebagai acuan validasi batas maksimal
                                             unit_id: item.unit_id,
                                             unit: item.unit_name,
-                                            warehouse_id: null,
-                                            warehouse: null,
+                                            warehouse_id: item
+                                                .warehouse_id,
+                                            warehouse: item
+                                                .warehouse_name,
                                             unit_price: unitPrice,
                                             discount: discount,
                                             amount: amount,
-                                            quotation_code: item
-                                                .quotation_code,
+                                            proforma_code: item
+                                                .proforma_code,
                                         });
                                     });
 
@@ -1359,7 +1361,7 @@
                                     }
 
                                     // 8. Tutup Modal Requisition
-                                    $("#modalQuotationDetail").modal("hide");
+                                    $("#modalProformaDetail").modal("hide");
 
                                     // 9. Beri feedback sukses ke user
                                     Swal.fire({
