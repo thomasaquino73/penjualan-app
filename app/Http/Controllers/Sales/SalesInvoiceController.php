@@ -9,13 +9,14 @@ use App\Models\DocumentTransactionHistory;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\Warehouse;
+use App\Models\Purchase\Supplier;
 use App\Models\Sales\Customer;
-use App\Models\Sales\ProformaInvoice;
-use App\Models\Sales\ProformaInvoiceDetail;
 use App\Models\Sales\SalesInvoice;
 use App\Models\Sales\SalesInvoiceDetail;
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderDetail;
+use App\Models\Sales\SalesQuotation;
+use App\Models\Sales\SalesQuotationDetail;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
@@ -562,59 +563,62 @@ class SalesInvoiceController extends Controller
         //
     }
 
-    public function edit(string $id)
+ 
+
+     public function edit(string $id)
     {
         // Mengambil tahun berjalan untuk tabel dinamis
         $year = date('Y');
 
         // 1. Load data PO beserta relasinya
         // Pastikan model PurchaseOrder dan Detail sudah mendukung table name dinamis jika diperlukan
-        $salesInvoice = SalesInvoice::with([
-            // 'salesQuotation',
+        $purchaseOrder = SalesInvoice::with([
+            'salesOrder',
             'details.produkID',
             'details.unitID',
-            // 'details.salesQuotationDetail.quotation',
+            'details.warehouseID',
+            'details.salesOrderDetail.salesOrder',
         ])->findOrFail($id);
 
         // 2. Cek status PO global: Apakah mengandung minimal satu item hasil serapan PR?
-        // $isFromPR = $salesInvoice->details->whereNotNull('sales_quotation_detail_id')->count() > 0;
+        $isFromPR = $purchaseOrder->details->whereNotNull('sales_order_detail_id')->count() > 0;
 
         // 3. Mapping data detail
-        $detailDataMapped = $salesInvoice->details->map(function ($detail) {
+        $detailDataMapped = $purchaseOrder->details->map(function ($detail) use ($purchaseOrder, $year) {
 
-            // $quotationCode = null;
-            // $sisaPr = null;
-            // $kuotaAsliPr = null;
-            // $totalDiambilLainnya = 0;
+            $orderCode = null;
+            $sisaPr = null;
+            $kuotaAsliPr = null;
+            $totalDiambilLainnya = 0;
 
             // Cek apakah item detail ini memiliki keterikatan dengan PR
-            // if ($detail->sales_quotation_detail_id) {
-            //     // Ambil data referensi dari relasi
-            //     $prDetail = $detail->salesQuotationDetail;
+            if ($detail->sales_order_detail_id) {
+                // Ambil data referensi dari relasi
+                $prDetail = $detail->purchaseRequisitionDetail;
 
-            //     if ($prDetail) {
-            //         $sisaPr = (float) $prDetail->outstanding_qty;
-            //         $kuotaAsliPr = (float) $prDetail->qty;
+                if ($prDetail) {
+                    $sisaPr = (float) $prDetail->outstanding_qty;
+                    $kuotaAsliPr = (float) $prDetail->qty;
 
-            //         // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
-            //         // Menggunakan DB::table karena tabel bersifat dinamis per tahun
-            //         $totalDiambilLainnya = DB::table("sales_invoice_detail_{$year}")
-            //             ->where('sales_quotation_detail_id', $detail->sales_quotation_detail_id)
-            //             ->where('sales_invoice_id', '<>', $salesInvoice->id) // Kecuali PO ini sendiri
-            //             ->where('active', 1)
-            //             ->sum('qty');
+                    // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
+                    // Menggunakan DB::table karena tabel bersifat dinamis per tahun
+                    $totalDiambilLainnya = DB::table("purchase_order_detail_{$year}")
+                        ->where('sales_order_detail_id', $detail->sales_order_detail_id)
+                        ->where('sales_order_id', '<>', $purchaseOrder->id) // Kecuali PO ini sendiri
+                        ->where('active', 1)
+                        ->sum('qty');
 
-            //         if ($prDetail->salesQuotation) {
-            //             $quotationCode = $prDetail->salesQuotation->code;
-            //         }
-            //     }
-            // }
+                    if ($prDetail->purchaseRequisition) {
+                        $orderCode = $prDetail->purchaseRequisition->code;
+                    }
+                }
+            }
 
             return [
                 'id' => $detail->id,
                 'sales_invoice_id' => $detail->sales_invoice_id,
-                // 'sales_quotation_detail_id' => $detail->sales_quotation_detail_id,
-                // 'quotation_code' => $quotationCode,
+                'sales_order_detail_id' => $detail->sales_order_detail_id,
+                'order_code' => $orderCode,
                 'product_id' => $detail->product_id,
                 'data_produk' => $detail->produkID->nama_barang ?? 'Product Not Found',
                 'quantity' => (float) $detail->qty,
@@ -623,15 +627,17 @@ class SalesInvoiceController extends Controller
                 'warehouse_id' => $detail->warehouse_id,
                 'warehouse' => $detail->warehouseID->nama_gudang ?? '-',
                 'unit_price' => (float) $detail->unit_price,
-                'discount_percent' => $detail->discount_percent,
                 'discount' => (float) $detail->discount,
+                'discount_percent' => $detail->discount_percent,
                 'amount' => (float) $detail->amount,
                 'tax' => (float) ($detail->tax ?? 0),
-                // 'sisa_pr' => $sisaPr,
-                // 'kuota_asli' => $kuotaAsliPr,
-                // 'total_diambil_lainnya' => (float) $totalDiambilLainnya, // Dikirim ke frontend
+                'sisa_pr' => $sisaPr,
+                'kuota_asli' => $kuotaAsliPr,
+                'total_diambil_lainnya' => (float) $totalDiambilLainnya, // Dikirim ke frontend
             ];
         });
+
+        // 🔥 Ambil semua pajak aktif (khusus pembelian & general)
         $taxes = Tax::where('is_active', true)
             ->whereIn('usage', ['purchase', 'both'])
             ->get();
@@ -641,10 +647,12 @@ class SalesInvoiceController extends Controller
             ->where('is_default', true)
             ->whereIn('usage', ['purchase', 'both'])
             ->first();
+
+        // 4. Susun semua variabel ke dalam array compact
         $x = [
-            'title' => 'Edit Sales Invoice ',
+            'title' => 'Edit Sales Invoice',
             'breadcrumb' => [
-                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Sales Invoice', 'url' => route('sales-invoice.index')],
                 ['label' => 'Edit Sales Invoice', 'url' => ''],
             ],
             'customer' => Customer::where('status', '<>', 0)->get(),
@@ -655,8 +663,8 @@ class SalesInvoiceController extends Controller
             'salesman' => User::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
-            'model' => $salesInvoice,
-            // 'isFromPR' => $isFromPR,
+            'model' => $purchaseOrder,
+            'isFromPR' => $isFromPR,
             'jsonDetails' => $detailDataMapped,
             'taxes' => $taxes,
             'defaultTax' => $defaultTax,
@@ -852,20 +860,20 @@ class SalesInvoiceController extends Controller
             $po = SalesInvoice::findOrFail($id);
 
             // 2. Ambil detail SO untuk mendapatkan referensi PR Detail yang terkait
-            // $sqDetails = SalesInvoiceDetail::where('sales_invoice_id', $po->id)->get();
-            // $involvedPrIds = [];
+            $sqDetails = SalesInvoiceDetail::where('sales_invoice_id', $po->id)->get();
+            $involvedPrIds = [];
 
-            // foreach ($sqDetails as $sqDetail) {
-            //     if ($sqDetail->sales_quotation_detail_id) {
-            //         // Catat ID PR Master-nya
-            //         $prDetail = SalesQuotationDetail::where('id', $sqDetail->sales_quotation_detail_id)
-            //             ->first();
+            foreach ($sqDetails as $sqDetail) {
+                if ($sqDetail->sales_quotation_detail_id) {
+                    // Catat ID PR Master-nya
+                    $prDetail = SalesQuotationDetail::where('id', $sqDetail->sales_quotation_detail_id)
+                        ->first();
 
-            //         if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
-            //             $involvedPrIds[] = $prDetail->sales_quotation_id;
-            //         }
-            //     }
-            // }
+                    if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
+                        $involvedPrIds[] = $prDetail->sales_quotation_id;
+                    }
+                }
+            }
 
             // 3. Nonaktifkan SO dan Detail SO
             $po->update(['active' => 0, 'updated_by' => Auth::id()]);
@@ -873,37 +881,37 @@ class SalesInvoiceController extends Controller
 
             // 4. Update Ulang sq_qty di setiap PR Detail yang terdampak
             // Kita hitung ulang berdasarkan sisa SO yang masih 'active' = 1
-            // foreach ($sqDetails as $sqDetail) {
-            //     if ($sqDetail->sales_quotation_detail_id) {
-            //         $totalRemainingPo = SalesInvoiceDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
-            //             ->where('active', 1)
-            //             ->sum('qty');
+            foreach ($sqDetails as $sqDetail) {
+                if ($sqDetail->sales_quotation_detail_id) {
+                    $totalRemainingPo = SalesInvoiceDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
+                        ->where('active', 1)
+                        ->sum('qty');
 
-            //         DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $sqDetail->sales_quotation_detail_id)
-            //             ->update(['sq_qty' => $totalRemainingPo]);
-            //     }
-            // }
+                    DB::table('sales_quotation_detail_'.date('Y'))
+                        ->where('id', $sqDetail->sales_quotation_detail_id)
+                        ->update(['sq_qty' => $totalRemainingPo]);
+                }
+            }
 
             // 5. Update Status PR Master
-            // foreach ($involvedPrIds as $prId) {
-            //     $allDetails = SalesQuotationDetail::where('sales_quotation_id', $prId)
-            //         ->get();
+            foreach ($involvedPrIds as $prId) {
+                $allDetails = SalesQuotationDetail::where('sales_quotation_id', $prId)
+                    ->get();
 
-            //     $totalRequested = $allDetails->sum('qty');
-            //     $totalOrdered = $allDetails->sum('sq_qty');
+                $totalRequested = $allDetails->sum('qty');
+                $totalOrdered = $allDetails->sum('sq_qty');
 
-            //     if ($totalOrdered >= $totalRequested) {
-            //         $status = 'closed';
-            //     } elseif ($totalOrdered > 0) {
-            //         $status = 'partial';
-            //     } else {
-            //         $status = 'processing';
-            //     }
+                if ($totalOrdered >= $totalRequested) {
+                    $status = 'closed';
+                } elseif ($totalOrdered > 0) {
+                    $status = 'partial';
+                } else {
+                    $status = 'processing';
+                }
 
-            //     SalesQuotation::where('id', $prId)
-            //         ->update(['status' => $status]);
-            // }
+                SalesQuotation::where('id', $prId)
+                    ->update(['status' => $status]);
+            }
 
             DB::commit();
 

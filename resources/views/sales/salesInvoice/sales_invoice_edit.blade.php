@@ -22,7 +22,7 @@
 
             <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
 
-            {{-- <div class="col-12 col-lg-5">
+            <div class="col-12 col-lg-5">
                 <div
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
@@ -31,7 +31,7 @@
                     </button>
 
                 </div>
-            </div> --}}
+            </div>
 
         </div>
         <div class="card-body table-responsive p-3">
@@ -207,7 +207,7 @@
         </div>
     </div>
     @include('sales.salesInvoice.part.modal_sales_invoice')
-    @include('sales.salesInvoice.part.modalDeliveryDetail')
+    @include('sales.salesInvoice.part.modalOrderDetail')
 @endsection
 @push('style')
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
@@ -268,7 +268,11 @@
                 @endforeach
             @endif
         ];
-        const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
+        // const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
+        let poIsFromPR = {{ $isFromPR ? 'true' : 'false' }};
+        if (poIsFromPR) {
+            $(".btn-success").html('<i class="ti ti-link"></i> Linked to SO').prop('disabled', true);
+        }
         $(function() {
             const datePicker = flatpickr("#sales_invoice_date", {
                 enableTime: false,
@@ -519,11 +523,11 @@
                                     let qtySekarang = parseFloat(data.quantity || 0);
 
                                     // 3. Update Title & UI Modal dengan informasi total serapan lain
-                                    // $("#modalTitle").html(`
-                                //         Edit Entry |
-                                //         <span class="badge bg-primary">SQ Awal: ${kuotaAwalPr}</span>
-                                //         <span class="badge bg-warning text-dark">Sudah diambil SO lain: ${totalLain}</span>
-                                //     `);
+                                    $("#modalTitle").html(`
+                                        Edit Entry |
+                                        <span class="badge bg-primary">SO Awal: ${kuotaAwalPr}</span>
+                                        <span class="badge bg-warning text-dark">Sudah diambil SO lain: ${totalLain}</span>
+                                    `);
                                     $("#modalTitle").html(`
                                             Edit Entry
                                         `);
@@ -761,7 +765,7 @@
                 // Tambahan Validasi: Ingatkan user jika customer belum dipilih
                 if (!customerId) {
                     alert(
-                        "Silahkan pilih Customer terlebih dahulu pada form utama SQ!",
+                        "Silahkan pilih Customer terlebih dahulu pada form utama SO!",
                     );
                     $(this).val("").trigger("change"); // Reset pilihan produk
                     return;
@@ -902,7 +906,7 @@
                             helperText
                                 .attr("class", "form-text text-muted")
                                 .text(
-                                    "Belum ada riwayat SQ dengan customer ini. Silahkan isi harga manual.",
+                                    "Belum ada riwayat SO dengan customer ini. Silahkan isi harga manual.",
                                 );
                             dropdownBtn.prop("disabled", true);
                             if (priceInput.val() === "") {

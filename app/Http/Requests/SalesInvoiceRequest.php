@@ -48,6 +48,7 @@ class SalesInvoiceRequest extends FormRequest
         }
 
         return $rules;
+    }
 
     public function message(): array
     {
