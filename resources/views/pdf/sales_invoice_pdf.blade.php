@@ -191,17 +191,17 @@
                 </div>
             </td>
             <td style="width: 50%; vertical-align: top; padding-left: 20px;">
-                <div class="po-box-title">Sales Order</div>
+                <div class="po-box-title">Sales Invoice</div>
                 <table style="width:100%;">
                     <tr>
                         <td width="70">Nomor</td>
                         <td width="10">:</td>
-                        <td>{{ $model->sales_order_code }}</td>
+                        <td>{{ $model->sales_invoice_code }}</td>
                     </tr>
                     <tr>
                         <td width="70">Tanggal</td>
                         <td width="10">:</td>
-                        <td>{{ date('d M Y', strtotime($model->sales_quotation_date)) }}</td>
+                        <td>{{ date('d M Y', strtotime($model->sales_invoice_date)) }}</td>
                     </tr>
                     <tr>
                         <td width="70">Pembayaran</td>
@@ -242,11 +242,11 @@
 
     <table class="w-100 footer-table">
         <tr>
-            <td class="keterangan-box">
+            <td class="keterangan-box" width="60%">
                 <div class="keterangan-title">Keterangan</div>
                 <div class="keterangan-content">{!! nl2br(e($model->description)) !!}</div>
             </td>
-            <td class="summary-box">
+            <td class="summary-box"width="40%">
                 <table class="summary-table">
                     <tr>
                         <td>Sub Total</td>
@@ -338,6 +338,8 @@
             </tr>
         </table>
     </div>
+
+
 </body>
 
 </html>

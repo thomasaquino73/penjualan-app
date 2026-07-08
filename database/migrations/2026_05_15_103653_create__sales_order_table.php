@@ -61,6 +61,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('sales_order_id');
             $table->unsignedBigInteger('sales_quotation_detail_id')->nullable();
+            $table->string('sales_quotation_code_id')->nullable();
             $table->unsignedBigInteger('product_id');
             $table->decimal('qty', 18, 4);
             $table->bigInteger('unit_id');

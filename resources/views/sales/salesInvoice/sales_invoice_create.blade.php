@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Sales Quotation')
+@section('title', 'Sales Invoice')
 @section('konten')
     <h4>
         <span class="text-muted fw-light">
@@ -1014,6 +1014,51 @@
                     return false;
                 }
 
+                let warehouseKosong = [];
+
+                prDetailsData.forEach(function(item, index) {
+                    if (
+                        item.warehouse_id === null ||
+                        item.warehouse_id === "" ||
+                        typeof item.warehouse_id === "undefined"
+                    ) {
+                        warehouseKosong.push(index + 1);
+                    }
+                });
+
+                if (warehouseKosong.length > 0) {
+
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Warehouse Belum Dipilih",
+                        html: "Warehouse wajib dipilih ",
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn btn-primary waves-effect waves-light",
+                        },
+                        buttonsStyling: false,
+                    }).then(() => {
+
+                        let closeBtn = $("#postForm").find(
+                            'button[data-save-and-new="false"]'
+                        );
+                        let newBtn = $("#postForm").find(
+                            'button[data-save-and-new="true"]'
+                        );
+
+                        closeBtn.html(
+                            '<i class="fa fa-upload me-1"></i> Save and Close'
+                        );
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New'
+                        );
+
+                        $(".card-footer button").prop("disabled", false);
+                    });
+
+                    return false;
+                }
+
                 formData.append("save_and_new", saveAndNew ? 1 : 0);
                 formData.append("items_detail", JSON.stringify(prDetailsData));
 
@@ -1079,6 +1124,7 @@
                     },
                 });
             });
+
             $("#formPrDetail").on("submit", function(e) {
                 e.preventDefault();
 
@@ -1367,7 +1413,7 @@
                                     Swal.fire({
                                         icon: "success",
                                         title: "Success",
-                                        text: "Data quotation berhasil dimasukkan.",
+                                        text: "Data Penjualan berhasil dimasukkan.",
                                         customClass: {
                                             confirmButton: "btn btn-primary",
                                         },

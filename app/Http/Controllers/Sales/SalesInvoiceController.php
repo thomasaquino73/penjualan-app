@@ -262,7 +262,7 @@ class SalesInvoiceController extends Controller
                         // EDIT
                         if (
                             $user->can('sales_invoice-edit') &&
-                            in_array($row->status, ['draft'])
+                            in_array($row->status, ['draft', 'pending', 'processing'])
                         ) {
 
                             $btn .= '

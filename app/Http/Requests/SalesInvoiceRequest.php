@@ -19,11 +19,11 @@ class SalesInvoiceRequest extends FormRequest
     {
         $id = $this->route('sales_invoice');
 
-        return [
-            'sales_invoice_code' => [
-                'required',
-                Rule::unique('sales_invoice_'.date('Y'), 'sales_invoice_code')->ignore($id),
-            ],
+        $rules = [
+            // 'sales_invoice_code' => [
+            //     'required',
+            //     Rule::unique('sales_invoice_'.date('Y'), 'sales_invoice_code')->ignore($id),
+            // ],
             'customer_id' => 'required',
             'sales_invoice_date' => 'required|date',
             'payment_term_id' => 'required',
@@ -32,7 +32,22 @@ class SalesInvoiceRequest extends FormRequest
             'description' => 'nullable|string',
             'items_detail' => 'required',
         ];
-    }
+        
+         if ($this->isMethod('POST')) {
+            // Store
+            // code tidak divalidasi karena dibuat otomatis
+        }
+
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+
+
+            $rules['sales_invoice_code'] = [
+                'required',
+                Rule::unique('sales_invoice_'.date('Y'), 'sales_invoice_code')->ignore($id),
+            ];
+        }
+
+        return $rules;
 
     public function message(): array
     {

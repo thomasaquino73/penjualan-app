@@ -2,6 +2,7 @@
 
 namespace App\Models\Sales;
 
+use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -44,6 +45,10 @@ class SalesInvoice extends Model
      public function salesOrder()
     {
         return $this->belongsTo(SalesOrder::class, 'sales_order_id', 'id');
+    }
+    public function paymentTermID()
+    {
+        return $this->belongsTo(SyaratPembayaran::class, 'payment_term_id');
     }
    
 }

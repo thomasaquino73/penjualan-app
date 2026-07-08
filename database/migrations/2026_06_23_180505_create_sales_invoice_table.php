@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('sales_invoice_code')->unique();
             $table->date('sales_invoice_date');
             $table->unsignedBigInteger('sales_order_id')->nullable();
+            $table->string('sales_order_code_id')->nullable();
             $table->unsignedBigInteger('payment_term_id')->nullable();
             $table->unsignedBigInteger('salesman_id')->nullable();
             $table->string('address')->nullable();
