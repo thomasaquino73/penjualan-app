@@ -2,7 +2,6 @@
 
 namespace App\Models\Purchase;
 
-use App\Models\Setting\CashBank;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;

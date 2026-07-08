@@ -14,6 +14,8 @@ use App\Models\Sales\ProformaInvoice;
 use App\Models\Sales\ProformaInvoiceDetail;
 use App\Models\Sales\SalesInvoice;
 use App\Models\Sales\SalesInvoiceDetail;
+use App\Models\Sales\SalesOrder;
+use App\Models\Sales\SalesOrderDetail;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
@@ -479,7 +481,8 @@ class SalesInvoiceController extends Controller
 
                 if (is_array($items) && count($items) > 0) {
                     foreach ($items as $item) {
-                        // $sqDetailId = $item['sales_quotation_detail_id'] ?? $item['detail_id'] ?? null;
+                        $sqDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
+                        $soCodeID = $item['sales_order_code_id'] ?? $item['order_code'] ?? null;
                         $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
                         $unitPrice = floatval($item['unit_price'] ?? 0);
                         $discount = floatval($item['discount'] ?? 0);
@@ -489,7 +492,8 @@ class SalesInvoiceController extends Controller
                         // 1. Simpan ke Sales Invoice Detail
                         $salesInvoiceDetail = SalesInvoiceDetail::create([
                             'sales_invoice_id' => $salesInvoice->id,
-                            // 'sales_quotation_detail_id' => $sqDetailId,
+                            'sales_order_detail_id' => $sqDetailId,
+                            'sales_order_code_id' => $soCodeID,
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
@@ -1510,9 +1514,9 @@ class SalesInvoiceController extends Controller
         return response()->json(['success' => true, 'message' => 'Sales Invoice berhasil diajukan!']);
     }
 
-      public function getProformaData(Request $request)
+       public function getOrderData(Request $request)
     {
-        $orders = ProformaInvoice::with([
+        $orders = SalesOrder::with([
             'details' => function ($query) {
                 $query->whereColumn('so_qty', '<', 'qty');
             },
@@ -1524,7 +1528,7 @@ class SalesInvoiceController extends Controller
         return response()->json($orders);
     }
 
-       public function getProformaDetail(Request $request)
+      public function getOrderDetail(Request $request)
     {
         $ids = $request->ids;
 
@@ -1536,14 +1540,14 @@ class SalesInvoiceController extends Controller
             ]);
         }
 
-        $details = ProformaInvoiceDetail::with([
+        $details = SalesOrderDetail::with([
             'produkID',
             'unitID',
-            'proforma',
+            'salesOrder',
         ])
-            ->whereIn('proforma_invoice_id', $ids)
+            ->whereIn('sales_order_id', $ids)
             ->where('active', 1)
-            ->whereHas('proforma', function ($q) {
+            ->whereHas('salesOrder', function ($q) {
                 $q->whereIn('status', ['processing', 'partial']);
             })
             ->get();
@@ -1557,8 +1561,8 @@ class SalesInvoiceController extends Controller
 
             return [
                 'id' => $item->id,
-                'proforma_invoce_detail_id' => $item->id,
-                'proforma_invoice_id' => $item->proforma_invoice_id,
+                'sales_invoice_detail_id' => $item->id,
+                'sales_invoice_id' => $item->sales_invoice_id,
                 'product_id' => $item->product_id,
                 'product_name' => $item->produkID->nama_barang ?? '',
                 'data_produk' => $item->produkID->nama_barang ?? '',
@@ -1576,8 +1580,8 @@ class SalesInvoiceController extends Controller
                 'discount' => $item->discount,
                 'amount' => $item->unit_price * $sisaQty, // Update amount berdasarkan sisa
                 'tax' => 0,
-                'proforma_code' => $item->proforma->proforma_invoice_code ?? '',
-                'proforma_status' => $item->proforma->status ?? '',
+                'order_code' => $item->salesOrder->sales_order_code ?? '',
+                'sales_order_status' => $item->salesOrder->status ?? '',
             ];
         });
 
@@ -1586,4 +1590,108 @@ class SalesInvoiceController extends Controller
             'data' => $formattedData,
         ]);
     }
+
+     public function getCustomerData($customerId)
+    {
+        // Pajak (ambil default)
+        $pajak = DB::table('customer_pajak')
+            ->where('customer_id', $customerId)
+            ->first();
+        $kontak = DB::table('customer_kontak')
+            ->where('customer_id', $customerId)
+            ->get();
+        $customer = Customer::find($customerId);
+        $address = collect([
+            $customer->alamat_tagihan,
+            collect([
+                $customer->kota_tagihan,
+                $customer->provinsi_tagihan,
+                $customer->kodepos_tagihan,
+            ])->filter()->implode(', '),
+            $customer->negara_tagihan,
+        ])->filter()->implode("\n");
+
+        return response()->json([
+            'pajak' => $pajak,
+            'kontak' => $kontak,
+            'address' => $address,
+        ]);
+    }
+
+    //   public function getProformaData(Request $request)
+    // {
+    //     $orders = ProformaInvoice::with([
+    //         'details' => function ($query) {
+    //             $query->whereColumn('so_qty', '<', 'qty');
+    //         },
+    //     ])
+    //         ->where('customer_id', $request->customer_id)
+    //         ->whereNotIn('status', ['draft', 'closed', 'done'])
+    //         ->get();
+
+    //     return response()->json($orders);
+    // }
+
+    //    public function getProformaDetail(Request $request)
+    // {
+    //     $ids = $request->ids;
+
+    //     if (empty($ids)) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Tidak ada data SQ yang dipilih.',
+    //             'data' => [],
+    //         ]);
+    //     }
+
+    //     $details = ProformaInvoiceDetail::with([
+    //         'produkID',
+    //         'unitID',
+    //         'proforma',
+    //     ])
+    //         ->whereIn('proforma_invoice_id', $ids)
+    //         ->where('active', 1)
+    //         ->whereHas('proforma', function ($q) {
+    //             $q->whereIn('status', ['processing', 'partial']);
+    //         })
+    //         ->get();
+
+    //     $formattedData = $details->map(function ($item) {
+    //         // LOGIKA PENENTUAN SISA:
+    //         // Cek apakah outstanding_qty ada (tidak null) dan bukan 0
+    //         $sisaQty = ($item->outstanding_qty !== null && $item->outstanding_qty > 0)
+    //                    ? (float) $item->outstanding_qty
+    //                    : (float) $item->qty;
+
+    //         return [
+    //             'id' => $item->id,
+    //             'proforma_invoce_detail_id' => $item->id,
+    //             'proforma_invoice_id' => $item->proforma_invoice_id,
+    //             'product_id' => $item->product_id,
+    //             'product_name' => $item->produkID->nama_barang ?? '',
+    //             'data_produk' => $item->produkID->nama_barang ?? '',
+
+    //             // Gunakan $sisaQty yang sudah dihitung di atas
+    //             'quantity' => $sisaQty,
+    //             'qty' => $sisaQty,
+
+    //             'unit_id' => $item->unit_id,
+    //             'unit_name' => $item->unitID->detail ?? '',
+    //             'warehouse_id' => $item->warehouse_id,
+    //             'warehouse_name' => $item->warehouseID->nama_gudang ?? '',
+    //             // 'unit' => $item->unitID->detail ?? '',
+    //             'unit_price' => $item->unit_price,
+    //             'discount' => $item->discount,
+    //             'amount' => $item->unit_price * $sisaQty, // Update amount berdasarkan sisa
+    //             'tax' => 0,
+    //             'proforma_code' => $item->proforma->proforma_invoice_code ?? '',
+    //             'proforma_status' => $item->proforma->status ?? '',
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $formattedData,
+    //     ]);
+    // }
 }

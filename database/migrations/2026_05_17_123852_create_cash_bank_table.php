@@ -9,111 +9,235 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('cash_banks', function (Blueprint $table) {
-            $table->id();
+   public function up(): void
+{
+    /*
+    |--------------------------------------------------------------------------
+    | MASTER CASH & BANK
+    |--------------------------------------------------------------------------
+    */
+    Schema::create('cash_banks', function (Blueprint $table) {
 
-            $table->string('code')->unique();
-            $table->string('name');
+        $table->id();
 
-            $table->enum('type', ['cash', 'bank']);
+        $table->string('code')->unique();
+        $table->string('name');
 
-            $table->string('bank_name')->nullable();
-            $table->string('account_number')->nullable();
-            $table->string('account_name')->nullable();
+        $table->enum('type', [
+            'cash',
+            'bank'
+        ]);
 
-            $table->decimal('opening_balance', 18, 2)->default(0);
-            $table->decimal('current_balance', 18, 2)->default(0);
+        $table->string('bank_name')->nullable();
+        $table->string('account_number')->nullable();
+        $table->string('account_name')->nullable();
+        $table->string('branch_name')->nullable();
+        $table->string('currency',10)->default('IDR');
 
-            // $table->foreignId('coa_id')->nullable()->constrained('chart_of_accounts');
+        $table->decimal('opening_balance',18,2)->default(0);
+        $table->decimal('current_balance',18,2)->default(0);
 
-            $table->boolean('is_active')->default(true);
+        $table->boolean('is_active')->default(true);
 
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        $table->unsignedBigInteger('created_by')->nullable();
+        $table->unsignedBigInteger('updated_by')->nullable();
 
-        Schema::create('cash_bank_transactions', function (Blueprint $table) {
-            $table->id();
+        $table->timestamps();
+        $table->softDeletes();
+    });
 
-            $table->string('transaction_no')->unique();
 
-            $table->date('transaction_date');
+    /*
+    |--------------------------------------------------------------------------
+    | CASH BANK TRANSACTION HEADER
+    |--------------------------------------------------------------------------
+    */
 
-            $table->foreignId('cash_bank_id')
-                ->constrained()
-                ->cascadeOnDelete();
+    Schema::create('cash_bank_transactions', function (Blueprint $table) {
 
-            $table->enum('transaction_type', [
-                'receipt',      // uang masuk
-                'payment',      // uang keluar
-                'transfer',      // transfer bank
-            ]);
+        $table->id();
 
-            $table->enum('reference_type', [
-                'sales_invoice',
-                'purchase_invoice',
-                'expense',
-                'income',
-                'transfer',
-                'others',
-            ])->default('others');
+        $table->string('transaction_no')->unique();
 
-            $table->unsignedBigInteger('reference_id')->nullable();
+        $table->date('transaction_date');
 
-            $table->decimal('amount', 18, 2);
+        $table->unsignedBigInteger('cash_bank_id');
 
-            $table->text('description')->nullable();
+        $table->enum('transaction_type',[
+            'receipt',     // uang masuk
+            'payment',     // uang keluar
+            'transfer'     // transfer antar rekening
+        ]);
 
-            $table->foreignId('created_by')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
+        /*
+        |--------------------------------------------------------------------------
+        | Referensi Dokumen
+        |--------------------------------------------------------------------------
+        |
+        | Karena sistem memakai tabel per tahun maka disimpan:
+        |
+        | reference_table = sales_invoice_2026
+        | reference_id    = 15
+        |
+        */
 
-            $table->enum('status', [
-                'draft',
-                'posted',
-                'void',
-            ])->default('draft');
+        $table->string('reference_table')->nullable();
 
-            $table->timestamp('posted_at')->nullable();
+        $table->unsignedBigInteger('reference_id')->nullable();
 
-            $table->timestamps();
-            $table->softDeletes();
+        $table->enum('reference_type',[
+            'sales_order',
+            'sales_invoice',
+            'purchase_order',
+            'purchase_invoice',
+            'expense',
+            'income',
+            'transfer',
+            'journal',
+            'others'
+        ])->default('others');
 
-            $table->index(['reference_type', 'reference_id']);
-        });
+        $table->string('reference_number')->nullable();
 
-        Schema::create('cash_bank_transaction_details', function (Blueprint $table) {
+        $table->decimal('amount',18,2);
 
-            $table->id();
+        $table->text('description')->nullable();
 
-            $table->foreignId('cash_bank_transaction_id')
-                ->constrained()
-                ->cascadeOnDelete();
+        $table->enum('status',[
+            'draft',
+            'posted',
+            'void'
+        ])->default('draft');
 
-            $table->enum('reference_type', [
-                'sales_invoice',
-                'purchase_invoice',
-            ]);
+        $table->timestamp('posted_at')->nullable();
 
-            $table->unsignedBigInteger('reference_id');
+        $table->unsignedBigInteger('created_by')->nullable();
+        $table->unsignedBigInteger('updated_by')->nullable();
 
-            $table->decimal('invoice_amount', 18, 2);
+        $table->timestamps();
 
-            $table->decimal('paid_amount', 18, 2);
+        $table->softDeletes();
 
-            $table->decimal('remaining_amount', 18, 2);
+        $table->foreign('cash_bank_id')
+            ->references('id')
+            ->on('cash_banks')
+            ->cascadeOnDelete();
 
-            $table->timestamps();
+        $table->index([
+            'reference_table',
+            'reference_id'
+        ]);
 
-            $table->index([
-                'reference_type',
-                'reference_id',
-            ]);
-        });
-    }
+        $table->index([
+            'reference_type'
+        ]);
+
+        $table->index([
+            'transaction_date'
+        ]);
+
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CASH BANK TRANSACTION DETAIL
+    |--------------------------------------------------------------------------
+    */
+
+    Schema::create('cash_bank_transaction_details', function (Blueprint $table) {
+
+        $table->id();
+
+        $table->unsignedBigInteger('cash_bank_transaction_id');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Bisa membayar banyak Invoice
+        |--------------------------------------------------------------------------
+        */
+
+        $table->string('reference_table');
+
+        $table->unsignedBigInteger('reference_id');
+
+        $table->enum('reference_type',[
+            'sales_invoice',
+            'purchase_invoice'
+        ]);
+
+        $table->string('reference_number')->nullable();
+
+        $table->decimal('invoice_amount',18,2);
+
+        $table->decimal('paid_amount',18,2);
+
+        $table->decimal('remaining_amount',18,2);
+
+        $table->text('description')->nullable();
+
+        $table->timestamps();
+
+        $table->foreign('cash_bank_transaction_id')
+            ->references('id')
+            ->on('cash_bank_transactions')
+            ->cascadeOnDelete();
+
+        $table->index([
+            'reference_table',
+            'reference_id'
+        ]);
+
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TRANSFER ANTAR BANK
+    |--------------------------------------------------------------------------
+    */
+
+    Schema::create('cash_bank_transfers', function (Blueprint $table) {
+
+        $table->id();
+
+        $table->string('transfer_no')->unique();
+
+        $table->date('transfer_date');
+
+        $table->unsignedBigInteger('from_cash_bank_id');
+
+        $table->unsignedBigInteger('to_cash_bank_id');
+
+        $table->decimal('amount',18,2);
+
+        $table->text('description')->nullable();
+
+        $table->enum('status',[
+            'draft',
+            'posted',
+            'void'
+        ])->default('draft');
+
+        $table->timestamp('posted_at')->nullable();
+
+        $table->unsignedBigInteger('created_by')->nullable();
+        $table->unsignedBigInteger('updated_by')->nullable();
+
+        $table->timestamps();
+
+        $table->softDeletes();
+
+        $table->foreign('from_cash_bank_id')
+            ->references('id')
+            ->on('cash_banks');
+
+        $table->foreign('to_cash_bank_id')
+            ->references('id')
+            ->on('cash_banks');
+
+    });
+}
 
     /**
      * Reverse the migrations.

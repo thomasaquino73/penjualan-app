@@ -333,7 +333,7 @@
                             <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height: 80px;">
                         </div>
                         <div style="font-weight: bold; text-decoration: underline;">
-                            Yohanes Lukman
+                            {{ $company->approval_name }}
                         </div>
                     @else
                         <div class="approval-title">

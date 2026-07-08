@@ -93,7 +93,7 @@
                             <div class="divider-text">Other Information</div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6 mb-3 ">
+                            <div class="col-md-4 mb-3 ">
                                 <label>Default Currency<small>*</small></label>
                                 <select name="default_currency_id" id="default_currency_id" class="form-select" required>
                                     <option value="">-- Select Default Currency --</option>
@@ -106,11 +106,17 @@
                                 </select>
                                 <span class="text-danger error" id="mata_uang_idError"></span>
                             </div>
-                            <div class="col-md-6 mb-3 ">
+                            <div class="col-md-4 mb-3 ">
                                 <label>Accounting Start Date<small>*</small></label>
                                 <input type="text" name="cut_off_date" id="cut_off_date" class="form-control"
                                     value="{{ $dataSistem->cut_off_date }}">
                                 <span class="text-danger error" id="cut_off_dateError"></span>
+                            </div>
+                            <div class="col-md-4 mb-3 ">
+                                <label>Approval Name<small>*</small></label>
+                                <input type="text" name="approval_name" id="approval_name" class="form-control"
+                                    value="{{ $dataSistem->approval_name ?? 'Belum Diatur' }}">
+                                <span class="text-danger error" id="approval_nameError"></span>
                             </div>
                         </div>
                         <div class="mt-3">

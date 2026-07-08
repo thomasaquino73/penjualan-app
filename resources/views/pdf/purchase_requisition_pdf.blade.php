@@ -345,19 +345,13 @@
                     </div>
 
                     <div class="signature-space" style="height: 70px; margin-bottom: 5px; text-align: center;">
-                        {{-- @if (isset($qrCodeBase64) && $qrCodeBase64 != null)
-                            <img src="{{ $qrCodeBase64 }}" style="width: 60px; height: 60px; display: inline-block;">
-                        @else
-                            <div
-                                style="font-size: 7pt; color: #777; border: 1px dashed #ccc; width: 60px; height: 60px; line-height: 60px; margin: 0 auto; background: #fff;">
-                                [QR CODE]
-                            </div>
-                        @endif --}}
+                        <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height:80px;">
                     </div>
 
 
 
                     <div class="signature-name" style="font-size: 9pt; color: #111; font-weight: bold;height: 17px;">
+                        {{ $company->approval_name }}
                     </div>
                     <div class="signature-line"
                         style="width: 90%; border-bottom: 1px solid #999; margin: 0 auto 4px auto;"></div>

@@ -252,7 +252,7 @@ class PurchaseRequisitionController extends Controller
         return $romawi[$bulan] ?? 'I';
     }
 
-    private function generateNumberId()
+     private function generateNumberId()
     {
         // Ambil record terakhir berdasarkan ID (urutkan dari yang terbaru)
         $last = PurchaseRequisition::orderBy('id', 'desc')->lockForUpdate()->first();
@@ -266,7 +266,7 @@ class PurchaseRequisitionController extends Controller
 
         // Regex untuk memisahkan prefix (semua karakter) dan angka (diakhiri digit)
         if (preg_match('/^(.*?)(\d+)$/', $lastCode, $matches)) {
-            $prefix = $matches[1];      // Contoh: "PO/2026/VII/"
+            $prefix = $matches[1];      // Contoh: "PR/2026/VII/"
             $lastNumber = $matches[2];  // Contoh: "0001"
 
             $length = strlen($lastNumber);
@@ -425,7 +425,7 @@ class PurchaseRequisitionController extends Controller
     public function show(string $id)
     {
         // Load master PR beserta detail, produk, dan relasi unitID (BasicCodeDetail)
-        $purchaseRequisition = PurchaseRequisition::with(['details.produkID', 'details.unitID', 'details.purchaseOrderDetails.purchaseOrder'])->findOrFail($id);
+        $purchaseRequisition = PurchaseRequisition::with(['details.produkID', 'details.unitID', 'details.purchaseRequisitionDetails.purchaseRequisition'])->findOrFail($id);
         $company = Company::first();
         $logoBase64 = null;
         if ($company && $company->logo) {
@@ -833,12 +833,10 @@ class PurchaseRequisitionController extends Controller
         return response()->json(['success' => true, 'message' => 'Purchase Requisition berhasil diproses!']);
     }
 
-    public function print($id)
+     public function print($id)
     {
-        // Load data detail PR beserta relasi creator dan updater (updated_by)
-        $detail = PurchaseRequisition::with(['details.produkID', 'details.unitID', 'creator', 'updater'])->findOrFail($id);
+        $purchaseRequisition = PurchaseRequisition::with(['details.produkID', 'details.unitID'])->findOrFail($id);
         $company = Company::first();
-
         // 1. LOGIKA LOGO PERUSAHAAN (Base64)
         $logoBase64 = null;
         if ($company && $company->logo) {
@@ -849,60 +847,27 @@ class PurchaseRequisitionController extends Controller
                 $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
             }
         }
+        $data = [
+            'detail' => $purchaseRequisition,
+            'company' => $company,
+            'modelDetail' => $purchaseRequisition->details,
+            'logoBase64' => $logoBase64,
+        ];
 
-        // Context SSL agar file_get_contents tidak error saat menembak API QR Code secara HTTPS
-        // $qrContext = stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+        $pdf = Pdf::loadView('pdf.purchase_requisition_pdf', $data)
+            ->setPaper('a4', 'portrait');
 
-        // 2. LOGIKA QR CODE PEMBUAT (CREATED BY) - Selalu Muncul
-        // $creatorName = $detail->creator->fullname ?? 'Staff Purchasing';
-        // $creatorText = "DOCUMENT VALIDATION\n"
-        //               ."Status: DIGITALLY SIGNED & CREATED\n"
-        //               .'Doc Number: '.$detail->code."\n"
-        //               .'Created By: '.$creatorName."\n"
-        //               .'Date: '.($detail->date ?? date('Y-m-d'));
+        // preview di browser
+        $filename = $purchaseRequisition->code;
 
-        // $qrCreatorUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='.urlencode($creatorText);
+        // replace forbidden filename chars
+        $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
+        $pdf->getDomPDF()->set_option('isPhpEnabled', true);
 
-        // try {
-        //     $qrCreatorData = file_get_contents($qrCreatorUrl, false, $qrContext);
-        //     $qrCodeBase64 = 'data:image/png;base64,'.base64_encode($qrCreatorData);
-        // } catch (\Exception $e) {
-        //     $qrCodeBase64 = null;
-        // }
+        return $pdf->stream($filename.'.pdf');
 
-        // 3. LOGIKA QR CODE APPROVER (APPROVED BY) - Hanya jika status sudah disetujui
-        // $qrApprovalBase64 = null;
-        // $approvedStatuses = ['processing', 'rejected'];
-
-        // if (in_array($detail->status, $approvedStatuses)) {
-        //     $updaterName = $detail->updater->fullname ?? 'Manager Purchasing';
-        //     $approvalText = "DOCUMENT VALIDATION\n"
-        //                   ."Status: DIGITALLY VERIFIED & APPROVED\n"
-        //                   .'Doc Number: '.$detail->code."\n"
-        //                   .'Approved By: '.$updaterName."\n"
-        //                   .'Approve Date: '.($detail->updated_at ? $detail->updated_at->format('Y-m-d H:i') : date('Y-m-d H:i'));
-
-        //     $qrApprovalUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='.urlencode($approvalText);
-
-        //     try {
-        //         $qrApprovalData = file_get_contents($qrApprovalUrl, false, $qrContext);
-        //         $qrApprovalBase64 = 'data:image/png;base64,'.base64_encode($qrApprovalData);
-        //     } catch (\Exception $e) {
-        //         $qrApprovalBase64 = null;
-        //     }
-        // }
-
-        // 4. GENERATE PDF (Kirimkan variabel qrCodeBase64 dan qrApprovalBase64 ke view)
-        $pdf = Pdf::loadView('pdf.purchase_requisition_pdf', compact('detail', 'company', 'logoBase64', 'qrCodeBase64', 'qrApprovalBase64'))
-            ->setOptions([
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
-                'chroot' => [public_path()],
-            ]);
-
-        $fileName = str_replace('/', '-', $detail->code).'.pdf';
-
-        return $pdf->download($fileName);
+        // kalau mau download:
+        // return $pdf->download('purchase-order.pdf');
     }
 
     public function CloseDocument(Request $request, $id)

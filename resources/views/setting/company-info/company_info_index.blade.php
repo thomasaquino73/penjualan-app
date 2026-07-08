@@ -84,14 +84,14 @@
                         <div class="divider-text">Other Information</div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3 ">
+                        <div class="col-md-4 mb-3 ">
                             <label>Default Currency<small>*</small></label>
                             <input type="text" name="mata_uang" id="mata_uang" class="form-control"
                                 value="{{ $dataSistem->defaultCurrency->code ?? 'Belum Diatur' }} - {{ $dataSistem->defaultCurrency->name ?? 'Belum Diatur' }}"
                                 disabled>
                             <span class="text-danger error" id="mata_uangError"></span>
                         </div>
-                        <div class="col-md-6 mb-3 ">
+                        <div class="col-md-4 mb-3 ">
                             <label>Accounting Start Date<small>*</small></label>
                             <input type="text" name="cut_off_date" id="cut_off_date" class="form-control"
                                 value="{{ $dataSistem->cut_off_date
@@ -99,6 +99,12 @@
                                     : 'Belum Diatur' }}"
                                 disabled>
                             <span class="text-danger error" id="cut_off_dateError"></span>
+                        </div>
+                        <div class="col-md-4 mb-3 ">
+                            <label>Approval Name<small>*</small></label>
+                            <input type="text" name="approval_name" id="approval_name" class="form-control"
+                                value="{{ $dataSistem->approval_name ?? 'Belum Diatur' }}" disabled>
+                            <span class="text-danger error" id="approval_nameError"></span>
                         </div>
                     </div>
                     @if (auth()->user()->can('company-edit'))

@@ -52,6 +52,7 @@ class CompanyInfoSeeder extends Seeder
             'favicon' => 'image/logo/69fd6d6ab719c1778216298.png',
             'default_currency_id' => '1',
             'cut_off_date' => '2026-05-01',
+            'approval_name' => 'Yohanes Lukman',
         ]);
 
         Supplier::create([

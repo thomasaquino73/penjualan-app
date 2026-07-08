@@ -55,4 +55,8 @@ class SalesInvoiceDetail extends Model
     {
         return $this->belongsTo(SalesInvoice::class, 'sales_invoice_id');
     }
+    public function salesOrderDetail()
+    {
+        return $this->belongsTo(SalesOrderDetail::class, 'sales_order_detail_id', 'id');
+    }
 }

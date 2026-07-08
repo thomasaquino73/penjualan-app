@@ -22,7 +22,7 @@
 
             <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
 
-            {{-- <div class="col-12 col-lg-5">
+            <div class="col-12 col-lg-5">
                 <div
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
@@ -32,16 +32,13 @@
                             Get Form
                         </button>
                         <ul class="dropdown-menu">
-                            <li><button class="dropdown-item btn-success btn-sm " id="showModalpr">
-                                    <i class="ti ti-clipboard me-1"></i>Proforma Invoice
-                                </button></li>
-                            <li><button class="dropdown-item btn-info btn-sm " id="showModalso">
-                                    <i class="ti ti-clipboard me-1"></i>Sales Order
+                            <li><button class="dropdown-item btn-info btn-sm " id="showModalpr">
+                                    <i class="ti ti-clipboard me-1"></i>ORDERS
                                 </button></li>
                         </ul>
                     </div>
                 </div>
-            </div> --}}
+            </div>
 
         </div>
         <div class="card-body table-responsive p-3">
@@ -214,7 +211,7 @@
         </div>
     </div>
     @include('sales.salesInvoice.part.modal_sales_invoice')
-    @include('sales.salesInvoice.part.modalProformaDetail')
+    @include('sales.salesInvoice.part.modalOrderDetail')
 @endsection
 @push('style')
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
@@ -265,11 +262,11 @@
             tbody.html(
                 '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>',
             );
-            $("#modalProformaDetail").modal("show");
+            $("#modalOrderDetail").modal("show");
 
             // Ambil data PR berstatus processing
             $.ajax({
-                url: "{{ route('sales-invoice.proforma.processing') }}",
+                url: "{{ route('sales-invoice.order.processing') }}",
                 type: "GET",
                 dataType: "json",
                 data: {
@@ -291,7 +288,7 @@
                                         <input class="form-check-input checkItem" type="checkbox" value="${item.id}">
                                     </div>
                                 </td>
-                                <td><strong>${item.proforma_invoice_code}</strong></td>
+                                <td><strong>${item.sales_order_code}</strong></td>
                                 <td>${dateFormatted}</td>
                             </tr>
                         `);
@@ -445,8 +442,8 @@
                         data: "data_produk",
                         render: function(data, type, row) {
                             // Menampilkan kode referensi PR di bawah nama produk jika ada
-                            if (row.proforma_code) {
-                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.proforma_code}</small>`;
+                            if (row.order_code) {
+                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.order_code}</small>`;
                             }
                             return `<strong>${data}</strong>`;
                         }
@@ -694,7 +691,7 @@
                 }
 
                 $.ajax({
-                    url: '/sales-order/' + customerId + '/data',
+                    url: '/sales-invoice/' + customerId + '/data',
                     type: 'GET',
                     dataType: 'json',
                     success: function(data) {
@@ -727,6 +724,9 @@
                         } else {
                             $('#taxpayer_data').val('');
                         }
+
+                        $('#address').val(data.address ?? '');
+
 
                     }
                 });
@@ -1287,7 +1287,7 @@
 
                         // 4. Kirim request AJAX ke backend
                         $.ajax({
-                            url: "{{ route('sales-invoice.get-proforma-detail') }}",
+                            url: "{{ route('sales-invoice.get-order-detail') }}",
                             type: "POST",
                             data: {
                                 ids: ids,
@@ -1331,7 +1331,7 @@
                                             data_produk: item
                                                 .product_name,
                                             quantity: sisaPr,
-                                            sisa_pr: sisaPr, // <--- TAMBAHKAN INI: Sebagai acuan validasi batas maksimal
+                                            sisa_pr: sisaPr,
                                             unit_id: item.unit_id,
                                             unit: item.unit_name,
                                             warehouse_id: item
@@ -1341,8 +1341,8 @@
                                             unit_price: unitPrice,
                                             discount: discount,
                                             amount: amount,
-                                            proforma_code: item
-                                                .proforma_code,
+                                            order_code: item
+                                                .order_code,
                                         });
                                     });
 
@@ -1361,7 +1361,7 @@
                                     }
 
                                     // 8. Tutup Modal Requisition
-                                    $("#modalProformaDetail").modal("hide");
+                                    $("#modalOrderDetail").modal("hide");
 
                                     // 9. Beri feedback sukses ke user
                                     Swal.fire({

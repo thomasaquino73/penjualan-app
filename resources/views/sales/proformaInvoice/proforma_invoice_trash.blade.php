@@ -33,7 +33,7 @@
                         <i class="ti ti-chevron-left me-1"></i> Back
                     </a>
 
-                    @canany(['proforma-invoice-restore'])
+                    @canany(['proforma_invoice-restore'])
                         <button id="restoreSelected" class="btn btn-success btn-sm ">
                             <i class="ti ti-refresh me-1"></i> Restore Selected
                         </button>
@@ -65,7 +65,7 @@
                         <th>Description</th>
                         <th>Total</th>
                         <th>Created</th>
-                        <th>Updated</th>
+                        <th>Deleted</th>
                         <th>Action</th>
                     </tr>
                 </thead>

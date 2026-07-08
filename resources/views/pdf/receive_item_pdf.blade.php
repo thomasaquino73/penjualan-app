@@ -396,7 +396,7 @@
                                 </div>
 
                                 <div style="font-weight:bold;text-decoration:underline;">
-                                    Yohanes Lukman
+                                    {{ $company->approval_name }}
                                 </div>
                             </td>
                         </tr>
