@@ -1560,7 +1560,7 @@
                             $("#btnSubmitSelected")
                                 .html(
                                     '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
-                                    )
+                                )
                                 .prop("disabled", true);
 
                         },
@@ -1604,14 +1604,10 @@
 
                                 let qty = parseFloat(item.outstanding_qty ??
                                     item.qty ?? 0);
-
                                 let unitPrice = parseFloat(item.unit_price ??
-                                0);
-
+                                    0);
                                 let discount = parseFloat(item.discount ?? 0);
-
                                 let amount = qty * unitPrice;
-
                                 prDetailsData.push({
 
                                     id: item.id,

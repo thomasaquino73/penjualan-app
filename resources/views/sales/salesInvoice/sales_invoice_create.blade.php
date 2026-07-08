@@ -1353,6 +1353,7 @@
                                     if (typeof prDetailsData === 'undefined') {
                                         window.prDetailsData = [];
                                     }
+                                    
 
                                     // 5. Looping data response backend untuk dimasukkan ke array DataTables
                                     response.data.forEach(function(item) {
@@ -1369,6 +1370,7 @@
                                         let unitPrice = item.unit_price;
                                         let discount = item.discount;
                                         let amount = item.amount;
+                                        let payment_term_id = item.payment_term_id;
 
                                         prDetailsData.push({
                                             detail_id: item

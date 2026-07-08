@@ -864,13 +864,13 @@ class SalesInvoiceController extends Controller
             $involvedPrIds = [];
 
             foreach ($sqDetails as $sqDetail) {
-                if ($sqDetail->sales_quotation_detail_id) {
+                if ($sqDetail->sales_order_detail_id) {
                     // Catat ID PR Master-nya
-                    $prDetail = SalesQuotationDetail::where('id', $sqDetail->sales_quotation_detail_id)
+                    $prDetail = SalesQuotationDetail::where('id', $sqDetail->sales_order_detail_id)
                         ->first();
 
-                    if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
-                        $involvedPrIds[] = $prDetail->sales_quotation_id;
+                    if ($prDetail && ! in_array($prDetail->sales_order_id, $involvedPrIds)) {
+                        $involvedPrIds[] = $prDetail->sales_order_id;
                     }
                 }
             }
@@ -882,20 +882,20 @@ class SalesInvoiceController extends Controller
             // 4. Update Ulang sq_qty di setiap PR Detail yang terdampak
             // Kita hitung ulang berdasarkan sisa SO yang masih 'active' = 1
             foreach ($sqDetails as $sqDetail) {
-                if ($sqDetail->sales_quotation_detail_id) {
-                    $totalRemainingPo = SalesInvoiceDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
+                if ($sqDetail->sales_order_detail_id) {
+                    $totalRemainingPo = SalesInvoiceDetail::where('sales_order_detail_id', $sqDetail->sales_order_detail_id)
                         ->where('active', 1)
                         ->sum('qty');
 
-                    DB::table('sales_quotation_detail_'.date('Y'))
-                        ->where('id', $sqDetail->sales_quotation_detail_id)
+                    DB::table('sales_order_detail_'.date('Y'))
+                        ->where('id', $sqDetail->sales_order_detail_id)
                         ->update(['sq_qty' => $totalRemainingPo]);
                 }
             }
 
             // 5. Update Status PR Master
             foreach ($involvedPrIds as $prId) {
-                $allDetails = SalesQuotationDetail::where('sales_quotation_id', $prId)
+                $allDetails = SalesQuotationDetail::where('sales_order_id', $prId)
                     ->get();
 
                 $totalRequested = $allDetails->sum('qty');
@@ -1064,32 +1064,32 @@ class SalesInvoiceController extends Controller
 
             // 3. Update sq_qty di PR Detail dan kumpulkan ID PR Master
             // foreach ($sqDetails as $sqDetail) {
-            //     if ($sqDetail->sales_quotation_detail_id) {
+            //     if ($sqDetail->sales_order_detail_id) {
             //         // Hitung total dari SO yang tersisa (yang masih aktif)
-            //         $totalRemainingPo = SalesInvoiceDetail::where('sales_quotation_detail_id', $sqDetail->sales_quotation_detail_id)
+            //         $totalRemainingPo = SalesInvoiceDetail::where('sales_order_detail_id', $sqDetail->sales_order_detail_id)
             //             ->where('active', 1)
             //             ->sum('qty');
 
             //         // Update ke tabel PR Detail
-            //         DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $sqDetail->sales_quotation_detail_id)
+            //         DB::table('sales_order_detail_'.date('Y'))
+            //             ->where('id', $sqDetail->sales_order_detail_id)
             //             ->update(['sq_qty' => $totalRemainingPo]);
 
             //         // Simpan ID PR untuk update status nanti
-            //         $prDetail = DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $sqDetail->sales_quotation_detail_id)
+            //         $prDetail = DB::table('sales_order_detail_'.date('Y'))
+            //             ->where('id', $sqDetail->sales_order_detail_id)
             //             ->first();
 
-            //         if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
-            //             $involvedPrIds[] = $prDetail->sales_quotation_id;
+            //         if ($prDetail && ! in_array($prDetail->sales_order_id, $involvedPrIds)) {
+            //             $involvedPrIds[] = $prDetail->sales_order_id;
             //         }
             //     }
             // }
 
             // 4. Update Status PR Master berdasarkan akumulasi terbaru
             // foreach ($involvedPrIds as $prId) {
-            //     $allDetails = DB::table('sales_quotation_detail_'.date('Y'))
-            //         ->where('sales_quotation_id', $prId)
+            //     $allDetails = DB::table('sales_order_detail_'.date('Y'))
+            //         ->where('sales_order_id', $prId)
             //         ->get();
 
             //     $totalRequested = $allDetails->sum('qty');
@@ -1103,7 +1103,7 @@ class SalesInvoiceController extends Controller
             //         $status = 'processing';
             //     }
 
-            //     DB::table('sales_quotation_'.date('Y'))
+            //     DB::table('sales_order_'.date('Y'))
             //         ->where('id', $prId)
             //         ->update(['status' => $status]);
             // }
@@ -1144,32 +1144,32 @@ class SalesInvoiceController extends Controller
 
             // 4. Update ulang sq_qty di PR Detail
             // foreach ($poDetails as $poDetail) {
-            //     if ($poDetail->sales_quotation_detail_id) {
+            //     if ($poDetail->sales_order_detail_id) {
             //         // Hitung total dari semua SO yang aktif
-            //         $totalPoForThisItem = SalesInvoiceDetail::where('sales_quotation_detail_id', $poDetail->sales_quotation_detail_id)
+            //         $totalPoForThisItem = SalesInvoiceDetail::where('sales_order_detail_id', $poDetail->sales_order_detail_id)
             //             ->where('active', 1)
             //             ->sum('qty');
 
             //         // Update ke tabel PR Detail
-            //         DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $poDetail->sales_quotation_detail_id)
+            //         DB::table('sales_order_detail_'.date('Y'))
+            //             ->where('id', $poDetail->sales_order_detail_id)
             //             ->update(['sq_qty' => $totalPoForThisItem]);
 
             //         // Simpan ID PR untuk update status
-            //         $prDetail = DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $poDetail->sales_quotation_detail_id)
+            //         $prDetail = DB::table('sales_order_detail_'.date('Y'))
+            //             ->where('id', $poDetail->sales_order_detail_id)
             //             ->first();
 
-            //         if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
-            //             $involvedPrIds[] = $prDetail->sales_quotation_id;
+            //         if ($prDetail && ! in_array($prDetail->sales_order_id, $involvedPrIds)) {
+            //             $involvedPrIds[] = $prDetail->sales_order_id;
             //         }
             //     }
             // }
 
             // 5. Update Status PR Master
             // foreach ($involvedPrIds as $prId) {
-            //     $allDetails = DB::table('sales_quotation_detail_'.date('Y'))
-            //         ->where('sales_quotation_id', $prId)
+            //     $allDetails = DB::table('sales_order_detail_'.date('Y'))
+            //         ->where('sales_order_id', $prId)
             //         ->get();
 
             //     $totalRequested = $allDetails->sum('qty');
@@ -1183,7 +1183,7 @@ class SalesInvoiceController extends Controller
             //         $status = 'processing';
             //     }
 
-            //     DB::table('sales_quotation_'.date('Y'))
+            //     DB::table('sales_order_'.date('Y'))
             //         ->where('id', $prId)
             //         ->update(['status' => $status]);
             // }
@@ -1226,54 +1226,54 @@ class SalesInvoiceController extends Controller
             SalesInvoiceDetail::whereIn('sales_invoice_id', $ids)->update(['active' => 1]);
 
             // 3. Ambil semua detail SO yang baru saja diaktifkan untuk sinkronisasi
-            // $poDetails = SalesInvoiceDetail::whereIn('sales_invoice_id', $ids)->get();
-            // $involvedPrIds = [];
+            $poDetails = SalesInvoiceDetail::whereIn('sales_invoice_id', $ids)->get();
+            $involvedPrIds = [];
 
             // 4. Update sq_qty di PR Detail dan kumpulkan ID PR Master
-            // foreach ($poDetails as $poDetail) {
-            //     if ($poDetail->sales_quotation_detail_id) {
-            //         // Hitung total dari semua SO yang aktif
-            //         $totalPoForThisItem = SalesInvoiceDetail::where('sales_quotation_detail_id', $poDetail->sales_quotation_detail_id)
-            //             ->where('active', 1)
-            //             ->sum('qty');
+            foreach ($poDetails as $poDetail) {
+                if ($poDetail->sales_order_detail_id) {
+                    // Hitung total dari semua SO yang aktif
+                    $totalPoForThisItem = SalesInvoiceDetail::where('sales_order_detail_id', $poDetail->sales_order_detail_id)
+                        ->where('active', 1)
+                        ->sum('qty');
 
-            //         // Update ke tabel PR Detail
-            //         DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $poDetail->sales_quotation_detail_id)
-            //             ->update(['sq_qty' => $totalPoForThisItem]);
+                    // Update ke tabel PR Detail
+                    DB::table('sales_order_detail_'.date('Y'))
+                        ->where('id', $poDetail->sales_order_detail_id)
+                        ->update(['sq_qty' => $totalPoForThisItem]);
 
-            //         // Simpan ID PR untuk update status nanti (hindari duplikat)
-            //         $prDetail = DB::table('sales_quotation_detail_'.date('Y'))
-            //             ->where('id', $poDetail->sales_quotation_detail_id)
-            //             ->first();
+                    // Simpan ID PR untuk update status nanti (hindari duplikat)
+                    $prDetail = DB::table('sales_order_detail_'.date('Y'))
+                        ->where('id', $poDetail->sales_order_detail_id)
+                        ->first();
 
-            //         if ($prDetail && ! in_array($prDetail->sales_quotation_id, $involvedPrIds)) {
-            //             $involvedPrIds[] = $prDetail->sales_quotation_id;
-            //         }
-            //     }
-            // }
+                    if ($prDetail && ! in_array($prDetail->sales_order_id, $involvedPrIds)) {
+                        $involvedPrIds[] = $prDetail->sales_order_id;
+                    }
+                }
+            }
 
             // 5. Update Status PR Master berdasarkan akumulasi terbaru
-            // foreach ($involvedPrIds as $prId) {
-            //     $allDetails = DB::table('sales_quotation_detail_'.date('Y'))
-            //         ->where('sales_quotation_id', $prId)
-            //         ->get();
+            foreach ($involvedPrIds as $prId) {
+                $allDetails = DB::table('sales_order_detail_'.date('Y'))
+                    ->where('sales_order_id', $prId)
+                    ->get();
 
-            //     $totalRequested = $allDetails->sum('qty');
-            //     $totalOrdered = $allDetails->sum('sq_qty');
+                $totalRequested = $allDetails->sum('qty');
+                $totalOrdered = $allDetails->sum('sq_qty');
 
-            //     if ($totalOrdered >= $totalRequested) {
-            //         $status = 'closed';
-            //     } elseif ($totalOrdered > 0) {
-            //         $status = 'partial';
-            //     } else {
-            //         $status = 'processing';
-            //     }
+                if ($totalOrdered >= $totalRequested) {
+                    $status = 'closed';
+                } elseif ($totalOrdered > 0) {
+                    $status = 'partial';
+                } else {
+                    $status = 'processing';
+                }
 
-            //     DB::table('sales_quotation_'.date('Y'))
-            //         ->where('id', $prId)
-            //         ->update(['status' => $status]);
-            // }
+                DB::table('sales_order_'.date('Y'))
+                    ->where('id', $prId)
+                    ->update(['status' => $status]);
+            }
 
             DB::commit();
 

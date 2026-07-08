@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('purchase_payment', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('purchase_order_id');
-            $table->foreign('purchase_order_id')->references('id')->on('purchase_order');
             $table->decimal('amount', 15, 2);
             $table->date('payment_date');
             $table->timestamps();
