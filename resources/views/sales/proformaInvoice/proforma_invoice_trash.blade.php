@@ -29,11 +29,11 @@
                     class="d-flex flex-column flex-md-row gap-2 
                         justify-content-start justify-content-lg-end">
 
-                    <a href="{{ route('sales-invoice.index') }}" class="btn btn-secondary btn-sm ">
+                    <a href="{{ route('proforma-invoice.index') }}" class="btn btn-secondary btn-sm ">
                         <i class="ti ti-chevron-left me-1"></i> Back
                     </a>
 
-                    @canany(['sales_invoice-restore'])
+                    @canany(['proforma-invoice-restore'])
                         <button id="restoreSelected" class="btn btn-success btn-sm ">
                             <i class="ti ti-refresh me-1"></i> Restore Selected
                         </button>
@@ -96,7 +96,7 @@
                     [10, 25, 50, 'All']
                 ],
                 ajax: {
-                    url: '{{ route('sales-invoice.trash') }}',
+                    url: '{{ route('proforma-invoice.trash') }}',
                     data: function(d) {
                         d.status = $('#selectStatus').val();
                     }
@@ -113,10 +113,10 @@
                         searchable: false
                     },
                     {
-                        data: 'sales_invoice_code',
+                        data: 'proforma_invoice_code',
                     },
                     {
-                        data: 'sales_invoice_date',
+                        data: 'proforma_invoice_date',
                     },
                     {
                         data: 'customer',
@@ -146,7 +146,7 @@
                 let id = $(this).data('id');
                 let token = $("meta[name='csrf-token']").attr("content");
                 Swal.fire({
-                    title: 'Restore this sales order?',
+                    title: 'Restore this proforma invoice?',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, restore!',
@@ -159,7 +159,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/sales-invoice/restore/${id}`,
+                            url: `/proforma-invoice/restore/${id}`,
                             type: 'PUT',
                             data: {
                                 _token: token
@@ -230,7 +230,7 @@
 
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: '/sales-invoice/restore-multiple',
+                            url: '/proforma-invoice/restore-multiple',
                             type: 'POST',
                             data: {
                                 ids: ids,

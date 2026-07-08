@@ -51,7 +51,7 @@
                         <th>#</th>
                         <th>PO Number</th>
                         <th>Date</th>
-                        <th>Supplier</th>
+                        <th>Customer</th>
                         <th>Status</th>
                         <th>Shipping Date</th>
                         <th>Grand Total</th>
@@ -91,20 +91,20 @@
                         searchable: false
                     },
                     {
-                        data: 'code',
+                        data: 'sales_order_code',
                     },
                     {
                         data: 'date',
                     },
 
                     {
-                        data: 'supplier',
+                        data: 'customer_name',
                     },
                     {
                         data: 'status',
                     },
                     {
-                        data: 'tanggal_kirim',
+                        data: 'tanggal_pengiriman',
                     },
                     {
                         data: 'amount',

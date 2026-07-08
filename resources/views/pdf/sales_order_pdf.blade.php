@@ -242,11 +242,11 @@
 
     <table class="w-100 footer-table">
         <tr>
-            <td class="keterangan-box">
+            <td class="keterangan-box" width="60%">
                 <div class="keterangan-title">Keterangan</div>
                 <div class="keterangan-content">{!! nl2br(e($model->description)) !!}</div>
             </td>
-            <td class="summary-box">
+            <td class="summary-box"width="40%">
                 <table class="summary-table">
                     <tr>
                         <td>Sub Total</td>

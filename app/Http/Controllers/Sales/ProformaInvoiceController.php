@@ -688,8 +688,8 @@ class ProformaInvoiceController extends Controller
             DB::commit();
 
             $redirectUrl = $request->save_and_new == 1
-                ? route('proforma-invoce.create') // Kembali kosongkan form untuk input data PR baru lagi
-                : route('proforma_invoice.index');  // Selesai dan kembali ke tabel index utama
+                ? route('proforma-invoice.create') // Kembali kosongkan form untuk input data PR baru lagi
+                : route('proforma-invoice.index');  // Selesai dan kembali ke tabel index utama
 
             return response()->json([
                 'success' => true,
@@ -1083,7 +1083,7 @@ class ProformaInvoiceController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Sales Order berhasil diupdate',
-                'redirect' => route('sales-order.index'),
+                'redirect' => route('proforma-invoice.index'),
             ]);
 
         } catch (\Exception $e) {
@@ -1172,7 +1172,7 @@ class ProformaInvoiceController extends Controller
     public function trash(Request $r)
     {
         if ($r->ajax()) {
-            $query = ProformaInvoice::where('active', '0')
+            $query = ProformaInvoice::where('active', 0)
                 ->orderby('proforma_invoice_code', 'desc')->get();
 
             return DataTables::of($query)
@@ -1262,11 +1262,20 @@ class ProformaInvoiceController extends Controller
                         <i class="ti ti-menu-2 ti-xs me-1"></i>
                       </button>
                       <ul class="dropdown-menu" style="">';
+ $btn .= '
+        <a class="dropdown-item"
+            target="_blank"
+            href="'.route('proforma-invoice.print', $row->id).'">
 
+            <i class="ti ti-printer me-1"></i>
+            Print / PDF
+        </a>
+            ';
                     if (auth()->user()->can('proforma_invoice-restore')) {
                         $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
                     }
+
 
                     return $btn;
                 })
@@ -1282,7 +1291,7 @@ class ProformaInvoiceController extends Controller
             ],
         ];
 
-        return view('sales.salesInvoice.proforma_invoice_trash', $x);
+        return view('sales.proformaInvoice.proforma_invoice_trash', $x);
     }
 
     public function deleteMultiple(Request $request)

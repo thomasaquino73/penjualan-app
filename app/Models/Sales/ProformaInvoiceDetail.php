@@ -60,4 +60,9 @@ class ProformaInvoiceDetail extends Model
     {
         return $this->belongsTo(SalesQuotationDetail::class, 'sales_quotation_detail_id', 'id');
     }
+
+    public function proforma()
+    {
+        return $this->belongsTo(ProformaInvoice::class, 'proforma_invoice_id');
+    }
 }

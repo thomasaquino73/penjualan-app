@@ -53,13 +53,9 @@
         }
 
         .company-contact {
-            width: 220px;
-            font-size: 10px;
-            line-height: 1.4;
-            white-space: normal;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
+            font-size: 7.5pt;
+            color: #444444;
+            line-height: 1.2;
         }
 
         .company-title {
@@ -250,38 +246,43 @@
         .items-table tr {
             page-break-inside: avoid;
         }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            font-size: 7.5pt;
+            color: #999;
+            text-align: right;
+            border-top: 1px solid #eee;
+            padding-top: 5px;
+        }
     </style>
-    {{-- <link rel="stylesheet" href="{{ asset('/public/assets/css/thomas/cetakpdf.css') }}"> --}}
 </head>
 
 <body>
 
     <table class="w-100 header-table">
         <tr>
-            {{-- <td style="width: 55%;">
-                <table>
-                    <tr>
-                        <td class="logo-box">
-                            <img src="{{ public_path('image/logo/69fd6d6ab719c1778216298.png') }}" style="width: 70px;">
-
-                        </td>
-                        <td class="company-contact">
-                            <img src="{{ public_path('image/favicon/phone.png') }}" width="10" height="10">
-                            {{ $company->nomor_telepon }}<br>
-                            {{ $company->alamat }}<br>
-                            {{ $company->email }}<br>
-                            {{ $company->website }}<br>
-                        </td>
-                    </tr>
-                </table>
-            </td> --}}
             <td style="width: 55%;">
                 <table>
                     <tr>
                         <td class="logo-box">
-                            <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 340px;">
-
+                            <img src="{{ public_path('image/logo/logo_print.png') }}" style="height: 80px;">
+                            {{-- @if (isset($company) && $company->logo)
+                            @else
+                                <div
+                                    style="width: 70px; height: 70px; border: 1px dashed #ccc; background: #fafafa; text-align: center; line-height: 70px; color: #aaa; font-size: 8pt;">
+                                    No Logo
+                                </div>
+                            @endif --}}
                         </td>
+                        {{-- <td class="company-contact">
+                            {{ $company->nomor_telepon }}<br>
+                            {{ $company->alamat }}<br>
+                            {{ $company->email }}<br>
+                            {{ $company->website }}<br>
+                        </td> --}}
                     </tr>
                 </table>
             </td>
@@ -299,35 +300,34 @@
     <table class="w-100 info-table">
         <tr>
             <td style="padding-right: 25px;">
-                <div class="section-title">Supplier</div>
+                <div class="section-title">Kepada</div>
                 <div class="recipient-box">
-                    <strong>{{ $model->supplierId->nama_supplier }}</strong><br>
+                    <strong>{{ $model->customerID->nama_customer }}</strong><br>
                     {{ $model->address }}
 
                 </div>
             </td>
             <td style="padding-left: 25px;">
-                <div class="po-box-title">Receive Item</div>
+                <div class="po-box-title">Proforma Invoice</div>
                 <table class="po-details-table">
                     <tr>
                         <td class="label">Nomor</td>
                         <td class="colon">:</td>
-                        <td class="value">{{ $model->receive_item_code }}</td>
+                        <td class="value">{{ $model->proforma_invoice_code }}</td>
                     </tr>
                     <tr>
                         <td class="label">Tanggal</td>
                         <td class="colon">:</td>
                         <td class="value">
-                            {{ date('d M Y', strtotime($model->receive_item_date)) }}</td>
+                            {{ date('d M Y', strtotime($model->proforma_invoice_date)) }}</td>
                     </tr>
                     <tr>
-                        <td class="label">No. Dokumen</td>
+                        <td class="label">Tanggal Kirim</td>
                         <td class="colon">:</td>
                         <td class="value">
-                            {{ $model->no_dokumen }}
+                            {{ isset($model->tanggal_pengiriman) ? date('d M Y', strtotime($model->tanggal_pengiriman)) : '' }}
                         </td>
                     </tr>
-
                 </table>
             </td>
         </tr>
@@ -339,8 +339,10 @@
                 <th style="width: 14%;">Kode Barang</th>
                 <th style="width: 40%;">Nama Barang</th>
                 <th style="width: 8%; text-align: center;">Kts.</th>
-                <th style="width: 8%; text-align: center;">Sat.</th>
-                <th style="width: 40%;">Gudang</th>
+                <th style="width: 8%; text-align: center;">Satuan</th>
+                <th style="width: 12%; text-align: right;">@Harga</th>
+                <th style="width: 12%; text-align: right;">Diskon</th>
+                <th style="width: 14%; text-align: right;">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -349,8 +351,10 @@
                     <td>{{ $detail->produkID->id_barang }}</td>
                     <td>{{ $detail->produkID ? $detail->produkID->nama_barang : 'Product Not Found' }}</td>
                     <td class="text-center">{{ rtrim(rtrim(number_format($detail->qty, 2, ',', '.'), '0'), ',') }}</td>
-                    <td>{{ $detail->unitID ? $detail->unitID->detail : 'Unit Not Found' }}</td>
-                    <td>{{ $detail->warehouseID ? $detail->warehouseID->nama_gudang : 'Warehouse Not Found' }}</td>
+                    <td class="text-center">{{ $detail->unitID->detail }}</td>
+                    <td class="text-right">{{ number_format($detail->unit_price, 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($detail->discount, 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($detail->amount, 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -360,7 +364,51 @@
         <tr>
             <td class="keterangan-box">
                 <div class="keterangan-title">Keterangan</div>
-                <div class="keterangan-content">{{ $model->description }}</div>
+                <div class="keterangan-content">{!! nl2br(e($model->description)) !!}</div>
+            </td>
+
+            <td class="summary-box">
+                <table class="summary-table">
+                    <tr>
+                        <td>Sub Total</td>
+                        <td class="text-right">
+                            {{ isset($model) ? format_uang(convert_currency($model->sub_total, $detail->currency_id ?? 1)) : '' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Diskon</td>
+                        <td class="text-right">
+                            {{ isset($model) ? format_uang(convert_currency($model->disc_nominal, $detail->currency_id ?? 1)) : '' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>PPN (11%)</td>
+                        <td class="text-right">
+                            {{ isset($model) ? format_uang(convert_currency($model->tax_amount, $detail->currency_id ?? 1)) : '' }}
+                        </td>
+                    </tr>
+                    <tr class="total-row">
+                        <td>Total</td>
+                        <td class="text-right">
+                            {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1)) : '' }}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+
+        </tr>
+    </table>
+    <table class="w-100 footer-table">
+        <tr>
+            <td class="keterangan-box">
+                @php
+                    $currencyId = session('currency_id') ?? \App\Models\Setting\Company::first()->default_currency_id;
+                    $currencyCode = \App\Models\Setting\Currency::find($currencyId)?->code ?? 'IDR';
+
+                    // Gunakan nilai asli (jangan di-round agar sen tidak hilang)
+                    $grandTotalConvert = convert_currency($model->grand_total, $model->currency_id ?? 1);
+                @endphp
+                <div>Terbilang: {{ terbilang($grandTotalConvert, $currencyCode) }}</div>
             </td>
         </tr>
     </table>
@@ -368,44 +416,51 @@
     <div class="signature-section">
         <table class="signature-table">
             <tr>
-                <td style="width:50%;">
+                <td style="width: 60%;">
                     <div class="dots-line"></div>
                 </td>
+                <td class="text-center" style="width: 40%;">
+                    @php
+                        $title = '';
+                        $user = '';
 
-                <td style="width:50%; padding:0;">
-                    <table style="width:100%;">
-                        <tr>
-                            <td style="width:50%; text-align:center;">
-                                <div class="approval-title">Diterima oleh</div>
-
-                                <div style="height:65px;">
-                                    <img src="{{ public_path('image/logo/69fd6d6ab719c1778216298.png') }}"
-                                        style="height:80px;">
-                                </div>
-
-                                <div style="font-weight:bold;text-decoration:underline;">
-                                    {{ $model->creator->fullname }}
-                                </div>
-                            </td>
-
-                            <td style="width:50%; text-align:center;">
-                                <div class="approval-title">Disetujui Oleh</div>
-
-                                <div style="height:65px;">
-                                    <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height:80px;">
-                                </div>
-
-                                <div style="font-weight:bold;text-decoration:underline;">
-                                    Yohanes Lukman
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
+                        if ($model->status == 'rejected') {
+                            $title = 'Ditolak Oleh,';
+                            $user = $model->rejectedBy?->fullname;
+                        } elseif (in_array($model->status, ['approved', 'sent', 'partially_received', 'completed'])) {
+                            $title = 'Disetujui Oleh,';
+                            $user = $model->approvedBy?->fullname;
+                        }
+                    @endphp
+                    @if ($model->status == 'processing')
+                        <div class="approval-title">
+                            Disetujui Oleh
+                        </div>
+                        <div style="height: 65px;">
+                            <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height: 80px;">
+                        </div>
+                        <div style="font-weight: bold; text-decoration: underline;">
+                            Yohanes Lukman
+                        </div>
+                    @else
+                        <div class="approval-title">
+                            Dibuat oleh,
+                        </div>
+                        <div style="height: 65px;">
+                            <img src="{{ public_path('image/logo/69fd6d6ab719c1778216298.png') }}"
+                                style="height: 80px;">
+                        </div>
+                        <div style="font-weight: bold; text-decoration: underline;">
+                            {{ $model->creator->fullname }}
+                        </div>
+                    @endif
                 </td>
             </tr>
         </table>
     </div>
-
+    <div class="footer">
+        Printed on: {{ date('Y-m-d H:i:s') }} | Confidential Document
+    </div>
 </body>
 
 </html>

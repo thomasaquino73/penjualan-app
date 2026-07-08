@@ -216,16 +216,17 @@ class PenjualanArsipController extends Controller
             return DataTables::of([])->make(true);
         }
 
-        $query = DB::table($table.' as pr')
+            $query = DB::table($table.' as pr')
+            ->leftJoin('customer as c', 'c.id', '=', 'pr.customer_id')
             ->leftJoin('users as creator', 'creator.id', '=', 'pr.created_by')
             ->leftJoin('users as updater', 'updater.id', '=', 'pr.updated_by')
             ->select([
                 'pr.*',
+                'c.nama_customer as customer_name',
                 'creator.fullname as creator_name',
                 'updater.fullname as updater_name',
             ])
             ->orderBy('pr.sales_order_code', 'desc');
-
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('created_at', function ($row) {
@@ -249,7 +250,10 @@ class PenjualanArsipController extends Controller
                     .'</small>';
             })
             ->addColumn('date', function ($row) {
-                return $row->date ? Carbon::parse($row->date)->format('d M Y') : 'N/A';
+                return $row->sales_order_date ? Carbon::parse($row->sales_order_date)->format('d M Y') : 'N/A';
+            })
+            ->addColumn('tanggal_pengiriman', function ($row) {
+                return $row->tanggal_pengiriman ? Carbon::parse($row->tanggal_pengiriman)->format('d M Y') : 'N/A';
             })
             ->addColumn('status', function ($row) {
                 switch ($row->status) {
@@ -287,6 +291,12 @@ class PenjualanArsipController extends Controller
 
                 return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
             })
+            ->addColumn('amount', function ($row) {
+                return format_uang(convert_currency($row->grand_total, $row->currency_id ?? 1));
+            })
+             ->addColumn('customer', function ($row) {
+                return $row->customer_name ?? '-';
+            })
             ->addColumn('action', function ($row) use ($year) {
                 return '
                         <a href="'.route('archive.purchase-requisition.print', [
@@ -297,7 +307,7 @@ class PenjualanArsipController extends Controller
                         </a>
                     ';
             })
-            ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'date'])
+            ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'date','customer','tanggal_pengiriman','amount'])
             ->make(true);
     }
 }

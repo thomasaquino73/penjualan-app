@@ -296,6 +296,7 @@ class ReceiveItemController extends Controller
             $data['supplier_id'] = $request->supplier_id;
             $data['shipping_id'] = $request->shipping_id;
             $data['fob_id'] = $request->fob_id;
+            $data['address'] = $request->address;
             $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
 
             // Generate Code
@@ -646,6 +647,8 @@ class ReceiveItemController extends Controller
             $data['receive_item_date'] = Carbon::parse($request->receive_item_date)->format('Y-m-d');
             $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
             $data['updated_by'] = Auth::id();
+            $data['address'] = $request->address;
+
 
             $receiveItem->update($data);
 

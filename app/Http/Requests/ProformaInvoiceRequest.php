@@ -19,11 +19,11 @@ class ProformaInvoiceRequest extends FormRequest
     {
         $id = $this->route('proforma_invoice');
 
-        return [
-            'proforma_invoice_code' => [
-                'required',
-                Rule::unique('proforma_invoice_'.date('Y'), 'proforma_invoice_code')->ignore($id),
-            ],
+        $rules = [
+            // 'proforma_invoice_code' => [
+            //     'required',
+            //     Rule::unique('proforma_invoice_'.date('Y'), 'proforma_invoice_code')->ignore($id),
+            // ],
             'customer_id' => 'required',
             'proforma_invoice_date' => 'required|date',
             'payment_term_id' => 'required',
@@ -32,6 +32,23 @@ class ProformaInvoiceRequest extends FormRequest
             'description' => 'nullable|string',
             'items_detail' => 'required',
         ];
+
+         if ($this->isMethod('POST')) {
+            // Store
+            // code tidak divalidasi karena dibuat otomatis
+        }
+
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+
+            $id = $this->route('proforma_invoice');
+
+            $rules['proforma_invoice_code'] = [
+                'required',
+                Rule::unique('proforma_invoice_'.date('Y'), 'proforma_invoice_code')->ignore($id),
+            ];
+        }
+
+        return $rules;
     }
 
     public function message(): array

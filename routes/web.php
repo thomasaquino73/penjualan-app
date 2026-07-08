@@ -332,6 +332,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('delivery-order', DeliveryOrderController::class);
 
     // INVOICE
+    Route::post('/sales-invoice/get-proforma-detail', [SalesInvoiceController::class, 'getProformaDetail'])->name('sales-invoice.get-proforma-detail');
+    Route::get('/sales-invoice/get-proforma-invoice', [SalesInvoiceController::class, 'getProformaData'])->name('sales-invoice.proforma.processing');
     Route::get('/sales-invoice/{id}/data', [SalesInvoiceController::class, 'getCustomerData'])->name('sales-invoice.getCustomerData');
     Route::post('/sales-invoice/{id}/process', [SalesInvoiceController::class, 'processData'])->name('sales-invoice.process');
     Route::get('/sales-invoice/wh/get-stock', [SalesInvoiceController::class, 'getStock'])->name('sales-invoice.wh.get-stock');

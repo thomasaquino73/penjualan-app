@@ -2,6 +2,7 @@
 
 namespace App\Models\Sales;
 
+use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -40,5 +41,9 @@ class ProformaInvoice extends Model
     public function details()
     {
         return $this->hasMany(ProformaInvoiceDetail::class, 'proforma_invoice_id');
+    }
+     public function paymentTermID()
+    {
+        return $this->belongsTo(SyaratPembayaran::class, 'payment_term_id');
     }
 }
