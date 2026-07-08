@@ -9,6 +9,8 @@ use App\Models\Inventory\Barang;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
+use App\Models\Sales\ProformaInvoice;
+use App\Models\Sales\ProformaInvoiceDetail;
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderDetail;
 use App\Models\Sales\SalesQuotation;
@@ -1434,6 +1436,19 @@ class SalesOrderController extends Controller
         }
     }
 
+    public function getProcessingProforma(Request $request)
+    {
+        $orders = ProformaInvoice::with([
+            'details' => function ($query) {
+                $query->whereColumn('so_qty', '<', 'qty');
+            },
+        ])
+            ->where('customer_id', $request->customer_id)
+            ->whereNotIn('status', ['draft', 'closed', 'done'])
+            ->get();
+
+        return response()->json($orders);
+    }
     public function getProcessingData(Request $request)
     {
         $orders = SalesQuotation::with([
@@ -1479,6 +1494,69 @@ class SalesOrderController extends Controller
         ]);
     }
 
+    public function getProformaDetail(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data SQ yang dipilih.',
+                'data' => [],
+            ]);
+        }
+
+        $details = ProformaInvoiceDetail::with([
+            'produkID',
+            'unitID',
+            'proforma',
+        ])
+            ->whereIn('proforma_invoice_id', $ids)
+            ->where('active', 1)
+            ->whereHas('proforma', function ($q) {
+                $q->whereIn('status', ['processing', 'partial']);
+            })
+            ->get();
+
+        $formattedData = $details->map(function ($item) {
+            // LOGIKA PENENTUAN SISA:
+            // Cek apakah outstanding_qty ada (tidak null) dan bukan 0
+            $sisaQty = ($item->outstanding_qty !== null && $item->outstanding_qty > 0)
+                       ? (float) $item->outstanding_qty
+                       : (float) $item->qty;
+
+            return [
+                'id' => $item->id,
+                'proforma_invoce_detail_id' => $item->id,
+                'proforma_invoice_id' => $item->proforma_invoice_id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->produkID->nama_barang ?? '',
+                'data_produk' => $item->produkID->nama_barang ?? '',
+
+                // Gunakan $sisaQty yang sudah dihitung di atas
+                'quantity' => $sisaQty,
+                'qty' => $sisaQty,
+
+                'unit_id' => $item->unit_id,
+                'unit_name' => $item->unitID->detail ?? '',
+                'warehouse_id' => $item->warehouse_id,
+                'warehouse_name' => $item->warehouseID->nama_gudang ?? '',
+                // 'unit' => $item->unitID->detail ?? '',
+                'unit_price' => $item->unit_price,
+                'discount' => $item->discount,
+                'amount' => $item->unit_price * $sisaQty, // Update amount berdasarkan sisa
+                'tax' => 0,
+                'quotation_code' => $item->proforma->proforma_invoice_code ?? '',
+                'proforma_status' => $item->proforma->status ?? '',
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $formattedData,
+        ]);
+    }
+    
     public function getQuotationDetail(Request $request)
     {
         $ids = $request->ids;

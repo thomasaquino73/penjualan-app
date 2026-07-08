@@ -285,6 +285,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/trash', [PurchaseInvoiceController::class, 'trash'])->name('trash');
         Route::resource('', PurchaseInvoiceController::class)->parameters(['' => 'purchase_invoice']);
     });
+    Route::get('/sales-order/get-processing-order', [SalesOrderController::class, 'getProcessingData'])->name('sales-order.quotation.processing');
+    Route::get('/sales-order/get-processing-proforma', [SalesOrderController::class, 'getProcessingProforma'])->name('sales-order.proforma.processing');
+    Route::post('/sales-order/get-quotation-detail', [SalesOrderController::class, 'getQuotationDetail'])->name('sales-order.get-quotation-detail');
+    Route::post('/sales-order/get-proforma-detail', [SalesOrderController::class, 'getProformaDetail'])->name('sales-order.get-proforma-detail');
     Route::get('/sales-order/{id}/data', [SalesOrderController::class, 'getCustomerData'])->name('sales-order.getCustomerData');
     Route::post('/sales-order/{id}/process', [SalesOrderController::class, 'processData'])->name('sales-order.process');
     Route::get('/sales-order/get-units-by-product/{id}', [SalesOrderController::class, 'getUnitsByProduct'])->name('sales-order.get_units');
@@ -295,11 +299,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/sales-order/restore-multiple', [SalesOrderController::class, 'restoreMultiple']);
     Route::put('/sales-order/restore/{id}', [SalesOrderController::class, 'restore'])->name('sales-order.restore');
     Route::post('/sales-order/delete-multiple', [SalesOrderController::class, 'deleteMultiple']);
-    Route::post('/sales-order/get-quotation-detail', [SalesOrderController::class, 'getQuotationDetail'])->name('sales-order.get-quotation-detail');
     Route::get('/sales-order/print/{id}', [SalesOrderController::class, 'print'])->name('sales-order.print');
     Route::get('/sales-order/sq/price-history', [SalesOrderController::class, 'getPriceHistory']);
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
-    Route::get('/sales-order/get-processing-order', [SalesOrderController::class, 'getProcessingData'])->name('sales-order.quotation.processing');
     Route::post('/sales-order/{id}/submit', [SalesOrderController::class, 'submitToPending'])->name('sales-order.submit');
     Route::resource('sales-order', SalesOrderController::class);
 
