@@ -11,6 +11,8 @@ use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
 use App\Models\Sales\ProformaInvoice;
 use App\Models\Sales\ProformaInvoiceDetail;
+use App\Models\Sales\SalesQuotation;
+use App\Models\Sales\SalesQuotationDetail;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
@@ -18,6 +20,7 @@ use App\Models\Setting\Tax;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -335,7 +338,7 @@ class ProformaInvoiceController extends Controller
         return $romawi[$bulan] ?? 'I';
     }
 
-     private function generateNumberId()
+    private function generateNumberId()
     {
         // Ambil record terakhir berdasarkan ID (urutkan dari yang terbaru)
         $last = ProformaInvoice::orderBy('id', 'desc')->lockForUpdate()->first();
@@ -400,6 +403,143 @@ class ProformaInvoiceController extends Controller
         return view('sales.proformaInvoice.proforma_invoice_create', $x);
     }
 
+    // public function store(ProformaInvoiceRequest $request)
+    // {
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $currentYear = date('Y');
+    //         $data = $request->validated();
+    //         $itemsDetailRaw = $request->input('items_detail');
+    //         unset($data['items_detail']);
+
+    //         // Persiapan data header Proforma Invoice
+    //         $data['created_by'] = Auth::id();
+    //         $data['proforma_invoice_date'] = Carbon::parse($request->proforma_invoice_date)->format('Y-m-d');
+    //         $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
+    //         $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
+    //         $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
+    //         $data['sub_total'] = $request->sub_total;
+    //         $data['disc_percent'] = $request->percent;
+    //         $data['disc_nominal'] = $request->discount_all;
+    //         $data['grand_total'] = $request->total_order;
+    //         $data['taxpayer_data'] = $request->taxpayer_data;
+    //         $data['tax_id'] = $request->tax_id;
+    //         $data['tax_amount'] = $request->tax_amount;
+    //         // Generate kode SO
+    //         do {
+    //             $generatedCode = $this->generateNumberId();
+    //             $exists = ProformaInvoice::where('proforma_invoice_code', $generatedCode)->exists();
+    //         } while ($exists);
+
+    //         $data['proforma_invoice_code'] = $generatedCode;
+    //         $proformaInvoice = ProformaInvoice::create($data);
+
+    //         if ($itemsDetailRaw) {
+    //             $items = json_decode($itemsDetailRaw, true);
+    //             $involvedSqIds = [];
+
+    //             if (is_array($items) && count($items) > 0) {
+    //                 foreach ($items as $item) {
+    //                     $sqDetailId = $item['sales_quotation_detail_id'] ?? $item['detail_id'] ?? null;
+    //                     $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
+    //                     $unitPrice = floatval($item['unit_price'] ?? 0);
+    //                     $discount = floatval($item['discount'] ?? 0);
+    //                     $discountPercent = $item['discount_percent'] ?? 0;
+    //                     $amount = ($qtyInputForm * $unitPrice) - $discount;
+
+    //                     // 1. Simpan ke Proforma Invoice Detail
+    //                     $soDetail = ProformaInvoiceDetail::create([
+    //                         'proforma_invoice_id' => $proformaInvoice->id,
+    //                         'sales_quotation_detail_id' => $sqDetailId,
+    //                         'product_id' => $item['product_id'],
+    //                         'qty' => $qtyInputForm,
+    //                         'unit_id' => $item['unit_id'],
+    //                         'warehouse_id' => $item['warehouse_id'],
+    //                         'unit_price' => $unitPrice,
+    //                         'discount_percent' => $discountPercent,
+    //                         'discount' => $discount,
+    //                         'amount' => $item['amount'] ?? $amount,
+    //                         'so_qty' => $qtyInputForm, // Sinkronisasi: sq_qty di SO = qty SO
+    //                         'outstanding_qty' => 0, // Karena SO adalah tahap akhir, outstanding di SO biasanya 0
+    //                         'status' => 'open',
+    //                         'active' => 1,
+    //                         'created_by' => Auth::id(),
+    //                     ]);
+
+    //                     // 2. Sinkronisasi ke Sales Quotation Detail (PR)
+    //                     if ($sqDetailId) {
+    //                         $sqDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
+
+    //                         if ($sqDetail) {
+    //                             // Hitung total akumulasi qty yang sudah masuk SO untuk item ini
+    //                             $totalSoForThisItem = ProformaInvoiceDetail::where('sales_quotation_detail_id', $sqDetailId)
+    //                                 ->where('active', 1)
+    //                                 ->sum('qty');
+
+    //                             // Update sq_qty dan outstanding_qty di SQ Detail
+    //                             $newOutstanding = max(0, ($sqDetail->qty - $totalSoForThisItem));
+
+    //                             DB::table("sales_quotation_detail_{$currentYear}")
+    //                                 ->where('id', $sqDetailId)
+    //                                 ->update([
+    //                                     'sq_qty' => $totalSoForThisItem,
+    //                                     'outstanding_qty' => $newOutstanding,
+    //                                 ]);
+
+    //                             if (! in_array($sqDetail->sales_quotation_id, $involvedSqIds)) {
+    //                                 $involvedSqIds[] = $sqDetail->sales_quotation_id;
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+
+    //                 // 3. Otomasi status Sales Quotation Master
+    //                 // foreach ($involvedSqIds as $sqId) {
+    //                 //     $allDetails = DB::table("sales_quotation_detail_{$currentYear}")
+    //                 //         ->where('sales_quotation_id', $sqId)
+    //                 //         ->get();
+
+    //                 //     $totalRequested = $allDetails->sum('qty');
+    //                 //     $totalOrdered = $allDetails->sum('sq_qty');
+
+    //                 //     if ($totalOrdered >= $totalRequested) {
+    //                 //         $newStatus = 'closed';
+    //                 //     } elseif ($totalOrdered > 0) {
+    //                 //         $newStatus = 'partial';
+    //                 //     } else {
+    //                 //         $newStatus = 'processing';
+    //                 //     }
+
+    //                 //     DB::table("sales_quotation_{$currentYear}")
+    //                 //         ->where('id', $sqId)
+    //                 //         ->update(['status' => $newStatus]);
+    //                 // }
+    //             }
+    //         }
+
+    //         DB::commit();
+
+    //         $redirectUrl = $request->save_and_new == 1
+    //             ? route('proforma-invoice.create') // Kembali kosongkan form untuk input data PR baru lagi
+    //             : route('proforma-invoice.index');  // Selesai dan kembali ke tabel index utama
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Proforma Invoice saved successfully!',
+    //             'redirect' => $redirectUrl,
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Gagal menyimpan data: '.$e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
     public function store(ProformaInvoiceRequest $request)
     {
         DB::beginTransaction();
@@ -410,7 +550,7 @@ class ProformaInvoiceController extends Controller
             $itemsDetailRaw = $request->input('items_detail');
             unset($data['items_detail']);
 
-            // Persiapan data header Proforma Invoice
+            // Persiapan data header Proforma Invoce
             $data['created_by'] = Auth::id();
             $data['proforma_invoice_date'] = Carbon::parse($request->proforma_invoice_date)->format('Y-m-d');
             $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
@@ -424,71 +564,101 @@ class ProformaInvoiceController extends Controller
             $data['tax_id'] = $request->tax_id;
             $data['tax_amount'] = $request->tax_amount;
             // Generate kode SO
-            do {
-                $generatedCode = $this->generateNumberId();
-                $exists = ProformaInvoice::where('proforma_invoice_code', $generatedCode)->exists();
-            } while ($exists);
+            $proformaInvoce = null;
+            $maxRetry = 10;
+            $currentCode = $request->proforma_invoice_code; // Ambil input awal dari user
 
-            $data['proforma_invoice_code'] = $generatedCode;
-            $proformaInvoice = ProformaInvoice::create($data);
+            for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
+                try {
+                    $data['proforma_invoice_code'] = $currentCode;
+                    $proformaInvoce = ProformaInvoice::create($data);
+                    break; // Berhasil, keluar dari loop
+                } catch (QueryException $e) {
+                    // Cek jika error adalah Duplicate Entry (1062)
+                    if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
 
+                        // LOGIKA PENTING: Ubah $currentCode ke nomor berikutnya
+                        // Menggunakan regex untuk mencari angka di akhir string
+                        if (preg_match('/^(.*?)(\d+)$/', $currentCode, $matches)) {
+                            $prefix = $matches[1];
+                            $lastNumber = (int) $matches[2];
+                            $length = strlen($matches[2]);
+
+                            // Tambahkan 1 ke nomor, lalu format ulang
+                            $currentCode = $prefix.str_pad($lastNumber + 1, $length, '0', STR_PAD_LEFT);
+                        } else {
+                            // Jika tidak ada format angka, tambahkan -1
+                            $currentCode .= '-1';
+                        }
+
+                        usleep(50000); // Tunggu sebentar sebelum retry
+
+                        continue;
+                    }
+                    throw $e; // Jika error bukan 1062, lempar error asli
+                }
+            }
+
+            if (! $proformaInvoce) {
+                throw new \Exception('Gagal membuat Proforma Invoce: Nomor sudah penuh atau sistem sibuk.');
+            }
             if ($itemsDetailRaw) {
                 $items = json_decode($itemsDetailRaw, true);
                 $involvedSqIds = [];
 
                 if (is_array($items) && count($items) > 0) {
                     foreach ($items as $item) {
-                        // $sqDetailId = $item['sales_quotation_detail_id'] ?? $item['detail_id'] ?? null;
+                        $sqDetailId = $item['sales_quotation_detail_id'] ?? $item['detail_id'] ?? null;
                         $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
                         $unitPrice = floatval($item['unit_price'] ?? 0);
                         $discount = floatval($item['discount'] ?? 0);
                         $discountPercent = $item['discount_percent'] ?? 0;
                         $amount = ($qtyInputForm * $unitPrice) - $discount;
 
-                        // 1. Simpan ke Proforma Invoice Detail
+                        // 1. Simpan ke Proforma Invoce Detail
                         $soDetail = ProformaInvoiceDetail::create([
-                            'proforma_invoice_id' => $proformaInvoice->id,
-                            // 'sales_quotation_detail_id' => $sqDetailId,
+                            'proforma_invoice_id' => $proformaInvoce->id,
+                            'sales_quotation_detail_id' => $sqDetailId,
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
-                            'warehouse_id' => $item['warehouse_id'],
+                            'warehouse_id' => ! empty($item['warehouse_id']) ? $item['warehouse_id'] : null,
                             'unit_price' => $unitPrice,
                             'discount_percent' => $discountPercent,
                             'discount' => $discount,
                             'amount' => $item['amount'] ?? $amount,
-                            'so_qty' => $qtyInputForm, // Sinkronisasi: sq_qty di SO = qty SO
-                            'outstanding_qty' => 0, // Karena SO adalah tahap akhir, outstanding di SO biasanya 0
+                            // 'so_qty' => 0, // Sinkronisasi: sq_qty di SO = qty SO
+                            'outstanding_qty' => $qtyInputForm, // Karena SO adalah tahap akhir, outstanding di SO biasanya 0
                             'status' => 'open',
                             'active' => 1,
                             'created_by' => Auth::id(),
                         ]);
 
                         // 2. Sinkronisasi ke Sales Quotation Detail (PR)
-                        // if ($sqDetailId) {
-                        //     $sqDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
+                        if ($sqDetailId) {
+                            $sqDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
 
-                        //     if ($sqDetail) {
-                        //         // Hitung total akumulasi qty yang sudah masuk SO untuk item ini
-                        //         $totalSoForThisItem = ProformaInvoiceDetail::where('sales_quotation_detail_id', $sqDetailId)
-                        //             ->where('active', 1)
-                        //             ->sum('qty');
+                            if ($sqDetail) {
+                                // Hitung total akumulasi qty yang sudah masuk SO untuk item ini
+                                $totalSoForThisItem = ProformaInvoiceDetail::where('sales_quotation_detail_id', $sqDetailId)
+                                    ->where('active', 1)
+                                    ->sum('qty');
 
-                        //         // Update sq_qty dan outstanding_qty di SQ Detail
-                        //         $newOutstanding = max(0, ($sqDetail->qty - $totalSoForThisItem));
+                                // Update sq_qty dan outstanding_qty di SQ Detail
+                                $newOutstanding = max(0, ($sqDetail->qty - $totalSoForThisItem));
 
-                        //         DB::table("sales_quotation_detail_{$currentYear}")
-                        //             ->where('id', $sqDetailId)
-                        //             ->update([
-                        //                 'sq_qty' => $totalSoForThisItem,
-                        //                 'outstanding_qty' => $newOutstanding,
-                        //             ]);
+                                DB::table("sales_quotation_detail_{$currentYear}")
+                                    ->where('id', $sqDetailId)
+                                    ->update([
+                                        'sq_qty' => $totalSoForThisItem,
+                                        'outstanding_qty' => $newOutstanding,
+                                    ]);
 
-                        //         if (! in_array($sqDetail->sales_quotation_id, $involvedSqIds)) {
-                        //             $involvedSqIds[] = $sqDetail->sales_quotation_id;
-                        //         }
-                        //     }
-                        // }
+                                if (! in_array($sqDetail->sales_quotation_id, $involvedSqIds)) {
+                                    $involvedSqIds[] = $sqDetail->sales_quotation_id;
+                                }
+                            }
+                        }
                     }
 
                     // 3. Otomasi status Sales Quotation Master
@@ -518,12 +688,12 @@ class ProformaInvoiceController extends Controller
             DB::commit();
 
             $redirectUrl = $request->save_and_new == 1
-                ? route('proforma-invoice.create') // Kembali kosongkan form untuk input data PR baru lagi
-                : route('proforma-invoice.index');  // Selesai dan kembali ke tabel index utama
+                ? route('proforma-invoce.create') // Kembali kosongkan form untuk input data PR baru lagi
+                : route('proforma_invoice.index');  // Selesai dan kembali ke tabel index utama
 
             return response()->json([
                 'success' => true,
-                'message' => 'Proforma Invoice saved successfully!',
+                'message' => 'Proforma Invoce saved successfully!',
                 'redirect' => $redirectUrl,
             ], 200);
 
@@ -560,44 +730,44 @@ class ProformaInvoiceController extends Controller
         ])->findOrFail($id);
 
         // 2. Cek status PO global: Apakah mengandung minimal satu item hasil serapan PR?
-        // $isFromPR = $proformaInvoice->details->whereNotNull('sales_quotation_detail_id')->count() > 0;
+        $isFromPR = $proformaInvoice->details->whereNotNull('sales_quotation_detail_id')->count() > 0;
 
         // 3. Mapping data detail
-        $detailDataMapped = $proformaInvoice->details->map(function ($detail) {
+        $detailDataMapped = $proformaInvoice->details->map(function ($detail) use ($proformaInvoice, $year) {
 
-            // $quotationCode = null;
-            // $sisaPr = null;
-            // $kuotaAsliPr = null;
-            // $totalDiambilLainnya = 0;
+            $quotationCode = null;
+            $sisaPr = null;
+            $kuotaAsliPr = null;
+            $totalDiambilLainnya = 0;
 
             // Cek apakah item detail ini memiliki keterikatan dengan PR
-            // if ($detail->sales_quotation_detail_id) {
-            //     // Ambil data referensi dari relasi
-            //     $prDetail = $detail->salesQuotationDetail;
+            if ($detail->sales_quotation_detail_id) {
+                // Ambil data referensi dari relasi
+                $prDetail = $detail->salesQuotationDetail;
 
-            //     if ($prDetail) {
-            //         $sisaPr = (float) $prDetail->outstanding_qty;
-            //         $kuotaAsliPr = (float) $prDetail->qty;
+                if ($prDetail) {
+                    $sisaPr = (float) $prDetail->outstanding_qty;
+                    $kuotaAsliPr = (float) $prDetail->qty;
 
-            //         // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
-            //         // Menggunakan DB::table karena tabel bersifat dinamis per tahun
-            //         $totalDiambilLainnya = DB::table("proforma_invoice_detail_{$year}")
-            //             ->where('sales_quotation_detail_id', $detail->sales_quotation_detail_id)
-            //             ->where('proforma_invoice_id', '<>', $proformaInvoice->id) // Kecuali PO ini sendiri
-            //             ->where('active', 1)
-            //             ->sum('qty');
+                    // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
+                    // Menggunakan DB::table karena tabel bersifat dinamis per tahun
+                    $totalDiambilLainnya = DB::table("proforma_invoice_detail_{$year}")
+                        ->where('sales_quotation_detail_id', $detail->sales_quotation_detail_id)
+                        ->where('proforma_invoice_id', '<>', $proformaInvoice->id) // Kecuali PO ini sendiri
+                        ->where('active', 1)
+                        ->sum('qty');
 
-            //         if ($prDetail->salesQuotation) {
-            //             $quotationCode = $prDetail->salesQuotation->code;
-            //         }
-            //     }
-            // }
+                    if ($prDetail->salesQuotation) {
+                        $quotationCode = $prDetail->salesQuotation->code;
+                    }
+                }
+            }
 
             return [
                 'id' => $detail->id,
                 'proforma_invoice_id' => $detail->proforma_invoice_id,
-                // 'sales_quotation_detail_id' => $detail->sales_quotation_detail_id,
-                // 'quotation_code' => $quotationCode,
+                'sales_quotation_detail_id' => $detail->sales_quotation_detail_id,
+                'quotation_code' => $quotationCode,
                 'product_id' => $detail->product_id,
                 'data_produk' => $detail->produkID->nama_barang ?? 'Product Not Found',
                 'quantity' => (float) $detail->qty,
@@ -610,9 +780,9 @@ class ProformaInvoiceController extends Controller
                 'discount' => (float) $detail->discount,
                 'amount' => (float) $detail->amount,
                 'tax' => (float) ($detail->tax ?? 0),
-                // 'sisa_pr' => $sisaPr,
-                // 'kuota_asli' => $kuotaAsliPr,
-                // 'total_diambil_lainnya' => (float) $totalDiambilLainnya, // Dikirim ke frontend
+                'sisa_pr' => $sisaPr,
+                'kuota_asli' => $kuotaAsliPr,
+                'total_diambil_lainnya' => (float) $totalDiambilLainnya, // Dikirim ke frontend
             ];
         });
         $taxes = Tax::where('is_active', true)
@@ -639,7 +809,7 @@ class ProformaInvoiceController extends Controller
             'shipping' => Shipping::where('status', 1)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
             'model' => $proformaInvoice,
-            // 'isFromPR' => $isFromPR,
+            'isFromPR' => $isFromPR,
             'jsonDetails' => $detailDataMapped,
             'taxes' => $taxes,
             'defaultTax' => $defaultTax,
@@ -647,6 +817,141 @@ class ProformaInvoiceController extends Controller
 
         return view('sales.proformaInvoice.proforma_invoice_edit', $x);
     }
+
+    // public function update(ProformaInvoiceRequest $request, $id)
+    // {
+    //     $validated = $request->validated();
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $currentYear = date('Y');
+
+    //         // 1. Cek data master
+    //         $proformaInvoce = ProformaInvoice::where('id', $id)->first();
+    //         if (! $proformaInvoce) {
+    //             throw new \Exception('Proforma Invoice tidak ditemukan.');
+    //         }
+
+    //         // 2. UPDATE MASTER
+    //         ProformaInvoice::where('id', $id)->update([
+    //             'customer_id' => $request->customer_id,
+    //             'proforma_invoice_code' => $request->proforma_invoice_code,
+    //             'salesman_id' => $request->salesman_id,
+    //             'proforma_invoice_date' => Carbon::parse($request->proforma_invoice_date)->format('Y-m-d'),
+    //             'tanggal_pengiriman' => Carbon::parse($request->shipping_date)->format('Y-m-d'),
+    //             'sub_total' => $request->sub_total,
+    //             'disc_percent' => $request->percent,
+    //             'disc_nominal' => $request->discount_all,
+    //             'grand_total' => $request->total_order,
+    //             'jenis_pengiriman' => $request->jenis_pengiriman,
+    //             'kena_pajak' => $request->has('kena_pajak') ? 1 : 0,
+    //             'total_termasuk_pajak' => $request->has('total_termasuk_pajak') ? 1 : 0,
+    //             'fob_id' => $request->fob_id,
+    //             'address' => $request->address,
+    //             'description' => $request->description,
+    //             'taxpayer_data' => $request->taxpayer_data,
+    //             'tax_id' => $request->tax_id,
+    //             'tax_amount' => $request->tax_amount,
+    //             'updated_by' => Auth::id(),
+    //             'updated_at' => now(),
+    //         ]);
+
+    //         // 3. DECODE ITEMS
+    //         $items = json_decode($request->items_detail, true);
+    //         if (! is_array($items) || count($items) == 0) {
+    //             throw new \Exception('Detail item tidak boleh kosong.');
+    //         }
+
+    //         // 4. REVERT QTY LAMA (Kembalikan stok/kuota ke SQ Detail)
+    //         // $oldDetails = DB::table("proforma_invoice_detail_{$currentYear}")->where('proforma_invoice_id', $id)->get();
+    //         // foreach ($oldDetails as $old) {
+    //         //     if ($old->sales_quotation_detail_id) {
+    //         //         DB::table("sales_quotation_detail_{$currentYear}")
+    //         //             ->where('id', $old->sales_quotation_detail_id)
+    //         //             ->update([
+    //         //                 'sq_qty' => DB::raw("sq_qty - {$old->qty}"),
+    //         //             ]);
+    //         //     }
+    //         // }
+
+    //         // 5. HAPUS DETAIL LAMA
+    //         DB::table("proforma_invoice_detail_{$currentYear}")->where('proforma_invoice_id', $id)->delete();
+
+    //         // 6. SIMPAN DETAIL BARU
+    //         $affectedSqIds = [];
+    //         foreach ($items as $item) {
+    //             // $sqDetailId = (! empty($item['sales_quotation_detail_id']) && $item['sales_quotation_detail_id'] != 'null')
+    //             //             ? $item['sales_quotation_detail_id'] : null;
+    //             $qty = floatval($item['quantity'] ?? $item['qty'] ?? 0);
+
+    //             DB::table("proforma_invoice_detail_{$currentYear}")->insert([
+    //                 'proforma_invoice_id' => $id,
+    //                 // 'sales_quotation_detail_id' => $sqDetailId,
+    //                 'product_id' => $item['product_id'],
+    //                 'qty' => $qty,
+    //                 'unit_id' => $item['unit_id'],
+    //                 'warehouse_id' => $item['warehouse_id'],
+    //                 'unit_price' => floatval($item['unit_price'] ?? 0),
+    //                 'discount_percent' => $item['discount_percent'] ?? 0,
+    //                 'discount' => floatval($item['discount'] ?? 0),
+    //                 'amount' => $item['amount'] ?? 0,
+    //                 'so_qty' => $qty, // Sinkronisasi: SO sudah menyerap qty ini
+    //                 'outstanding_qty' => 0,    // SO adalah tahap akhir
+    //                 'active' => 1,
+    //                 'created_by' => Auth::id(),
+    //                 'created_at' => now(),
+    //                 'updated_at' => now(),
+    //             ]);
+
+    //             // if ($sqDetailId) {
+    //             //     DB::table("sales_quotation_detail_{$currentYear}")
+    //             //         ->where('id', $sqDetailId)
+    //             //         ->update(['sq_qty' => DB::raw("sq_qty + {$qty}")]);
+    //             //     $affectedSqIds[] = $sqDetailId;
+    //             // }
+    //         }
+
+    //         // 7. UPDATE STATUS MASTER QUOTATION
+    //         // $affectedMasterSqIds = [];
+    //         // foreach (array_unique($affectedSqIds) as $sqDetailId) {
+    //         //     $sqDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
+    //         //     if ($sqDetail) {
+    //         //         $outstanding = max(0, $sqDetail->qty - $sqDetail->sq_qty);
+    //         //         DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->update([
+    //         //             'outstanding_qty' => $outstanding,
+    //         //         ]);
+    //         //         $affectedMasterSqIds[] = $sqDetail->sales_quotation_id;
+    //         //     }
+    //         // }
+
+    //         // foreach (array_unique($affectedMasterSqIds) as $sqId) {
+    //         //     $details = DB::table("sales_quotation_detail_{$currentYear}")->where('sales_quotation_id', $sqId)->get();
+    //         //     $allCompleted = $details->every(fn ($d) => $d->sq_qty >= $d->qty);
+    //         //     $anyPartial = $details->some(fn ($d) => $d->sq_qty > 0);
+
+    //         //     DB::table("sales_quotation_{$currentYear}")->where('id', $sqId)->update([
+    //         //         'status' => $allCompleted ? 'closed' : ($anyPartial ? 'partial' : 'processing'),
+    //         //     ]);
+    //         // }
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Proforma Invoice berhasil diupdate',
+    //             'redirect' => route('proforma-invoice.index'),
+    //         ]);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
 
     public function update(ProformaInvoiceRequest $request, $id)
     {
@@ -658,11 +963,19 @@ class ProformaInvoiceController extends Controller
             $currentYear = date('Y');
 
             // 1. Cek data master
-            $salesOrder = ProformaInvoice::where('id', $id)->first();
-            if (! $salesOrder) {
+            $proformaInvoice = DB::table("proforma_invoice_{$currentYear}")->where('id', $id)->first();
+            if (! $proformaInvoice) {
                 throw new \Exception('Proforma Invoice tidak ditemukan.');
             }
+            $code = $request->proforma_invoice_code;
 
+            while (
+                ProformaInvoice::where('proforma_invoice_code', $code)
+                    ->where('id', '!=', $proformaInvoice->id)
+                    ->exists()
+            ) {
+                $code = $this->generateNumberId();
+            }
             // 2. UPDATE MASTER
             ProformaInvoice::where('id', $id)->update([
                 'customer_id' => $request->customer_id,
@@ -711,13 +1024,13 @@ class ProformaInvoiceController extends Controller
             // 6. SIMPAN DETAIL BARU
             $affectedSqIds = [];
             foreach ($items as $item) {
-                // $sqDetailId = (! empty($item['sales_quotation_detail_id']) && $item['sales_quotation_detail_id'] != 'null')
-                //             ? $item['sales_quotation_detail_id'] : null;
+                $sqDetailId = (! empty($item['sales_quotation_detail_id']) && $item['sales_quotation_detail_id'] != 'null')
+                            ? $item['sales_quotation_detail_id'] : null;
                 $qty = floatval($item['quantity'] ?? $item['qty'] ?? 0);
 
                 DB::table("proforma_invoice_detail_{$currentYear}")->insert([
                     'proforma_invoice_id' => $id,
-                    // 'sales_quotation_detail_id' => $sqDetailId,
+                    'sales_quotation_detail_id' => $sqDetailId,
                     'product_id' => $item['product_id'],
                     'qty' => $qty,
                     'unit_id' => $item['unit_id'],
@@ -726,20 +1039,20 @@ class ProformaInvoiceController extends Controller
                     'discount_percent' => $item['discount_percent'] ?? 0,
                     'discount' => floatval($item['discount'] ?? 0),
                     'amount' => $item['amount'] ?? 0,
-                    'so_qty' => $qty, // Sinkronisasi: SO sudah menyerap qty ini
-                    'outstanding_qty' => 0,    // SO adalah tahap akhir
+                    // 'so_qty' => 0, // Sinkronisasi: SO sudah menyerap qty ini
+                    'outstanding_qty' => $qty,    // SO adalah tahap akhir
                     'active' => 1,
                     'created_by' => Auth::id(),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
 
-                // if ($sqDetailId) {
-                //     DB::table("sales_quotation_detail_{$currentYear}")
-                //         ->where('id', $sqDetailId)
-                //         ->update(['sq_qty' => DB::raw("sq_qty + {$qty}")]);
-                //     $affectedSqIds[] = $sqDetailId;
-                // }
+                if ($sqDetailId) {
+                    DB::table("sales_quotation_detail_{$currentYear}")
+                        ->where('id', $sqDetailId)
+                        ->update(['sq_qty' => DB::raw("sq_qty + {$qty}")]);
+                    $affectedSqIds[] = $sqDetailId;
+                }
             }
 
             // 7. UPDATE STATUS MASTER QUOTATION
@@ -769,8 +1082,8 @@ class ProformaInvoiceController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Proforma Invoice berhasil diupdate',
-                'redirect' => route('proforma-invoice.index'),
+                'message' => 'Sales Order berhasil diupdate',
+                'redirect' => route('sales-order.index'),
             ]);
 
         } catch (\Exception $e) {
@@ -1222,6 +1535,108 @@ class ProformaInvoiceController extends Controller
                 'message' => 'Gagal merestore data: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getProcessingData(Request $request)
+    {
+        $orders = SalesQuotation::with([
+            'details' => function ($query) {
+                $query->whereColumn('sq_qty', '<', 'qty');
+            },
+        ])
+            ->where('customer_id', $request->customer_id)
+            ->whereNotIn('status', ['draft', 'closed', 'done'])
+            ->get();
+
+        return response()->json($orders);
+    }
+
+    public function getCustomerData($customerId)
+    {
+        // Pajak (ambil default)
+        $pajak = DB::table('customer_pajak')
+            ->where('customer_id', $customerId)
+            ->first();
+        $kontak = DB::table('customer_kontak')
+            ->where('customer_id', $customerId)
+            ->get();
+        $customer = Customer::find($customerId);
+        $address = collect([
+            $customer->alamat_tagihan,
+            collect([
+                $customer->kota_tagihan,
+                $customer->provinsi_tagihan,
+                $customer->kodepos_tagihan,
+            ])->filter()->implode(', '),
+            $customer->negara_tagihan,
+        ])->filter()->implode("\n");
+
+        return response()->json([
+            'pajak' => $pajak,
+            'kontak' => $kontak,
+            'address' => $address,
+        ]);
+    }
+
+    public function getQuotationDetail(Request $request)
+    {
+        $ids = $request->ids;
+
+        if (empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data SQ yang dipilih.',
+                'data' => [],
+            ]);
+        }
+
+        $details = SalesQuotationDetail::with([
+            'produkID',
+            'unitID',
+            'quotation',
+        ])
+            ->whereIn('sales_quotation_id', $ids)
+            ->where('active', 1)
+            ->whereHas('quotation', function ($q) {
+                $q->whereIn('status', ['processing', 'partial']);
+            })
+            ->get();
+
+        $formattedData = $details->map(function ($item) {
+            // LOGIKA PENENTUAN SISA:
+            // Cek apakah outstanding_qty ada (tidak null) dan bukan 0
+            $sisaQty = ($item->outstanding_qty !== null && $item->outstanding_qty > 0)
+                       ? (float) $item->outstanding_qty
+                       : (float) $item->qty;
+
+            return [
+                'id' => $item->id,
+                'sales_quotation_detail_id' => $item->id,
+                'sales_quotation_id' => $item->sales_quotation_id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->produkID->nama_barang ?? '',
+                'data_produk' => $item->produkID->nama_barang ?? '',
+
+                // Gunakan $sisaQty yang sudah dihitung di atas
+                'quantity' => $sisaQty,
+                'qty' => $sisaQty,
+
+                'unit_id' => $item->unit_id,
+                'unit' => $item->unitID->detail ?? '',
+                'unit_name' => $item->unitID->detail ?? '',
+                'unit_price' => $item->unit_price,
+                'discount' => $item->discount,
+                'amount' => $item->unit_price * $sisaQty, // Update amount berdasarkan sisa
+                'tax' => 0,
+                'quotation_code' => $item->quotation->sales_quotation_code ?? '',
+                'quotation_status' => $item->quotation->status ?? '',
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $formattedData,
+        ]);
     }
 
     public function print($id)

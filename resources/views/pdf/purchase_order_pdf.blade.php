@@ -188,7 +188,7 @@
 
     <footer>
         Printed on: {{ date('Y-m-d H:i:s') }}
-        <script type="text/php">if (sset($pdf)) { $font = $fontMetrics->getFont("Arial", "bold"); $pdf->page_text(520, 800, "Page {PAGE_NUM} of {PAGE_COUNT}", $font, 7, array(0,0,0)); }</script>
+        <script type="text/php">if (isset($pdf)) { $font = $fontMetrics->getFont("Arial", "bold"); $pdf->page_text(520, 800, "Page {PAGE_NUM} of {PAGE_COUNT}", $font, 7, array(0,0,0)); }</script>
     </footer>
 
     <table class="info-table" style="margin-top: 20px; width:100%">
@@ -255,11 +255,11 @@
 
     <table class="w-100 footer-table">
         <tr>
-            <td class="keterangan-box">
+            <td class="keterangan-box" width="60%">
                 <div class="keterangan-title">Keterangan</div>
                 <div class="keterangan-content">{!! nl2br(e($model->description)) !!}</div>
             </td>
-            <td class="summary-box">
+            <td class="summary-box" width="40%">
                 <table class="summary-table">
                     <tr>
                         <td>Sub Total</td>

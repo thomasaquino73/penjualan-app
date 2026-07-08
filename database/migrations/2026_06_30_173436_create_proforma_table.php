@@ -61,7 +61,7 @@ return new class extends Migration
 
             $table->unsignedBigInteger('proforma_invoice_id');
             $table->unsignedBigInteger('sales_order_detail_id')->nullable();
-
+            $table->unsignedBigInteger('sales_quotation_detail_id')->nullable();
             $table->unsignedBigInteger('product_id');
             $table->decimal('qty', 18, 4);
             $table->unsignedBigInteger('unit_id');

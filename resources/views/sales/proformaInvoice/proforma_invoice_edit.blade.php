@@ -22,7 +22,7 @@
 
             <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
 
-            {{-- <div class="col-12 col-lg-5">
+            <div class="col-12 col-lg-5">
                 <div
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
@@ -31,7 +31,7 @@
                     </button>
 
                 </div>
-            </div> --}}
+            </div>
 
         </div>
         <div class="card-body table-responsive p-3">
@@ -267,7 +267,12 @@
                 @endforeach
             @endif
         ];
-        const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
+        // const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
+
+        let poIsFromPR = {{ $isFromPR ? 'true' : 'false' }};
+        if (poIsFromPR) {
+            $(".btn-success").html('<i class="ti ti-link"></i> Linked to SQ').prop('disabled', true);
+        }
         $(function() {
             const datePicker = flatpickr("#proforma_invoice_date", {
                 enableTime: false,

@@ -109,8 +109,6 @@ class DeliveryOrderController extends Controller
                             $text = 'Processing';
                             break;
 
-                        
-
                         case 'approved':
                             $badge = 'bg-label-success';
                             $text = 'Approved';
@@ -504,8 +502,7 @@ class DeliveryOrderController extends Controller
         return view('sales.deliveryOrder.delivery_order_create', $x);
     }
 
-
-     public function store(DeliveryOrderRequest $r, StockService $stockService)
+    public function store(DeliveryOrderRequest $r, StockService $stockService)
     {
         DB::beginTransaction();
 
@@ -571,39 +568,39 @@ class DeliveryOrderController extends Controller
                  * Hitung Stok Real
                  * =====================================================
                  */
-                DB::table('stock_mutations')
-                    ->where('data_barang_id', $item['product_id'])
-                    ->where('warehouse_id', $item['warehouse_id'])
-                    ->where('unit_id', $item['unit_id'])
-                    ->lockForUpdate()
-                    ->get();
+                        DB::table('stock_mutations')
+                            ->where('data_barang_id', $item['product_id'])
+                            ->where('warehouse_id', $item['warehouse_id'])
+                            ->where('unit_id', $item['unit_id'])
+                            ->lockForUpdate()
+                            ->get();
 
-                /**
-                 * =====================================================
-                 * Hitung Stok Real
-                 * =====================================================
-                 */
-                $realStock = $stockService->realStock(
-                    $item['product_id'],
-                    $item['warehouse_id'],
-                    $item['unit_id']
-                );
+                        /**
+                         * =====================================================
+                         * Hitung Stok Real
+                         * =====================================================
+                         */
+                        $realStock = $stockService->realStock(
+                            $item['product_id'],
+                            $item['warehouse_id'],
+                            $item['unit_id']
+                        );
 
-                if ($realStock < $qty) {
+                        if ($realStock < $qty) {
 
-                    throw new \Exception(
-                        "Stok barang {$item['product_name']} tidak mencukupi.\n" .
-                        "Gudang : {$item['warehouse_name']}\n" .
-                        "Stok tersedia : {$realStock}\n" .
-                        "Permintaan : {$qty}"
-                    );
+                            throw new \Exception(
+                                "Stok barang {$item['product_name']} tidak mencukupi.\n".
+                                "Gudang : {$item['warehouse_name']}\n".
+                                "Stok tersedia : {$realStock}\n".
+                                "Permintaan : {$qty}"
+                            );
 
-                }
-                 /**
-                 * =====================================================
-                 * Simpan Detail DO
-                 * =====================================================
-                 */
+                        }
+                        /**
+                         * =====================================================
+                         * Simpan Detail DO
+                         * =====================================================
+                         */
                         DeliveryOrderDetail::create([
                             'delivery_order_id' => $deliveryOrder->id,
                             'sales_order_detail_id' => $soDetailId,
@@ -700,7 +697,7 @@ class DeliveryOrderController extends Controller
             'details.produkID',
             'details.unitID',
             'details.warehouseID',
-             'details.salesOrderDetail.salesOrder',
+            'details.salesOrderDetail.salesOrder',
         ])->findOrFail($id);
         $isFromPR = $deliveryOrder->details->whereNotNull('sales_order_detail_id')->count() > 0;
         $detailDataMapped = $deliveryOrder->details->map(function ($detail) use ($deliveryOrder, $year) {
@@ -722,11 +719,11 @@ class DeliveryOrderController extends Controller
                     // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
                     // Menggunakan DB::table karena tabel bersifat dinamis per tahun
                     $totalDiambilLainnya = DB::table("delivery_order_detail_{$year} as dod")
-                    ->join("delivery_order_{$year} as do", 'do.id', '=', 'dod.delivery_order_id')
-                    ->where('dod.sales_order_detail_id', $detail->sales_order_detail_id)
-                    ->where('dod.delivery_order_id', '<>', $deliveryOrder->id)
-                    ->where('do.active', 1)
-                    ->sum('dod.qty');
+                        ->join("delivery_order_{$year} as do", 'do.id', '=', 'dod.delivery_order_id')
+                        ->where('dod.sales_order_detail_id', $detail->sales_order_detail_id)
+                        ->where('dod.delivery_order_id', '<>', $deliveryOrder->id)
+                        ->where('do.active', 1)
+                        ->sum('dod.qty');
 
                     if ($prDetail->salesOrder) {
                         $orderCode = $prDetail->salesOrder->sales_order_code;
@@ -1288,7 +1285,7 @@ class DeliveryOrderController extends Controller
                 'data' => [],
             ]);
         }
-        $header=SalesOrder::where('id',$ids)->get();
+        $header = SalesOrder::where('id', $ids)->get();
 
         $details = SalesOrderDetail::with([
             'produkID',

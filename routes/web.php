@@ -126,6 +126,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/pengaturan-background/{id}', [PengaturanSistemController::class, 'login_background_destroy'])->name('pengaturan.background.delete');
     });
 
+    Route::get('/dashboard/sales-statistics', [DashboardController::class, 'salesStatistics'])->name('dashboard.sales-statistics');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/company-info', [CompanyInfoController::class, 'index'])->name('company.info');
     Route::get('/company-info/{id}/edit', [CompanyInfoController::class, 'edit'])->name('company.edit');
@@ -235,8 +236,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/permintaan-pembelian/delete-multiple', [PurchaseRequisitionController::class, 'deleteMultiple']);
     Route::post('/permintaan-pembelian/restore-multiple', [PurchaseRequisitionController::class, 'restoreMultiple']);
     Route::put('/permintaan-pembelian/restore/{id}', [PurchaseRequisitionController::class, 'restore'])->name('permintaan-pembelian.restore');
-    Route::get('/get-units-by-product/{id}', [PurchaseRequisitionController::class, 'getUnitsByProduct'])
-        ->name('permintaan-pembelian.get_units');
+    Route::get('/get-units-by-product/{id}', [PurchaseRequisitionController::class, 'getUnitsByProduct'])->name('permintaan-pembelian.get_units');
     Route::post('/permintaan-pembelian/{id}/submit', [PurchaseRequisitionController::class, 'submitToPending'])->name('permintaan-pembelian.submit');
     Route::patch('/permintaan-pembelian/{id}/close', [PurchaseRequisitionController::class, 'CloseDocument'])->name('permintaan-pembelian.close');
     Route::get('/permintaan-pembelian/print/{id}', [PurchaseRequisitionController::class, 'print'])->name('permintaan-pembelian.print');
@@ -345,6 +345,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales-invoice/trash', [SalesInvoiceController::class, 'trash'])->name('sales-invoice.trash');
     Route::resource('sales-invoice', SalesInvoiceController::class);
 
+    Route::post('/proforma-invoice/get-quotation-detail', [ProformaInvoiceController::class, 'getQuotationDetail'])->name('proforma-invoice.get-quotation-detail');
+    Route::get('/proforma-invoice/{id}/data', [ProformaInvoiceController::class, 'getCustomerData'])->name('proforma-invoice.getCustomerData');
+    Route::get('/proforma-invoice/get-processing-order', [ProformaInvoiceController::class, 'getProcessingData'])->name('proforma-invoice.quotation.processing');
     Route::post('/proforma-invoice/{id}/process', [ProformaInvoiceController::class, 'processData'])->name('proforma-invoice.process');
     Route::get('/proforma-invoice/wh/get-stock', [ProformaInvoiceController::class, 'getStock'])->name('proforma-invoice.wh.get-stock');
     Route::post('/proforma-invoice/restore-multiple', [ProformaInvoiceController::class, 'restoreMultiple']);

@@ -216,23 +216,7 @@
                                 </select>
                                 <span class="error text-danger" id="unit_id_modalsError"></span>
                             </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label" for="unit_price">Unit Price</label>
-                                <div class="input-group input-group-merge">
-                                    <span class="input-group-text"> {{ $mataUangDefault->symbol }}</span>
-                                    <input type="number" id="unit_price" name="unit_price" class="form-control"
-                                        placeholder="0" min="0">
-                                </div>
-                                <span class="error text-danger" id="unit_priceError"></span>
-                            </div>
-                            <div class="col-12 mb-3">
-                                <label class="form-label" for="discount">Total Price</label>
-                                <div class="input-group input-group-merge">
-                                    <span class="input-group-text"> {{ $mataUangDefault->symbol }}</span>
-                                    <input type="number" id="total_price" name="total_price" class="form-control"
-                                        placeholder="0" min="0" readonly>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -304,7 +288,7 @@
                         // Mengambil nama satuan/unit (misal: 'Pcs', 'Box') menggunakan relasi unitID ke BasicCodeDetail
                         'stok_unit_name': '{{ $stock->unitID ? $stock->unitID->detail : 'Unit Tidak Ditemukan' }}',
 
-                        'unit_price': '{{ $stock->price }}',
+                        // 'unit_price': '{{ $stock->price }}',
                     }
                     {{ !$loop->last ? ',' : '' }}
                 @endforeach
@@ -837,18 +821,18 @@
         radioNonSupply.addEventListener('change', toggleStockTab);
     </script>
     <script>
-        function hitungTotal() {
-            let qty = parseFloat(document.getElementById('quantity').value) || 0;
-            let price = parseFloat(document.getElementById('unit_price').value) || 0;
+        // function hitungTotal() {
+        //     let qty = parseFloat(document.getElementById('quantity').value) || 0;
+        //     let price = parseFloat(document.getElementById('unit_price').value) || 0;
 
-            let total = qty * price;
+        //     let total = qty * price;
 
-            document.getElementById('total_price').value = total;
-        }
+        //     document.getElementById('total_price').value = total;
+        // }
 
-        // trigger saat input berubah
-        document.getElementById('quantity').addEventListener('input', hitungTotal);
-        document.getElementById('unit_price').addEventListener('input', hitungTotal);
+        // // trigger saat input berubah
+        // document.getElementById('quantity').addEventListener('input', hitungTotal);
+        // document.getElementById('unit_price').addEventListener('input', hitungTotal);
     </script>
     <script>
         // $('#unit_id').on('change', function() {
@@ -988,9 +972,9 @@
                     {
                         data: 'stok_unit_name',
                     },
-                    {
-                        data: 'unit_price'
-                    },
+                    // {
+                    //     data: 'unit_price'
+                    // },
                     {
                         data: 'warehouse_name'
                     },
@@ -1030,12 +1014,12 @@
 
                                     // 2. Set nilai text & number (Quantity, Unit Price, Date)
                                     $('#quantity').val(data.quantity);
-                                    $('#unit_price').val(data.unit_price);
+                                    // $('#unit_price').val(data.unit_price);
                                     $('#date_stock').val(data
                                         .date_stock); // Menyesuaikan id="date_stock" di modal kamu
 
                                     // 3. Picu fungsi hitung total price agar langsung kalkulasi saat modal buka
-                                    hitungTotal();
+                                    // hitungTotal();
 
                                     // 4. Set Dropdown Warehouse
                                     if ($('#warehouse_id').length) {

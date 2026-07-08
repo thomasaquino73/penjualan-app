@@ -6,7 +6,6 @@
                  <th>Date</th>
                  <th>Qty</th>
                  <th>Unit</th>
-                 <th>Unit Price ({{ $mataUangDefault ?? 'Rp' }})</th>
                  <th>Warehouse</th>
              </tr>
          </thead>

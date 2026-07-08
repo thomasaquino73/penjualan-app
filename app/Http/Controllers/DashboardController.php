@@ -2,46 +2,82 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Http\Request;
 class DashboardController extends Controller
 {
-    public function index()
-    {
-        $data = User::query();
-        $stats = $this->getUserStatistics($data);
-        $minStock = $this->getMinimumStock();
-        $transaksiTerbanyak = $this->getTransaksiTerbanyak();
-        $TotalTransactions = $this->getTotalTransactions();
-        $popularBrands = $this->getPopularBrandThisMonth();
-        $brandLabels = $popularBrands->pluck('brand_name');
-        $brandValues = $popularBrands->pluck('total_qty');
-        if ($brandLabels->isEmpty()) {
-            $brandLabels = ['No Data'];
-            $brandValues = [0];
-        }
-        $brandName = BasicCodeDetail::where('master_id', 11)->orderby('detail', 'asc')->get();
+  public function index(Request $request)
+{
+    // Tahun yang dipilih (default = tahun sekarang)
+    $currentYear = date('Y');
+    $year = $request->get('year', $currentYear);
+    $lastYear = $currentYear - 1;
 
-        $x = [
-            'totalUsers' => $stats['totalUsers'],
-            'totalActive' => $stats['totalActive'],
-            'totalVerified' => $stats['totalVerified'],
-            'totalLogin' => $stats['totalLogin'],
-            'minStock' => $minStock,
-            'transaksiTerbanyak' => $transaksiTerbanyak,
-            'TotalTransactions' => $TotalTransactions,
-            'popularBrands' => $popularBrands,
-            'brandLabels' => $brandLabels,
-            'brandValues' => $brandValues,
-            'brandName' => $brandName,
-        ];
+    // Statistik penjualan berdasarkan tahun yang dipilih
+    $salesChart = $this->getSalesStatisticsByYear($year);
+    $totalSales = $this->getTotalSalesByYear($year);
 
-        return view('dashboard', $x);
+    // Statistik user
+    $data = User::query();
+    $stats = $this->getUserStatistics($data);
+
+    // Minimum stock
+    $minStock = $this->getMinimumStock();
+
+    // Produk transaksi terbanyak
+    $transaksiTerbanyak = $this->getTransaksiTerbanyak();
+
+    // Total transaksi bulan ini
+    $TotalTransactions = $this->getTotalTransactions();
+
+    // Brand populer bulan ini
+    $popularBrands = $this->getPopularBrandThisMonth();
+    $brandLabels = $popularBrands->pluck('brand_name');
+    $brandValues = $popularBrands->pluck('total_qty');
+
+    if ($brandLabels->isEmpty()) {
+        $brandLabels = collect(['No Data']);
+        $brandValues = collect([0]);
     }
+
+    return view('dashboard', [
+        // User
+        'totalUsers'          => $stats['totalUsers'],
+        'totalActive'         => $stats['totalActive'],
+        'totalVerified'       => $stats['totalVerified'],
+        'totalLogin'          => $stats['totalLogin'],
+
+        // Stock
+        'minStock'            => $minStock,
+
+        // Transaksi
+        'transaksiTerbanyak'  => $transaksiTerbanyak,
+        'TotalTransactions'   => $TotalTransactions,
+
+        // Brand
+        'popularBrands'       => $popularBrands,
+        'brandLabels'         => $brandLabels,
+        'brandValues'         => $brandValues,
+
+        // Sales Chart
+        'salesStatistics'     => $salesChart,
+        'salesLabels'         => $salesChart['labels'],
+        'salesValues'         => $salesChart['values'],
+
+        // Total Sales
+        'totalSales'          => $totalSales,
+
+        // Tahun
+        'selectedYear'        => $year,
+        'currentYear'         => $currentYear,
+        'lastYear'            => $lastYear,
+        'totalSalesThisYear'  => $this->getTotalSalesByYear($currentYear),
+        'totalSalesLastYear'  => $this->getTotalSalesByYear($lastYear),
+    ]);
+}
 
     private function getUserStatistics($data)
     {
@@ -140,7 +176,7 @@ class DashboardController extends Controller
         $table = "sales_order_{$year}";
 
         return DB::table($table)
-            ->whereIn('status', ['approved', 'completed'])
+            ->whereIn('status', ['processing', 'completed', 'closed'])
             ->whereMonth('sales_order_date', now()->month)
             ->whereYear('sales_order_date', now()->year)
             ->where('active', 1)
@@ -177,5 +213,107 @@ class DashboardController extends Controller
             ->orderByDesc('total_qty')
             ->limit(5)
             ->get();
+    }
+
+   private function getSalesStatisticsThisYear()
+    {
+        $year = date('Y');
+        $table = "sales_order_{$year}";
+
+        $labels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        $values = array_fill(0, 12, 0);
+
+        if (!DB::getSchemaBuilder()->hasTable($table)) {
+            return compact('labels', 'values');
+        }
+
+        $rows = DB::table($table)
+            ->selectRaw('MONTH(sales_order_date) as month, SUM(grand_total) as total')
+            ->where('active', 1)
+            ->whereIn('status', ['approved', 'processing', 'partial', 'completed'])
+            ->groupBy(DB::raw('MONTH(sales_order_date)'))
+            ->get();
+
+        foreach ($rows as $row) {
+            $values[$row->month - 1] = (float) $row->total;
+        }
+
+        return compact('labels', 'values');
+    }
+    private function getTotalSalesThisYear()
+    {
+        $year = date('Y');
+        $table = "sales_order_{$year}";
+
+        if (!DB::getSchemaBuilder()->hasTable($table)) {
+            return 0;
+        }
+
+        return (float) DB::table($table)
+            ->where('active', 1)
+            ->whereIn('status', [
+                'approved',
+                'processing',
+                'partial',
+                'completed'
+            ])
+            ->sum('grand_total');
+    }
+    private function getTotalSalesByYear($year)
+    {
+        $table = "sales_order_{$year}";
+
+        if (!DB::getSchemaBuilder()->hasTable($table)) {
+            return 0;
+        }
+
+        return (float) DB::table($table)
+            ->where('active', 1)
+            ->whereIn('status', [
+                'approved',
+                'processing',
+                'partial',
+                'completed'
+            ])
+            ->sum('grand_total');
+    }
+    private function getSalesStatisticsByYear($year)
+    {
+        $table = "sales_order_{$year}";
+
+        $labels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        $values = array_fill(0, 12, 0);
+
+        if (!DB::getSchemaBuilder()->hasTable($table)) {
+            return compact('labels', 'values');
+        }
+
+        $rows = DB::table($table)
+            ->selectRaw('MONTH(sales_order_date) as month, SUM(grand_total) as total')
+            ->where('active', 1)
+            ->whereIn('status', ['approved', 'processing', 'partial', 'completed'])
+            ->groupBy(DB::raw('MONTH(sales_order_date)'))
+            ->get();
+
+        foreach ($rows as $row) {
+            $values[$row->month - 1] = (float) $row->total;
+        }
+
+        return compact('labels', 'values');
+    }
+
+    public function salesStatistics(Request $request)
+    {
+        $year = $request->year ?? date('Y');
+
+        $salesChart = $this->getSalesStatisticsByYear($year);
+        $totalSales = $this->getTotalSalesByYear($year);
+
+        return response()->json([
+            'labels' => $salesChart['labels'],
+            'values' => $salesChart['values'],
+            'totalSales' => number_format($totalSales, 0, ',', '.'),
+            'year' => $year,
+        ]);
     }
 }
