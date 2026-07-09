@@ -2,7 +2,6 @@
 
 namespace App\Models\Purchase;
 
-use App\Models\Purchase\Supplier;
 use App\Models\Sales\Customer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -47,5 +46,4 @@ class PurchaseRequisition extends Model
     {
         return $this->hasMany(PurchaseRequisitionDetail::class, 'purchase_requisition_id');
     }
-  
 }

@@ -241,35 +241,7 @@ class PurchaseOrderController extends Controller
                     |--------------------------------------------------------------------------
                     */
 
-                    if ($row->created_by == $currentUserId) {
-
-                        // SEND TO APPROVAL
-                        // if ($row->status == 'draft') {
-
-                        //     $btn .= '
-                        //         <a class="dropdown-item btn-submit-po"
-                        //             href="javascript:void(0)"
-                        //             data-id="'.$row->id.'">
-
-                        //             <i class="ti ti-send me-1"></i>
-                        //             Send To Approval
-                        //         </a>
-                        //     ';
-                        // }
-                        if ($row->status == 'draft') {
-
-                            $btn .= '
-                                <a class="dropdown-item btn-process"
-                                    href="javascript:void(0)"
-                                    data-id="'.$row->id.'">
-
-                                    <i class="ti ti-send me-1"></i>
-                                    Send To Process
-                                </a>
-                            ';
-                        }
-
-                        // EDIT
+                    // EDIT
                         if (
                             $user->can('purchase_order-edit') &&
                             in_array($row->status, ['draft', 'pending', 'processing'])
@@ -303,6 +275,36 @@ class PurchaseOrderController extends Controller
                                 </a>
                             ';
                         }
+
+                    if ($row->created_by == $currentUserId) {
+
+                        // SEND TO APPROVAL
+                        // if ($row->status == 'draft') {
+
+                        //     $btn .= '
+                        //         <a class="dropdown-item btn-submit-po"
+                        //             href="javascript:void(0)"
+                        //             data-id="'.$row->id.'">
+
+                        //             <i class="ti ti-send me-1"></i>
+                        //             Send To Approval
+                        //         </a>
+                        //     ';
+                        // }
+                        if ($row->status == 'draft') {
+
+                            $btn .= '
+                                <a class="dropdown-item btn-process"
+                                    href="javascript:void(0)"
+                                    data-id="'.$row->id.'">
+
+                                    <i class="ti ti-send me-1"></i>
+                                    Send To Process
+                                </a>
+                            ';
+                        }
+
+                        
                     }
 
                     /*
@@ -553,6 +555,7 @@ class PurchaseOrderController extends Controller
             ->whereIn('usage', ['purchase', 'both'])
             ->first();
         $company = Company::with('defaultCurrency')->first();
+        $status = ['processing', 'partial'];
         $x = [
             'title' => 'Purchase Order New',
             'breadcrumb' => [
@@ -560,7 +563,7 @@ class PurchaseOrderController extends Controller
                 ['label' => 'Purchase Order', 'url' => ''],
             ],
             'supplier' => Supplier::where('status', 1)->get(),
-            'company' => Company::first(),
+            // 'company' => Company::first(),
             'idNumber' => $this->generateNumberId(),
             'shipping' => Shipping::where('status', 1)->get(),
             'warehouse' => Warehouse::where('status', 1)->get(),
@@ -570,6 +573,9 @@ class PurchaseOrderController extends Controller
             'taxes' => $taxes,
             'defaultTax' => $defaultTax,
             'company' => $company->defaultCurrency,
+            'number' => PurchaseRequisition::whereIn('status', $status)
+                ->where('active', 1)
+                ->get(),
 
         ];
 
@@ -844,7 +850,8 @@ class PurchaseOrderController extends Controller
                 'tax' => (float) ($detail->tax ?? 0),
                 'sisa_pr' => $sisaPr,
                 'kuota_asli' => $kuotaAsliPr,
-                'total_diambil_lainnya' => (float) $totalDiambilLainnya, // Dikirim ke frontend
+                'total_diambil_lainnya' => (float) $totalDiambilLainnya, 
+               
             ];
         });
 
@@ -858,6 +865,7 @@ class PurchaseOrderController extends Controller
             ->where('is_default', true)
             ->whereIn('usage', ['purchase', 'both'])
             ->first();
+        $status = ['processing', 'partial'];
 
         // 4. Susun semua variabel ke dalam array compact
         $x = [
@@ -879,12 +887,13 @@ class PurchaseOrderController extends Controller
             'jsonDetails' => $detailDataMapped,
             'taxes' => $taxes,
             'defaultTax' => $defaultTax,
+             'number' => PurchaseRequisition::whereIn('status', $status)
+                ->where('active', 1)
+                ->get(),
         ];
 
         return view('purchase.purchase_order.purchase_order_edit', $x);
     }
-
-    
 
     public function update(PurchaseOrderRequest $request, string $id)
     {

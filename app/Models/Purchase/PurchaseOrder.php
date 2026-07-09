@@ -69,9 +69,9 @@ class PurchaseOrder extends Model
         return $this->belongsTo(Shipping::class, 'vehicle_id');
     }
 
-    public function bankID()
+    public function paymentTermID()
     {
-        return $this->belongsTo(CashBank::class, 'bank_id');
+        return $this->belongsTo(SyaratPembayaran::class, 'payment_term');
     }
 
     public function purchaseRequisition()

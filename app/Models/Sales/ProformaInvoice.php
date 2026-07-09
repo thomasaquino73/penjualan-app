@@ -42,7 +42,8 @@ class ProformaInvoice extends Model
     {
         return $this->hasMany(ProformaInvoiceDetail::class, 'proforma_invoice_id');
     }
-     public function paymentTermID()
+
+    public function paymentTermID()
     {
         return $this->belongsTo(SyaratPembayaran::class, 'payment_term_id');
     }

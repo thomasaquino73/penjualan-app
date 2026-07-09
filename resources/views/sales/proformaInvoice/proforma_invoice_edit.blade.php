@@ -207,6 +207,7 @@
         </div>
     </div>
     @include('sales.proformaInvoice.part.modal_proforma_invoice')
+    @include('sales.proformaInvoice.part.modalQuotationDetail')
 @endsection
 @push('style')
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
@@ -267,17 +268,122 @@
                 @endforeach
             @endif
         ];
-        // const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
+        const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
 
-        let poIsFromPR = {{ $isFromPR ? 'true' : 'false' }};
-        if (poIsFromPR) {
-            $(".btn-success").html('<i class="ti ti-link"></i> Linked to SQ').prop('disabled', true);
-        }
+        // let poIsFromPR = {{ $isFromPR ? 'true' : 'false' }};
+        // if (poIsFromPR) {
+        //     $(".btn-success").html('<i class="ti ti-link"></i> Linked to SQ').prop('disabled', true);
+        // }
         $(function() {
             const datePicker = flatpickr("#proforma_invoice_date", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
             });
+        });
+
+        $("#showModalpr").on("click", function(e) {
+            e.preventDefault();
+
+            var customerId = $("#customer_id").val();
+            $("#sq_number")
+                .empty()
+                .append('<option value="">Select Quotation</option>')
+                .val(null)
+                .trigger("change");
+            if (!customerId) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Warning!",
+                    text: "Please select Customer first before adding new data.",
+                    confirmButtonColor: "#3085d6",
+                    confirmButtonText: "OK",
+                    customClass: {
+                        confirmButton: "btn btn-danger",
+                    },
+                    buttonsStyling: false,
+                });
+                return;
+            }
+
+            $.ajax({
+                url: "/sales-order/get-quotation/" + customerId,
+                type: "GET",
+                success: function(response) {
+
+                    let option = '<option value="">Select Quotation</option>';
+
+                    $.each(response, function(i, item) {
+                        option += `<option value="${item.id}">
+                                ${item.sales_quotation_code}
+                           </option>`;
+                    });
+
+                    $("#sq_number").html(option);
+
+                    $("#modalQuotationDetail").modal("show");
+                }
+            });
+        });
+
+        $('#sq_number').on('change', function() {
+
+            let quotationIds = $(this).val();
+
+            if (!quotationIds || quotationIds.length === 0) {
+                $('#quotationTableBody').html('');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('sales-order.getQuotationDetail') }}",
+                type: "POST",
+                data: {
+                    quotation_ids: quotationIds,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+
+                    let html = '';
+
+                    $.each(response, function(index, item) {
+
+                        html += `
+                    <tr>
+                        <td>
+                            <div class="form-check form-check-primary">
+                                <input
+                                    class="form-check-input checkItem"
+                                    type="checkbox"
+
+                                    data-id="${item.id}"
+                                    data-product_id="${item.product_id}"
+                                    data-product_name="${item.nama_barang}"
+                                    data-qty="${item.qty}"
+                                    data-unit_id="${item.unit_id}"
+                                    data-unit_name="${item.unit_name}"
+                                    data-unit_price="${item.unit_price}"
+                                    data-discount="${item.discount}"
+                                    data-amount="${item.amount}"
+                                    data-quotation_id="${item.sales_quotation_id}"
+                                >
+                            </div>
+                        </td>
+
+                        <td>${item.nama_barang}</td>
+                        <td class="text-end">${item.qty}</td>
+                        <td>${item.unit_name}</td>
+                        <td class="text-end">${parseFloat(item.unit_price).toLocaleString()}</td>
+                        <td class="text-end">${parseFloat(item.discount).toLocaleString()}</td>
+                        <td class="text-end">${parseFloat(item.amount).toLocaleString()}</td>
+                    </tr>`;
+                    });
+
+                    $("#checkAll").prop("checked", false);
+                    $("#quotationTableBody").html(html);
+
+                }
+            });
+
         });
 
 
@@ -374,6 +480,15 @@
                     placeholder: $this.attr("data-placeholder"),
                     width: "100%",
                     dropdownParent: $("#modalPrDetail"),
+                });
+            });
+
+            $(".select2-modal2").each(function() {
+                var $this = $(this);
+                $this.wrap('<div class="position-relative"></div>').select2({
+                    placeholder: $this.attr("data-placeholder"),
+                    width: "100%",
+                    dropdownParent: $("#modalQuotationDetail"),
                 });
             });
 
@@ -736,6 +851,7 @@
                             $('#taxpayer_data').val('');
                         }
 
+                        $('#address').val(data.address ?? '');
 
                     }
                 });
@@ -965,95 +1081,166 @@
 
             $("#postForm").on("submit", function(e) {
                 e.preventDefault();
+
                 let form = this;
+                let formData = new FormData(form);
 
-                // Fungsi pembungkus logika AJAX (Eksekutor)
-                let runAjax = function() {
-                    let formData = new FormData(form);
+                // Ambil warehouse_id
+                let warehouseId = $("#warehouse_id").val();
 
-                    if (!activeBtn) {
-                        activeBtn = $("#postForm").find('button[data-save-and-new="false"]');
-                        saveAndNew = false;
-                    }
+                if (!activeBtn) {
+                    activeBtn = $("#postForm").find(
+                        'button[data-save-and-new="false"]',
+                    );
+                    saveAndNew = false;
+                }
 
-                    activeBtn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
-                    $(".card-footer button").prop("disabled", true);
+                // START LOADING
+                activeBtn.html(
+                    '<i class="fa fa-spin fa-spinner me-1"></i> Checking...',
+                );
+                $(".card-footer button").prop("disabled", true);
 
-                    formData.append("save_and_new", saveAndNew ? 1 : 0);
-                    formData.append("items_detail", JSON.stringify(prDetailsData));
+                // ===========================
+                // VALIDASI WAREHOUSE
+                // ===========================
+                if (!warehouseId || warehouseId === "") {
 
-                    $.ajax({
-                        url: $(form).attr("action"),
-                        method: $(form).attr("method"),
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        dataType: "json",
-                        complete: function() {
-                            let closeBtn = $("#postForm").find(
-                                'button[data-save-and-new="false"]');
-                            let newBtn = $("#postForm").find(
-                                'button[data-save-and-new="true"]');
-                            closeBtn.html(
-                                '<i class="fa fa-upload me-1"></i> Save and Close');
-                            newBtn.html(
-                                '<i class="fa fa-plus-circle me-1"></i> Save and Create New'
-                            );
-                            $(".card-footer button").prop("disabled", false);
+                    let closeBtn = $("#postForm").find(
+                        'button[data-save-and-new="false"]',
+                    );
+                    let newBtn = $("#postForm").find(
+                        'button[data-save-and-new="true"]',
+                    );
+
+                    closeBtn.html(
+                        '<i class="fa fa-upload me-1"></i> Save and Close',
+                    );
+                    newBtn.html(
+                        '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
+                    );
+
+                    $(".card-footer button").prop("disabled", false);
+
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Warehouse Required",
+                        text: "Please select a warehouse before saving.",
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn btn-primary waves-effect waves-light",
                         },
-                        success: function(response) {
-                            Swal.fire({
-                                icon: "success",
-                                title: "Data Updated Successfully",
-                                text: response.message,
-                                customClass: {
-                                    confirmButton: "btn btn-primary waves-effect waves-light"
-                                },
-                                buttonsStyling: false,
-                            }).then(() => {
-                                window.location.href = response.redirect;
-                            });
-                        },
-                        error: function(xhr) {
-                            resetValidation();
-                            let errors = xhr.responseJSON?.errors;
-                            $.each(errors, function(key, value) {
-                                displayFieldError(key, value[0]);
-                            });
-                            Swal.fire({
-                                icon: "error",
-                                title: "Failed to Create Data",
-                                text: xhr.responseJSON?.message ||
-                                    "Please check your data again.",
-                                customClass: {
-                                    confirmButton: "btn btn-primary waves-effect waves-light"
-                                },
-                                buttonsStyling: false,
-                            });
-
-                        }
+                        buttonsStyling: false,
+                    }).then(() => {
+                        $("#warehouse_id").focus();
                     });
-                };
 
-                // Validasi Item Kosong
-                if (typeof prDetailsData === "undefined" || prDetailsData.length === 0) {
+                    return false;
+                }
+
+                // ===========================
+                // VALIDASI DETAIL
+                // ===========================
+                if (
+                    typeof prDetailsData === "undefined" ||
+                    prDetailsData.length === 0
+                ) {
                     Swal.fire({
                         icon: "warning",
                         title: "Empty Items",
                         text: "Please add at least one item detail to the table before saving.",
                         confirmButtonText: "OK",
                         customClass: {
-                            confirmButton: "btn btn-primary waves-effect waves-light"
+                            confirmButton: "btn btn-primary waves-effect waves-light",
                         },
                         buttonsStyling: false,
                     }).then(() => {
+                        let closeBtn = $("#postForm").find(
+                            'button[data-save-and-new="false"]',
+                        );
+                        let newBtn = $("#postForm").find(
+                            'button[data-save-and-new="true"]',
+                        );
+
+                        closeBtn.html(
+                            '<i class="fa fa-upload me-1"></i> Save and Close',
+                        );
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
+                        );
+
                         $(".card-footer button").prop("disabled", false);
                     });
+
                     return false;
                 }
 
-                // Jalankan validasi duplikat, jika lolos/dikonfirmasi, baru jalankan runAjax
-                submitUpdate(runAjax);
+                formData.append("save_and_new", saveAndNew ? 1 : 0);
+                formData.append("items_detail", JSON.stringify(prDetailsData));
+
+                $.ajax({
+                    url: $(form).attr("action"),
+                    method: $(form).attr("method"),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    beforeSend: function() {
+                        activeBtn.html(
+                            '<i class="fa fa-spin fa-spinner me-1"></i> Sending...',
+                        );
+                        $(".card-footer button").prop("disabled", true);
+                    },
+                    complete: function() {
+                        let closeBtn = $("#postForm").find(
+                            'button[data-save-and-new="false"]',
+                        );
+                        let newBtn = $("#postForm").find(
+                            'button[data-save-and-new="true"]',
+                        );
+
+                        closeBtn.html(
+                            '<i class="fa fa-upload me-1"></i> Save and Close',
+                        );
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
+                        );
+
+                        $(".card-footer button").prop("disabled", false);
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Data Created Successfully",
+                            text: response.message,
+                            customClass: {
+                                confirmButton: "btn btn-primary waves-effect waves-light",
+                            },
+                            buttonsStyling: false,
+                        }).then(() => {
+                            window.location.href = response.redirect;
+                        });
+                    },
+                    error: function(xhr) {
+                        resetValidation();
+
+                        let errors = xhr.responseJSON?.errors;
+                        $.each(errors, function(key, value) {
+                            displayFieldError(key, value[0]);
+                        });
+
+                        Swal.fire({
+                            icon: "error",
+                            title: "Failed to Create Data",
+                            text: xhr.responseJSON.message ||
+                                "Please check your data again.",
+                            customClass: {
+                                confirmButton: "btn btn-primary waves-effect waves-light",
+                            },
+                            buttonsStyling: false,
+                        });
+                    },
+                });
             });
             $("#formPrDetail").on("submit", function(e) {
                 e.preventDefault();
@@ -1220,6 +1407,71 @@
 
                 // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
                 calculateTotalOrder();
+            });
+            $("#btnSubmitSelected").on("click", function() {
+
+                let checkedBoxes = $(".checkItem:checked");
+
+                if (checkedBoxes.length === 0) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Warning",
+                        text: "Silakan pilih minimal satu item quotation.",
+                        customClass: {
+                            confirmButton: "btn btn-danger",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return;
+                }
+
+                if (typeof prDetailsData === "undefined") {
+                    window.prDetailsData = [];
+                }
+
+                checkedBoxes.each(function() {
+
+                    let item = {
+                        detail_id: $(this).data("id"),
+                        product_id: $(this).data("product_id"),
+                        data_produk: $(this).data("product_name"),
+                        quantity: parseFloat($(this).data("qty")),
+                        sisa_pr: parseFloat($(this).data("qty")),
+                        unit_id: $(this).data("unit_id"),
+                        unit: $(this).data("unit_name"),
+                        warehouse_id: null,
+                        warehouse: null,
+                        unit_price: parseFloat($(this).data("unit_price")),
+                        discount: parseFloat($(this).data("discount")),
+                        amount: parseFloat($(this).data("amount")),
+                        quotation_code: $(this).data("quotation_code"),
+                    };
+
+                    // Hindari data ganda
+                    let exists = prDetailsData.some(x => x.detail_id == item.detail_id);
+
+                    if (!exists) {
+                        prDetailsData.push(item);
+                    }
+                });
+
+                table.clear().rows.add(prDetailsData).draw();
+
+                calculateGrandTotal();
+                calculateTotalOrder();
+
+                $("#modalQuotationDetail").modal("hide");
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Success",
+                    text: "Data quotation berhasil dimasukkan.",
+                    customClass: {
+                        confirmButton: "btn btn-primary",
+                    },
+                    buttonsStyling: false,
+                });
+
             });
 
 

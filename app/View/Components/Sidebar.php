@@ -100,32 +100,32 @@ class Sidebar extends Component
                     // ],
                 ],
             ],
-            [
-                'type' => 'dropdown',
-                'name' => 'PEMBAYARAN',
-                'icon' => 'ti ti-file-invoice',
-                'roles' => ['Super Admin'],
-                'permissions' => [
-                    'purchase_invoice-browse',
-                ],
-                'children' => [
-                    [
-                        'name' => 'Purchase Invoice',
-                        'route' => 'purchase-invoice.index',
-                        'pattern' => 'purchase-invoice.*',
-                        'roles' => ['Super Admin'],
-                        'permissions' => ['purchase_invoice-browse'],
-                    ],
-                    [
-                        'name' => 'Purchase Payment',
-                        'route' => 'purchase-invoice.index',
-                        'pattern' => 'purchase-invoice.*',
-                        'roles' => ['Super Admin'],
-                        'permissions' => ['purchase_invoice-browse'],
-                    ],
+            // [
+            //     'type' => 'dropdown',
+            //     'name' => 'PEMBAYARAN',
+            //     'icon' => 'ti ti-file-invoice',
+            //     'roles' => ['Super Admin'],
+            //     'permissions' => [
+            //         'purchase_invoice-browse',
+            //     ],
+            //     'children' => [
+            //         [
+            //             'name' => 'Purchase Invoice',
+            //             'route' => 'purchase-invoice.index',
+            //             'pattern' => 'purchase-invoice.*',
+            //             'roles' => ['Super Admin'],
+            //             'permissions' => ['purchase_invoice-browse'],
+            //         ],
+            //         [
+            //             'name' => 'Purchase Payment',
+            //             'route' => 'purchase-invoice.index',
+            //             'pattern' => 'purchase-invoice.*',
+            //             'roles' => ['Super Admin'],
+            //             'permissions' => ['purchase_invoice-browse'],
+            //         ],
 
-                ],
-            ],
+            //     ],
+            // ],
             [
                 'type' => 'section',
                 'label' => 'PENJUALAN',
@@ -233,16 +233,16 @@ class Sidebar extends Component
                 'roles' => ['Super Admin'],
                 'permissions' => ['delivery_order-browse'],
             ],
-            [
-                'type' => 'single',
-                'name' => 'Store Sales',
-                'route' => 'penjualan-toko.index',
-                'icon' => 'ti ti-calculator',
-                'pattern' => 'penjualan-toko.*',
-                'active' => true,
-                'roles' => ['Super Admin'],
-                'permissions' => ['penjualan_toko-browse'],
-            ],
+            // [
+            //     'type' => 'single',
+            //     'name' => 'Store Sales',
+            //     'route' => 'penjualan-toko.index',
+            //     'icon' => 'ti ti-calculator',
+            //     'pattern' => 'penjualan-toko.*',
+            //     'active' => true,
+            //     'roles' => ['Super Admin'],
+            //     'permissions' => ['penjualan_toko-browse'],
+            // ],
             [
                 'type' => 'section',
                 'label' => 'INVENTORY',

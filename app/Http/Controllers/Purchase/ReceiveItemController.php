@@ -649,7 +649,6 @@ class ReceiveItemController extends Controller
             $data['updated_by'] = Auth::id();
             $data['address'] = $request->address;
 
-
             $receiveItem->update($data);
 
             // 4. SIMPAN: Data Detail Baru

@@ -43,7 +43,7 @@
 
                                   <!-- Input Box Utama -->
                                   <input type="number" id="unit_price" name="unit_price" class="form-control"
-                                      placeholder="0" min="0">
+                                      step="any" placeholder="0" min="0">
 
                                   <!-- Tombol Dropdown History Terintegrasi -->
 

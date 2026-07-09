@@ -42,13 +42,14 @@ class SalesInvoice extends Model
     {
         return $this->hasMany(SalesInvoiceDetail::class, 'sales_invoice_id');
     }
-     public function salesOrder()
+
+    public function salesOrder()
     {
         return $this->belongsTo(SalesOrder::class, 'sales_order_id', 'id');
     }
+
     public function paymentTermID()
     {
         return $this->belongsTo(SyaratPembayaran::class, 'payment_term_id');
     }
-   
 }

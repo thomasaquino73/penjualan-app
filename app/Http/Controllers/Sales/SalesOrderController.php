@@ -10,7 +10,6 @@ use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
 use App\Models\Sales\ProformaInvoice;
-use App\Models\Sales\ProformaInvoiceDetail;
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderDetail;
 use App\Models\Sales\SalesQuotation;
@@ -253,7 +252,39 @@ class SalesOrderController extends Controller
                     | 1. OWNER ACTION
                     |--------------------------------------------------------------------------
                     */
+                    if (
+                        $user->can('sales_order-edit') &&
+                        in_array($row->status, ['draft', 'pending', 'processing'])
+                    ) {
 
+                        $btn .= '
+                                <a class="dropdown-item"
+                                    href="'.route('sales-order.edit', $row->id).'">
+
+                                    <i class="far fa-edit me-1"></i>
+                                    Edit SO
+                                </a>
+                            ';
+                    }
+
+                    // DELETE
+                    if (
+                        $user->can('sales_order-delete') &&
+                           in_array($row->status, ['draft', 'pending', 'processing'])
+                    ) {
+
+                        $btn .= '
+                                <a class="dropdown-item text-danger"
+                                    href="javascript:void(0)"
+                                    id="delete"
+                                    data-id="'.$row->id.'"
+                                    data-name="'.$row->sales_order_code.'">
+
+                                    <i class="ti ti-trash me-1"></i>
+                                    Delete
+                                </a>
+                            ';
+                    }
                     if ($row->created_by == $currentUserId) {
 
                         // SEND TO APPROVAL
@@ -282,39 +313,7 @@ class SalesOrderController extends Controller
                             ';
                         }
                         // EDIT
-                        if (
-                            $user->can('sales_order-edit') &&
-                            in_array($row->status, ['draft', 'pending', 'processing'])
-                        ) {
 
-                            $btn .= '
-                                <a class="dropdown-item"
-                                    href="'.route('sales-order.edit', $row->id).'">
-
-                                    <i class="far fa-edit me-1"></i>
-                                    Edit PO
-                                </a>
-                            ';
-                        }
-
-                        // DELETE
-                        if (
-                            $user->can('sales_order-delete') &&
-                            $row->status == 'draft'
-                        ) {
-
-                            $btn .= '
-                                <a class="dropdown-item text-danger"
-                                    href="javascript:void(0)"
-                                    id="delete"
-                                    data-id="'.$row->id.'"
-                                    data-name="'.$row->sales_order_code.'">
-
-                                    <i class="ti ti-trash me-1"></i>
-                                    Delete
-                                </a>
-                            ';
-                        }
                     }
 
                     /*
@@ -424,7 +423,7 @@ class SalesOrderController extends Controller
                     } else {
                         $btn .= '<a class="dropdown-item"
                 href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->code.'">
-                <i class="ti ti-lock"></i> Close PO
+                <i class="ti ti-lock"></i> Close SO
              </a>';
                     }
                     /*
@@ -535,7 +534,7 @@ class SalesOrderController extends Controller
         return $lastCode.'-0001';
     }
 
-    public function create()
+    public function create(Request $r)
     {
         // 🔥 Ambil semua pajak aktif (khusus pembelian & general)
         $taxes = Tax::where('is_active', true)
@@ -548,6 +547,7 @@ class SalesOrderController extends Controller
             ->whereIn('usage', ['purchase', 'both'])
             ->first();
         $company = Company::with('defaultCurrency')->first();
+        $status = ['processing', 'partial'];
 
         $x = [
             'title' => 'Sales Order New',
@@ -558,7 +558,7 @@ class SalesOrderController extends Controller
             'customer' => Customer::where('status', '<>', 0)->get(),
             'idNumber' => $this->generateNumberId(),
             'product' => Barang::where('status', '<>', 0)->get(),
-            'warehouse' => Warehouse::where('status', 1)->get(),
+            'warehouse' => Warehouse::where('status', '<>', 0)->get(),
             'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
             'salesman' => User::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),
@@ -566,6 +566,11 @@ class SalesOrderController extends Controller
             'taxes' => $taxes,
             'defaultTax' => $defaultTax,
             'company' => $company->defaultCurrency,
+
+            'sqNumber' => SalesQuotation::whereIn('status', $status)
+                ->where('active', 1)
+                ->where('customer_id', $r->customer_id)
+                ->get(),
 
         ];
 
@@ -750,7 +755,7 @@ class SalesOrderController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(string $id, Request $r)
     {
         // Mengambil tahun berjalan untuk tabel dinamis
         $year = date('Y');
@@ -829,6 +834,7 @@ class SalesOrderController extends Controller
             ->where('is_default', true)
             ->whereIn('usage', ['purchase', 'both'])
             ->first();
+        $status = ['processing', 'partial'];
         $x = [
             'title' => 'Edit Sales Order ',
             'breadcrumb' => [
@@ -848,6 +854,11 @@ class SalesOrderController extends Controller
             'jsonDetails' => $detailDataMapped,
             'taxes' => $taxes,
             'defaultTax' => $defaultTax,
+
+            'sqNumber' => SalesQuotation::whereIn('status', $status)
+                ->where('active', 1)
+                ->where('customer_id', $r->customer_id)
+                ->get(),
         ];
 
         return view('sales.salesOrder.sales_order_edit', $x);
@@ -1436,19 +1447,8 @@ class SalesOrderController extends Controller
         }
     }
 
-    public function getProcessingProforma(Request $request)
-    {
-        $orders = ProformaInvoice::with([
-            'details' => function ($query) {
-                $query->whereColumn('so_qty', '<', 'qty');
-            },
-        ])
-            ->where('customer_id', $request->customer_id)
-            ->whereNotIn('status', ['draft', 'closed', 'done'])
-            ->get();
+ 
 
-        return response()->json($orders);
-    }
     public function getProcessingData(Request $request)
     {
         $orders = SalesQuotation::with([
@@ -1494,128 +1494,94 @@ class SalesOrderController extends Controller
         ]);
     }
 
-    public function getProformaDetail(Request $request)
-    {
-        $ids = $request->ids;
+    // public function getQuotationDetail2(Request $request)
+    // {
+    //     $ids = $request->ids;
 
-        if (empty($ids)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak ada data SQ yang dipilih.',
-                'data' => [],
-            ]);
-        }
+    //     if (empty($ids)) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Tidak ada data SQ yang dipilih.',
+    //             'data' => [],
+    //         ]);
+    //     }
 
-        $details = ProformaInvoiceDetail::with([
-            'produkID',
-            'unitID',
-            'proforma',
-        ])
-            ->whereIn('proforma_invoice_id', $ids)
-            ->where('active', 1)
-            ->whereHas('proforma', function ($q) {
-                $q->whereIn('status', ['processing', 'partial']);
-            })
-            ->get();
+    //     $details = SalesQuotationDetail::with([
+    //         'produkID',
+    //         'unitID',
+    //         'quotation',
+    //     ])
+    //         ->whereIn('sales_quotation_id', $ids)
+    //         ->where('active', 1)
+    //         ->whereHas('quotation', function ($q) {
+    //             $q->whereIn('status', ['processing', 'partial']);
+    //         })
+    //         ->get();
 
-        $formattedData = $details->map(function ($item) {
-            // LOGIKA PENENTUAN SISA:
-            // Cek apakah outstanding_qty ada (tidak null) dan bukan 0
-            $sisaQty = ($item->outstanding_qty !== null && $item->outstanding_qty > 0)
-                       ? (float) $item->outstanding_qty
-                       : (float) $item->qty;
+    //     $formattedData = $details->map(function ($item) {
+    //         // LOGIKA PENENTUAN SISA:
+    //         // Cek apakah outstanding_qty ada (tidak null) dan bukan 0
+    //         $sisaQty = ($item->outstanding_qty !== null && $item->outstanding_qty > 0)
+    //                    ? (float) $item->outstanding_qty
+    //                    : (float) $item->qty;
 
-            return [
-                'id' => $item->id,
-                'proforma_invoce_detail_id' => $item->id,
-                'proforma_invoice_id' => $item->proforma_invoice_id,
-                'product_id' => $item->product_id,
-                'product_name' => $item->produkID->nama_barang ?? '',
-                'data_produk' => $item->produkID->nama_barang ?? '',
+    //         return [
+    //             'id' => $item->id,
+    //             'sales_quotation_detail_id' => $item->id,
+    //             'sales_quotation_id' => $item->sales_quotation_id,
+    //             'product_id' => $item->product_id,
+    //             'product_name' => $item->produkID->nama_barang ?? '',
+    //             'data_produk' => $item->produkID->nama_barang ?? '',
 
-                // Gunakan $sisaQty yang sudah dihitung di atas
-                'quantity' => $sisaQty,
-                'qty' => $sisaQty,
+    //             // Gunakan $sisaQty yang sudah dihitung di atas
+    //             'quantity' => $sisaQty,
+    //             'qty' => $sisaQty,
 
-                'unit_id' => $item->unit_id,
-                'unit_name' => $item->unitID->detail ?? '',
-                'warehouse_id' => $item->warehouse_id,
-                'warehouse_name' => $item->warehouseID->nama_gudang ?? '',
-                // 'unit' => $item->unitID->detail ?? '',
-                'unit_price' => $item->unit_price,
-                'discount' => $item->discount,
-                'amount' => $item->unit_price * $sisaQty, // Update amount berdasarkan sisa
-                'tax' => 0,
-                'quotation_code' => $item->proforma->proforma_invoice_code ?? '',
-                'proforma_status' => $item->proforma->status ?? '',
-            ];
-        });
+    //             'unit_id' => $item->unit_id,
+    //             'unit' => $item->unitID->detail ?? '',
+    //             'unit_name' => $item->unitID->detail ?? '',
+    //             'unit_price' => $item->unit_price,
+    //             'discount' => $item->discount,
+    //             'amount' => $item->unit_price * $sisaQty, // Update amount berdasarkan sisa
+    //             'tax' => 0,
+    //             'quotation_code' => $item->quotation->sales_quotation_code ?? '',
+    //             'quotation_status' => $item->quotation->status ?? '',
+    //         ];
+    //     });
 
-        return response()->json([
-            'success' => true,
-            'data' => $formattedData,
-        ]);
-    }
-    
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $formattedData,
+    //     ]);
+    // }
+
     public function getQuotationDetail(Request $request)
     {
-        $ids = $request->ids;
+        $year = date('Y');
 
-        if (empty($ids)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak ada data SQ yang dipilih.',
-                'data' => [],
-            ]);
-        }
+        $ids = $request->quotation_ids;
 
-        $details = SalesQuotationDetail::with([
-            'produkID',
-            'unitID',
-            'quotation',
-        ])
-            ->whereIn('sales_quotation_id', $ids)
-            ->where('active', 1)
-            ->whereHas('quotation', function ($q) {
-                $q->whereIn('status', ['processing', 'partial']);
-            })
+        $details = DB::table("sales_quotation_detail_$year as d")
+            ->join('data_barang as b', 'b.id', '=', 'd.product_id')
+            ->join('basic_code_detail as u', 'u.id', '=', 'd.unit_id')
+            ->select(
+                'd.id',
+                'd.sales_quotation_id',
+                'd.product_id',
+                'b.nama_barang',
+                'd.qty',
+                'd.unit_price',
+                'd.discount',
+                'd.discount_percent',
+                'd.amount',
+                'u.detail as unit_name',
+                'd.unit_id'
+            )
+            ->whereIn('d.sales_quotation_id', $ids)
+            ->where('d.active', 1)
             ->get();
 
-        $formattedData = $details->map(function ($item) {
-            // LOGIKA PENENTUAN SISA:
-            // Cek apakah outstanding_qty ada (tidak null) dan bukan 0
-            $sisaQty = ($item->outstanding_qty !== null && $item->outstanding_qty > 0)
-                       ? (float) $item->outstanding_qty
-                       : (float) $item->qty;
-
-            return [
-                'id' => $item->id,
-                'sales_quotation_detail_id' => $item->id,
-                'sales_quotation_id' => $item->sales_quotation_id,
-                'product_id' => $item->product_id,
-                'product_name' => $item->produkID->nama_barang ?? '',
-                'data_produk' => $item->produkID->nama_barang ?? '',
-
-                // Gunakan $sisaQty yang sudah dihitung di atas
-                'quantity' => $sisaQty,
-                'qty' => $sisaQty,
-
-                'unit_id' => $item->unit_id,
-                'unit' => $item->unitID->detail ?? '',
-                'unit_name' => $item->unitID->detail ?? '',
-                'unit_price' => $item->unit_price,
-                'discount' => $item->discount,
-                'amount' => $item->unit_price * $sisaQty, // Update amount berdasarkan sisa
-                'tax' => 0,
-                'quotation_code' => $item->quotation->sales_quotation_code ?? '',
-                'quotation_status' => $item->quotation->status ?? '',
-            ];
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => $formattedData,
-        ]);
+        return response()->json($details);
     }
 
     public function submitToPending($id)
@@ -1967,5 +1933,18 @@ class SalesOrderController extends Controller
         ]);
 
         return response()->json(['success' => true, 'message' => 'Sales Order berhasil diajukan!']);
+    }
+
+    public function getQuotation($customerId)
+    {
+        $status = ['processing', 'partial'];
+
+        $data = SalesQuotation::whereIn('status', $status)
+            ->where('active', 1)
+            ->where('customer_id', $customerId)
+            ->select('id', 'sales_quotation_code')
+            ->get();
+
+        return response()->json($data);
     }
 }

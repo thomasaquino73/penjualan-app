@@ -252,7 +252,7 @@ class PurchaseRequisitionController extends Controller
         return $romawi[$bulan] ?? 'I';
     }
 
-     private function generateNumberId()
+    private function generateNumberId()
     {
         // Ambil record terakhir berdasarkan ID (urutkan dari yang terbaru)
         $last = PurchaseRequisition::orderBy('id', 'desc')->lockForUpdate()->first();
@@ -833,7 +833,7 @@ class PurchaseRequisitionController extends Controller
         return response()->json(['success' => true, 'message' => 'Purchase Requisition berhasil diproses!']);
     }
 
-     public function print($id)
+    public function print($id)
     {
         $purchaseRequisition = PurchaseRequisition::with(['details.produkID', 'details.unitID'])->findOrFail($id);
         $company = Company::first();

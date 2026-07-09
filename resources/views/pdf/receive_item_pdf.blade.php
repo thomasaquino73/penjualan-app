@@ -287,9 +287,8 @@
             </td>
             <td style="width: 45%;">
                 <div class="company-title">{{ $company->nama_perusahaan }}</div>
-                <div class="company-address">
-                    {{ $company->alamat }}
-                </div>
+                <div class="company-address">{!! nl2br(e($company->alamat)) !!}</div>
+
             </td>
         </tr>
     </table>
@@ -302,7 +301,7 @@
                 <div class="section-title">Supplier</div>
                 <div class="recipient-box">
                     <strong>{{ $model->supplierId->nama_supplier }}</strong><br>
-                    {{ $model->address }}
+                    {!! nl2br(e($model->address)) !!}
 
                 </div>
             </td>

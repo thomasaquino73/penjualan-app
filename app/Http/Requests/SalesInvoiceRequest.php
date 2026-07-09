@@ -32,14 +32,13 @@ class SalesInvoiceRequest extends FormRequest
             'description' => 'nullable|string',
             'items_detail' => 'required',
         ];
-        
-         if ($this->isMethod('POST')) {
+
+        if ($this->isMethod('POST')) {
             // Store
             // code tidak divalidasi karena dibuat otomatis
         }
 
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
-
 
             $rules['sales_invoice_code'] = [
                 'required',

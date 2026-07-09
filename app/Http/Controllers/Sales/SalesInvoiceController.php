@@ -9,7 +9,6 @@ use App\Models\DocumentTransactionHistory;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\Warehouse;
-use App\Models\Purchase\Supplier;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesInvoice;
 use App\Models\Sales\SalesInvoiceDetail;
@@ -163,26 +162,6 @@ class SalesInvoiceController extends Controller
                                 '.$text.'
                             </span>
                     ';
-
-                    // APPROVED INFO
-                    if ($row->status == 'approved' && $row->approvedBy) {
-
-                        $html .= '
-                        <small class="text-muted mt-1">
-                            Approved By : '.$row->approvedBy->fullname.'
-                        </small>
-                    ';
-                    }
-
-                    // REJECTED INFO
-                    if ($row->status == 'rejected' && $row->rejectedBy) {
-
-                        $html .= '
-                            <small class="text-muted mt-1">
-                                Rejected By : '.$row->rejectedBy->fullname.'
-                            </small>
-                        ';
-                    }
 
                     // OUTSTANDING INFO
                     if (
@@ -503,7 +482,7 @@ class SalesInvoiceController extends Controller
                             'discount_percent' => $discountPercent,
                             'discount' => $discount,
                             'amount' => $item['amount'] ?? $amount,
-                            'so_qty' => $qtyInputForm, // Sinkronisasi: sq_qty di SO = qty SO
+                            'so_qty' => $qtyInputForm, // Sinkronisasi: so_qty di SO = qty SO
                             'outstanding_qty' => 0, // Karena SO adalah tahap akhir, outstanding di SO biasanya 0
                             'status' => 'open',
                             'active' => 1,
@@ -530,6 +509,52 @@ class SalesInvoiceController extends Controller
                             ]),
                         ]);
 
+                        if ($sqDetailId) {
+                            $sqDetail = DB::table("sales_order_detail_{$currentYear}")->where('id', $sqDetailId)->first();
+
+                            if ($sqDetail) {
+                                // Hitung total akumulasi qty yang sudah masuk SO untuk item ini
+                                $totalSoForThisItem = SalesInvoiceDetail::where('sales_order_detail_id', $sqDetailId)
+                                    ->where('active', 1)
+                                    ->sum('qty');
+
+                                // Update so_qty dan outstanding_qty di SQ Detail
+                                $newOutstanding = max(0, ($sqDetail->qty - $totalSoForThisItem));
+
+                                DB::table("sales_order_detail_{$currentYear}")
+                                    ->where('id', $sqDetailId)
+                                    ->update([
+                                        'so_qty' => $totalSoForThisItem,
+                                        'outstanding_qty' => $newOutstanding,
+                                    ]);
+
+                                if (! in_array($sqDetail->sales_order_id, $involvedSqIds)) {
+                                    $involvedSqIds[] = $sqDetail->sales_order_id;
+                                }
+                            }
+                        }
+
+                    }
+
+                    foreach ($involvedSqIds as $sqId) {
+                        $allDetails = DB::table("sales_order_detail_{$currentYear}")
+                            ->where('sales_order_id', $sqId)
+                            ->get();
+
+                        $totalRequested = $allDetails->sum('qty');
+                        $totalOrdered = $allDetails->sum('so_qty');
+
+                        if ($totalOrdered >= $totalRequested) {
+                            $newStatus = 'completed';
+                        } elseif ($totalOrdered > 0) {
+                            $newStatus = 'partial';
+                        } else {
+                            $newStatus = 'processing';
+                        }
+
+                        DB::table("sales_order_{$currentYear}")
+                            ->where('id', $sqId)
+                            ->update(['status' => $newStatus]);
                     }
 
                 }
@@ -556,16 +581,13 @@ class SalesInvoiceController extends Controller
             ], 500);
         }
     }
-    
 
     public function show(string $id)
     {
         //
     }
 
- 
-
-     public function edit(string $id)
+    public function edit(string $id)
     {
         // Mengambil tahun berjalan untuk tabel dinamis
         $year = date('Y');
@@ -879,7 +901,7 @@ class SalesInvoiceController extends Controller
             $po->update(['active' => 0, 'updated_by' => Auth::id()]);
             SalesInvoiceDetail::where('sales_invoice_id', $po->id)->update(['active' => 0]);
 
-            // 4. Update Ulang sq_qty di setiap PR Detail yang terdampak
+            // 4. Update Ulang so_qty di setiap PR Detail yang terdampak
             // Kita hitung ulang berdasarkan sisa SO yang masih 'active' = 1
             foreach ($sqDetails as $sqDetail) {
                 if ($sqDetail->sales_order_detail_id) {
@@ -889,7 +911,7 @@ class SalesInvoiceController extends Controller
 
                     DB::table('sales_order_detail_'.date('Y'))
                         ->where('id', $sqDetail->sales_order_detail_id)
-                        ->update(['sq_qty' => $totalRemainingPo]);
+                        ->update(['so_qty' => $totalRemainingPo]);
                 }
             }
 
@@ -899,7 +921,7 @@ class SalesInvoiceController extends Controller
                     ->get();
 
                 $totalRequested = $allDetails->sum('qty');
-                $totalOrdered = $allDetails->sum('sq_qty');
+                $totalOrdered = $allDetails->sum('so_qty');
 
                 if ($totalOrdered >= $totalRequested) {
                     $status = 'closed';
@@ -1062,7 +1084,7 @@ class SalesInvoiceController extends Controller
             ]);
             SalesInvoiceDetail::whereIn('sales_invoice_id', $ids)->update(['active' => 0]);
 
-            // 3. Update sq_qty di PR Detail dan kumpulkan ID PR Master
+            // 3. Update so_qty di PR Detail dan kumpulkan ID PR Master
             // foreach ($sqDetails as $sqDetail) {
             //     if ($sqDetail->sales_order_detail_id) {
             //         // Hitung total dari SO yang tersisa (yang masih aktif)
@@ -1073,7 +1095,7 @@ class SalesInvoiceController extends Controller
             //         // Update ke tabel PR Detail
             //         DB::table('sales_order_detail_'.date('Y'))
             //             ->where('id', $sqDetail->sales_order_detail_id)
-            //             ->update(['sq_qty' => $totalRemainingPo]);
+            //             ->update(['so_qty' => $totalRemainingPo]);
 
             //         // Simpan ID PR untuk update status nanti
             //         $prDetail = DB::table('sales_order_detail_'.date('Y'))
@@ -1093,7 +1115,7 @@ class SalesInvoiceController extends Controller
             //         ->get();
 
             //     $totalRequested = $allDetails->sum('qty');
-            //     $totalOrdered = $allDetails->sum('sq_qty');
+            //     $totalOrdered = $allDetails->sum('so_qty');
 
             //     if ($totalOrdered >= $totalRequested) {
             //         $status = 'closed';
@@ -1142,7 +1164,7 @@ class SalesInvoiceController extends Controller
             // $poDetails = SalesInvoiceDetail::where('sales_invoice_id', $po->id)->get();
             // $involvedPrIds = [];
 
-            // 4. Update ulang sq_qty di PR Detail
+            // 4. Update ulang so_qty di PR Detail
             // foreach ($poDetails as $poDetail) {
             //     if ($poDetail->sales_order_detail_id) {
             //         // Hitung total dari semua SO yang aktif
@@ -1153,7 +1175,7 @@ class SalesInvoiceController extends Controller
             //         // Update ke tabel PR Detail
             //         DB::table('sales_order_detail_'.date('Y'))
             //             ->where('id', $poDetail->sales_order_detail_id)
-            //             ->update(['sq_qty' => $totalPoForThisItem]);
+            //             ->update(['so_qty' => $totalPoForThisItem]);
 
             //         // Simpan ID PR untuk update status
             //         $prDetail = DB::table('sales_order_detail_'.date('Y'))
@@ -1173,7 +1195,7 @@ class SalesInvoiceController extends Controller
             //         ->get();
 
             //     $totalRequested = $allDetails->sum('qty');
-            //     $totalOrdered = $allDetails->sum('sq_qty');
+            //     $totalOrdered = $allDetails->sum('so_qty');
 
             //     if ($totalOrdered >= $totalRequested) {
             //         $status = 'closed';
@@ -1229,7 +1251,7 @@ class SalesInvoiceController extends Controller
             $poDetails = SalesInvoiceDetail::whereIn('sales_invoice_id', $ids)->get();
             $involvedPrIds = [];
 
-            // 4. Update sq_qty di PR Detail dan kumpulkan ID PR Master
+            // 4. Update so_qty di PR Detail dan kumpulkan ID PR Master
             foreach ($poDetails as $poDetail) {
                 if ($poDetail->sales_order_detail_id) {
                     // Hitung total dari semua SO yang aktif
@@ -1240,7 +1262,7 @@ class SalesInvoiceController extends Controller
                     // Update ke tabel PR Detail
                     DB::table('sales_order_detail_'.date('Y'))
                         ->where('id', $poDetail->sales_order_detail_id)
-                        ->update(['sq_qty' => $totalPoForThisItem]);
+                        ->update(['so_qty' => $totalPoForThisItem]);
 
                     // Simpan ID PR untuk update status nanti (hindari duplikat)
                     $prDetail = DB::table('sales_order_detail_'.date('Y'))
@@ -1260,7 +1282,7 @@ class SalesInvoiceController extends Controller
                     ->get();
 
                 $totalRequested = $allDetails->sum('qty');
-                $totalOrdered = $allDetails->sum('sq_qty');
+                $totalOrdered = $allDetails->sum('so_qty');
 
                 if ($totalOrdered >= $totalRequested) {
                     $status = 'closed';
@@ -1522,7 +1544,7 @@ class SalesInvoiceController extends Controller
         return response()->json(['success' => true, 'message' => 'Sales Invoice berhasil diajukan!']);
     }
 
-       public function getOrderData(Request $request)
+    public function getOrderData(Request $request)
     {
         $orders = SalesOrder::with([
             'details' => function ($query) {
@@ -1536,7 +1558,7 @@ class SalesInvoiceController extends Controller
         return response()->json($orders);
     }
 
-      public function getOrderDetail(Request $request)
+    public function getOrderDetail(Request $request)
     {
         $ids = $request->ids;
 
@@ -1599,7 +1621,7 @@ class SalesInvoiceController extends Controller
         ]);
     }
 
-     public function getCustomerData($customerId)
+    public function getCustomerData($customerId)
     {
         // Pajak (ambil default)
         $pajak = DB::table('customer_pajak')

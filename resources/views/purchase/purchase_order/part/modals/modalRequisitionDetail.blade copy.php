@@ -1,8 +1,8 @@
-<div class="modal fade" id="modalProformaDetail">
+<div class="modal fade" id="modalRequisitionDetail">
     <div class="modal-dialog modal-md">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">Proforma Invoice Processing</h5>
+                <h5 class="modal-title" id="modalTitle">Requisition Processing</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -14,17 +14,17 @@
                                     <input class="form-check-input" type="checkbox" id="checkAll">
                                 </div>
                             </th>
-                            <th>PI Number</th>
+                            <th>PR Number</th>
                             <th>Date</th>
                         </tr>
                     </thead>
-                    <tbody id="proformaTableBody">
+                    <tbody id="requisitionTableBody">
                     </tbody>
                 </table>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="btnSubmitProforma">
+                <button type="button" class="btn btn-primary" id="btnSubmitSelected">
                     <i class="ti ti-check me-1"></i> Process Selected
                 </button>
             </div>

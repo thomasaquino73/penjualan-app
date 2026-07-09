@@ -216,7 +216,7 @@ class PenjualanArsipController extends Controller
             return DataTables::of([])->make(true);
         }
 
-            $query = DB::table($table.' as pr')
+        $query = DB::table($table.' as pr')
             ->leftJoin('customer as c', 'c.id', '=', 'pr.customer_id')
             ->leftJoin('users as creator', 'creator.id', '=', 'pr.created_by')
             ->leftJoin('users as updater', 'updater.id', '=', 'pr.updated_by')
@@ -227,6 +227,7 @@ class PenjualanArsipController extends Controller
                 'updater.fullname as updater_name',
             ])
             ->orderBy('pr.sales_order_code', 'desc');
+
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('created_at', function ($row) {
@@ -294,7 +295,7 @@ class PenjualanArsipController extends Controller
             ->addColumn('amount', function ($row) {
                 return format_uang(convert_currency($row->grand_total, $row->currency_id ?? 1));
             })
-             ->addColumn('customer', function ($row) {
+            ->addColumn('customer', function ($row) {
                 return $row->customer_name ?? '-';
             })
             ->addColumn('action', function ($row) use ($year) {
@@ -307,7 +308,7 @@ class PenjualanArsipController extends Controller
                         </a>
                     ';
             })
-            ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'date','customer','tanggal_pengiriman','amount'])
+            ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'date', 'customer', 'tanggal_pengiriman', 'amount'])
             ->make(true);
     }
 }

@@ -4,80 +4,81 @@ namespace App\Http\Controllers;
 
 use App\Models\Inventory\Barang;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
+
 class DashboardController extends Controller
 {
-  public function index(Request $request)
-{
-    // Tahun yang dipilih (default = tahun sekarang)
-    $currentYear = date('Y');
-    $year = $request->get('year', $currentYear);
-    $lastYear = $currentYear - 1;
+    public function index(Request $request)
+    {
+        // Tahun yang dipilih (default = tahun sekarang)
+        $currentYear = date('Y');
+        $year = $request->get('year', $currentYear);
+        $lastYear = $currentYear - 1;
 
-    // Statistik penjualan berdasarkan tahun yang dipilih
-    $salesChart = $this->getSalesStatisticsByYear($year);
-    $totalSales = $this->getTotalSalesByYear($year);
+        // Statistik penjualan berdasarkan tahun yang dipilih
+        $salesChart = $this->getSalesStatisticsByYear($year);
+        $totalSales = $this->getTotalSalesByYear($year);
 
-    // Statistik user
-    $data = User::query();
-    $stats = $this->getUserStatistics($data);
+        // Statistik user
+        $data = User::query();
+        $stats = $this->getUserStatistics($data);
 
-    // Minimum stock
-    $minStock = $this->getMinimumStock();
+        // Minimum stock
+        $minStock = $this->getMinimumStock();
 
-    // Produk transaksi terbanyak
-    $transaksiTerbanyak = $this->getTransaksiTerbanyak();
+        // Produk transaksi terbanyak
+        $transaksiTerbanyak = $this->getTransaksiTerbanyak();
 
-    // Total transaksi bulan ini
-    $TotalTransactions = $this->getTotalTransactions();
+        // Total transaksi bulan ini
+        $TotalTransactions = $this->getTotalTransactions();
 
-    // Brand populer bulan ini
-    $popularBrands = $this->getPopularBrandThisMonth();
-    $brandLabels = $popularBrands->pluck('brand_name');
-    $brandValues = $popularBrands->pluck('total_qty');
+        // Brand populer bulan ini
+        $popularBrands = $this->getPopularBrandThisMonth();
+        $brandLabels = $popularBrands->pluck('brand_name');
+        $brandValues = $popularBrands->pluck('total_qty');
 
-    if ($brandLabels->isEmpty()) {
-        $brandLabels = collect(['No Data']);
-        $brandValues = collect([0]);
+        if ($brandLabels->isEmpty()) {
+            $brandLabels = collect(['No Data']);
+            $brandValues = collect([0]);
+        }
+
+        return view('dashboard', [
+            // User
+            'totalUsers' => $stats['totalUsers'],
+            'totalActive' => $stats['totalActive'],
+            'totalVerified' => $stats['totalVerified'],
+            'totalLogin' => $stats['totalLogin'],
+
+            // Stock
+            'minStock' => $minStock,
+
+            // Transaksi
+            'transaksiTerbanyak' => $transaksiTerbanyak,
+            'TotalTransactions' => $TotalTransactions,
+
+            // Brand
+            'popularBrands' => $popularBrands,
+            'brandLabels' => $brandLabels,
+            'brandValues' => $brandValues,
+
+            // Sales Chart
+            'salesStatistics' => $salesChart,
+            'salesLabels' => $salesChart['labels'],
+            'salesValues' => $salesChart['values'],
+
+            // Total Sales
+            'totalSales' => $totalSales,
+
+            // Tahun
+            'selectedYear' => $year,
+            'currentYear' => $currentYear,
+            'lastYear' => $lastYear,
+            'totalSalesThisYear' => $this->getTotalSalesByYear($currentYear),
+            'totalSalesLastYear' => $this->getTotalSalesByYear($lastYear),
+        ]);
     }
-
-    return view('dashboard', [
-        // User
-        'totalUsers'          => $stats['totalUsers'],
-        'totalActive'         => $stats['totalActive'],
-        'totalVerified'       => $stats['totalVerified'],
-        'totalLogin'          => $stats['totalLogin'],
-
-        // Stock
-        'minStock'            => $minStock,
-
-        // Transaksi
-        'transaksiTerbanyak'  => $transaksiTerbanyak,
-        'TotalTransactions'   => $TotalTransactions,
-
-        // Brand
-        'popularBrands'       => $popularBrands,
-        'brandLabels'         => $brandLabels,
-        'brandValues'         => $brandValues,
-
-        // Sales Chart
-        'salesStatistics'     => $salesChart,
-        'salesLabels'         => $salesChart['labels'],
-        'salesValues'         => $salesChart['values'],
-
-        // Total Sales
-        'totalSales'          => $totalSales,
-
-        // Tahun
-        'selectedYear'        => $year,
-        'currentYear'         => $currentYear,
-        'lastYear'            => $lastYear,
-        'totalSalesThisYear'  => $this->getTotalSalesByYear($currentYear),
-        'totalSalesLastYear'  => $this->getTotalSalesByYear($lastYear),
-    ]);
-}
 
     private function getUserStatistics($data)
     {
@@ -215,15 +216,15 @@ class DashboardController extends Controller
             ->get();
     }
 
-   private function getSalesStatisticsThisYear()
+    private function getSalesStatisticsThisYear()
     {
         $year = date('Y');
         $table = "sales_order_{$year}";
 
-        $labels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         $values = array_fill(0, 12, 0);
 
-        if (!DB::getSchemaBuilder()->hasTable($table)) {
+        if (! DB::getSchemaBuilder()->hasTable($table)) {
             return compact('labels', 'values');
         }
 
@@ -240,12 +241,13 @@ class DashboardController extends Controller
 
         return compact('labels', 'values');
     }
+
     private function getTotalSalesThisYear()
     {
         $year = date('Y');
         $table = "sales_order_{$year}";
 
-        if (!DB::getSchemaBuilder()->hasTable($table)) {
+        if (! DB::getSchemaBuilder()->hasTable($table)) {
             return 0;
         }
 
@@ -255,15 +257,16 @@ class DashboardController extends Controller
                 'approved',
                 'processing',
                 'partial',
-                'completed'
+                'completed',
             ])
             ->sum('grand_total');
     }
+
     private function getTotalSalesByYear($year)
     {
         $table = "sales_order_{$year}";
 
-        if (!DB::getSchemaBuilder()->hasTable($table)) {
+        if (! DB::getSchemaBuilder()->hasTable($table)) {
             return 0;
         }
 
@@ -273,18 +276,19 @@ class DashboardController extends Controller
                 'approved',
                 'processing',
                 'partial',
-                'completed'
+                'completed',
             ])
             ->sum('grand_total');
     }
+
     private function getSalesStatisticsByYear($year)
     {
         $table = "sales_order_{$year}";
 
-        $labels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         $values = array_fill(0, 12, 0);
 
-        if (!DB::getSchemaBuilder()->hasTable($table)) {
+        if (! DB::getSchemaBuilder()->hasTable($table)) {
             return compact('labels', 'values');
         }
 

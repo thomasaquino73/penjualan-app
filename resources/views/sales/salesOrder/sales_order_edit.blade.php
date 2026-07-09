@@ -577,89 +577,46 @@
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
                                 action: function(e, dt, node, config) {
+                                    let data = dt.row({
+                                        selected: true
+                                    }).data();
+                                    let rowIndex = dt.row({
+                                        selected: true
+                                    }).index();
 
-
-
-
-
-                                    // 1. TANDAI BAHWA SEDANG PROSES EDIT
-                                    window.isPopulating = true;
                                     window.isEditingMode = true;
 
-                                    // 2. Setup Data Dasar
+                                    // Menyimpan index baris array untuk penanda update
                                     $("#detail_id").val(rowIndex);
 
-                                    // Ambil data untuk kalkulasi
-                                    let kuotaAwalPr = parseFloat(data.kuota_asli || 0);
-                                    let sisaPr = parseFloat(data.sisa_pr || 0);
-                                    let totalLain = parseFloat(data.total_diambil_lainnya ||
-                                        0); // Data baru dari backend
-                                    let qtySekarang = parseFloat(data.quantity || 0);
+                                    // --- AMANKAN DATA ID RELASI DI SINI ---
+                                    $("#modal_purchase_requisition_detail_id").val(data.detail_id ||
+                                        data.purchase_requisition_detail_id || "");
+                                    $("#modal_requisition_code").val(data.requisition_code || "");
 
-                                    // 3. Update Title & UI Modal dengan informasi total serapan lain
-                                    $("#modalTitle").html(`
-                                            Edit Entry |
-                                            <span class="badge bg-primary">SQ Awal: ${kuotaAwalPr}</span>
-                                            <span class="badge bg-warning text-dark">Sudah diambil SO lain: ${totalLain}</span>
-                                        `);
+                                    // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
+                                    if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
+                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
+                                    } else {
+                                        $("#quantity").removeAttr(
+                                            "data-sisa-pr"); // Jika PO bebas, hapus batasannya
+                                    }
+                                    // --------------------------------------
 
-                                    // 4. Bersihkan Form (Kecuali Hidden Fields)
-                                    $("#formPrDetail").find("input, select, textarea").not(
-                                        '[type="hidden"]').val('');
-
-                                    // 5. Isi Data ke Input Form
-                                    $("#quantity").val(qtySekarang);
-                                    $("#modal_sales_quotation_detail_id").val(data
-                                        .sales_quotation_detail_id || "");
-                                    $("#unit_price").val(parseFloat(data.unit_price || 0));
-                                    $("#discount_percent").val(data.discount_percent || 0);
-                                    $("#discount").val(parseFloat(data.discount || 0));
-                                    $("#total_price").val(data.amount || 0);
-                                    $("#tax").val(parseFloat(data.tax || 0));
-
-                                    // 6. Set Validasi Maksimal di Input
-                                    // Logika: Sisa PR (outstanding) + Qty PO ini sendiri (karena qty lama akan di-overwrite)
-                                    let maxAllowed = sisaPr + qtySekarang;
-                                    $("#quantity").attr("data-max-allowed", maxAllowed);
-                                    $("#quantity").attr("placeholder", "Maksimal: " + maxAllowed);
-
-                                    // 7. Penanganan Select2 (Product & Unit)
-                                    $('#unit_id').prop("disabled", false);
-                                    $('#product_id').prop("disabled", false);
-
-                                    // Trigger Product untuk memuat daftar unit via AJAX
-                                    $("#product_id").val(data.product_id).trigger("change.select2");
+                                    $("#quantity").val(data.quantity);
+                                    $("#unit_id").data("pending-val", data.unit_id);
                                     $("#warehouse_id").val(data.warehouse_id).trigger("change");
+                                    $("#product_id").val(data.product_id).trigger("change");
+                                    $("#unit_price").val(data.unit_price);
+                                    $("#discount").val(data.discount || 0);
+                                    $("#discount_percent").val(data.discount_percent || 0);
+                                    $("#tax").val(data.tax || 0);
+                                    $("#total_price").val(data.amount || 0);
 
-                                    // Delay untuk menunggu respons AJAX produk selesai
-                                    setTimeout(function() {
-                                        let $unitSelect = $('#unit_id');
-                                        $unitSelect.empty();
-
-                                        if (data.unit_id) {
-                                            let newOption = new Option(data.unit || "Unit",
-                                                data.unit_id, true, true);
-                                            $unitSelect.append(newOption).trigger(
-                                                'change.select2');
-                                        } else {
-                                            $unitSelect.val('').trigger('change.select2');
-                                        }
-
-                                        // Lepaskan flag setelah semua proses selesai
-                                        window.isPopulating = false;
-                                    }, 500);
-
-                                    // 8. Tampilkan Modal
+                                    $("#modalTitle").text("Edit entry");
                                     $("#btnSubmitModal").text("Update");
                                     $("#modalPrDetail").modal("show");
-                                    let rowSelected = dt.row({
-                                        selected: true
-                                    });
-                                    let data = rowSelected.data();
-                                    let rowIndex = rowSelected.index();
-
-
-                                }
+                                },
                             },
                             {
                                 text: '<i class="ti ti-trash me-1"></i> Delete',
@@ -830,7 +787,7 @@
                 let dropdownMenu = $("#po-price-dropdown-menu");
                 let helperText = $("#po-history-helper");
 
-                // Pastikan ID selector ini sesuai dengan ID Select Customer di form utama kamu
+                // Pastikan ID selector ini sesuai dengan ID Select Supplier di form utama kamu
                 let customerId = $("#customer_id").val();
 
                 if (!productId) {
@@ -842,10 +799,10 @@
                     return;
                 }
 
-                // Tambahan Validasi: Ingatkan user jika customer belum dipilih
+                // Tambahan Validasi: Ingatkan user jika supplier belum dipilih
                 if (!customerId) {
                     alert(
-                        "Silahkan pilih Customer terlebih dahulu pada form utama SQ!",
+                        "Silahkan pilih Customer terlebih dahulu pada form utama SO!",
                     );
                     $(this).val("").trigger("change"); // Reset pilihan produk
                     return;
@@ -855,7 +812,7 @@
                 // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
                 // ==========================================
                 $.ajax({
-                    url: `/sales-order/get-units-by-product/${productId}`,
+                    url: `/get-units-by-product/${productId}`,
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -890,6 +847,7 @@
                         }
                     },
                     error: function() {
+                        console.error("Gagal memuat list unit dari Controller.");
                         unitSelect
                             .empty()
                             .append("<option></option>")
@@ -902,7 +860,7 @@
                 // 2. AJAX History PO + Fallback Harga Master
                 // ==========================================
                 $.ajax({
-                    url: `/sales-order/sq/price-history?product_id=${productId}&customer_id=${customerId}`,
+                    url: `/purchase-order/po/price-history?product_id=${productId}&customer_id=${customerId}`,
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -975,7 +933,6 @@
                                 a.on("click", function(e) {
                                     e.preventDefault();
                                     priceInput.val(harga);
-                                    calculateTotal();
                                 });
 
                                 li.append(a);
@@ -985,7 +942,7 @@
                             helperText
                                 .attr("class", "form-text text-muted")
                                 .text(
-                                    "Belum ada riwayat SQ dengan customer ini. Silahkan isi harga manual.",
+                                    "Belum ada riwayat PO dengan supplier ini. Silahkan isi harga manual.",
                                 );
                             dropdownBtn.prop("disabled", true);
                             if (priceInput.val() === "") {
@@ -994,6 +951,7 @@
                         }
                     },
                     error: function(xhr) {
+                        console.error("Gagal mengambil data riwayat harga:", xhr);
                         helperText
                             .attr("class", "form-text text-danger")
                             .text("Gagal memuat riwayat harga.");
@@ -1001,59 +959,7 @@
                 });
             });
 
-            // function calculateGrandTotal() {
-            //     let grandSubTotal = 0;
 
-            //     // 1. Iterasi/looping semua data amount yang ada di array lokal
-            //     $.each(prDetailsData, function(index, item) {
-            //         grandSubTotal += parseFloat(item.amount) || 0;
-            //     });
-
-            //     // 2. Masukkan hasil penjumlahan ke input field Sub Total
-            //     $("#sub_total").val(Math.round(grandSubTotal));
-
-            //     // 3. Hitung ulang diskon global secara otomatis saat isi tabel berubah
-            //     let currentPercent = parseFloat($("#percent").val()) || 0;
-
-            //     if (currentPercent > 0) {
-            //         // Jika awalnya diisi persen, hitung ulang nominal Rupiahnya berdasarkan Sub Total baru
-            //         let newDiscountNominal = grandSubTotal * (currentPercent / 100);
-            //         $("#discount_all").val(Math.round(newDiscountNominal));
-            //     } else {
-            //         // Jika awalnya diisi nominal Rupiah, validasi agar tidak melebihi Sub Total baru
-            //         let currentNominal = parseFloat($("#discount_all").val()) || 0;
-            //         if (currentNominal > grandSubTotal) {
-            //             currentNominal = grandSubTotal;
-            //             $("#discount_all").val(Math.round(grandSubTotal));
-            //         }
-            //         // Set ulang nilai persen barunya
-            //         let newPercent =
-            //             grandSubTotal > 0 ? (currentNominal / grandSubTotal) * 100 : 0;
-            //         $("#percent").val(
-            //             newPercent % 1 === 0 ? newPercent : newPercent.toFixed(2),
-            //         );
-            //     }
-
-            //     // 4. Update hasil akhir ke Total Order
-            //     calculateTotalOrder();
-            // }
-
-            // function calculateTotalOrder() {
-            //     // Ambil nilai dari input, jika kosong atau bukan angka, default ke 0
-            //     let subTotal = parseFloat($("#sub_total").val()) || 0;
-            //     let discount = parseFloat($("#discount_all").val()) || 0;
-
-            //     // Rumus: Total Order = Sub Total - Discount
-            //     let totalOrder = subTotal - discount;
-
-            //     // Cegah nilai total order menjadi minus jika discount lebih besar dari subtotal
-            //     if (totalOrder < 0) {
-            //         totalOrder = 0;
-            //     }
-
-            //     // Masukkan hasil kalkulasi ke input Total Order
-            //     $("#total_order").val(Math.round(totalOrder));
-            // }
             $("#btnSubmitModal").on("click", function(e) {
                 let qtyInput = $("#quantity");
                 let currentQty = parseFloat(qtyInput.val()) || 0;
@@ -1096,95 +1002,166 @@
 
             $("#postForm").on("submit", function(e) {
                 e.preventDefault();
+
                 let form = this;
+                let formData = new FormData(form);
 
-                // Fungsi pembungkus logika AJAX (Eksekutor)
-                let runAjax = function() {
-                    let formData = new FormData(form);
+                // Ambil warehouse_id
+                let warehouseId = $("#warehouse_id").val();
 
-                    if (!activeBtn) {
-                        activeBtn = $("#postForm").find('button[data-save-and-new="false"]');
-                        saveAndNew = false;
-                    }
+                if (!activeBtn) {
+                    activeBtn = $("#postForm").find(
+                        'button[data-save-and-new="false"]',
+                    );
+                    saveAndNew = false;
+                }
 
-                    activeBtn.html('<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
-                    $(".card-footer button").prop("disabled", true);
+                // START LOADING
+                activeBtn.html(
+                    '<i class="fa fa-spin fa-spinner me-1"></i> Checking...',
+                );
+                $(".card-footer button").prop("disabled", true);
 
-                    formData.append("save_and_new", saveAndNew ? 1 : 0);
-                    formData.append("items_detail", JSON.stringify(prDetailsData));
+                // ===========================
+                // VALIDASI WAREHOUSE
+                // ===========================
+                if (!warehouseId || warehouseId === "") {
 
-                    $.ajax({
-                        url: $(form).attr("action"),
-                        method: $(form).attr("method"),
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        dataType: "json",
-                        complete: function() {
-                            let closeBtn = $("#postForm").find(
-                                'button[data-save-and-new="false"]');
-                            let newBtn = $("#postForm").find(
-                                'button[data-save-and-new="true"]');
-                            closeBtn.html(
-                                '<i class="fa fa-upload me-1"></i> Save and Close');
-                            newBtn.html(
-                                '<i class="fa fa-plus-circle me-1"></i> Save and Create New'
-                            );
-                            $(".card-footer button").prop("disabled", false);
+                    let closeBtn = $("#postForm").find(
+                        'button[data-save-and-new="false"]',
+                    );
+                    let newBtn = $("#postForm").find(
+                        'button[data-save-and-new="true"]',
+                    );
+
+                    closeBtn.html(
+                        '<i class="fa fa-upload me-1"></i> Save and Close',
+                    );
+                    newBtn.html(
+                        '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
+                    );
+
+                    $(".card-footer button").prop("disabled", false);
+
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Warehouse Required",
+                        text: "Please select a warehouse before saving.",
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn btn-primary waves-effect waves-light",
                         },
-                        success: function(response) {
-                            Swal.fire({
-                                icon: "success",
-                                title: "Data Updated Successfully",
-                                text: response.message,
-                                customClass: {
-                                    confirmButton: "btn btn-primary waves-effect waves-light"
-                                },
-                                buttonsStyling: false,
-                            }).then(() => {
-                                window.location.href = response.redirect;
-                            });
-                        },
-                        error: function(xhr) {
-                            resetValidation();
-                            let errors = xhr.responseJSON?.errors;
-                            $.each(errors, function(key, value) {
-                                displayFieldError(key, value[0]);
-                            });
-                            Swal.fire({
-                                icon: "error",
-                                title: "Failed to Create Data",
-                                text: xhr.responseJSON?.message ||
-                                    "Please check your data again.",
-                                customClass: {
-                                    confirmButton: "btn btn-primary waves-effect waves-light"
-                                },
-                                buttonsStyling: false,
-                            });
-
-                        }
+                        buttonsStyling: false,
+                    }).then(() => {
+                        $("#warehouse_id").focus();
                     });
-                };
 
-                // Validasi Item Kosong
-                if (typeof prDetailsData === "undefined" || prDetailsData.length === 0) {
+                    return false;
+                }
+
+                // ===========================
+                // VALIDASI DETAIL
+                // ===========================
+                if (
+                    typeof prDetailsData === "undefined" ||
+                    prDetailsData.length === 0
+                ) {
                     Swal.fire({
                         icon: "warning",
                         title: "Empty Items",
                         text: "Please add at least one item detail to the table before saving.",
                         confirmButtonText: "OK",
                         customClass: {
-                            confirmButton: "btn btn-primary waves-effect waves-light"
+                            confirmButton: "btn btn-primary waves-effect waves-light",
                         },
                         buttonsStyling: false,
                     }).then(() => {
+                        let closeBtn = $("#postForm").find(
+                            'button[data-save-and-new="false"]',
+                        );
+                        let newBtn = $("#postForm").find(
+                            'button[data-save-and-new="true"]',
+                        );
+
+                        closeBtn.html(
+                            '<i class="fa fa-upload me-1"></i> Save and Close',
+                        );
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
+                        );
+
                         $(".card-footer button").prop("disabled", false);
                     });
+
                     return false;
                 }
 
-                // Jalankan validasi duplikat, jika lolos/dikonfirmasi, baru jalankan runAjax
-                submitUpdate(runAjax);
+                formData.append("save_and_new", saveAndNew ? 1 : 0);
+                formData.append("items_detail", JSON.stringify(prDetailsData));
+
+                $.ajax({
+                    url: $(form).attr("action"),
+                    method: $(form).attr("method"),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    beforeSend: function() {
+                        activeBtn.html(
+                            '<i class="fa fa-spin fa-spinner me-1"></i> Sending...',
+                        );
+                        $(".card-footer button").prop("disabled", true);
+                    },
+                    complete: function() {
+                        let closeBtn = $("#postForm").find(
+                            'button[data-save-and-new="false"]',
+                        );
+                        let newBtn = $("#postForm").find(
+                            'button[data-save-and-new="true"]',
+                        );
+
+                        closeBtn.html(
+                            '<i class="fa fa-upload me-1"></i> Save and Close',
+                        );
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
+                        );
+
+                        $(".card-footer button").prop("disabled", false);
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Data Created Successfully",
+                            text: response.message,
+                            customClass: {
+                                confirmButton: "btn btn-primary waves-effect waves-light",
+                            },
+                            buttonsStyling: false,
+                        }).then(() => {
+                            window.location.href = response.redirect;
+                        });
+                    },
+                    error: function(xhr) {
+                        resetValidation();
+
+                        let errors = xhr.responseJSON?.errors;
+                        $.each(errors, function(key, value) {
+                            displayFieldError(key, value[0]);
+                        });
+
+                        Swal.fire({
+                            icon: "error",
+                            title: "Failed to Create Data",
+                            text: xhr.responseJSON.message ||
+                                "Please check your data again.",
+                            customClass: {
+                                confirmButton: "btn btn-primary waves-effect waves-light",
+                            },
+                            buttonsStyling: false,
+                        });
+                    },
+                });
             });
             $("#formPrDetail").on("submit", function(e) {
                 e.preventDefault();
