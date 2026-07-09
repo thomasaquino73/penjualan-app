@@ -206,16 +206,12 @@
     @include('purchase.purchase_order.part.modals.modalPrDetail')
     @include('purchase.purchase_order.part.modals.modalRequisitionDetail')
 @endsection
-@push('style')
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
-@endpush
-@push('scripts')
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
+@include('partials.tabel.css')
+@include('partials.tabel.js')
 
-    <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
-    <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
+
+@push('scripts')
+   
     <script>
         $(document).ready(function() {
 
@@ -707,29 +703,63 @@
                 });
             });
             // MENAMPILKAN TABEL BARANG
+            // ========================================================
+            // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
+            // ========================================================
+            function refreshDataIndices() {
+                if (Array.isArray(prDetailsData)) {
+                    prDetailsData.forEach((item, index) => {
+                        item.urutan_lokal = index; // Membuat nomor ID unik lokal berbasis index array
+                    });
+                }
+            }
+            // Jalankan fungsi sebelum tabel diinisialisasi
+            refreshDataIndices();
+
             let table = new DataTable("#table", {
                 processing: true,
                 serverSide: false,
                 responsive: true,
                 select: true,
                 searching: false,
+
+                // 1. Tambahkan indeks pengurutan awal ke kolom pertama [0] agar engine rowReorder aktif
+                order: [
+                    [0, 'asc']
+                ],
+
                 lengthMenu: [
                     [10, 25, 50, -1],
                     [10, 25, 50, "All"],
                 ],
+
+                // 2. Hubungkan fungsi pencarian indeks dinamis berdasarkan data objek array langsung
+                rowReorder: {
+                    selector: 'td:first-child',
+                    dataSrc: function(row) {
+                        return prDetailsData.indexOf(row);
+                    }
+                },
+
                 data: prDetailsData,
                 columns: [{
+                        // 3. Menggunakan data: null agar aman dari error unknown parameter
                         data: null,
-                        orderable: false,
+                        orderable: true, // Wajib TRUE agar baris bisa digeser
+                        className: "text-center reorder-pointer",
                         searchable: false,
                         render: function(data, type, row, meta) {
-                            return meta.row + 1;
+                            // Memberikan angka visual statis sesuai baris di layar saat ini
+                            if (type === 'display') {
+                                return meta.row + 1;
+                            }
+                            // Kembalikan indeks array murni ke internal DataTables agar kalkulasi drag & drop berjalan
+                            return prDetailsData.indexOf(row);
                         },
                     },
                     {
                         data: "data_produk",
                         render: function(data, type, row) {
-                            // Menampilkan kode referensi PR di bawah nama produk jika ada
                             if (row.requisition_code) {
                                 return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.requisition_code}</small>`;
                             }
@@ -738,9 +768,9 @@
                     },
                     {
                         data: "quantity",
-                        className: "text-end", // Rata kanan untuk angka
+                        className: "text-end",
                         render: function(data) {
-                            return parseFloat(data).toLocaleString('id-ID');
+                            return parseFloat(data ?? 0).toLocaleString('id-ID');
                         }
                     },
                     {
@@ -756,10 +786,6 @@
                             });
                         }
                     },
-                    // {
-                    //     data: "discount_percent",
-                    //     className: "text-center"
-                    // },
                     {
                         data: "discount",
                         className: "text-end",
@@ -777,142 +803,123 @@
                         }
                     },
                     {
-                        data: "warehouse",
-                        className: "text-center"
+                        data: 'warehouse',
+                        render: function(data) {
+                            return data ? data : '-';
+                        }
                     },
                 ],
                 layout: {
                     topStart: {
-                        buttons: [{
+                        buttons: [
+                            // =======================
+                            // ➕ ADD
+                            // =======================
+                            {
                                 text: '<i class="ti ti-plus me-1"></i> New',
                                 className: "btn btn-primary btn-sm me-2 AddNew",
-                                action: function(e, dt, node, config) {
-                                    var supplierId = $("#supplier_id").val();
+                                action: function() {
+                                    let supplierId = $("#supplier_id").val();
 
-                                    if (!supplierId || supplierId === "") {
-                                        // ... (SweetAlert warning code tetap sama)
-                                        return false;
+                                    if (!supplierId) {
+                                        Swal.fire({
+                                            icon: "warning",
+                                            title: "Warning!",
+                                            text: "Please select Supplier first before adding new data.",
+                                            confirmButtonText: "OK",
+                                            customClass: {
+                                                confirmButton: "btn btn-danger",
+                                            },
+                                            buttonsStyling: false,
+                                        });
+                                        return;
                                     }
 
+                                    window.isEditingMode = false;
+
                                     $("#formPrDetail")[0].reset();
-                                    $("#detail_id").val(""); // Kosongkan index menandakan data baru
 
-                                    // === BERSIHKAN ATRIBUT VALDASI PR AGAR TIDAK MENGUNCI DATA BARU ===
-                                    $("#quantity").removeAttr("data-max-allowed");
-                                    $("#quantity").removeAttr("data-qty-lama");
+                                    $("#detail_id").val("");
+                                    $("#modal_purchase_requisition_detail_id").val("");
+                                    $("#modal_requisition_code").val("");
 
-                                    // Reset status asal source di modal saat buat data baru
-                                    $("#badgeSource").removeClass("bg-primary").addClass(
-                                        "bg-secondary").text("Source: Manual / Tanpa PR");
-                                    $("#product_id").prop("disabled",
-                                        false); // Pastikan bisa dipilih kembali
+                                    $("#warehouse_id").val("").trigger("change");
 
                                     if ($.fn.select2) {
                                         $("#product_id").val("").trigger("change");
                                         $("#unit_id").val("").trigger("change");
                                     }
 
+                                    $("#quantity").removeAttr("data-sisa-pr");
+
                                     $("#modalTitle").text("Create new entry");
                                     $("#btnSubmitModal").text("Create");
+
                                     $("#modalPrDetail").modal("show");
-                                }
+                                },
                             },
+
+                            // =======================
+                            // ✏️ EDIT
+                            // =======================
                             {
                                 text: '<i class="ti ti-edit me-1"></i> Edit',
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
-                                action: function(e, dt, node, config) {
-                                    let rowSelected = dt.row({
+                                action: function(e, dt) {
+                                    let data = dt.row({
                                         selected: true
-                                    });
-                                    let data = rowSelected.data();
-                                    let rowIndex = rowSelected.index();
+                                    }).data();
+                                    if (!data) return;
 
-                                    // 1. TANDAI BAHWA SEDANG PROSES EDIT
-                                    window.isPopulating = true;
                                     window.isEditingMode = true;
 
-                                    // 2. Setup Data Dasar
-                                    $("#detail_id").val(rowIndex);
+                                    $("#detail_id").val(data.detail_id);
 
-                                    // Ambil data untuk kalkulasi
-                                    let kuotaAwalPr = parseFloat(data.kuota_asli || 0);
-                                    let sisaPr = parseFloat(data.sisa_pr || 0);
-                                    let totalLain = parseFloat(data.total_diambil_lainnya ||
-                                        0); // Data baru dari backend
-                                    let qtySekarang = parseFloat(data.quantity || 0);
+                                    $("#modal_purchase_requisition_detail_id")
+                                        .val(data.detail_id || data
+                                            .purchase_requisition_detail_id || "");
 
-                                    // 3. Update Title & UI Modal dengan informasi total serapan lain
-                                    $("#modalTitle").html(`
-                                            Edit Entry |
-                                            <span class="badge bg-primary">PR Awal: ${kuotaAwalPr}</span>
-                                            <span class="badge bg-warning text-dark">Sudah diambil PO lain: ${totalLain}</span>
-                                        `);
+                                    $("#modal_requisition_code").val(data.requisition_code || "");
 
-                                    // 4. Bersihkan Form (Kecuali Hidden Fields)
-                                    $("#formPrDetail").find("input, select, textarea").not(
-                                        '[type="hidden"]').val('');
+                                    if (data.sisa_pr != null) {
+                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
+                                    } else {
+                                        $("#quantity").removeAttr("data-sisa-pr");
+                                    }
 
-                                    // 5. Isi Data ke Input Form
-                                    $("#quantity").val(qtySekarang);
-                                    $("#modal_purchase_requisition_detail_id").val(data
-                                        .purchase_requisition_detail_id || "");
-                                    $("#unit_price").val(parseFloat(data.unit_price || 0));
-                                    $("#discount").val(parseFloat(data.discount || 0));
-                                    $("#discount_percent").val(data.discount_percent || 0);
-                                    $("#tax").val(parseFloat(data.tax || 0));
-                                    $("#amount").val(data.amount || 0);
+                                    $("#quantity").val(data.quantity ?? 0);
+                                    $("#unit_id").data("pending-val", data.unit_id);
+                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
+                                    $("#product_id").val(data.product_id).trigger("change");
 
-                                    // 6. Set Validasi Maksimal di Input
-                                    // Logika: Sisa PR (outstanding) + Qty PO ini sendiri (karena qty lama akan di-overwrite)
-                                    let maxAllowed = sisaPr + qtySekarang;
-                                    $("#quantity").attr("data-max-allowed", maxAllowed);
-                                    $("#quantity").attr("placeholder", "Maksimal: " + maxAllowed);
+                                    $("#unit_price").val(data.unit_price ?? 0);
+                                    $("#discount").val(data.discount ?? 0);
+                                    $("#discount_percent").val(data.discount_percent ?? 0);
+                                    $("#tax").val(data.tax ?? 0);
+                                    $("#amount").val(data.amount ?? 0);
 
-                                    // 7. Penanganan Select2 (Product & Unit)
-                                    $('#unit_id').prop("disabled", false);
-                                    $('#product_id').prop("disabled", false);
-
-                                    // Trigger Product untuk memuat daftar unit via AJAX
-                                    $("#product_id").val(data.product_id).trigger("change.select2");
-                                    $("#warehouse_id").val(data.warehouse_id).trigger(
-                                        "change.select2");
-
-                                    // Delay untuk menunggu respons AJAX produk selesai
-                                    setTimeout(function() {
-                                        let $unitSelect = $('#unit_id');
-                                        $unitSelect.empty();
-
-                                        if (data.unit_id) {
-                                            let newOption = new Option(data.unit || "Unit",
-                                                data.unit_id, true, true);
-                                            $unitSelect.append(newOption).trigger(
-                                                'change.select2');
-                                        } else {
-                                            $unitSelect.val('').trigger('change.select2');
-                                        }
-
-                                        // Lepaskan flag setelah semua proses selesai
-                                        window.isPopulating = false;
-                                    }, 500);
-
-                                    // 8. Tampilkan Modal
+                                    $("#modalTitle").text("Edit entry");
                                     $("#btnSubmitModal").text("Update");
+
                                     $("#modalPrDetail").modal("show");
-                                }
+                                },
                             },
+
+                            // =======================
+                            // 🗑 DELETE
+                            // =======================
                             {
                                 text: '<i class="ti ti-trash me-1"></i> Delete',
                                 className: "btn btn-danger btn-sm me-2",
                                 extend: "selected",
-                                action: function(e, dt, node, config) {
-                                    let rowIndex = dt.row({
-                                        selected: true
-                                    }).index();
+                                action: function(e, dt) {
                                     let data = dt.row({
                                         selected: true
                                     }).data();
-                                    let name = data.data_produk ? data.data_produk : "";
+                                    if (!data) return;
+
+                                    let name = data.data_produk || "";
 
                                     Swal.fire({
                                         title: "Are you sure?",
@@ -922,41 +929,77 @@
                                         confirmButtonText: "Yes, delete it!",
                                         cancelButtonText: "Cancel",
                                         customClass: {
-                                            confirmButton: "btn btn-primary me-3 waves-effect waves-light",
-                                            cancelButton: "btn btn-label-secondary waves-effect waves-light",
+                                            confirmButton: "btn btn-primary me-3",
+                                            cancelButton: "btn btn-label-secondary",
                                         },
                                         buttonsStyling: false,
                                     }).then(function(result) {
                                         if (result.isConfirmed) {
-                                            prDetailsData.splice(rowIndex, 1);
+                                            prDetailsData = prDetailsData.filter(item =>
+                                                item.detail_id !== data.detail_id ||
+                                                item.data_produk !== data.data_produk
+                                            );
+
                                             dt.clear().rows.add(prDetailsData).draw();
+
                                             calculateGrandTotal();
                                             calculateTotalOrder();
-                                            toastr.success(
-                                                "Deleted Data Successfully",
+
+                                            toastr.success("Deleted Data Successfully",
                                                 "", {
                                                     timeOut: 1500,
                                                     progressBar: true,
-                                                },
-                                            );
+                                                });
                                         }
                                     });
                                 },
                             },
+
+                            // =======================
+                            // 🔄 CLEAR ALL
+                            // =======================
                             {
                                 text: '<i class="ti ti-refresh me-1"></i> Clear All',
                                 className: "btn btn-secondary btn-sm",
-                                action: function(e, dt, node, config) {
+                                action: function(e, dt) {
                                     prDetailsData = [];
                                     dt.clear().draw();
+
                                     calculateGrandTotal();
                                     calculateTotalOrder();
+
                                     $("#percent").val(0);
                                 },
                             },
                         ],
                     },
                 },
+            });
+
+            // ========================================================
+            // 🔄 EVENT SINKRONISASI COCOK UNTUK STRUKTUR JAVASCRIPT ARRAY
+            // ========================================================
+            table.on('row-reorder', function(e, diff, edit) {
+                // Jika tidak ada perubahan posisi penyeretan, abaikan proses
+                if (diff.length === 0) return;
+
+                // Lakukan loop manipulasi urutan elemen array asli di javascript menggunakan splice
+                diff.forEach(function(change) {
+                    let movedRowData = table.row(change.node).data();
+                    let oldIndex = prDetailsData.indexOf(movedRowData);
+
+                    if (oldIndex !== -1) {
+                        // Hapus dari posisi lama
+                        prDetailsData.splice(oldIndex, 1);
+                        // Masukkan tepat ke indeks baris baru hasil geser visual
+                        prDetailsData.splice(change.newPosition, 0, movedRowData);
+                    }
+                });
+
+                // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
+                table.rows().invalidate();
+
+                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
 
             $("#btnSubmitModal").on("click", function(e) {

@@ -58,6 +58,7 @@ return new class extends Migration
         Schema::create("purchase_order_detail_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->bigInteger('purchase_order_id');
+            $table->integer('urutan')->default(0);
             $table->bigInteger('product_id');
             $table->decimal('qty', 18, 4);
             $table->bigInteger('unit_id');

@@ -50,6 +50,7 @@ return new class extends Migration
         Schema::create("sales_quotation_detail_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('sales_quotation_id');
+            $table->integer('urutan')->default(0);
             $table->unsignedBigInteger('product_id');
             $table->decimal('qty', 18, 4);
             $table->bigInteger('unit_id');

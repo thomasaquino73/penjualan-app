@@ -274,30 +274,29 @@ class SalesQuotationController extends Controller
 
     private function generateNumberId()
     {
-        // Ambil record terakhir berdasarkan ID (urutkan dari yang terbaru)
-        $last = SalesQuotation::orderBy('id', 'desc')->lockForUpdate()->first();
+        $tahun = date('Y');
+        $bulan = date('n');
+        $bulanRomawi = $this->bulanRomawi($bulan);
 
-        if (! $last) {
-            // Jika database benar-benar kosong, gunakan format default
-            return 'SQ/2026/VII/0001';
+        // Prefix yang akan dicari
+        $prefix = "SQ/{$tahun}/{$bulanRomawi}/";
+
+        // Ambil nomor terakhir pada bulan & tahun yang sama
+        $last = SalesQuotation::where('sales_quotation_code', 'like', $prefix.'%')
+            ->lockForUpdate()
+            ->orderByDesc('id')
+            ->first();
+
+        if ($last) {
+            // Ambil 4 digit terakhir
+            $lastNumber = (int) substr($last->sales_quotation_code, -4);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            // Jika belum ada pada bulan ini mulai dari 0001
+            $nextNumber = 1;
         }
 
-        $lastCode = $last->sales_quotation_code;
-
-        // Regex untuk memisahkan prefix (semua karakter) dan angka (diakhiri digit)
-        if (preg_match('/^(.*?)(\d+)$/', $lastCode, $matches)) {
-            $prefix = $matches[1];      // Contoh: "PO/2026/VII/"
-            $lastNumber = $matches[2];  // Contoh: "0001"
-
-            $length = strlen($lastNumber);
-            $nextNumber = (int) $lastNumber + 1;
-
-            // Gabungkan kembali dengan format padding yang sama
-            return $prefix.str_pad($nextNumber, $length, '0', STR_PAD_LEFT);
-        }
-
-        // Jika tidak ada pola angka, tambahkan -0001
-        return $lastCode.'-0001';
+        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function create()

@@ -425,38 +425,29 @@ class PurchaseInvoiceController extends Controller
 
     private function generateNumberId()
     {
-        $year = date('Y');
-        $month = $this->bulanRomawi(date('n'));
+        $tahun = date('Y');
+        $bulan = date('n');
+        $bulanRomawi = $this->bulanRomawi($bulan);
 
-        // 🔥 ambil data terakhir berdasarkan tahun & bulan yg sama
-        $last = PurchaseInvoice::where('code', 'like', "PI/$year/$month/%")
-            ->orderBy('id', 'desc')
+        // Prefix yang akan dicari
+        $prefix = "PI/{$tahun}/{$bulanRomawi}/";
+
+        // Ambil nomor terakhir pada bulan & tahun yang sama
+        $last = PurchaseInvoice::where('code', 'like', $prefix.'%')
+            ->lockForUpdate()
+            ->orderByDesc('id')
             ->first();
 
-        if (! $last) {
-            return "PI/$year/$month/0001";
+        if ($last) {
+            // Ambil 4 digit terakhir
+            $lastNumber = (int) substr($last->code, -4);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            // Jika belum ada pada bulan ini mulai dari 0001
+            $nextNumber = 1;
         }
 
-        $lastId = $last->code;
-
-        // 🔥 ambil angka terakhir
-        preg_match('/(\d+)$/', $lastId, $matches);
-
-        if (! $matches) {
-            // kalau tidak ada angka → tambahin default
-            return $lastId.'01';
-        }
-
-        $number = (int) $matches[1];
-        $number++;
-
-        // 🔥 ambil prefix tanpa angka
-        $prefix = substr($lastId, 0, -strlen($matches[1]));
-
-        // 🔥 padding mengikuti panjang angka sebelumnya
-        $length = strlen($matches[1]);
-
-        return $prefix.str_pad($number, $length, '0', STR_PAD_LEFT);
+        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function create()
