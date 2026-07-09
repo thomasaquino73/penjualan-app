@@ -406,7 +406,7 @@ class SalesQuotationController extends Controller
                 $involvedPrIds = [];
 
                 if (is_array($items) && count($items) > 0) {
-                    foreach ($items as $item) {
+                    foreach ($items as $index => $item) {
                         // $prDetailId = $item['purchase_requisition_detail_id'] ?? $item['pr_detail_id'] ?? $item['detail_id'] ?? null;
                         $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
                         $unitPrice = floatval($item['unit_price'] ?? 0);
@@ -423,6 +423,7 @@ class SalesQuotationController extends Controller
                             'unit_price' => $unitPrice,
                             'discount_percent' => $item['discount_percent'],
                             'discount' => $discount,
+                            'urutan' => $index,
                             'amount' => $item['amount'] ?? $amount,
                             'active' => 1,
                             'created_by' => Auth::id(),
@@ -590,7 +591,7 @@ class SalesQuotationController extends Controller
                 $items = json_decode($itemsDetailRaw, true);
 
                 if (is_array($items) && count($items) > 0) {
-                    foreach ($items as $item) {
+                    foreach ($items as $index => $item) {
                         $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
                         $unitPrice = floatval($item['unit_price'] ?? 0);
                         $discount = floatval($item['discount'] ?? 0);
@@ -604,6 +605,7 @@ class SalesQuotationController extends Controller
                             'outstanding_qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
                             'unit_price' => $unitPrice,
+                            'urutan' => $index,
                             'discount_percent' => $discountPercent,
                             'discount' => $discount,
                             'amount' => $item['amount'] ?? $amount,

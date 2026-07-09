@@ -69,22 +69,7 @@ class AppServiceProvider extends ServiceProvider
             $aplikasi = $sistemData ? $sistemData->nama_aplikasi : 'Default Application';
             $sistem = $sistemData ? $sistemData->nama_sistem : 'Default System';
 
-            $year = date('Y');
-            $month = date('m');
-            $tablePO = "purchase_order_{$year}";
-            $tableSQ = "sales_quotation_{$year}";
-            $totalPurchaseOrder = 0;
-            $totalsalesQuotation = 0;
-            if (Schema::hasTable($tablePO)) {
-                $totalPurchaseOrder = DB::table($tablePO)
-                    ->whereMonth('datePO', $month)
-                    ->count();
-            }
-            if (Schema::hasTable($tableSQ)) {
-                $totalsalesQuotation = DB::table($tableSQ)
-                    ->whereMonth('sales_quotation_date', $month)
-                    ->count();
-            }
+            
 
             // Kirim semua variabel ke views
             $view->with([
@@ -100,8 +85,7 @@ class AppServiceProvider extends ServiceProvider
                 'notel' => $notel,
                 'alamat' => $alamat,
                 'globalCurrency' => $currency,
-                'totalPO' => $totalPurchaseOrder,
-                'totalSQ' => $totalsalesQuotation,
+             
             ]);
         });
 

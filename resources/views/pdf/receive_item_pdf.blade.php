@@ -5,8 +5,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Purchase Order - PT. Almex Bintang Timur</title>
-    <style>
+    <title>Receive Item - PT. Almex Bintang Timur</title>
+    @include('pdf.partials.css')
+
+    {{-- <style>
         /* Pengaturan Kertas Cetak A4 */
         @page {
             size: A4;
@@ -250,88 +252,48 @@
         .items-table tr {
             page-break-inside: avoid;
         }
-    </style>
+    </style> --}}
     {{-- <link rel="stylesheet" href="{{ asset('/public/assets/css/thomas/cetakpdf.css') }}"> --}}
 </head>
 
 <body>
+    @include('pdf.partials.header_logo')
+    <footer>
+        Printed on: {{ date('Y-m-d H:i:s') }} | Page
+        <script type="text/php">if (isset($pdf)) { $font = $fontMetrics->getFont("Arial", "bold"); $pdf->page_text(520, 800, "Page {PAGE_NUM} of {PAGE_COUNT}", $font, 7, array(0,0,0)); }</script>
+    </footer>
 
-    <table class="w-100 header-table">
+    <table class="info-table" style="margin-top: 20px; width:100%">
         <tr>
-            {{-- <td style="width: 55%;">
-                <table>
-                    <tr>
-                        <td class="logo-box">
-                            <img src="{{ public_path('image/logo/69fd6d6ab719c1778216298.png') }}" style="width: 70px;">
-
-                        </td>
-                        <td class="company-contact">
-                            <img src="{{ public_path('image/favicon/phone.png') }}" width="10" height="10">
-                            {{ $company->nomor_telepon }}<br>
-                            {{ $company->alamat }}<br>
-                            {{ $company->email }}<br>
-                            {{ $company->website }}<br>
-                        </td>
-                    </tr>
-                </table>
-            </td> --}}
-            <td style="width: 55%;">
-                <table>
-                    <tr>
-                        <td class="logo-box">
-                            <img src="{{ public_path('image/logo/logo_print.png') }}" style="width: 340px;">
-
-                        </td>
-                    </tr>
-                </table>
-            </td>
-            <td style="width: 45%;">
-                <div class="company-title">{{ $company->nama_perusahaan }}</div>
-                <div class="company-address">{!! nl2br(e($company->alamat)) !!}</div>
-
-            </td>
-        </tr>
-    </table>
-
-    <div class="divider"></div>
-
-    <table class="w-100 info-table">
-        <tr>
-            <td style="padding-right: 25px;">
+            <td style="width: 50%; vertical-align: top;">
                 <div class="section-title">Supplier</div>
                 <div class="recipient-box">
-                    <strong>{{ $model->supplierId->nama_supplier }}</strong><br>
-                    {!! nl2br(e($model->address)) !!}
-
+                    <strong>{{ $model->supplierID->nama_supplier }}</strong><br>
+                    {{ $model->address }}
                 </div>
             </td>
-            <td style="padding-left: 25px;">
-                <div class="po-box-title">Receive Item</div>
-                <table class="po-details-table">
+            <td style="width: 50%; vertical-align: top; padding-left: 20px;">
+                <div class="po-box-title">Receive Item </div>
+                <table style="width:100%;">
                     <tr>
-                        <td class="label">Nomor</td>
-                        <td class="colon">:</td>
-                        <td class="value">{{ $model->receive_item_code }}</td>
+                        <td width="70">Nomor</td>
+                        <td width="10">:</td>
+                        <td>{{ $model->receive_item_code }}</td>
                     </tr>
                     <tr>
-                        <td class="label">Tanggal</td>
-                        <td class="colon">:</td>
-                        <td class="value">
-                            {{ date('d M Y', strtotime($model->receive_item_date)) }}</td>
+                        <td width="70">Tanggal</td>
+                        <td width="10">:</td>
+                        <td>{{ date('d M Y', strtotime($model->receive_item_date)) }}</td>
                     </tr>
                     <tr>
-                        <td class="label">No. Dokumen</td>
-                        <td class="colon">:</td>
-                        <td class="value">
-                            {{ $model->no_dokumen }}
-                        </td>
+                        <td width="70">No. Dokumen</td>
+                        <td width="10">:</td>
+                        <td>{{ $model->no_dokumen }}</td>
                     </tr>
-
                 </table>
             </td>
         </tr>
     </table>
-
     <table class="items-table">
         <thead>
             <tr>
@@ -354,7 +316,6 @@
             @endforeach
         </tbody>
     </table>
-
     <table class="w-100 footer-table">
         <tr>
             <td class="keterangan-box">
@@ -363,7 +324,6 @@
             </td>
         </tr>
     </table>
-
     <div class="signature-section">
         <table class="signature-table">
             <tr>
@@ -378,8 +338,7 @@
                                 <div class="approval-title">Diterima oleh</div>
 
                                 <div style="height:65px;">
-                                    <img src="{{ public_path('image/logo/69fd6d6ab719c1778216298.png') }}"
-                                        style="height:80px;">
+
                                 </div>
 
                                 <div style="font-weight:bold;text-decoration:underline;">

@@ -73,6 +73,8 @@ class Sidebar extends Component
                         'pattern' => 'permintaan-pembelian.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['permintaan_pembelian-browse'],
+                          'badge' => fn () => MenuBadge::count('purchase_requisition', 'date'),
+                            'badge_color' => 'danger',
                     ],
                     [
                         'name' => 'Purchase Order',
@@ -225,6 +227,8 @@ class Sidebar extends Component
                         'pattern' => 'proforma-invoice.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['proforma_invoice-browse'],
+                         'badge' => fn () => MenuBadge::count('proforma_invoice', 'proforma_invoice_date'),
+                            'badge_color' => 'danger',
                     ],
                     [
                         'name' => 'Sales Invoice',
@@ -232,6 +236,8 @@ class Sidebar extends Component
                         'pattern' => 'sales-invoice.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['sales_invoice-browse'],
+                         'badge' => fn () => MenuBadge::count('sales_invoice', 'sales_invoice_date'),
+                            'badge_color' => 'danger',
                     ],
 
                 ],

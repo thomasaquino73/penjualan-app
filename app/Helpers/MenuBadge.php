@@ -20,6 +20,7 @@ class MenuBadge
 
         return DB::table($table)
             ->whereMonth($dateColumn, $month)
+            ->where('status','processing')
             ->count();
     }
 }

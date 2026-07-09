@@ -475,7 +475,7 @@ class ProformaInvoiceController extends Controller
                 $involvedSqIds = [];
 
                 if (is_array($items) && count($items) > 0) {
-                    foreach ($items as $item) {
+                      foreach ($items as $index => $item) {
                         $sqDetailId = $item['sales_quotation_detail_id'] ?? $item['detail_id'] ?? null;
                         $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
                         $unitPrice = floatval($item['unit_price'] ?? 0);
@@ -489,6 +489,7 @@ class ProformaInvoiceController extends Controller
                             'sales_quotation_detail_id' => $sqDetailId,
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
+                            'urutan' => $index,
                             'unit_id' => $item['unit_id'],
                             'warehouse_id' => ! empty($item['warehouse_id']) ? $item['warehouse_id'] : null,
                             'unit_price' => $unitPrice,
@@ -762,7 +763,7 @@ class ProformaInvoiceController extends Controller
 
             // 6. SIMPAN DETAIL BARU
             $affectedSqIds = [];
-            foreach ($items as $item) {
+              foreach ($items as $index => $item) {
                 $sqDetailId = (! empty($item['sales_quotation_detail_id']) && $item['sales_quotation_detail_id'] != 'null')
                             ? $item['sales_quotation_detail_id'] : null;
                 $qty = floatval($item['quantity'] ?? $item['qty'] ?? 0);
@@ -772,6 +773,7 @@ class ProformaInvoiceController extends Controller
                     'sales_quotation_detail_id' => $sqDetailId,
                     'product_id' => $item['product_id'],
                     'qty' => $qty,
+                    'urutan' => $index,
                     'unit_id' => $item['unit_id'],
                     'warehouse_id' => $item['warehouse_id'],
                     'unit_price' => floatval($item['unit_price'] ?? 0),

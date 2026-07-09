@@ -642,7 +642,7 @@ class SalesOrderController extends Controller
                 $involvedSqIds = [];
 
                 if (is_array($items) && count($items) > 0) {
-                    foreach ($items as $item) {
+                    foreach ($items as $index => $item) {
                         $sqDetailId = $item['sales_quotation_detail_id'] ?? $item['detail_id'] ?? null;
                         $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
                         $unitPrice = floatval($item['unit_price'] ?? 0);
@@ -662,6 +662,7 @@ class SalesOrderController extends Controller
                             'discount_percent' => $discountPercent,
                             'discount' => $discount,
                             'amount' => $item['amount'] ?? $amount,
+                            'urutan' => $index, // 🔥 INI KUNCI NYA
                             // 'so_qty' => 0, // Sinkronisasi: sq_qty di SO = qty SO
                             'outstanding_qty' => $qtyInputForm, // Karena SO adalah tahap akhir, outstanding di SO biasanya 0
                             'status' => 'open',
@@ -932,7 +933,7 @@ class SalesOrderController extends Controller
 
             // 6. SIMPAN DETAIL BARU
             $affectedSqIds = [];
-            foreach ($items as $item) {
+            foreach ($items as $index => $item) {
                 $sqDetailId = (! empty($item['sales_quotation_detail_id']) && $item['sales_quotation_detail_id'] != 'null')
                             ? $item['sales_quotation_detail_id'] : null;
                 $qty = floatval($item['quantity'] ?? $item['qty'] ?? 0);
@@ -948,6 +949,7 @@ class SalesOrderController extends Controller
                     'discount_percent' => $item['discount_percent'] ?? 0,
                     'discount' => floatval($item['discount'] ?? 0),
                     'amount' => $item['amount'] ?? 0,
+                    'urutan' => $index,
                     // 'so_qty' => 0, // Sinkronisasi: SO sudah menyerap qty ini
                     'outstanding_qty' => $qty,    // SO adalah tahap akhir
                     'active' => 1,

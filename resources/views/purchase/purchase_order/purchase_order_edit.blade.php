@@ -212,7 +212,9 @@
 @include('partials.button.btn_addpayment')
 @include('partials.button.btn_submitform')
 @include('partials.button.select2_modal')
-@include('purchase.purchase_order.part.js.calculate_total')
+@include('partials.js.calculate_total')
+
+
 @push('scripts')
     <script>
         $(document).ready(function() {

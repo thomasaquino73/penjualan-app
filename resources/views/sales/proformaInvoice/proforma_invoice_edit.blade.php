@@ -209,16 +209,13 @@
     @include('sales.proformaInvoice.part.modal_proforma_invoice')
     @include('sales.proformaInvoice.part.modalQuotationDetail')
 @endsection
-@push('style')
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
-@endpush
+@include('partials.tabel.css')
+@include('partials.tabel.js')
+@include('partials.button.btn_addshipping')
+@include('partials.button.btn_addpayment')
+@include('partials.button.btn_submitform')
+@include('partials.button.select2_modal')
 @push('scripts')
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
-
-    <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
-    <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
         $(document).ready(function() {
 
@@ -401,88 +398,9 @@
                 $("#checkAll").prop("checked", false);
             }
         });
-        $("#btnAddShipping").click(function() {
-            Swal.fire({
-                title: "Add New Shipping",
-                input: "text",
-                inputLabel: "Shipping Name",
-                inputPlaceholder: "Input shipping name...",
 
-                showCancelButton: true,
-
-                // confirmButtonColor: "#3085d6",
-                // cancelButtonColor: "#d33",
-
-                confirmButtonText: "Save",
-                cancelButtonText: "Cancel",
-                customClass: {
-                    confirmButton: "btn btn-primary me-2",
-                    cancelButton: "btn btn-danger",
-                },
-                buttonsStyling: false,
-                inputValidator: (value) => {
-                    if (!value) {
-                        return "Shipping wajib diisi";
-                    }
-                },
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: "{{ route('shipping.store') }}",
-                        type: "POST",
-
-                        data: {
-                            nama: result.value,
-                            _token: "{{ csrf_token() }}",
-                        },
-
-                        success: function(response) {
-                            let option = new Option(
-                                response.nama,
-                                response.id,
-                                true,
-                                true,
-                            );
-
-                            $("#jenis_pengiriman").append(option).trigger("change");
-
-                            Swal.fire({
-                                icon: "success",
-                                title: "Success",
-                                text: response.message,
-                                customClass: {
-                                    confirmButton: "btn btn-primary me-2",
-                                },
-                                buttonsStyling: false,
-                            });
-                        },
-
-                        error: function(xhr) {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error",
-                                text: "Failed save shipping",
-                                customClass: {
-                                    confirmButton: "btn btn-info",
-                                },
-                                buttonsStyling: false,
-                            });
-                        },
-                    });
-                }
-            });
-        });
 
         $(document).ready(function() {
-            $(".select2-modal").each(function() {
-                var $this = $(this);
-                $this.wrap('<div class="position-relative"></div>').select2({
-                    placeholder: $this.attr("data-placeholder"),
-                    width: "100%",
-                    dropdownParent: $("#modalPrDetail"),
-                });
-            });
-
             $(".select2-modal2").each(function() {
                 var $this = $(this);
                 $this.wrap('<div class="position-relative"></div>').select2({
@@ -506,23 +424,54 @@
                 width: "100%",
             });
 
+            // ========================================================
+            // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
+            // ========================================================
+            function refreshDataIndices() {
+                if (Array.isArray(prDetailsData)) {
+                    prDetailsData.forEach((item, index) => {
+                        item.urutan_lokal = index; // Membuat nomor ID unik lokal berbasis index array
+                    });
+                }
+            }
+            // Jalankan fungsi sebelum tabel diinisialisasi
+            refreshDataIndices();
+
             let table = new DataTable("#table", {
                 processing: true,
                 serverSide: false,
                 responsive: true,
                 select: true,
                 searching: false,
+                // 1. Tambahkan indeks pengurutan awal ke kolom pertama [0] agar engine rowReorder aktif
+                order: [
+                    [0, 'asc']
+                ],
                 lengthMenu: [
                     [10, 25, 50, -1],
                     [10, 25, 50, "All"],
                 ],
+                // 2. Hubungkan fungsi pencarian indeks dinamis berdasarkan data objek array langsung
+                rowReorder: {
+                    selector: 'td:first-child',
+                    dataSrc: function(row) {
+                        return prDetailsData.indexOf(row);
+                    }
+                },
                 data: prDetailsData,
                 columns: [{
+                        // 3. Menggunakan data: null agar aman dari error unknown parameter
                         data: null,
-                        orderable: false,
+                        orderable: true, // Wajib TRUE agar baris bisa digeser
+                        className: "text-center reorder-pointer",
                         searchable: false,
                         render: function(data, type, row, meta) {
-                            return meta.row + 1;
+                            // Memberikan angka visual statis sesuai baris di layar saat ini
+                            if (type === 'display') {
+                                return meta.row + 1;
+                            }
+                            // Kembalikan indeks array murni ke internal DataTables agar kalkulasi drag & drop berjalan
+                            return prDetailsData.indexOf(row);
                         },
                     },
                     {
@@ -570,7 +519,8 @@
                         render: function(data) {
                             return `<strong>${parseFloat(data ?? 0).toLocaleString('id-ID', { minimumFractionDigits: 0 })}</strong>`;
                         }
-                    }, {
+                    },
+                    {
                         data: "warehouse",
                         className: "text-center"
                     },
@@ -599,8 +549,8 @@
                                     }
 
                                     $("#formPrDetail")[0].reset();
-                                    $("#detail_id").val("");
                                     $("#warehouse_id").val("").trigger("change");
+                                    $("#detail_id").val("");
 
                                     if ($.fn.select2) {
                                         $("#product_id").val("").trigger("change");
@@ -610,6 +560,7 @@
                                     $("#modalTitle").text("Create new entry");
                                     $("#btnSubmitModal").text("Create");
                                     $("#modalPrDetail").modal("show");
+
                                 },
                             },
                             {
@@ -617,87 +568,52 @@
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
                                 action: function(e, dt, node, config) {
-                                    let rowSelected = dt.row({
-                                        selected: true
-                                    });
-                                    let data = rowSelected.data();
-                                    let rowIndex = rowSelected.index();
 
-                                    // 1. TANDAI BAHWA SEDANG PROSES EDIT
-                                    window.isPopulating = true;
+                                    let data = dt.row({
+                                        selected: true
+                                    }).data();
+                                    let rowIndex = dt.row({
+                                        selected: true
+                                    }).index();
+                                    console.log("========== DATA EDIT ==========");
+                                    console.dir(data);
+                                    console.log("unit_price :", data.unit_price);
+                                    console.log("amount :", data.amount);
+                                    console.log("discount :", data.discount);
+                                    console.log("quantity :", data.quantity);
                                     window.isEditingMode = true;
 
-                                    // 2. Setup Data Dasar
+                                    // Menyimpan index baris array untuk penanda update
                                     $("#detail_id").val(rowIndex);
 
-                                    // Ambil data untuk kalkulasi
-                                    let kuotaAwalPr = parseFloat(data.kuota_asli || 0);
-                                    let sisaPr = parseFloat(data.sisa_pr || 0);
-                                    let totalLain = parseFloat(data.total_diambil_lainnya ||
-                                        0); // Data baru dari backend
-                                    let qtySekarang = parseFloat(data.quantity || 0);
+                                    // --- AMANKAN DATA ID RELASI DI SINI ---
+                                    $("#modal_purchase_quotation_detail_id").val(data.detail_id ||
+                                        data.purchase_quotation_detail_id || "");
+                                    $("#modal_quotation_code").val(data.quotation_code || "");
 
-                                    // 3. Update Title & UI Modal dengan informasi total serapan lain
-                                    // $("#modalTitle").html(`
-                                //         Edit Entry |
-                                //         <span class="badge bg-primary">SQ Awal: ${kuotaAwalPr}</span>
-                                //         <span class="badge bg-warning text-dark">Sudah diambil SO lain: ${totalLain}</span>
-                                //     `);
-                                    $("#modalTitle").html(`
-                                            Edit Entry
-                                        `);
-
-                                    // 4. Bersihkan Form (Kecuali Hidden Fields)
-                                    $("#formPrDetail").find("input, select, textarea").not(
-                                        '[type="hidden"]').val('');
-
-                                    // 5. Isi Data ke Input Form
-                                    $("#quantity").val(qtySekarang);
-                                    // $("#modal_sales_quotation_detail_id").val(data
-                                    //     .sales_quotation_detail_id || "");
-                                    $("#unit_price").val(parseFloat(data.unit_price || 0));
-                                    $("#discount_percent").val(data.discount_percent || 0);
-                                    $("#discount").val(parseFloat(data.discount || 0));
+                                    // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
+                                    if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
+                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
+                                    } else {
+                                        $("#quantity").removeAttr(
+                                            "data-sisa-pr"); // Jika PO bebas, hapus batasannya
+                                    }
+                                    // --------------------------------------
+                                    $("#quantity").val(data.quantity);
+                                    $("#unit_id").data("pending-val", data.unit_id);
+                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
+                                    $("#unit_price").val(data.unit_price);
+                                    $("#discount").val(data.discount || 0);
                                     $("#total_price").val(data.amount || 0);
-                                    $("#tax").val(parseFloat(data.tax || 0));
+                                    $("#tax").val(data.tax || 0);
+                                    $("#product_id").val(data.product_id).trigger("change");
 
-                                    // 6. Set Validasi Maksimal di Input
-                                    // Logika: Sisa PR (outstanding) + Qty PO ini sendiri (karena qty lama akan di-overwrite)
-                                    let maxAllowed = sisaPr + qtySekarang;
-                                    $("#quantity").attr("data-max-allowed", maxAllowed);
-                                    $("#quantity").attr("placeholder", "Maksimal: " + maxAllowed);
-
-                                    // 7. Penanganan Select2 (Product & Unit)
-                                    $('#unit_id').prop("disabled", false);
-                                    $('#product_id').prop("disabled", false);
-
-                                    // Trigger Product untuk memuat daftar unit via AJAX
-                                    $("#product_id").val(data.product_id).trigger("change.select2");
-                                    $("#warehouse_id").val(data.warehouse_id).trigger(
-                                        "change.select2");
-
-                                    // Delay untuk menunggu respons AJAX produk selesai
-                                    setTimeout(function() {
-                                        let $unitSelect = $('#unit_id');
-                                        $unitSelect.empty();
-
-                                        if (data.unit_id) {
-                                            let newOption = new Option(data.unit || "Unit",
-                                                data.unit_id, true, true);
-                                            $unitSelect.append(newOption).trigger(
-                                                'change.select2');
-                                        } else {
-                                            $unitSelect.val('').trigger('change.select2');
-                                        }
-
-                                        // Lepaskan flag setelah semua proses selesai
-                                        window.isPopulating = false;
-                                    }, 500);
-
-                                    // 8. Tampilkan Modal
+                                    $("#modalTitle").text("Edit entry");
                                     $("#btnSubmitModal").text("Update");
                                     $("#modalPrDetail").modal("show");
-                                }
+
+
+                                },
                             },
                             {
                                 text: '<i class="ti ti-trash me-1"></i> Delete',
@@ -755,6 +671,32 @@
                         ],
                     },
                 },
+            });
+
+            // ========================================================
+            // 🔄 EVENT SINKRONISASI COCOK UNTUK STRUKTUR JAVASCRIPT ARRAY
+            // ========================================================
+            table.on('row-reorder', function(e, diff, edit) {
+                // Jika tidak ada perubahan posisi penyeretan, abaikan proses
+                if (diff.length === 0) return;
+
+                // Lakukan loop manipulasi urutan elemen array asli di javascript menggunakan splice
+                diff.forEach(function(change) {
+                    let movedRowData = table.row(change.node).data();
+                    let oldIndex = prDetailsData.indexOf(movedRowData);
+
+                    if (oldIndex !== -1) {
+                        // Hapus dari posisi lama
+                        prDetailsData.splice(oldIndex, 1);
+                        // Masukkan tepat ke indeks baris baru hasil geser visual
+                        prDetailsData.splice(change.newPosition, 0, movedRowData);
+                    }
+                });
+
+                // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
+                table.rows().invalidate();
+
+                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
 
             function loadAvailableStock() {
@@ -1071,177 +1013,7 @@
                 // JIKA PO BEBAS (maxPrLimit tidak ada), AKAN LOLOS TANPA VALIDASI MAKSIMAL
             });
 
-            let saveAndNew = false;
-            let activeBtn = null;
 
-            $(document).on("click", '.card-footer button[type="submit"]', function() {
-                saveAndNew = $(this).data("save-and-new");
-                activeBtn = $(this);
-            });
-
-            $("#postForm").on("submit", function(e) {
-                e.preventDefault();
-
-                let form = this;
-                let formData = new FormData(form);
-
-                // Ambil warehouse_id
-                let warehouseId = $("#warehouse_id").val();
-
-                if (!activeBtn) {
-                    activeBtn = $("#postForm").find(
-                        'button[data-save-and-new="false"]',
-                    );
-                    saveAndNew = false;
-                }
-
-                // START LOADING
-                activeBtn.html(
-                    '<i class="fa fa-spin fa-spinner me-1"></i> Checking...',
-                );
-                $(".card-footer button").prop("disabled", true);
-
-                // ===========================
-                // VALIDASI WAREHOUSE
-                // ===========================
-                if (!warehouseId || warehouseId === "") {
-
-                    let closeBtn = $("#postForm").find(
-                        'button[data-save-and-new="false"]',
-                    );
-                    let newBtn = $("#postForm").find(
-                        'button[data-save-and-new="true"]',
-                    );
-
-                    closeBtn.html(
-                        '<i class="fa fa-upload me-1"></i> Save and Close',
-                    );
-                    newBtn.html(
-                        '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
-                    );
-
-                    $(".card-footer button").prop("disabled", false);
-
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Warehouse Required",
-                        text: "Please select a warehouse before saving.",
-                        confirmButtonText: "OK",
-                        customClass: {
-                            confirmButton: "btn btn-primary waves-effect waves-light",
-                        },
-                        buttonsStyling: false,
-                    }).then(() => {
-                        $("#warehouse_id").focus();
-                    });
-
-                    return false;
-                }
-
-                // ===========================
-                // VALIDASI DETAIL
-                // ===========================
-                if (
-                    typeof prDetailsData === "undefined" ||
-                    prDetailsData.length === 0
-                ) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Empty Items",
-                        text: "Please add at least one item detail to the table before saving.",
-                        confirmButtonText: "OK",
-                        customClass: {
-                            confirmButton: "btn btn-primary waves-effect waves-light",
-                        },
-                        buttonsStyling: false,
-                    }).then(() => {
-                        let closeBtn = $("#postForm").find(
-                            'button[data-save-and-new="false"]',
-                        );
-                        let newBtn = $("#postForm").find(
-                            'button[data-save-and-new="true"]',
-                        );
-
-                        closeBtn.html(
-                            '<i class="fa fa-upload me-1"></i> Save and Close',
-                        );
-                        newBtn.html(
-                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
-                        );
-
-                        $(".card-footer button").prop("disabled", false);
-                    });
-
-                    return false;
-                }
-
-                formData.append("save_and_new", saveAndNew ? 1 : 0);
-                formData.append("items_detail", JSON.stringify(prDetailsData));
-
-                $.ajax({
-                    url: $(form).attr("action"),
-                    method: $(form).attr("method"),
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: "json",
-                    beforeSend: function() {
-                        activeBtn.html(
-                            '<i class="fa fa-spin fa-spinner me-1"></i> Sending...',
-                        );
-                        $(".card-footer button").prop("disabled", true);
-                    },
-                    complete: function() {
-                        let closeBtn = $("#postForm").find(
-                            'button[data-save-and-new="false"]',
-                        );
-                        let newBtn = $("#postForm").find(
-                            'button[data-save-and-new="true"]',
-                        );
-
-                        closeBtn.html(
-                            '<i class="fa fa-upload me-1"></i> Save and Close',
-                        );
-                        newBtn.html(
-                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
-                        );
-
-                        $(".card-footer button").prop("disabled", false);
-                    },
-                    success: function(response) {
-                        Swal.fire({
-                            icon: "success",
-                            title: "Data Created Successfully",
-                            text: response.message,
-                            customClass: {
-                                confirmButton: "btn btn-primary waves-effect waves-light",
-                            },
-                            buttonsStyling: false,
-                        }).then(() => {
-                            window.location.href = response.redirect;
-                        });
-                    },
-                    error: function(xhr) {
-                        resetValidation();
-
-                        let errors = xhr.responseJSON?.errors;
-                        $.each(errors, function(key, value) {
-                            displayFieldError(key, value[0]);
-                        });
-
-                        Swal.fire({
-                            icon: "error",
-                            title: "Failed to Create Data",
-                            text: xhr.responseJSON.message ||
-                                "Please check your data again.",
-                            customClass: {
-                                confirmButton: "btn btn-primary waves-effect waves-light",
-                            },
-                            buttonsStyling: false,
-                        });
-                    },
-                });
-            });
             $("#formPrDetail").on("submit", function(e) {
                 e.preventDefault();
 

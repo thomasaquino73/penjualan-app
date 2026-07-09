@@ -208,16 +208,16 @@
     @include('sales.salesOrder.part.modal_sales_order')
     @include('sales.salesOrder.part.modalQuotationDetail')
 @endsection
-@push('style')
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
-@endpush
-@push('scripts')
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
 
-    <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
-    <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
+@include('partials.tabel.css')
+@include('partials.tabel.js')
+@include('partials.button.btn_addshipping')
+@include('partials.button.btn_addpayment')
+@include('partials.button.btn_submitform')
+@include('partials.button.select2_modal')
+@include('partials.js.calculate_total')
+
+@push('scripts')
     <script>
         $(document).ready(function() {
 
@@ -444,28 +444,20 @@
         });
 
         $(document).ready(function() {
-            $(".select2-modal").each(function() {
-                var $this = $(this);
-                $this.wrap('<div class="position-relative"></div>').select2({
-                    placeholder: $this.attr("data-placeholder"),
-                    width: "100%",
-                    dropdownParent: $("#modalPrDetail"),
-                });
-            });
 
-            $("#customer_contact_id").select2({
-                placeholder: "Select Contact",
-                width: "100%",
-            });
 
-            $("#payment_term_id").select2({
-                placeholder: "Select Payment Term",
-                width: "100%",
-            });
-            $("#jenis_pengiriman").select2({
-                placeholder: "Select Shipping",
-                width: "100%",
-            });
+            // ========================================================
+            // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
+            // ========================================================
+            function refreshDataIndices() {
+                if (Array.isArray(prDetailsData)) {
+                    prDetailsData.forEach((item, index) => {
+                        item.urutan_lokal = index; // Membuat nomor ID unik lokal berbasis index array
+                    });
+                }
+            }
+            // Jalankan fungsi sebelum tabel diinisialisasi
+            refreshDataIndices();
 
             let table = new DataTable("#table", {
                 processing: true,
@@ -473,17 +465,37 @@
                 responsive: true,
                 select: true,
                 searching: false,
+                // 1. Tambahkan indeks pengurutan awal ke kolom pertama [0] agar engine rowReorder aktif
+                order: [
+                    [0, 'asc']
+                ],
+
                 lengthMenu: [
                     [10, 25, 50, -1],
                     [10, 25, 50, "All"],
                 ],
+
+                // 2. Hubungkan fungsi pencarian indeks dinamis berdasarkan data objek array langsung
+                rowReorder: {
+                    selector: 'td:first-child',
+                    dataSrc: function(row) {
+                        return prDetailsData.indexOf(row);
+                    }
+                },
                 data: prDetailsData,
                 columns: [{
+                        // 3. Menggunakan data: null agar aman dari error unknown parameter
                         data: null,
-                        orderable: false,
+                        orderable: true, // Wajib TRUE agar baris bisa digeser
+                        className: "text-center reorder-pointer",
                         searchable: false,
                         render: function(data, type, row, meta) {
-                            return meta.row + 1;
+                            // Memberikan angka visual statis sesuai baris di layar saat ini
+                            if (type === 'display') {
+                                return meta.row + 1;
+                            }
+                            // Kembalikan indeks array murni ke internal DataTables agar kalkulasi drag & drop berjalan
+                            return prDetailsData.indexOf(row);
                         },
                     },
                     {
@@ -674,6 +686,29 @@
                         ],
                     },
                 },
+            });
+
+            table.on('row-reorder', function(e, diff, edit) {
+                // Jika tidak ada perubahan posisi penyeretan, abaikan proses
+                if (diff.length === 0) return;
+
+                // Lakukan loop manipulasi urutan elemen array asli di javascript menggunakan splice
+                diff.forEach(function(change) {
+                    let movedRowData = table.row(change.node).data();
+                    let oldIndex = prDetailsData.indexOf(movedRowData);
+
+                    if (oldIndex !== -1) {
+                        // Hapus dari posisi lama
+                        prDetailsData.splice(oldIndex, 1);
+                        // Masukkan tepat ke indeks baris baru hasil geser visual
+                        prDetailsData.splice(change.newPosition, 0, movedRowData);
+                    }
+                });
+
+                // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
+                table.rows().invalidate();
+
+                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
 
             function loadAvailableStock() {
@@ -992,177 +1027,7 @@
                 // JIKA PO BEBAS (maxPrLimit tidak ada), AKAN LOLOS TANPA VALIDASI MAKSIMAL
             });
 
-            let saveAndNew = false;
-            let activeBtn = null;
 
-            $(document).on("click", '.card-footer button[type="submit"]', function() {
-                saveAndNew = $(this).data("save-and-new");
-                activeBtn = $(this);
-            });
-
-            $("#postForm").on("submit", function(e) {
-                e.preventDefault();
-
-                let form = this;
-                let formData = new FormData(form);
-
-                // Ambil warehouse_id
-                let warehouseId = $("#warehouse_id").val();
-
-                if (!activeBtn) {
-                    activeBtn = $("#postForm").find(
-                        'button[data-save-and-new="false"]',
-                    );
-                    saveAndNew = false;
-                }
-
-                // START LOADING
-                activeBtn.html(
-                    '<i class="fa fa-spin fa-spinner me-1"></i> Checking...',
-                );
-                $(".card-footer button").prop("disabled", true);
-
-                // ===========================
-                // VALIDASI WAREHOUSE
-                // ===========================
-                if (!warehouseId || warehouseId === "") {
-
-                    let closeBtn = $("#postForm").find(
-                        'button[data-save-and-new="false"]',
-                    );
-                    let newBtn = $("#postForm").find(
-                        'button[data-save-and-new="true"]',
-                    );
-
-                    closeBtn.html(
-                        '<i class="fa fa-upload me-1"></i> Save and Close',
-                    );
-                    newBtn.html(
-                        '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
-                    );
-
-                    $(".card-footer button").prop("disabled", false);
-
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Warehouse Required",
-                        text: "Please select a warehouse before saving.",
-                        confirmButtonText: "OK",
-                        customClass: {
-                            confirmButton: "btn btn-primary waves-effect waves-light",
-                        },
-                        buttonsStyling: false,
-                    }).then(() => {
-                        $("#warehouse_id").focus();
-                    });
-
-                    return false;
-                }
-
-                // ===========================
-                // VALIDASI DETAIL
-                // ===========================
-                if (
-                    typeof prDetailsData === "undefined" ||
-                    prDetailsData.length === 0
-                ) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Empty Items",
-                        text: "Please add at least one item detail to the table before saving.",
-                        confirmButtonText: "OK",
-                        customClass: {
-                            confirmButton: "btn btn-primary waves-effect waves-light",
-                        },
-                        buttonsStyling: false,
-                    }).then(() => {
-                        let closeBtn = $("#postForm").find(
-                            'button[data-save-and-new="false"]',
-                        );
-                        let newBtn = $("#postForm").find(
-                            'button[data-save-and-new="true"]',
-                        );
-
-                        closeBtn.html(
-                            '<i class="fa fa-upload me-1"></i> Save and Close',
-                        );
-                        newBtn.html(
-                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
-                        );
-
-                        $(".card-footer button").prop("disabled", false);
-                    });
-
-                    return false;
-                }
-
-                formData.append("save_and_new", saveAndNew ? 1 : 0);
-                formData.append("items_detail", JSON.stringify(prDetailsData));
-
-                $.ajax({
-                    url: $(form).attr("action"),
-                    method: $(form).attr("method"),
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: "json",
-                    beforeSend: function() {
-                        activeBtn.html(
-                            '<i class="fa fa-spin fa-spinner me-1"></i> Sending...',
-                        );
-                        $(".card-footer button").prop("disabled", true);
-                    },
-                    complete: function() {
-                        let closeBtn = $("#postForm").find(
-                            'button[data-save-and-new="false"]',
-                        );
-                        let newBtn = $("#postForm").find(
-                            'button[data-save-and-new="true"]',
-                        );
-
-                        closeBtn.html(
-                            '<i class="fa fa-upload me-1"></i> Save and Close',
-                        );
-                        newBtn.html(
-                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
-                        );
-
-                        $(".card-footer button").prop("disabled", false);
-                    },
-                    success: function(response) {
-                        Swal.fire({
-                            icon: "success",
-                            title: "Data Created Successfully",
-                            text: response.message,
-                            customClass: {
-                                confirmButton: "btn btn-primary waves-effect waves-light",
-                            },
-                            buttonsStyling: false,
-                        }).then(() => {
-                            window.location.href = response.redirect;
-                        });
-                    },
-                    error: function(xhr) {
-                        resetValidation();
-
-                        let errors = xhr.responseJSON?.errors;
-                        $.each(errors, function(key, value) {
-                            displayFieldError(key, value[0]);
-                        });
-
-                        Swal.fire({
-                            icon: "error",
-                            title: "Failed to Create Data",
-                            text: xhr.responseJSON.message ||
-                                "Please check your data again.",
-                            customClass: {
-                                confirmButton: "btn btn-primary waves-effect waves-light",
-                            },
-                            buttonsStyling: false,
-                        });
-                    },
-                });
-            });
             $("#formPrDetail").on("submit", function(e) {
                 e.preventDefault();
 

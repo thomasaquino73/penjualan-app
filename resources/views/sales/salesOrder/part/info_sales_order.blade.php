@@ -13,6 +13,9 @@
                         @endforeach
                         <option></option>
                     </select>
+                    <button type="button" class="btn btn-primary btn-sm" id="btnAddTerm">
+                        <i class="ti ti-plus"></i>
+                    </button>
                 </div>
                 <span class="error text-danger" id="payment_term_idError"></span>
 
