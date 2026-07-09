@@ -60,6 +60,7 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('proforma_invoice_id');
+            $table->integer('urutan')->default(0);
             $table->unsignedBigInteger('sales_order_detail_id')->nullable();
             $table->unsignedBigInteger('sales_quotation_detail_id')->nullable();
             $table->unsignedBigInteger('product_id');

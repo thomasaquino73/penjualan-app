@@ -221,16 +221,12 @@
     @include('sales.salesOrder.part.modal_sales_order')
     @include('sales.salesOrder.part.modalQuotationDetail')
 @endsection
-@push('style')
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
-@endpush
-@push('scripts')
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
+@include('partials.tabel.css')
+@include('partials.tabel.js')
+@include('partials.button.btn_addshipping')
+@include('partials.button.select2_modal')
 
-    <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
-    <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
+@push('scripts')
     <script>
         let prDetailsData = [];
         $(function() {
@@ -346,80 +342,6 @@
 
         });
 
-
-
-        $("#btnAddShipping").click(function() {
-            Swal.fire({
-                title: "Add New Shipping",
-                input: "text",
-                inputLabel: "Shipping Name",
-                inputPlaceholder: "Input shipping name...",
-
-                showCancelButton: true,
-
-                // confirmButtonColor: "#3085d6",
-                // cancelButtonColor: "#d33",
-
-                confirmButtonText: "Save",
-                cancelButtonText: "Cancel",
-                customClass: {
-                    confirmButton: "btn btn-primary me-2",
-                    cancelButton: "btn btn-danger",
-                },
-                buttonsStyling: false,
-                inputValidator: (value) => {
-                    if (!value) {
-                        return "Shipping wajib diisi";
-                    }
-                },
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: "{{ route('shipping.store') }}",
-                        type: "POST",
-
-                        data: {
-                            nama: result.value,
-                            _token: "{{ csrf_token() }}",
-                        },
-
-                        success: function(response) {
-                            let option = new Option(
-                                response.nama,
-                                response.id,
-                                true,
-                                true,
-                            );
-
-                            $("#jenis_pengiriman").append(option).trigger("change");
-
-                            Swal.fire({
-                                icon: "success",
-                                title: "Success",
-                                text: response.message,
-                                customClass: {
-                                    confirmButton: "btn btn-primary me-2",
-                                },
-                                buttonsStyling: false,
-                            });
-                        },
-
-                        error: function(xhr) {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error",
-                                text: "Failed save shipping",
-                                customClass: {
-                                    confirmButton: "btn btn-info",
-                                },
-                                buttonsStyling: false,
-                            });
-                        },
-                    });
-                }
-            });
-        });
-
         //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
         $("#checkAll").on("change", function() {
             // Jika checkAll dicentang, semua .checkItem ikut dicentang, begitu sebaliknya
@@ -436,22 +358,7 @@
         });
 
         $(document).ready(function() {
-            $(".select2-modal").each(function() {
-                var $this = $(this);
-                $this.wrap('<div class="position-relative"></div>').select2({
-                    placeholder: $this.attr("data-placeholder"),
-                    width: "100%",
-                    dropdownParent: $("#modalPrDetail"),
-                });
-            });
-            $(".select2-modal2").each(function() {
-                var $this = $(this);
-                $this.wrap('<div class="position-relative"></div>').select2({
-                    placeholder: $this.attr("data-placeholder"),
-                    width: "100%",
-                    dropdownParent: $("#modalQuotationDetail"),
-                });
-            });
+
             $("#customer_contact_id").select2({
                 placeholder: "Select Contact",
                 width: "100%",
@@ -465,6 +372,19 @@
                 placeholder: "Select Shipping",
                 width: "100%",
             });
+
+            // ========================================================
+            // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
+            // ========================================================
+            function refreshDataIndices() {
+                if (Array.isArray(prDetailsData)) {
+                    prDetailsData.forEach((item, index) => {
+                        item.urutan_lokal = index; // Membuat nomor ID unik lokal berbasis index array
+                    });
+                }
+            }
+            // Jalankan fungsi sebelum tabel diinisialisasi
+            refreshDataIndices();
 
             let table = new DataTable("#table", {
                 processing: true,
@@ -676,6 +596,32 @@
                         ],
                     },
                 },
+            });
+
+            // ========================================================
+            // 🔄 EVENT SINKRONISASI COCOK UNTUK STRUKTUR JAVASCRIPT ARRAY
+            // ========================================================
+            table.on('row-reorder', function(e, diff, edit) {
+                // Jika tidak ada perubahan posisi penyeretan, abaikan proses
+                if (diff.length === 0) return;
+
+                // Lakukan loop manipulasi urutan elemen array asli di javascript menggunakan splice
+                diff.forEach(function(change) {
+                    let movedRowData = table.row(change.node).data();
+                    let oldIndex = prDetailsData.indexOf(movedRowData);
+
+                    if (oldIndex !== -1) {
+                        // Hapus dari posisi lama
+                        prDetailsData.splice(oldIndex, 1);
+                        // Masukkan tepat ke indeks baris baru hasil geser visual
+                        prDetailsData.splice(change.newPosition, 0, movedRowData);
+                    }
+                });
+
+                // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
+                table.rows().invalidate();
+
+                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
 
             function loadAvailableStock() {
@@ -1012,47 +958,36 @@
 
             $("#postForm").on("submit", function(e) {
                 e.preventDefault();
-
                 let form = this;
                 let formData = new FormData(form);
-
-                // Ambil warehouse_id
                 let warehouseId = $("#warehouse_id").val();
-
                 if (!activeBtn) {
                     activeBtn = $("#postForm").find(
                         'button[data-save-and-new="false"]',
                     );
                     saveAndNew = false;
                 }
-
-                // START LOADING
                 activeBtn.html(
                     '<i class="fa fa-spin fa-spinner me-1"></i> Checking...',
                 );
                 $(".card-footer button").prop("disabled", true);
-
                 // ===========================
                 // VALIDASI WAREHOUSE
                 // ===========================
                 if (!warehouseId || warehouseId === "") {
-
                     let closeBtn = $("#postForm").find(
                         'button[data-save-and-new="false"]',
                     );
                     let newBtn = $("#postForm").find(
                         'button[data-save-and-new="true"]',
                     );
-
                     closeBtn.html(
                         '<i class="fa fa-upload me-1"></i> Save and Close',
                     );
                     newBtn.html(
                         '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
                     );
-
                     $(".card-footer button").prop("disabled", false);
-
                     Swal.fire({
                         icon: "warning",
                         title: "Warehouse Required",
@@ -1065,10 +1000,8 @@
                     }).then(() => {
                         $("#warehouse_id").focus();
                     });
-
                     return false;
                 }
-
                 // ===========================
                 // VALIDASI DETAIL
                 // ===========================

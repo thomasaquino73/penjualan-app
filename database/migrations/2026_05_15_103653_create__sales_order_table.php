@@ -60,6 +60,7 @@ return new class extends Migration
         Schema::create("sales_order_detail_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('sales_order_id');
+            $table->integer('urutan')->default(0);
             $table->unsignedBigInteger('sales_quotation_detail_id')->nullable();
             $table->string('sales_quotation_code_id')->nullable();
             $table->unsignedBigInteger('product_id');

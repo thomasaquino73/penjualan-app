@@ -3,11 +3,14 @@
 namespace App\Providers;
 
 use App\Models\PengaturanSistem;
+use App\Models\Purchase\PurchaseOrder;
 use App\Models\Setting\Company;
 use App\Models\Setting\Currency;
 use App\Models\StockMutation;
 use App\Observers\StockMutationObserver;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -30,8 +33,7 @@ class AppServiceProvider extends ServiceProvider
         StockMutation::observe(StockMutationObserver::class);
         Paginator::useBootstrapFive();
 
-        // Menggunakan '*' tidak masalah asal query-nya di-cache atau dibungkus singleton,
-        // namun alternatif terbaik agar tidak membebani memori adalah mengambil data global sekali saja di sini.
+        Schema::defaultStringLength(191);
         View::composer('*', function ($view) {
             // 1. Ambil data company sekalian dengan defaultCurrency-nya (Eager Loading)
             $company = Company::with('defaultCurrency')->first();
@@ -67,6 +69,23 @@ class AppServiceProvider extends ServiceProvider
             $aplikasi = $sistemData ? $sistemData->nama_aplikasi : 'Default Application';
             $sistem = $sistemData ? $sistemData->nama_sistem : 'Default System';
 
+            $year = date('Y');
+            $month = date('m');
+            $tablePO = "purchase_order_{$year}";
+            $tableSQ = "sales_quotation_{$year}";
+            $totalPurchaseOrder = 0;
+            $totalsalesQuotation = 0;
+            if (Schema::hasTable($tablePO)) {
+                $totalPurchaseOrder = DB::table($tablePO)
+                    ->whereMonth('datePO', $month)
+                    ->count();
+            }
+            if (Schema::hasTable($tableSQ)) {
+                $totalsalesQuotation = DB::table($tableSQ)
+                    ->whereMonth('sales_quotation_date', $month)
+                    ->count();
+            }
+
             // Kirim semua variabel ke views
             $view->with([
                 'mataUang' => $currency,
@@ -81,6 +100,8 @@ class AppServiceProvider extends ServiceProvider
                 'notel' => $notel,
                 'alamat' => $alamat,
                 'globalCurrency' => $currency,
+                'totalPO' => $totalPurchaseOrder,
+                'totalSQ' => $totalsalesQuotation,
             ]);
         });
 

@@ -2,6 +2,11 @@
 
 namespace App\View\Components;
 
+use App\Helpers\MenuBadge;
+use App\Models\Purchase\PurchaseOrder;
+use App\Models\Sales\SalesOrder;
+use App\Models\Sales\SalesQuotation;
+use Illuminate\Support\Facades\View;
 use Illuminate\View\Component;
 
 class Sidebar extends Component
@@ -75,6 +80,8 @@ class Sidebar extends Component
                         'pattern' => 'purchase-order.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['purchase_order-browse'],
+                          'badge' => fn () => MenuBadge::count('purchase_order', 'datePO'),
+                            'badge_color' => 'danger',
                     ],
                     [
                         'name' => 'Receive Item',
@@ -82,6 +89,7 @@ class Sidebar extends Component
                         'pattern' => 'receive-item.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['receive_item-browse'],
+                    
                     ],
 
                     // [
@@ -169,6 +177,8 @@ class Sidebar extends Component
                         'pattern' => 'sales-quotation.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['sales_quotation-browse'],
+                         'badge' => fn () => MenuBadge::count('sales_quotation', 'sales_quotation_date'),
+                            'badge_color' => 'danger',
                     ],
                     [
                         'name' => 'Penjualan',
@@ -176,6 +186,9 @@ class Sidebar extends Component
                         'pattern' => 'sales-order.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['sales_order-browse'],
+                         'badge' => fn () => MenuBadge::count('sales_order', 'sales_order_date'),
+                            'badge_color' => 'danger',
+                    
                     ],
 
                     // [

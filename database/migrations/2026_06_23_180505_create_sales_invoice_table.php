@@ -64,6 +64,7 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('sales_invoice_id');
+            $table->integer('urutan')->default(0);
             $table->unsignedBigInteger('sales_order_detail_id')->nullable();
             $table->string('sales_order_code_id')->nullable();
             $table->unsignedBigInteger('product_id');

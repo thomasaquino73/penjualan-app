@@ -63,8 +63,16 @@
                             @continue(!$childAccess)
 
                             <li class="menu-item {{ $childActive ? 'active' : '' }}">
-                                <a href="{{ route($child['route']) }}" class="menu-link">
-                                    <div>{{ $child['name'] }}</div>
+                                <a href="{{ route($child['route']) }}" class="menu-link d-flex align-items-center">
+
+                                    <span>{{ $child['name'] }}</span>
+
+                                    @if (isset($child['badge']))
+                                        <span class="badge bg-{{ $child['badge_color'] ?? 'primary' }} ms-auto">
+                                            {{ is_callable($child['badge']) ? $child['badge']() : $child['badge'] }}
+                                        </span>
+                                    @endif
+
                                 </a>
                             </li>
                         @endforeach
