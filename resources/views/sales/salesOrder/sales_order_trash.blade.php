@@ -29,7 +29,7 @@
                     class="d-flex flex-column flex-md-row gap-2 
                         justify-content-start justify-content-lg-end">
 
-                    <a href="{{ route('sales-invoice.index') }}" class="btn btn-secondary btn-sm ">
+                    <a href="{{ route('sales-order.index') }}" class="btn btn-secondary btn-sm ">
                         <i class="ti ti-chevron-left me-1"></i> Back
                     </a>
 
@@ -96,7 +96,7 @@
                     [10, 25, 50, 'All']
                 ],
                 ajax: {
-                    url: '{{ route('sales-invoice.trash') }}',
+                    url: '{{ route('sales-order.trash') }}',
                     data: function(d) {
                         d.status = $('#selectStatus').val();
                     }
@@ -146,7 +146,7 @@
                 let id = $(this).data('id');
                 let token = $("meta[name='csrf-token']").attr("content");
                 Swal.fire({
-                    title: 'Restore this sales invoice?',
+                    title: 'Restore this sales order?',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, restore!',
@@ -159,7 +159,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/sales-invoice/restore/${id}`,
+                            url: `/sales-order/restore/${id}`,
                             type: 'PUT',
                             data: {
                                 _token: token
@@ -230,7 +230,7 @@
 
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: '/sales-invoice/restore-multiple',
+                            url: '/sales-order/restore-multiple',
                             type: 'POST',
                             data: {
                                 ids: ids,
