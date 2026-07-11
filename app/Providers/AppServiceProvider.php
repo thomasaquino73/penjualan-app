@@ -3,13 +3,11 @@
 namespace App\Providers;
 
 use App\Models\PengaturanSistem;
-use App\Models\Purchase\PurchaseOrder;
 use App\Models\Setting\Company;
 use App\Models\Setting\Currency;
 use App\Models\StockMutation;
 use App\Observers\StockMutationObserver;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -69,8 +67,6 @@ class AppServiceProvider extends ServiceProvider
             $aplikasi = $sistemData ? $sistemData->nama_aplikasi : 'Default Application';
             $sistem = $sistemData ? $sistemData->nama_sistem : 'Default System';
 
-            
-
             // Kirim semua variabel ke views
             $view->with([
                 'mataUang' => $currency,
@@ -85,7 +81,7 @@ class AppServiceProvider extends ServiceProvider
                 'notel' => $notel,
                 'alamat' => $alamat,
                 'globalCurrency' => $currency,
-             
+
             ]);
         });
 

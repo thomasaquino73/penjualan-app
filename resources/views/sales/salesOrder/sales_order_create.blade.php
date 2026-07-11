@@ -732,10 +732,6 @@
             });
 
             $(document).on("change", "#product_id", function() {
-                console.log("=== CHANGE PRODUCT ===");
-                console.log("isEditingMode =", window.isEditingMode);
-                console.log("isPopulating =", window.isPopulating);
-                console.log("harga sebelum =", $("#unit_price").val());
                 let productId = $(this).val();
                 let unitSelect = $("#unit_id");
                 let priceInput = $("#unit_price");
@@ -768,7 +764,7 @@
                 // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
                 // ==========================================
                 $.ajax({
-                    url: `/sales-order/get-units-by-product/${productId}`,
+                    url: window.routes.getUnits.replace(':id', productId),
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -823,7 +819,7 @@
                 // 2. AJAX History PO + Fallback Harga Master
                 // ==========================================
                 $.ajax({
-                    url: `/sales-order/sq/price-history?product_id=${productId}&customer_id=${customerId}`,
+                    url: `/sales-order/so/price-history?product_id=${productId}&customer_id=${customerId}`,
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -906,7 +902,7 @@
                             helperText
                                 .attr("class", "form-text text-muted")
                                 .text(
-                                    "Belum ada riwayat SO dengan customer ini. Silahkan isi harga manual.",
+                                    "Belum ada riwayat harga dengan customer ini. Silahkan isi harga manual.",
                                 );
                             dropdownBtn.prop("disabled", true);
                             if (priceInput.val() === "") {

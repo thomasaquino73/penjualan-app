@@ -847,7 +847,7 @@
                 // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
                 // ==========================================
                 $.ajax({
-                    url: `/get-units-by-product/${productId}`,
+                    url: window.routes.getUnits.replace(':id', productId),
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -861,8 +861,11 @@
                             .append("<option></option>")
                             .prop("disabled", false);
 
-                        if (response && response.length > 0) {
-                            $.each(response, function(key, item) {
+                        // FIX: Akses properti 'units' dari objek response
+                        let units = response.units;
+
+                        if (units && units.length > 0) {
+                            $.each(units, function(key, item) {
                                 unitSelect.append(
                                     `<option value="${item.id}">${item.name}</option>`,
                                 );
@@ -875,6 +878,11 @@
 
                         unitSelect.trigger("change");
 
+                        // Gunakan response.default_price
+                        // priceInput.val(response.default_price || 0);
+                        if (!window.isEditingMode) {
+                            priceInput.val(response.default_price || 0);
+                        }
                         let pendingUnitId = unitSelect.data("pending-val");
                         if (pendingUnitId) {
                             unitSelect.val(pendingUnitId).trigger("change");
@@ -882,7 +890,6 @@
                         }
                     },
                     error: function() {
-                        console.error("Gagal memuat list unit dari Controller.");
                         unitSelect
                             .empty()
                             .append("<option></option>")
@@ -895,7 +902,7 @@
                 // 2. AJAX History PO + Fallback Harga Master
                 // ==========================================
                 $.ajax({
-                    url: `/purchase-order/po/price-history?product_id=${productId}&customer_id=${customerId}`,
+                    url: `/sales-order/so/price-history?product_id=${productId}&customer_id=${customerId}`,
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -968,6 +975,7 @@
                                 a.on("click", function(e) {
                                     e.preventDefault();
                                     priceInput.val(harga);
+                                    calculateTotal();
                                 });
 
                                 li.append(a);
@@ -977,7 +985,7 @@
                             helperText
                                 .attr("class", "form-text text-muted")
                                 .text(
-                                    "Belum ada riwayat PO dengan supplier ini. Silahkan isi harga manual.",
+                                    "Belum ada riwayat harga dengan customer ini. Silahkan isi harga manual.",
                                 );
                             dropdownBtn.prop("disabled", true);
                             if (priceInput.val() === "") {
@@ -986,7 +994,6 @@
                         }
                     },
                     error: function(xhr) {
-                        console.error("Gagal mengambil data riwayat harga:", xhr);
                         helperText
                             .attr("class", "form-text text-danger")
                             .text("Gagal memuat riwayat harga.");

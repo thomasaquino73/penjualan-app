@@ -3,10 +3,6 @@
 namespace App\View\Components;
 
 use App\Helpers\MenuBadge;
-use App\Models\Purchase\PurchaseOrder;
-use App\Models\Sales\SalesOrder;
-use App\Models\Sales\SalesQuotation;
-use Illuminate\Support\Facades\View;
 use Illuminate\View\Component;
 
 class Sidebar extends Component
@@ -73,8 +69,8 @@ class Sidebar extends Component
                         'pattern' => 'permintaan-pembelian.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['permintaan_pembelian-browse'],
-                          'badge' => fn () => MenuBadge::count('purchase_requisition', 'date'),
-                            'badge_color' => 'danger',
+                        'badge' => fn () => MenuBadge::count('purchase_requisition', 'date'),
+                        'badge_color' => 'danger',
                     ],
                     [
                         'name' => 'Purchase Order',
@@ -82,8 +78,8 @@ class Sidebar extends Component
                         'pattern' => 'purchase-order.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['purchase_order-browse'],
-                          'badge' => fn () => MenuBadge::count('purchase_order', 'datePO'),
-                            'badge_color' => 'danger',
+                        'badge' => fn () => MenuBadge::count('purchase_order', 'datePO'),
+                        'badge_color' => 'danger',
                     ],
                     [
                         'name' => 'Receive Item',
@@ -91,7 +87,7 @@ class Sidebar extends Component
                         'pattern' => 'receive-item.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['receive_item-browse'],
-                    
+
                     ],
 
                     // [
@@ -179,8 +175,8 @@ class Sidebar extends Component
                         'pattern' => 'sales-quotation.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['sales_quotation-browse'],
-                         'badge' => fn () => MenuBadge::count('sales_quotation', 'sales_quotation_date'),
-                            'badge_color' => 'danger',
+                        'badge' => fn () => MenuBadge::count('sales_quotation', 'sales_quotation_date'),
+                        'badge_color' => 'danger',
                     ],
                     [
                         'name' => 'Penjualan',
@@ -188,9 +184,9 @@ class Sidebar extends Component
                         'pattern' => 'sales-order.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['sales_order-browse'],
-                         'badge' => fn () => MenuBadge::count('sales_order', 'sales_order_date'),
-                            'badge_color' => 'danger',
-                    
+                        'badge' => fn () => MenuBadge::count('sales_order', 'sales_order_date'),
+                        'badge_color' => 'danger',
+
                     ],
 
                     // [
@@ -227,8 +223,8 @@ class Sidebar extends Component
                         'pattern' => 'proforma-invoice.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['proforma_invoice-browse'],
-                         'badge' => fn () => MenuBadge::count('proforma_invoice', 'proforma_invoice_date'),
-                            'badge_color' => 'danger',
+                        'badge' => fn () => MenuBadge::count('proforma_invoice', 'proforma_invoice_date'),
+                        'badge_color' => 'danger',
                     ],
                     [
                         'name' => 'Sales Invoice',
@@ -236,8 +232,8 @@ class Sidebar extends Component
                         'pattern' => 'sales-invoice.*',
                         'roles' => ['Super Admin'],
                         'permissions' => ['sales_invoice-browse'],
-                         'badge' => fn () => MenuBadge::count('sales_invoice', 'sales_invoice_date'),
-                            'badge_color' => 'danger',
+                        'badge' => fn () => MenuBadge::count('sales_invoice', 'sales_invoice_date'),
+                        'badge_color' => 'danger',
                     ],
 
                 ],
@@ -252,16 +248,16 @@ class Sidebar extends Component
                 'roles' => ['Super Admin'],
                 'permissions' => ['delivery_order-browse'],
             ],
-            // [
-            //     'type' => 'single',
-            //     'name' => 'Store Sales',
-            //     'route' => 'penjualan-toko.index',
-            //     'icon' => 'ti ti-calculator',
-            //     'pattern' => 'penjualan-toko.*',
-            //     'active' => true,
-            //     'roles' => ['Super Admin'],
-            //     'permissions' => ['penjualan_toko-browse'],
-            // ],
+            [
+                'type' => 'single',
+                'name' => 'Store Sales',
+                'route' => 'penjualan-toko.index',
+                'icon' => 'ti ti-calculator',
+                'pattern' => 'penjualan-toko.*',
+                'active' => true,
+                'roles' => ['Super Admin'],
+                'permissions' => ['penjualan_toko-browse'],
+            ],
             [
                 'type' => 'section',
                 'label' => 'INVENTORY',

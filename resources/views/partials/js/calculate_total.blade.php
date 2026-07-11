@@ -4,35 +4,60 @@
             let qty = parseFloat(document.getElementById('quantity').value) || 0;
             let price = parseFloat(document.getElementById('unit_price').value) || 0;
             let discountInput = document.getElementById('discount_percent').value;
+
             let subtotal = qty * price;
+
             let remaining = subtotal;
             let totalDiscount = 0;
+
             if (discountInput) {
                 // Ambil semua angka dari input seperti "10+5+5"
                 let discounts = discountInput.split('+');
+
                 discounts.forEach(d => {
                     let percent = parseFloat(d.trim()) || 0;
+
                     let discValue = remaining * (percent / 100);
                     totalDiscount += discValue;
+
                     remaining -= discValue;
                 });
             }
+
             // Set hasil ke input discount (nominal)
             document.getElementById('discount').value = totalDiscount.toFixed(2);
+
             // Set total price
-            document.getElementById('amount').value = remaining.toFixed(2);
+            document.getElementById('total_price').value = remaining.toFixed(2);
         }
+
         document.getElementById('discount').addEventListener('input', function() {
+
             let qty = parseFloat(document.getElementById('quantity').value) || 0;
             let price = parseFloat(document.getElementById('unit_price').value) || 0;
             let discountNominal = parseFloat(this.value) || 0;
+
             let subtotal = qty * price;
+
             if (discountNominal > subtotal) {
                 discountNominal = subtotal;
+                this.value = subtotal;
             }
+
+            // Hitung discount %
+            let discountPercent = 0;
+            if (subtotal > 0) {
+                discountPercent = (discountNominal / subtotal) * 100;
+            }
+
+            document.getElementById('discount_percent').value = discountPercent.toFixed(2);
+
+            // Hitung total
             let total = subtotal - discountNominal;
-            document.getElementById('amount').value = total.toFixed(2);
+            document.getElementById('total_price').value = total.toFixed(2);
+
         });
+
         document.getElementById('quantity').addEventListener('input', calculateTotal);
         document.getElementById('unit_price').addEventListener('input', calculateTotal);
         document.getElementById('discount_percent').addEventListener('input', calculateTotal);
@@ -41,60 +66,85 @@
         $("#sub_total, #discount_all").on("input", function() {
             calculateTotalOrder();
         });
+
         // ===============================
         // Ambil Grand Total dari Detail
         // ===============================
         function getGrandSubTotal() {
+
             let total = 0;
+
             $.each(prDetailsData, function(index, item) {
                 total += parseFloat(item.amount) || 0;
             });
+
             return total;
         }
+
         // ===============================
         // Hitung Grand Total
         // ===============================
         function calculateGrandTotal() {
+
             let grandSubTotal = getGrandSubTotal();
+
             let currentPercent = parseFloat($("#percent").val()) || 0;
+
             if (currentPercent > 0) {
+
                 let nominalDiscount = grandSubTotal * currentPercent / 100;
+
                 $("#discount_all").val(Math.round(nominalDiscount));
+
             } else {
+
                 let nominalDiscount = parseFloat($("#discount_all").val()) || 0;
+
                 if (nominalDiscount > grandSubTotal) {
                     nominalDiscount = grandSubTotal;
                     $("#discount_all").val(Math.round(nominalDiscount));
                 }
+
                 let percent = grandSubTotal > 0 ?
                     (nominalDiscount / grandSubTotal) * 100 :
                     0;
+
                 $("#percent").val(
                     percent % 1 === 0 ? percent : percent.toFixed(2)
                 );
             }
+
             calculateTotalOrder();
         }
 
         const TAXES = @json($taxes);
         const DEFAULT_TAX_ID = {{ $defaultTax->id ?? 'null' }};
+
         // ===============================
         // Hitung Total Order
         // ===============================
         function calculateTotalOrder() {
+
             // Selalu hitung subtotal dari tabel
             let grandSubTotal = getGrandSubTotal();
+
             let discount = parseFloat($("#discount_all").val()) || 0;
+
             let kenaPajak = $("#kena_pajak").is(":checked");
             let totalInclude = $("#total_termasuk_pajak").is(":checked");
+
             let selectedTaxId = $("#tax_id").val();
+
             let taxPercent = 0;
+
             if (selectedTaxId) {
                 let selectedTax = TAXES.find(t => t.id == selectedTaxId);
+
                 if (selectedTax) {
                     taxPercent = parseFloat(selectedTax.percentage) || 0;
                 }
             }
+
             // subtotal setelah diskon
             let subtotal = grandSubTotal - discount;
 

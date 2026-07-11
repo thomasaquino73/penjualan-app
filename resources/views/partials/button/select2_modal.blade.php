@@ -17,6 +17,7 @@
                     dropdownParent: $("#modalRequisitionDetail"),
                 });
             });
+
         });
     </script>
 @endpush

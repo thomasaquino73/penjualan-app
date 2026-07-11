@@ -25,12 +25,6 @@
                 <div
                     class="d-flex flex-column flex-md-row gap-2 
                     justify-content-start justify-content-lg-end">
-
-                    @canany(['kategori_supplier-create'])
-                        <button id="create" class="btn  btn-sm btn-primary">
-                            <i class="ti ti-plus me-1"></i> Add Data
-                        </button>
-                    @endcanany
                     @canany(['kategori_supplier-delete'])
                         <button id="deleteSelected" class="btn btn-danger btn-sm">
                             <i class="ti ti-trash me-1"></i> Delete Selected
@@ -56,13 +50,15 @@
                         <th>Description</th>
                         <th>Created</th>
                         <th>Updated</th>
-                        <th>Action</th>
+                        {{-- <th>Action</th> --}}
                     </tr>
                 </thead>
             </table>
         </div>
     </div>
 @endsection
+@include('partials.tabel.css')
+@include('partials.tabel.js')
 @push('scripts')
     <div class="modal fade" id="modals" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered1 modal-simple ">
@@ -119,10 +115,195 @@
                     $('.checkItem:checked').length === $('.checkItem').length
                 );
             });
+            // ✅ Siapkan tombol dulu (DI LUAR DataTable)
+            let buttons = [];
+
+            // ✅ Button CREATE (pakai permission)
+            @canany(['kategori_supplier-create'])
+                buttons.push({
+                    text: '<i class="ti ti-plus me-1"></i> New',
+                    className: "btn btn-primary btn-sm me-2 AddNew",
+                    action: function(e, dt, node, config) {
+                        $('#modals').modal('show');
+                        $('#savedata').html('<i class="fa fa-save me-1"></i>Save changes');
+                        $('#modal-title').html('Add Categories');
+                        $('#postForm').trigger('reset');
+                        $('#id').val('');
+                        resetValidation();
+                    }
+                });
+            @endcanany
+
+
+            // ✅ Button EDIT
+            @canany(['kategori_supplier-edit'])
+                buttons.push({
+                    text: '<i class="ti ti-edit me-1"></i> Edit',
+                    className: "btn btn-warning btn-sm me-2",
+                    extend: "selectedSingle",
+                    action: function(e, dt, node, config) {
+
+                        let row = dt.row({
+                            selected: true
+                        });
+
+                        // ❗ Pastikan ada row terpilih
+                        if (!row.any()) {
+                            toastr.warning("Pilih data terlebih dahulu!");
+                            return;
+                        }
+
+                        let rowData = row.data();
+                        let id = rowData.id; // ✅ Ambil ID dari row terpilih
+
+                        console.log("========== PROSES EDIT ID:", id, "==========");
+
+                        window.isEditingMode = true;
+                        resetValidation();
+
+                        // Tampilkan loading/spinner jika diperlukan, atau langsung jalankan AJAX
+                        $.ajax({
+                            type: "GET",
+                            url: "{{ url('kategori-supplier') }}/" + id + "/edit",
+                            data: {
+                                id: id
+                            },
+                            dataType: 'json',
+                            success: function(data) {
+                                // 1. Ubah teks UI Modal
+                                $('#modal-title').html('Edit Categories');
+                                $('#savedata').html(
+                                    'Save changes'
+                                ); // Menjaga konsistensi text tombol submit
+
+                                // 2. Isi nilai input form berdasarkan data dari server
+                                $('#id').val(data.id);
+                                $('#detail').val(data.detail);
+                                $('#description').val(data.description);
+
+                                // 3. Bersihkan sisa-sisa error validasi lawas
+                                resetValidation();
+
+                                // 4. 🔥 TAMPILKAN MODAL KE LAYAR
+                                $('#modals').modal('show');
+                            },
+                            error: function(xhr) {
+                                let errorMessage = xhr.responseJSON && xhr.responseJSON
+                                    .message ?
+                                    xhr.responseJSON.message :
+                                    "Gagal mengambil data dari server.";
+                                toastr.error(errorMessage);
+                            }
+                        });
+                    }
+                });
+            @endcanany
+
+
+            // ✅ Button DELETE
+            @canany(['kategori_supplier-delete'])
+                buttons.push({
+                    text: '<i class="ti ti-trash me-1"></i> Delete',
+                    className: "btn btn-danger btn-sm me-2",
+                    extend: "selected",
+                    action: function(e, dt, node, config) {
+
+                        let row = dt.row({
+                            selected: true
+                        });
+
+                        // ❗ Pastikan ada row yang terpilih sebelum mengeksekusi hapus
+                        if (!row.any()) {
+                            toastr.warning("Pilih data terlebih dahulu!");
+                            return;
+                        }
+
+                        let rowIndex = row.index();
+                        let data = row.data();
+
+                        // ✅ PERBAIKAN: Ambil langsung dari objek data milik DataTables, bukan dari $(this)
+                        let id = data.id;
+                        let name = data.detail || data.name ||
+                            'Data'; // Sesuaikan dengan key nama/kategori di database Anda
+                        let token = $("meta[name='csrf-token']").attr("content");
+
+                        Swal.fire({
+                            title: 'Are you sure?',
+                            text: "Want to delete data: " + name,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, delete it!',
+                            cancelButtonText: 'Cancel',
+                            customClass: {
+                                confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+                                cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                            },
+                            buttonsStyling: false
+                        }).then(function(result) {
+                            if (result.isConfirmed) {
+                                $.ajax({
+                                    url: `/kategori-supplier/${id}`,
+                                    type: "DELETE",
+                                    cache: false,
+                                    data: {
+                                        _token: token
+                                    },
+                                    success: function(response) {
+                                        // Refresh data tabel setelah sukses menghapus
+                                        table.draw();
+
+                                        toastr.success('Deleted Data Successfully',
+                                            '', {
+                                                timeOut: 1500,
+                                                progressBar: true,
+                                                closeButton: false,
+                                                positionClass: 'toast-top-right',
+                                            });
+                                    },
+                                    error: function(jqXHR) {
+                                        let message =
+                                            "Something went wrong"; // Fallback jika respon kosong
+
+                                        if (jqXHR.responseJSON && jqXHR.responseJSON
+                                            .message) {
+                                            // Mengambil pesan spesifik dari Controller Anda
+                                            message = jqXHR.responseJSON.message;
+                                        }
+
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Failed to delete',
+                                            text: message, // Pesan otomatis berubah sesuai kondisi di Controller
+                                            timer: 5000,
+                                            customClass: {
+                                                confirmButton: 'btn btn-info waves-effect waves-light'
+                                            }
+                                        });
+                                    }
+                                });
+                            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                                Swal.fire({
+                                    icon: 'info',
+                                    title: 'Cancelled',
+                                    text: 'Your data is safe.',
+                                    customClass: {
+                                        confirmButton: 'btn btn-info waves-effect waves-light'
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            @endcanany
+
+
+
+
             var table = new DataTable('#table', {
                 processing: true,
                 serverSide: true,
                 responsive: true,
+                select: true,
                 lengthMenu: [
                     [10, 25, 50, -1],
                     [10, 25, 50, 'All']
@@ -151,21 +332,13 @@
                     {
                         data: 'updated_at',
                     },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
-                    },
-                ]
-            });
-            $('#create').click(function() {
-                $('#modals').modal('show');
-                $('#savedata').html('<i class="fa fa-save me-1"></i>Save changes');
-                $('#modal-title').html('Add Categories');
-                $('#postForm').trigger('reset');
-                $('#id').val('');
-                resetValidation();
+
+                ],
+                layout: {
+                    topStart: {
+                        buttons: buttons
+                    }
+                }
             });
             $('#postForm').on('submit', function(e) {
                 e.preventDefault();
@@ -182,7 +355,8 @@
                             '<i class="fa fa-spin fa-spinner me-1"></i> Sending...');
                     },
                     complete: function(e) {
-                        $('#savedata').html(' <i class="fa fa-save me-1"></i> Save changes');
+                        $('#savedata').html(
+                            ' <i class="fa fa-save me-1"></i> Save changes');
                     },
                     success: function(response) {
                         $('#modals').modal('hide');
@@ -228,99 +402,7 @@
 
 
             });
-            $('body').on('click', '.editPost', function(a) {
-                $('#modals').modal('show');
-                $('#savedata').html('Save changes');
-                resetValidation();
 
-                var id = $(this).data('id');
-                console.log(id);
-                $.ajax({
-                    type: "GET",
-                    url: "{{ url('kategori-supplier') }}/" + id + "/edit",
-                    data: {
-                        id: id
-                    },
-                    dataType: 'json',
-                    success: function(data) {
-                        $('#modal-title').html('Edit Categories');
-                        $('#id').val(data.id);
-                        $('#detail').val(data.detail);
-                        $('#description').val(data.description);
-                        resetValidation();
-                    }
-                });
-            });
-
-
-
-            $('body').on('click', '#delete', function() {
-                let id = $(this).data('id');
-                let name = $(this).data('name');
-                let token = $("meta[name='csrf-token']").attr("content");
-
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "Want to delete data: " + name,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, delete it!',
-                    cancelButtonText: 'Cancel',
-                    customClass: {
-                        confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
-                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
-                    },
-                    buttonsStyling: false
-                }).then(function(result) {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: `/kategori-supplier/${id}`,
-                            type: "DELETE",
-                            cache: false,
-                            data: {
-                                _token: token
-                            },
-                            success: function(response) {
-                                table.draw();
-                                toastr.success('Deleted Data Successfully', '', {
-                                    timeOut: 1500,
-                                    progressBar: true,
-                                    closeButton: false,
-                                    positionClass: 'toast-top-right',
-                                });
-                            },
-                            error: function(jqXHR) {
-                                let message =
-                                    "Something went wrong"; // Fallback jika respon kosong
-
-                                if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
-                                    // Mengambil pesan spesifik dari Controller Anda
-                                    message = jqXHR.responseJSON.message;
-                                }
-
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Failed to delete',
-                                    text: message, // Pesan otomatis berubah sesuai kondisi di Controller
-                                    timer: 5000,
-                                    customClass: {
-                                        confirmButton: 'btn btn-info waves-effect waves-light'
-                                    }
-                                });
-                            }
-                        });
-                    } else if (result.dismiss === Swal.DismissReason.cancel) {
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'Cancelled',
-                            text: 'Your data is safe.',
-                            customClass: {
-                                confirmButton: 'btn btn-info waves-effect waves-light'
-                            }
-                        });
-                    }
-                });
-            });
             $('#deleteSelected').on('click', function() {
 
                 let ids = [];
@@ -366,12 +448,13 @@
                                 _token: '{{ csrf_token() }}'
                             },
                             success: function(res) {
-                                toastr.success('Deleted Data Successfully', '', {
-                                    timeOut: 1500,
-                                    progressBar: true,
-                                    closeButton: false,
-                                    positionClass: 'toast-top-right',
-                                });
+                                toastr.success('Deleted Data Successfully',
+                                    '', {
+                                        timeOut: 1500,
+                                        progressBar: true,
+                                        closeButton: false,
+                                        positionClass: 'toast-top-right',
+                                    });
                                 $('#table').DataTable().ajax.reload();
                             },
                             error: function() {

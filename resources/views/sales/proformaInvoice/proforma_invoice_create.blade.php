@@ -62,7 +62,7 @@
 
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label">SO Number <small class="text-danger">*</small> </label>
+                                <label class="form-label">Number <small class="text-danger">*</small> </label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
                                     <input type="text" name="proforma_invoice_code" id="proforma_invoice_code"
@@ -853,7 +853,7 @@
                 // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
                 // ==========================================
                 $.ajax({
-                    url: `/proforma-invoice/get-units-by-product/${productId}`,
+                    url: window.routes.getUnits.replace(':id', productId),
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -991,7 +991,7 @@
                             helperText
                                 .attr("class", "form-text text-muted")
                                 .text(
-                                    "Belum ada riwayat SO dengan customer ini. Silahkan isi harga manual.",
+                                    "Belum ada riwayat harga dengan customer ini. Silahkan isi harga manual.",
                                 );
                             dropdownBtn.prop("disabled", true);
                             if (priceInput.val() === "") {

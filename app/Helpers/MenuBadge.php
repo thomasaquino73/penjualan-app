@@ -14,13 +14,13 @@ class MenuBadge
 
         $table = "{$tablePrefix}_{$year}";
 
-        if (!Schema::hasTable($table)) {
+        if (! Schema::hasTable($table)) {
             return 0;
         }
 
         return DB::table($table)
             ->whereMonth($dateColumn, $month)
-            ->where('status','processing')
+            ->where('status', 'processing')
             ->count();
     }
 }

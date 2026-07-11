@@ -1111,7 +1111,7 @@
                             helperText
                                 .attr("class", "form-text text-muted")
                                 .text(
-                                    "Belum ada riwayat PO dengan supplier ini. Silahkan isi harga manual.",
+                                    "Belum ada riwayat harga dengan supplier ini. Silahkan isi harga manual.",
                                 );
                             dropdownBtn.prop("disabled", true);
                             if (priceInput.val() === "") {

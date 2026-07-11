@@ -69,30 +69,8 @@ class KategoriCustomerController extends Controller
                                     >
                             </div>';
                 })
-                ->addColumn('action', function ($row) {
-                    $btn = '<div class="btn-group">
-                      <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="ti ti-menu-2 ti-xs me-1"></i>
-                      
-                      </button>
-                      <ul class="dropdown-menu" style="">';
-                    if (auth()->user()->can('kategori_customer-edit')) {
 
-                        $btn .= '<a class="dropdown-item editPost" href="javascript:void(0)"
-                            data-id="'.$row->id.'"> <i class="far fa-edit"></i> Edit</a>';
-                    }
-                    if (auth()->user()->can('kategori_customer-delete')) {
-
-                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
-                                data-id="'.$row->id.'"
-                                data-name="'.$row->detail.'"
-                                ><i class="ti ti-trash"></i> Delete</a>';
-                    }
-
-                    return $btn;
-                })
-
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok'])
+                ->rawColumns(['created_at', 'updated_at', 'status', 'cekbok'])
                 ->make(true);
         }
         $x = [

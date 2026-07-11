@@ -187,6 +187,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/data-barang/print/{id}', [DataBarangController::class, 'print'])->name('data-barang.print');
     Route::resource('data-barang', DataBarangController::class);
 
+    Route::prefix('ajax')->group(function () {
+        Route::get('/products/{id}/units', [DataBarangController::class, 'getUnits'])
+            ->name('ajax.products.units');
+
+    });
+
     Route::post('/satuan-barang/delete-multiple', [SatuanBarangController::class, 'deleteMultiple']);
     Route::resource('satuan-barang', SatuanBarangController::class);
 
@@ -303,7 +309,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/sales-order/restore/{id}', [SalesOrderController::class, 'restore'])->name('sales-order.restore');
     Route::post('/sales-order/delete-multiple', [SalesOrderController::class, 'deleteMultiple']);
     Route::get('/sales-order/print/{id}', [SalesOrderController::class, 'print'])->name('sales-order.print');
-    Route::get('/sales-order/sq/price-history', [SalesOrderController::class, 'getPriceHistory']);
+    Route::get('/sales-order/so/price-history', [SalesOrderController::class, 'getPriceHistory']);
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
     Route::post('/sales-order/{id}/submit', [SalesOrderController::class, 'submitToPending'])->name('sales-order.submit');
     Route::resource('sales-order', SalesOrderController::class);

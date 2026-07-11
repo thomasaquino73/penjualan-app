@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Models\Inventory\Barang;
+use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
 use App\Models\Sales\StoreSales;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
+use App\Models\Setting\Tax;
 use Illuminate\Http\Request;
 
 class KasirController extends Controller
@@ -65,36 +68,37 @@ class KasirController extends Controller
 
     private function generateNumberId()
     {
-        $date = now()->format('Ymd');
-        $prefix = "TRX{$date}";
-        $last = StoreSales::orderBy('id', 'desc')->lockForUpdate()->first();
+        $tahun = date('Y');
+        $bulan = date('n');
+        $bulanRomawi = $this->bulanRomawi($bulan);
 
-        if (! $last) {
-            // Jika database benar-benar kosong, gunakan format default
-            return $prefix.'0001';
+        // Prefix yang akan dicari
+        $prefix = "TRX/{$tahun}/{$bulanRomawi}/";
+
+        // Ambil nomor terakhir pada bulan & tahun yang sama
+        $last = StoreSales::where('store_sales_code', 'like', $prefix.'%')
+            ->lockForUpdate()
+            ->orderByDesc('id')
+            ->first();
+
+        if ($last) {
+            // Ambil 4 digit terakhir
+            $lastNumber = (int) substr($last->store_sales_code, -4);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            // Jika belum ada pada bulan ini mulai dari 0001
+            $nextNumber = 1;
         }
 
-        $lastCode = $last->code;
-
-        // Regex untuk memisahkan prefix (semua karakter) dan angka (diakhiri digit)
-        if (preg_match('/^(.*?)(\d+)$/', $lastCode, $matches)) {
-            $prefix = $matches[1];      // Contoh: "PO/2026/VII/"
-            $lastNumber = $matches[2];  // Contoh: "0001"
-
-            $length = strlen($lastNumber);
-            $nextNumber = (int) $lastNumber + 1;
-
-            // Gabungkan kembali dengan format padding yang sama
-            return $prefix.str_pad($nextNumber, $length, '0', STR_PAD_LEFT);
-        }
-
-        // Jika tidak ada pola angka, tambahkan -0001
-        return $lastCode.'-0001';
+        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function create()
     {
         $company = Company::with('defaultCurrency')->first();
+        $taxes = Tax::where('is_active', true)
+            ->whereIn('usage', ['purchase', 'both'])
+            ->get();
 
         return view('sales.kasir.kasir_create', [
             'title' => 'Add Product',
@@ -103,6 +107,9 @@ class KasirController extends Controller
             'payment' => SyaratPembayaran::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),
             'customer' => Customer::where('status', '<>', 0)->get(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'warehouse' => Warehouse::where('status', '<>', 0)->get(),
+            'taxes' => $taxes,
         ]);
     }
 

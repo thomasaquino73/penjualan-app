@@ -399,10 +399,10 @@ class DeliveryOrderController extends Controller
             </a>
         ';
                     }
-                    if ($row->status != 'closed') {
+                    if ($row->status != 'delivered') {
                         $btn .= '<a class="dropdown-item"
-                href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->delivery_order_code.'">
-                <i class="ti ti-lock"></i> Close
+                href="javascript:void(0)" id="delivered"   data-id="'.$row->id.'" data-name="'.$row->delivery_order_code.'">
+                <i class="ti ti-lock"></i> Delivered
              </a>';
                     }
                     /*
@@ -456,30 +456,29 @@ class DeliveryOrderController extends Controller
 
     private function generateNumberId()
     {
-        // Ambil record terakhir berdasarkan ID (urutkan dari yang terbaru)
-        $last = DeliveryOrder::orderBy('id', 'desc')->lockForUpdate()->first();
+        $tahun = date('Y');
+        $bulan = date('n');
+        $bulanRomawi = $this->bulanRomawi($bulan);
 
-        if (! $last) {
-            // Jika database benar-benar kosong, gunakan format default
-            return 'DO/2026/VII/0001';
+        // Prefix yang akan dicari
+        $prefix = "DO/{$tahun}/{$bulanRomawi}/";
+
+        // Ambil nomor terakhir pada bulan & tahun yang sama
+        $last = DeliveryOrder::where('delivery_order_code', 'like', $prefix.'%')
+            ->lockForUpdate()
+            ->orderByDesc('id')
+            ->first();
+
+        if ($last) {
+            // Ambil 4 digit terakhir
+            $lastNumber = (int) substr($last->delivery_order_code, -4);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            // Jika belum ada pada bulan ini mulai dari 0001
+            $nextNumber = 1;
         }
 
-        $lastCode = $last->delivery_order_code;
-
-        // Regex untuk memisahkan prefix (semua karakter) dan angka (diakhiri digit)
-        if (preg_match('/^(.*?)(\d+)$/', $lastCode, $matches)) {
-            $prefix = $matches[1];      // Contoh: "PO/2026/VII/"
-            $lastNumber = $matches[2];  // Contoh: "0001"
-
-            $length = strlen($lastNumber);
-            $nextNumber = (int) $lastNumber + 1;
-
-            // Gabungkan kembali dengan format padding yang sama
-            return $prefix.str_pad($nextNumber, $length, '0', STR_PAD_LEFT);
-        }
-
-        // Jika tidak ada pola angka, tambahkan -0001
-        return $lastCode.'-0001';
+        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function create()
@@ -927,79 +926,6 @@ class DeliveryOrderController extends Controller
         }
     }
 
-    // public function destroy(Request $request, $id)
-    // {
-    //     DB::beginTransaction();
-
-    //     try {
-    //         // 1. Cari SO yang akan dihapus
-    //         $po = DeliveryOrder::findOrFail($id);
-
-    //         // 2. Ambil detail SO untuk mendapatkan referensi PR Detail yang terkait
-    //         // $sqDetails = DeliveryOrderDetail::where('delivery_order_id', $po->id)->get();
-    //         // $involvedPrIds = [];
-
-    //         // foreach ($sqDetails as $sqDetail) {
-    //         //     if ($sqDetail->sales_order_detail_id) {
-    //         //         // Catat ID PR Master-nya
-    //         //         $prDetail = SalesQuotationDetail::where('id', $sqDetail->sales_order_detail_id)
-    //         //             ->first();
-
-    //         //         if ($prDetail && ! in_array($prDetail->sales_order_id, $involvedPrIds)) {
-    //         //             $involvedPrIds[] = $prDetail->sales_order_id;
-    //         //         }
-    //         //     }
-    //         // }
-
-    //         // 3. Nonaktifkan SO dan Detail SO
-    //         $po->update(['active' => 0, 'updated_by' => Auth::id()]);
-    //         // DeliveryOrderDetail::where('delivery_order_id', $po->id)->update(['active' => 0]);
-
-    //         // 4. Update Ulang sq_qty di setiap PR Detail yang terdampak
-    //         // Kita hitung ulang berdasarkan sisa SO yang masih 'active' = 1
-    //         // foreach ($sqDetails as $sqDetail) {
-    //         //     if ($sqDetail->sales_order_detail_id) {
-    //         //         $totalRemainingPo = DeliveryOrderDetail::where('sales_order_detail_id', $sqDetail->sales_order_detail_id)
-    //         //             ->where('active', 1)
-    //         //             ->sum('qty');
-
-    //         //         DB::table('sales_order_detail_'.date('Y'))
-    //         //             ->where('id', $sqDetail->sales_order_detail_id)
-    //         //             ->update(['sq_qty' => $totalRemainingPo]);
-    //         //     }
-    //         // }
-
-    //         // // 5. Update Status PR Master
-    //         // foreach ($involvedPrIds as $prId) {
-    //         //     $allDetails = SalesQuotationDetail::where('sales_order_id', $prId)
-    //         //         ->get();
-
-    //         //     $totalRequested = $allDetails->sum('qty');
-    //         //     $totalOrdered = $allDetails->sum('sq_qty');
-
-    //         //     if ($totalOrdered >= $totalRequested) {
-    //         //         $status = 'closed';
-    //         //     } elseif ($totalOrdered > 0) {
-    //         //         $status = 'partial';
-    //         //     } else {
-    //         //         $status = 'processing';
-    //         //     }
-
-    //         //     SalesQuotation::where('id', $prId)
-    //         //         ->update(['status' => $status]);
-    //         // }
-
-    //         DB::commit();
-
-    //         return response()->json(['status' => 'success', 'message' => 'SO berhasil dibatalkan.'], 200);
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-
-    //         return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan SO: '.$e->getMessage()], 500);
-    //     }
-    // }
-
     public function destroy(Request $request, $id)
     {
         DB::beginTransaction();
@@ -1017,6 +943,40 @@ class DeliveryOrderController extends Controller
             DB::rollBack();
 
             return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan DO: '.$e->getMessage()], 500);
+        }
+    }
+
+    public function deliveredItem(Request $request, $id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $do = DeliveryOrder::findOrFail($id);
+
+            $do->update([
+                'status' => 'delivered',
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Jika stok memang harus dikurangi saat barang dikirim
+            StockMutation::where('document_type', 'delivery_order')
+                ->where('document_id', $do->id)
+                ->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Barang berhasil dikirim.',
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengirim Barang: '.$e->getMessage(),
+            ], 500);
         }
     }
 

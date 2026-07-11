@@ -906,7 +906,7 @@
                             helperText
                                 .attr("class", "form-text text-muted")
                                 .text(
-                                    "Belum ada riwayat SO dengan customer ini. Silahkan isi harga manual.",
+                                    "Belum ada riwayat hargadengan customer ini. Silahkan isi harga manual.",
                                 );
                             dropdownBtn.prop("disabled", true);
                             if (priceInput.val() === "") {

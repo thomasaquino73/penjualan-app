@@ -203,6 +203,7 @@
 @include('partials.button.btn_addpayment')
 @include('partials.button.btn_submitform')
 @include('partials.button.select2_modal')
+@include('partials.js.calculate_total')
 
 @push('scripts')
     <script>
@@ -577,7 +578,7 @@
                 // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
                 // ==========================================
                 $.ajax({
-                    url: `/get-units-by-product/${productId}`,
+                    url: window.routes.getUnits.replace(':id', productId),
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -712,7 +713,7 @@
                             helperText
                                 .attr("class", "form-text text-muted")
                                 .text(
-                                    "Belum ada riwayat SQ dengan customer ini. Silahkan isi harga manual.",
+                                    "Belum ada riwayat harga dengan customer ini. Silahkan isi harga manual.",
                                 );
                             dropdownBtn.prop("disabled", true);
                             if (priceInput.val() === "") {
@@ -896,7 +897,7 @@
             });
         });
     </script>
-    <script>
+    {{-- <script>
         function calculateTotal() {
             let qty = parseFloat(document.getElementById('quantity').value) || 0;
             let price = parseFloat(document.getElementById('unit_price').value) || 0;
@@ -1172,5 +1173,5 @@
             calculateTotalOrder();
 
         });
-    </script>
+    </script> --}}
 @endpush

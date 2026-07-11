@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SalesOrderRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
-use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
@@ -1461,98 +1460,6 @@ class SalesOrderController extends Controller
         return response()->json($orders);
     }
 
-    public function getPriceHistory(Request $request)
-    {
-        $productId = $request->get('product_id');
-        $customerId = $request->get('customer_id');
-
-        $year = date('Y');
-        $tableDetail = "sales_order_detail_{$year}";
-        $tableMaster = "sales_order_{$year}";
-
-        // Mengambil harga unik langsung dari database
-        $history = DB::table($tableDetail)
-            ->join($tableMaster, "{$tableDetail}.sales_order_id", '=', "{$tableMaster}.id")
-            ->where("{$tableDetail}.product_id", $productId)
-            ->where("{$tableMaster}.customer_id", $customerId)
-            // Kuncinya di sini: kelompokkan berdasarkan harga, lalu ambil tanggal terbaru dengan MAX()
-            ->select(
-                "{$tableDetail}.unit_price as harga",
-                DB::raw("MAX({$tableMaster}.sales_order_date) as tanggal")
-            )
-            ->groupBy("{$tableDetail}.unit_price")
-            // Urutkan berdasarkan tanggal terbaru (hasil dari MAX tanggal di atas)
-            ->orderBy('tanggal', 'desc')
-            ->limit(5)
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'history' => $history,
-        ]);
-    }
-
-    // public function getQuotationDetail2(Request $request)
-    // {
-    //     $ids = $request->ids;
-
-    //     if (empty($ids)) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Tidak ada data SQ yang dipilih.',
-    //             'data' => [],
-    //         ]);
-    //     }
-
-    //     $details = SalesQuotationDetail::with([
-    //         'produkID',
-    //         'unitID',
-    //         'quotation',
-    //     ])
-    //         ->whereIn('sales_quotation_id', $ids)
-    //         ->where('active', 1)
-    //         ->whereHas('quotation', function ($q) {
-    //             $q->whereIn('status', ['processing', 'partial']);
-    //         })
-    //         ->get();
-
-    //     $formattedData = $details->map(function ($item) {
-    //         // LOGIKA PENENTUAN SISA:
-    //         // Cek apakah outstanding_qty ada (tidak null) dan bukan 0
-    //         $sisaQty = ($item->outstanding_qty !== null && $item->outstanding_qty > 0)
-    //                    ? (float) $item->outstanding_qty
-    //                    : (float) $item->qty;
-
-    //         return [
-    //             'id' => $item->id,
-    //             'sales_quotation_detail_id' => $item->id,
-    //             'sales_quotation_id' => $item->sales_quotation_id,
-    //             'product_id' => $item->product_id,
-    //             'product_name' => $item->produkID->nama_barang ?? '',
-    //             'data_produk' => $item->produkID->nama_barang ?? '',
-
-    //             // Gunakan $sisaQty yang sudah dihitung di atas
-    //             'quantity' => $sisaQty,
-    //             'qty' => $sisaQty,
-
-    //             'unit_id' => $item->unit_id,
-    //             'unit' => $item->unitID->detail ?? '',
-    //             'unit_name' => $item->unitID->detail ?? '',
-    //             'unit_price' => $item->unit_price,
-    //             'discount' => $item->discount,
-    //             'amount' => $item->unit_price * $sisaQty, // Update amount berdasarkan sisa
-    //             'tax' => 0,
-    //             'quotation_code' => $item->quotation->sales_quotation_code ?? '',
-    //             'quotation_status' => $item->quotation->status ?? '',
-    //         ];
-    //     });
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => $formattedData,
-    //     ]);
-    // }
-
     public function getQuotationDetail(Request $request)
     {
         $year = date('Y');
@@ -1798,82 +1705,6 @@ class SalesOrderController extends Controller
             ->value('stock') ?? 0;
     }
 
-    public function getUnitsByProduct($id)
-    {
-        $product = Barang::find($id);
-        $defaultPrice = $product ? $product->default_price : 0;
-        // 1. Ambil semua baris data konversi berdasarkan data_barang_id
-        $conversions = DataBarangConversion::with(['toUnitID', 'fromUnitID'])
-            ->where('data_barang_id', $id)
-            ->get();
-
-        if ($conversions->isEmpty()) {
-            return response()->json([]);
-        }
-
-        $result = [];
-        $addedIds = []; // Array penampung untuk menghindari ID kembar di dropdown
-
-        // 2. Cek apakah ada SALAH SATU atau SEMUA baris yang to_unit_id-nya terisi (TIDAK NULL)
-        $hasToUnit = $conversions->contains(function ($item) {
-            return ! is_null($item->getRawOriginal('to_unit_id')) && $item->getRawOriginal('to_unit_id') !== '';
-        });
-
-        if ($hasToUnit) {
-            // --- KONDISI A: to_unit_id ada yang terisi -> Tampilkan dari to_unit_id DAN from_unit_id ---
-
-            // Ambil SEMUA data to_unit_id yang valid (tidak null)
-            foreach ($conversions as $item) {
-                $toId = $item->getRawOriginal('to_unit_id');
-
-                if (! is_null($toId) && ! in_array($toId, $addedIds)) {
-                    $result[] = [
-                        'id' => $toId,
-                        'name' => $item->toUnitID ? $item->toUnitID->detail : 'Unit '.$toId,
-                    ];
-                    $addedIds[] = $toId;
-                }
-            }
-
-            // Tambahkan JUGAdari darifrom_unit_id (ambil 1 data saja)
-            $firstFromUnit = $conversions->first(function ($item) {
-                return ! is_null($item->getRawOriginal('from_unit_id'));
-            });
-
-            if ($firstFromUnit) {
-                $fromId = $firstFromUnit->getRawOriginal('from_unit_id');
-                if (! in_array($fromId, $addedIds)) {
-                    $result[] = [
-                        'id' => $fromId,
-                        'name' => $firstFromUnit->fromUnitID ? $firstFromUnit->fromUnitID->detail : 'Unit '.$fromId,
-                    ];
-                }
-            }
-
-        } else {
-            // --- KONDISI B: to_unit_id KOSONG SEMUA -> Hanya tampilkan 1 data dari from_unit_id ---
-
-            $firstFromUnit = $conversions->first(function ($item) {
-                return ! is_null($item->getRawOriginal('from_unit_id'));
-            });
-
-            if ($firstFromUnit) {
-                $fromId = $firstFromUnit->getRawOriginal('from_unit_id');
-                $result[] = [
-                    'id' => $fromId,
-                    'name' => $firstFromUnit->fromUnitID ? $firstFromUnit->fromUnitID->detail : 'Unit '.$fromId,
-                ];
-            }
-        }
-
-        // Kembalikan data array JSON ter-filter ke JavaScript
-        // return response()->json($result);
-        return response()->json([
-            'units' => $result, // Ubah struktur agar units dibungkus
-            'default_price' => $defaultPrice,
-        ]);
-    }
-
     public function getCustomerData($customerId)
     {
         // Pajak (ambil default)
@@ -1944,5 +1775,48 @@ class SalesOrderController extends Controller
             ->get();
 
         return response()->json($data);
+    }
+
+    public function getPriceHistory(Request $request)
+    {
+        $productId = $request->get('product_id');
+        $customerId = $request->get('customer_id');
+
+        $year = date('Y');
+        $tableDetail = "sales_order_detail_{$year}";
+        $tableMaster = "sales_order_{$year}";
+
+        // Mengambil harga unik langsung dari database
+        $history = DB::table($tableDetail)
+            ->join($tableMaster, "{$tableDetail}.sales_order_id", '=', "{$tableMaster}.id")
+            ->where("{$tableDetail}.product_id", $productId)
+            ->where("{$tableMaster}.customer_id", $customerId)
+            ->select(
+                "{$tableDetail}.unit_price as harga", // Pastikan nama kolom benar
+                DB::raw("MAX({$tableMaster}.sales_order_date) as tanggal")
+            )
+            ->groupBy("{$tableDetail}.unit_price")
+            ->orderBy('tanggal', 'desc')
+            ->limit(5)
+            ->get();
+        // $history = DB::table($tableDetail)
+        //     ->join($tableMaster, "{$tableDetail}.sales_quotation_id", '=', "{$tableMaster}.id")
+        //     ->where("{$tableDetail}.product_id", $productId)
+        //     ->where("{$tableMaster}.customer_id", $customerId)
+        //     // Kuncinya di sini: kelompokkan berdasarkan harga, lalu ambil tanggal terbaru dengan MAX()
+        //     ->select(
+        //         "{$tableDetail}.unit_price as harga",
+        //         DB::raw("MAX({$tableMaster}.sales_quotation_date) as tanggal")
+        //     )
+        //     ->groupBy("{$tableDetail}.unit_price")
+        //     // Urutkan berdasarkan tanggal terbaru (hasil dari MAX tanggal di atas)
+        //     ->orderBy('tanggal', 'desc')
+        //     ->limit(5)
+        //     ->get();
+
+        return response()->json([
+            'success' => true,
+            'history' => $history,
+        ]);
     }
 }

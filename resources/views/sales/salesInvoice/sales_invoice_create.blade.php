@@ -903,7 +903,7 @@
                             helperText
                                 .attr("class", "form-text text-muted")
                                 .text(
-                                    "Belum ada riwayat SI dengan customer ini. Silahkan isi harga manual.",
+                                    "Belum ada riwayat harga dengan customer ini. Silahkan isi harga manual.",
                                 );
                             dropdownBtn.prop("disabled", true);
                             if (priceInput.val() === "") {
@@ -1353,7 +1353,7 @@
                                     if (typeof prDetailsData === 'undefined') {
                                         window.prDetailsData = [];
                                     }
-                                    
+
 
                                     // 5. Looping data response backend untuk dimasukkan ke array DataTables
                                     response.data.forEach(function(item) {
@@ -1370,7 +1370,8 @@
                                         let unitPrice = item.unit_price;
                                         let discount = item.discount;
                                         let amount = item.amount;
-                                        let payment_term_id = item.payment_term_id;
+                                        let payment_term_id = item
+                                            .payment_term_id;
 
                                         prDetailsData.push({
                                             detail_id: item

@@ -11,4 +11,9 @@
             cursor: move;
         }
     </style>
+    <script>
+        window.routes = {
+            getUnits: "{{ route('ajax.products.units', ':id') }}",
+        };
+    </script>
 @endpush
