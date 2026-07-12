@@ -63,6 +63,46 @@
                     return false;
                 }
 
+                // ===============================
+                // CHECK WAREHOUSE
+                // ===============================
+                let emptyWarehouse = prDetailsData.some(function(item) {
+                    return !item.warehouse_id || item.warehouse_id === "";
+                });
+
+                if (emptyWarehouse) {
+
+                    Swal.fire({
+                        icon: "error",
+                        title: "Warehouse Required",
+                        text: "Please select warehouse for all item details before saving.",
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn btn-primary waves-effect waves-light",
+                        },
+                        buttonsStyling: false,
+                    }).then(() => {
+
+                        let closeBtn = $("#postForm").find(
+                            'button[data-save-and-new="false"]',
+                        );
+                        let newBtn = $("#postForm").find(
+                            'button[data-save-and-new="true"]',
+                        );
+
+                        closeBtn.html(
+                            '<i class="fa fa-upload me-1"></i> Save and Close',
+                        );
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
+                        );
+
+                        $(".card-footer button").prop("disabled", false);
+                    });
+
+                    return false;
+                }
+
                 formData.append("save_and_new", saveAndNew ? 1 : 0);
                 formData.append("items_detail", JSON.stringify(prDetailsData));
 

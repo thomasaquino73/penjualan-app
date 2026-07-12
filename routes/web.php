@@ -259,7 +259,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/table-pr', [PurchaseOrderController::class, 'table_pr'])->name('table_pr');
         Route::get('/trash', [PurchaseOrderController::class, 'trash'])->name('trash');
         Route::get('/get-processing-requisitions', [PurchaseOrderController::class, 'getProcessingData'])->name('requisitions.processing');
-         Route::post('/get-quotation-detail', [SalesOrderController::class, 'getQuotationDetail'])->name('getQuotationDetail');
+        Route::post('/get-quotation-detail', [PurchaseOrderController::class, 'getQuotationDetail'])->name('getQuotationDetail');
         Route::post('/{id}/submit', [PurchaseOrderController::class, 'submitToPending'])->name('submit');
         Route::post('/{id}/process', [PurchaseOrderController::class, 'processData'])->name('process');
         Route::post('/change-status/{id}', [PurchaseOrderController::class, 'changeStatus']);
@@ -267,7 +267,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/po/price-history', [PurchaseOrderController::class, 'getPriceHistory']);
         Route::get('/get-supplier-address/{supplier}', [PurchaseOrderController::class, 'getSupplierAddress']);
         // Route::get('/get-company-addresses/{companyId}', [PurchaseOrderController::class, 'getCompanyAddresses']);
-        Route::post('/send-supplier/{id}', [PurchaseOrderController::class, 'sendSupplier'])->name('send-supplier');
+        // Route::post('/send-supplier/{id}', [PurchaseOrderController::class, 'sendSupplier'])->name('send-supplier');
         Route::post('/get-requisition-detail', [PurchaseOrderController::class, 'getRequisitionDetail'])->name('get-requisition-detail');
         Route::resource('', PurchaseOrderController::class)->parameters(['' => 'purchase_order']);
     });
@@ -294,12 +294,12 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/sales-order/get-quotation/{customer}', [SalesOrderController::class, 'getQuotation'])->name('sales-order.getQuotation');
-    // Route::get('/sales-order/get-processing-order', [SalesOrderController::class, 'getProcessingData'])->name('sales-order.quotation.processing');
+    Route::get('/sales-order/get-processing-order', [SalesOrderController::class, 'getProcessingData'])->name('sales-order.quotation.processing');
     // Route::post('/sales-order/get-quotation-detail-2', [SalesOrderController::class, 'getQuotationDetail2'])->name('sales-order.get-quotation-detail');
     Route::post('/sales-order/get-quotation-detail', [SalesOrderController::class, 'getQuotationDetail'])->name('sales-order.getQuotationDetail');
     Route::post('/sales-order/get-proforma-detail', [SalesOrderController::class, 'getProformaDetail'])->name('sales-order.get-proforma-detail');
     Route::get('/sales-order/{id}/data', [SalesOrderController::class, 'getCustomerData'])->name('sales-order.getCustomerData');
-    // Route::post('/sales-order/{id}/process', [SalesOrderController::class, 'processData'])->name('sales-order.process');
+    Route::post('/sales-order/{id}/process', [SalesOrderController::class, 'processData'])->name('sales-order.process');
     // Route::get('/sales-order/get-units-by-product/{id}', [SalesOrderController::class, 'getUnitsByProduct'])->name('sales-order.get_units');
     Route::get('/sales-order/wh/get-stock', [SalesOrderController::class, 'getStock'])->name('sales-order.wh.get-stock');
     Route::patch('/sales-order/{id}/close', [SalesOrderController::class, 'CloseDocument'])->name('sales-order.close');

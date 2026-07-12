@@ -286,9 +286,7 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-
                     let html = '';
-
                     $.each(response, function(index, item) {
                         let safeProductName = item.nama_barang.replace(/"/g,
                             '&quot;');
@@ -303,7 +301,7 @@
                                     data-id="${item.id}"
                                     data-product_id="${item.product_id}"
                                     data-product_name="${safeProductName}"
-                                    data-qty="${item.qty}"
+                                    data-outstanding_qty="${item.outstanding_qty}"
                                     data-unit_id="${item.unit_id}"
                                     data-unit_name="${item.unit_name}"
                                     data-unit_price="${item.unit_price}"
@@ -315,7 +313,7 @@
                         </td>
 
                         <td>${item.nama_barang}</td>
-                        <td class="text-end">${item.qty}</td>
+                        <td class="text-end">${parseFloat(item.outstanding_qty)}</td>
                         <td>${item.unit_name}</td>
                         <td class="text-end">${parseFloat(item.unit_price).toLocaleString()}</td>
                         <td class="text-end">${parseFloat(item.discount).toLocaleString()}</td>
@@ -499,46 +497,101 @@
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
                                 action: function(e, dt, node, config) {
-                                    let data = dt.row({
+
+                                    const row = dt.row({
                                         selected: true
-                                    }).data();
-                                    let rowIndex = dt.row({
-                                        selected: true
-                                    }).index();
+                                    });
+
+                                    if (!row.any()) {
+                                        Swal.fire({
+                                            icon: "warning",
+                                            title: "Warning",
+                                            text: "Please select one data first."
+                                        });
+                                        return;
+                                    }
+
+                                    const data = row.data();
+                                    const rowIndex = row.index();
 
                                     window.isEditingMode = true;
 
-                                    // Menyimpan index baris array untuk penanda update
-                                    $("#detail_id").val(rowIndex);
+                                    // Reset error
+                                    $("#formPrDetail .error").html("");
 
-                                    // --- AMANKAN DATA ID RELASI DI SINI ---
-                                    $("#modal_purchase_requisition_detail_id").val(data.detail_id ||
-                                        data.purchase_requisition_detail_id || "");
-                                    $("#modal_requisition_code").val(data.requisition_code || "");
-
-                                    // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
-                                    if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
-                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
-                                    } else {
-                                        $("#quantity").removeAttr(
-                                            "data-sisa-pr"); // Jika PO bebas, hapus batasannya
-                                    }
-                                    // --------------------------------------
-
-                                    $("#quantity").val(data.quantity);
-                                    $("#unit_id").data("pending-val", data.unit_id);
-                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
-                                    $("#product_id").val(data.product_id).trigger("change");
-                                    $("#unit_price").val(data.unit_price);
-                                    $("#discount").val(data.discount || 0);
-                                    $("#discount_percent").val(data.discount_percent || 0);
-                                    $("#tax").val(data.tax || 0);
-                                    $("#total_price").val(data.amount || 0);
+                                    // ==========================
+                                    // HEADER
+                                    // ==========================
 
                                     $("#modalTitle").text("Edit entry");
                                     $("#btnSubmitModal").text("Update");
+
+                                    // ==========================
+                                    // HIDDEN
+                                    // ==========================
+
+                                    $("#detail_id").val(rowIndex);
+
+                                    $("#modal_sales_quotation_detail_id").val(
+                                        data.detail_id ??
+                                        data.sales_quotation_detail_id ??
+                                        ""
+                                    );
+
+                                    $("#modal_requisition_code").val(
+                                        data.requisition_code ?? ""
+                                    );
+
+                                    // ==========================
+                                    // TEXTBOX
+                                    // ==========================
+
+                                    $("#quantity").val(data.quantity ?? "");
+
+                                    $("#unit_price").val(data.unit_price ?? 0);
+
+                                    $("#discount").val(data.discount ?? 0);
+
+                                    $("#discount_percent").val(data.discount_percent ?? 0);
+
+                                    $("#tax").val(data.tax ?? 0);
+
+                                    $("#total_price").val(data.amount ?? 0);
+
+                                    $("#available_stok").val(data.available_stok ?? "");
+
+                                    // ==========================
+                                    // ATTRIBUTE
+                                    // ==========================
+
+                                    if (data.sisa_pr != null) {
+                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
+                                    } else {
+                                        $("#quantity").removeAttr("data-sisa-pr");
+                                    }
+
+                                    // ==========================
+                                    // SELECT
+                                    // ==========================
+
+                                    $("#warehouse_id")
+                                        .val(data.warehouse_id)
+                                        .trigger("change.select2");
+
+                                    // simpan unit yg dipilih
+                                    $("#unit_id").data("pending-val", data.unit_id);
+
+                                    // simpan harga lama
+                                    $("#unit_price").data("pending-price", data.unit_price);
+
+                                    // buka modal dulu
                                     $("#modalPrDetail").modal("show");
-                                },
+
+                                    // terakhir trigger product
+                                    $("#product_id")
+                                        .val(data.product_id)
+                                        .trigger("change");
+                                }
                             },
                             {
                                 text: '<i class="ti ti-trash me-1"></i> Delete',
@@ -651,7 +704,7 @@
                         detail_id: $(this).data("id"),
                         product_id: $(this).data("product_id"),
                         data_produk: $(this).data("product_name"),
-                        quantity: parseFloat($(this).data("qty")),
+                        quantity: parseFloat($(this).data("outstanding_qty")),
                         sisa_pr: parseFloat($(this).data("qty")),
                         unit_id: $(this).data("unit_id"),
                         unit: $(this).data("unit_name"),
@@ -712,11 +765,23 @@
                         unit_id: unitId
                     },
                     success: function(res) {
-                        $('#available_stok').val(res.stock);
 
-                        $('#modalTitle').text(
-                            `Create new entry (Available Stock: ${res.stock} ${res.unit})`
-                        );
+                        $('#available_stok').val(parseFloat(res.stock));
+
+                        if (window.isEditingMode) {
+
+                            $('#modalTitle').text(
+                                `Edit entry (Available Stock: ${parseFloat(res.stock)} ${res.unit})`
+                            );
+
+                        } else {
+
+                            $('#modalTitle').text(
+                                `Create new entry (Available Stock: ${parseFloat(res.stock)} ${res.unit})`
+                            );
+
+                        }
+
                     }
                 });
             }

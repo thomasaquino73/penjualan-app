@@ -304,11 +304,13 @@
         $("#showModalpr").on("click", function(e) {
             e.preventDefault();
 
-            let tbody = $("#requisitionTableBody");
-            var supplierId = $("#supplier_id").val();
-
-            // Validasi wajib pilih supplier dulu
-            if (!supplierId || supplierId === "") {
+            var supplierID = $("#supplier_id").val();
+            $("#sq_number")
+                .empty()
+                .append('<option value="">Select Requisition</option>')
+                .val(null)
+                .trigger("change");
+            if (!supplierID) {
                 Swal.fire({
                     icon: "warning",
                     title: "Warning!",
@@ -320,55 +322,83 @@
                     },
                     buttonsStyling: false,
                 });
-                return false;
+                return;
             }
 
-            // Reset checkbox 'Check All' menjadi tidak tercentang saat modal dibuka
-            $("#checkAll").prop("checked", false);
-
-            tbody.html(
-                '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>',
-            );
-            $("#modalRequisitionDetail").modal("show");
-
-            // Ambil data PR berstatus processing
             $.ajax({
                 url: "{{ route('purchase-order.requisitions.processing') }}",
                 type: "GET",
-                dataType: "json",
                 success: function(response) {
-                    tbody.empty();
 
-                    if (response && response.length > 0) {
-                        $.each(response, function(key, item) {
-                            let dateFormatted = new Date(item.created_at).toLocaleDateString(
-                                "id-ID");
+                    let option = '<option value="">Select Quotation</option>';
 
-                            // Tambahkan baris PR ke tabel modal
-                            tbody.append(`
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input class="form-check-input checkItem" type="checkbox" value="${item.id}">
-                                    </div>
-                                </td>
-                                <td><strong>${item.code}</strong></td>
-                                <td>${dateFormatted}</td>
-                            </tr>
-                        `);
-                        });
-                    } else {
-                        tbody.html(
-                            '<tr><td colspan="3" class="text-center text-muted">No processing data found.</td></tr>',
-                        );
-                    }
-                },
-                error: function(xhr) {
-                    tbody.html(
-                        '<tr><td colspan="3" class="text-center text-danger">Failed to fetch data.</td></tr>',
-                    );
-                },
+                    $.each(response, function(i, item) {
+                        option += `<option value="${item.id}">
+                                ${item.code}
+                           </option>`;
+                    });
+
+                    $("#sq_number").html(option);
+
+                    $("#modalRequisitionDetail").modal("show");
+                }
             });
+        });
+
+        $('#sq_number').on('change', function() {
+
+            let quotationIds = $(this).val();
+
+            if (!quotationIds || quotationIds.length === 0) {
+                $('#quotationTableBody').html('');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('purchase-order.getQuotationDetail') }}",
+                type: "POST",
+                data: {
+                    quotation_ids: quotationIds,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    let html = '';
+                    $.each(response, function(index, item) {
+                        let safeProductName = item.nama_barang.replace(/"/g,
+                            '&quot;');
+                        html += `
+                    <tr>
+                        <td>
+                            <div class="form-check form-check-primary">
+                                <input
+                                    class="form-check-input checkItem"
+                                    type="checkbox"
+
+                                    data-id="${item.id}"
+                                    data-product_id="${item.product_id}"
+                                    data-product_name="${safeProductName}"
+                                    data-outstanding_qty="${item.outstanding_qty}"
+                                    data-unit_id="${item.unit_id}"
+                                    data-unit_name="${item.unit_name}"
+                             
+                                    data-quotation_id="${item.purchase_requisition_id}"
+                                >
+                            </div>
+                        </td>
+
+                        <td>${item.nama_barang}</td>
+                        <td class="text-end">${parseFloat(item.outstanding_qty)}</td>
+                        <td>${item.unit_name}</td>
+                     
+                    </tr>`;
+                    });
+
+                    $("#checkAll").prop("checked", false);
+                    $("#quotationTableBody").html(html);
+
+                }
+            });
+
         });
         //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
         $("#checkAll").on("change", function() {
@@ -1199,13 +1229,11 @@
 
             $("#btnSubmitSelected").on("click", function() {
                 let checkedBoxes = $(".checkItem:checked");
-
-                // 1. Validasi jika tidak ada PR yang dicentang
                 if (checkedBoxes.length === 0) {
                     Swal.fire({
                         icon: "warning",
-                        title: "Peringatan",
-                        text: "Silakan pilih minimal satu data requisition!",
+                        title: "Warning",
+                        text: "Silakan pilih minimal satu item requisition.",
                         customClass: {
                             confirmButton: "btn btn-danger",
                         },
@@ -1214,135 +1242,50 @@
                     return;
                 }
 
-                // 2. Ambil ID requisition yang dicentang
-                let ids = [];
+                if (typeof prDetailsData === "undefined") {
+                    window.prDetailsData = [];
+                }
+
                 checkedBoxes.each(function() {
-                    ids.push($(this).val());
-                });
 
-                // 3. Tampilkan konfirmasi SweetAlert sebelum memproses
-                Swal.fire({
-                    title: "Proses data terpilih?",
-                    text: `Anda memilih ${checkedBoxes.length} data untuk dimasukkan ke tabel.`,
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonText: "Ya, Masukkan!",
-                    cancelButtonText: "Batal",
-                    customClass: {
-                        confirmButton: "btn btn-primary",
-                        cancelButton: "btn btn-secondary",
-                    },
-                    buttonsStyling: false,
-                }).then((result) => {
-                    if (result.isConfirmed) {
+                    let item = {
+                        detail_id: $(this).data("id"),
+                        product_id: $(this).data("product_id"),
+                        data_produk: $(this).data("product_name"),
+                        quantity: parseFloat($(this).data("outstanding_qty")),
+                        sisa_pr: parseFloat($(this).data("qty")),
+                        unit_id: $(this).data("unit_id"),
+                        unit: $(this).data("unit_name"),
+                        warehouse_id: null,
+                        warehouse: null,
+                        unit_price: 0,
+                        discount: 0,
+                        amount: 0,
+                        order_code: $(this).data("code"),
+                    };
 
-                        // 4. Kirim request AJAX ke backend
-                        $.ajax({
-                            url: "{{ route('purchase-order.get-requisition-detail') }}",
-                            type: "POST",
-                            data: {
-                                ids: ids,
-                                _token: "{{ csrf_token() }}"
-                            },
-                            beforeSend: function() {
-                                $("#btnSubmitSelected")
-                                    .html(
-                                        '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
-                                    )
-                                    .prop("disabled", true);
-                            },
-                            success: function(response) {
-                                if (response.success) {
+                    // Hindari data ganda
+                    let exists = prDetailsData.some(x => x.detail_id == item.detail_id);
 
-                                    // Bersihkan atau siapkan array penampung global jika belum didefinisikan sebelumnya
-                                    if (typeof prDetailsData === 'undefined') {
-                                        window.prDetailsData = [];
-                                    }
-
-                                    // 5. Looping data response backend untuk dimasukkan ke array DataTables
-                                    response.data.forEach(function(item) {
-                                        let qtyAwal = parseFloat(item.qty || 0);
-                                        let sudahPO = parseFloat(item.po_qty ||
-                                            0);
-                                        let sisaPr = qtyAwal -
-                                            sudahPO; // Batas maksimal kuantitas PR
-
-                                        if (sisaPr <= 0) {
-                                            return; // Jika sisa PR habis, jangan masukkan ke list
-                                        }
-
-                                        let unitPrice = 0;
-                                        let discount = 0;
-                                        let amount = sisaPr * unitPrice;
-
-                                        prDetailsData.push({
-                                            detail_id: item
-                                                .id, // ID Detail PR tersimpan di sini
-                                            product_id: item.product_id,
-                                            data_produk: item
-                                                .product_name,
-                                            quantity: sisaPr,
-                                            sisa_pr: sisaPr, // <--- TAMBAHKAN INI: Sebagai acuan validasi batas maksimal
-                                            unit_id: item.unit_id,
-                                            unit: item.unit_name,
-                                            unit_price: unitPrice,
-                                            discount: discount,
-                                            amount: amount,
-                                            requisition_code: item
-                                                .requisition_code,
-                                            required_date: item
-                                                .required_date,
-                                            notes: item.notes
-                                        });
-                                    });
-
-                                    // 6. Refresh dan gambar ulang DataTables kamu
-                                    $('#table').DataTable()
-                                        .clear()
-                                        .rows.add(prDetailsData)
-                                        .draw();
-
-                                    // 7. Hitung ulang total matematika PO
-                                    if (typeof calculateGrandTotal === "function") {
-                                        calculateGrandTotal();
-                                    }
-                                    if (typeof calculateTotalOrder === "function") {
-                                        calculateTotalOrder();
-                                    }
-
-                                    // 8. Tutup Modal Requisition
-                                    $("#modalRequisitionDetail").modal("hide");
-
-                                    // 9. Beri feedback sukses ke user
-                                    Swal.fire({
-                                        icon: "success",
-                                        title: "Success",
-                                        text: "Data requisition berhasil dimasukkan.",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary",
-                                        },
-                                        buttonsStyling: false,
-                                    });
-                                }
-                            },
-                            error: function(xhr) {
-                                Swal.fire({
-                                    icon: "error",
-                                    title: "Error",
-                                    text: "Terjadi kesalahan saat mengambil data.",
-                                });
-                            },
-                            complete: function() {
-                                // Kembalikan kondisi tombol submit ke semula
-                                $("#btnSubmitSelected")
-                                    .html(
-                                        '<i class="ti ti-check me-1"></i> Process Selected'
-                                    )
-                                    .prop("disabled", false);
-                            }
-                        });
+                    if (!exists) {
+                        prDetailsData.push(item);
                     }
                 });
+
+                table.clear().rows.add(prDetailsData).draw();
+
+                $("#modalRequisitionDetail").modal("hide");
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Success",
+                    text: "Data requisition berhasil dimasukkan.",
+                    customClass: {
+                        confirmButton: "btn btn-primary",
+                    },
+                    buttonsStyling: false,
+                });
+
             });
 
             $(document).on('input change', '.input-qty', function() {

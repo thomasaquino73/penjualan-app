@@ -1306,7 +1306,7 @@ class DeliveryOrderController extends Controller
         ]);
     }
 
-     public function getQuotation($customerId)
+    public function getQuotation($customerId)
     {
         $status = ['processing', 'partial'];
 
@@ -1318,7 +1318,8 @@ class DeliveryOrderController extends Controller
 
         return response()->json($data);
     }
-     public function getQuotationDetail(Request $request)
+
+    public function getQuotationDetail(Request $request)
     {
         $year = date('Y');
 

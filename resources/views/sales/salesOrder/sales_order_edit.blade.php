@@ -220,7 +220,14 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
-
+            $(".select2-modal2").each(function() {
+                var $this = $(this);
+                $this.wrap('<div class="position-relative"></div>').select2({
+                    placeholder: $this.attr("data-placeholder"),
+                    width: "100%",
+                    dropdownParent: $("#modalQuotationDetail"),
+                });
+            });
             // 🔥 SET STATE AWAL checkbox
             if ($("#kena_pajak").is(":checked")) {
                 $("#tax_container").show();
@@ -287,11 +294,13 @@
         $("#showModalpr").on("click", function(e) {
             e.preventDefault();
 
-            let tbody = $("#quotationTableBody");
             var customerId = $("#customer_id").val();
-
-            // Validasi wajib pilih customer dulu
-            if (!customerId || customerId === "") {
+            $("#sq_number")
+                .empty()
+                .append('<option value="">Select Quotation</option>')
+                .val(null)
+                .trigger("change");
+            if (!customerId) {
                 Swal.fire({
                     icon: "warning",
                     title: "Warning!",
@@ -303,58 +312,88 @@
                     },
                     buttonsStyling: false,
                 });
-                return false;
+                return;
             }
 
-            // Reset checkbox 'Check All' menjadi tidak tercentang saat modal dibuka
-            $("#checkAll").prop("checked", false);
-
-            tbody.html(
-                '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>',
-            );
-            $("#modalQuotationDetail").modal("show");
-
-            // Ambil data PR berstatus processing
             $.ajax({
-                url: "{{ route('sales-order.quotation.processing') }}",
+                url: "/sales-order/get-quotation/" + customerId,
                 type: "GET",
-                dataType: "json",
+                success: function(response) {
+
+                    let option = '<option value="">Select Quotation</option>';
+
+                    $.each(response, function(i, item) {
+                        option += `<option value="${item.id}">
+                                ${item.sales_quotation_code}
+                           </option>`;
+                    });
+
+                    $("#sq_number").html(option);
+
+                    $("#modalQuotationDetail").modal("show");
+                }
+            });
+        });
+
+        $('#sq_number').on('change', function() {
+
+            let quotationIds = $(this).val();
+
+            if (!quotationIds || quotationIds.length === 0) {
+                $('#quotationTableBody').html('');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('sales-order.getQuotationDetail') }}",
+                type: "POST",
                 data: {
-                    customer_id: customerId
+                    quotation_ids: quotationIds,
+                    _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    tbody.empty();
+                    console.log(response);
+                    let html = '';
+                    $.each(response, function(index, item) {
+                        let safeProductName = item.nama_barang.replace(/"/g,
+                            '&quot;');
+                        html += `
+                    <tr>
+                        <td>
+                            <div class="form-check form-check-primary">
+                                <input
+                                    class="form-check-input checkItem"
+                                    type="checkbox"
 
-                    if (response && response.length > 0) {
-                        $.each(response, function(key, item) {
-                            let dateFormatted = new Date(item.created_at).toLocaleDateString(
-                                "id-ID");
+                                    data-id="${item.id}"
+                                    data-product_id="${item.product_id}"
+                                    data-product_name="${safeProductName}"
+                                    data-outstanding_qty="${item.outstanding_qty}"
+                                    data-unit_id="${item.unit_id}"
+                                    data-unit_name="${item.unit_name}"
+                                    data-unit_price="${item.unit_price}"
+                                    data-discount="${item.discount}"
+                                    data-amount="${item.amount}"
+                                    data-quotation_id="${item.sales_quotation_id}"
+                                >
+                            </div>
+                        </td>
 
-                            // Tambahkan baris PR ke tabel modal
-                            tbody.append(`
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input class="form-check-input checkItem" type="checkbox" value="${item.id}">
-                                    </div>
-                                </td>
-                                <td><strong>${item.sales_quotation_code}</strong></td>
-                                <td>${dateFormatted}</td>
-                            </tr>
-                        `);
-                        });
-                    } else {
-                        tbody.html(
-                            '<tr><td colspan="3" class="text-center text-muted">No processing data found.</td></tr>',
-                        );
-                    }
-                },
-                error: function(xhr) {
-                    tbody.html(
-                        '<tr><td colspan="3" class="text-center text-danger">Failed to fetch data.</td></tr>',
-                    );
-                },
+                        <td>${item.nama_barang}</td>
+                        <td class="text-end">${parseFloat(item.outstanding_qty)}</td>
+                        <td>${item.unit_name}</td>
+                        <td class="text-end">${parseFloat(item.unit_price).toLocaleString()}</td>
+                        <td class="text-end">${parseFloat(item.discount).toLocaleString()}</td>
+                        <td class="text-end">${parseFloat(item.amount).toLocaleString()}</td>
+                    </tr>`;
+                    });
+
+                    $("#checkAll").prop("checked", false);
+                    $("#quotationTableBody").html(html);
+
+                }
             });
+
         });
 
         //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
@@ -589,46 +628,101 @@
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
                                 action: function(e, dt, node, config) {
-                                    let data = dt.row({
+
+                                    const row = dt.row({
                                         selected: true
-                                    }).data();
-                                    let rowIndex = dt.row({
-                                        selected: true
-                                    }).index();
+                                    });
+
+                                    if (!row.any()) {
+                                        Swal.fire({
+                                            icon: "warning",
+                                            title: "Warning",
+                                            text: "Please select one data first."
+                                        });
+                                        return;
+                                    }
+
+                                    const data = row.data();
+                                    const rowIndex = row.index();
 
                                     window.isEditingMode = true;
 
-                                    // Menyimpan index baris array untuk penanda update
-                                    $("#detail_id").val(rowIndex);
+                                    // Reset error
+                                    $("#formPrDetail .error").html("");
 
-                                    // --- AMANKAN DATA ID RELASI DI SINI ---
-                                    $("#modal_purchase_requisition_detail_id").val(data.detail_id ||
-                                        data.purchase_requisition_detail_id || "");
-                                    $("#modal_requisition_code").val(data.requisition_code || "");
-
-                                    // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
-                                    if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
-                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
-                                    } else {
-                                        $("#quantity").removeAttr(
-                                            "data-sisa-pr"); // Jika PO bebas, hapus batasannya
-                                    }
-                                    // --------------------------------------
-
-                                    $("#quantity").val(data.quantity);
-                                    $("#unit_id").data("pending-val", data.unit_id);
-                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
-                                    $("#product_id").val(data.product_id).trigger("change");
-                                    $("#unit_price").val(data.unit_price);
-                                    $("#discount").val(data.discount || 0);
-                                    $("#discount_percent").val(data.discount_percent || 0);
-                                    $("#tax").val(data.tax || 0);
-                                    $("#total_price").val(data.amount || 0);
+                                    // ==========================
+                                    // HEADER
+                                    // ==========================
 
                                     $("#modalTitle").text("Edit entry");
                                     $("#btnSubmitModal").text("Update");
+
+                                    // ==========================
+                                    // HIDDEN
+                                    // ==========================
+
+                                    $("#detail_id").val(rowIndex);
+
+                                    $("#modal_sales_quotation_detail_id").val(
+                                        data.detail_id ??
+                                        data.sales_quotation_detail_id ??
+                                        ""
+                                    );
+
+                                    $("#modal_requisition_code").val(
+                                        data.requisition_code ?? ""
+                                    );
+
+                                    // ==========================
+                                    // TEXTBOX
+                                    // ==========================
+
+                                    $("#quantity").val(data.quantity ?? "");
+
+                                    $("#unit_price").val(data.unit_price ?? 0);
+
+                                    $("#discount").val(data.discount ?? 0);
+
+                                    $("#discount_percent").val(data.discount_percent ?? 0);
+
+                                    $("#tax").val(data.tax ?? 0);
+
+                                    $("#total_price").val(data.amount ?? 0);
+
+                                    $("#available_stok").val(data.available_stok ?? "");
+
+                                    // ==========================
+                                    // ATTRIBUTE
+                                    // ==========================
+
+                                    if (data.sisa_pr != null) {
+                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
+                                    } else {
+                                        $("#quantity").removeAttr("data-sisa-pr");
+                                    }
+
+                                    // ==========================
+                                    // SELECT
+                                    // ==========================
+
+                                    $("#warehouse_id")
+                                        .val(data.warehouse_id)
+                                        .trigger("change.select2");
+
+                                    // simpan unit yg dipilih
+                                    $("#unit_id").data("pending-val", data.unit_id);
+
+                                    // simpan harga lama
+                                    $("#unit_price").data("pending-price", data.unit_price);
+
+                                    // buka modal dulu
                                     $("#modalPrDetail").modal("show");
-                                },
+
+                                    // terakhir trigger product
+                                    $("#product_id")
+                                        .val(data.product_id)
+                                        .trigger("change");
+                                }
                             },
                             {
                                 text: '<i class="ti ti-trash me-1"></i> Delete',
@@ -733,11 +827,23 @@
                         unit_id: unitId
                     },
                     success: function(res) {
-                        $('#available_stok').val(res.stock);
 
-                        $('#modalTitle').text(
-                            `Create new entry (Available Stock: ${res.stock} ${res.unit})`
-                        );
+                        $('#available_stok').val(parseFloat(res.stock));
+
+                        if (window.isEditingMode) {
+
+                            $('#modalTitle').text(
+                                `Edit entry (Available Stock: ${parseFloat(res.stock)} ${res.unit})`
+                            );
+
+                        } else {
+
+                            $('#modalTitle').text(
+                                `Create new entry (Available Stock: ${parseFloat(res.stock)} ${res.unit})`
+                            );
+
+                        }
+
                     }
                 });
             }
@@ -1203,14 +1309,15 @@
             });
 
             $("#btnSubmitSelected").on("click", function() {
+
                 let checkedBoxes = $(".checkItem:checked");
 
-                // 1. Validasi jika tidak ada PR yang dicentang
+                // Validasi minimal pilih satu item
                 if (checkedBoxes.length === 0) {
                     Swal.fire({
                         icon: "warning",
-                        title: "Peringatan",
-                        text: "Silakan pilih minimal satu data quotation!",
+                        title: "Warning",
+                        text: "Silakan pilih minimal satu item quotation.",
                         customClass: {
                             confirmButton: "btn btn-danger",
                         },
@@ -1219,133 +1326,98 @@
                     return;
                 }
 
-                // 2. Ambil ID quotation yang dicentang
-                let ids = [];
+                // Pastikan array sudah ada
+                if (typeof prDetailsData === "undefined") {
+                    window.prDetailsData = [];
+                }
+
+                // ==========================
+                // VALIDASI DUPLIKASI PRODUK
+                // ==========================
+                let duplicateProducts = [];
+
                 checkedBoxes.each(function() {
-                    ids.push($(this).val());
+
+                    let productId = $(this).data("product_id");
+                    let productName = $(this).data("product_name");
+
+                    let exists = prDetailsData.some(function(item) {
+                        return item.product_id == productId;
+                    });
+
+                    if (exists) {
+                        duplicateProducts.push(productName);
+                    }
+
                 });
 
-                // 3. Tampilkan konfirmasi SweetAlert sebelum memproses
+                // Jika ada produk yang sudah ada
+                if (duplicateProducts.length > 0) {
+
+                    // Hilangkan nama yang sama
+                    duplicateProducts = [...new Set(duplicateProducts)];
+
+                    Swal.fire({
+                        icon: "error",
+                        title: "Produk Sudah Ada",
+                        html: "Produk berikut sudah terdapat pada daftar Sales Order:<br><br>" +
+                            "<b>" + duplicateProducts.join("<br>") + "</b>" +
+                            "<br><br>Silakan hapus atau edit produk yang sudah ada.",
+                        customClass: {
+                            confirmButton: "btn btn-danger",
+                        },
+                        buttonsStyling: false,
+                    });
+
+                    return;
+                }
+
+                // ==========================
+                // TAMBAHKAN DATA KE TABEL
+                // ==========================
+                checkedBoxes.each(function() {
+
+                    let item = {
+                        detail_id: $(this).data("id"),
+                        product_id: $(this).data("product_id"),
+                        data_produk: $(this).data("product_name"),
+                        quantity: parseFloat($(this).data("outstanding_qty")),
+                        sisa_pr: parseFloat($(this).data("qty")),
+                        unit_id: $(this).data("unit_id"),
+                        unit: $(this).data("unit_name"),
+                        warehouse_id: null,
+                        warehouse: null,
+                        unit_price: parseFloat($(this).data("unit_price")),
+                        discount: parseFloat($(this).data("discount")),
+                        amount: parseFloat($(this).data("amount")),
+                        order_code: $(this).data("sales_quotation_code"),
+                    };
+
+                    prDetailsData.push(item);
+
+                });
+
+                // Refresh DataTable
+                table.clear().rows.add(prDetailsData).draw();
+
+                // Hitung ulang total
+                calculateGrandTotal();
+                calculateTotalOrder();
+
+                // Tutup modal
+                $("#modalQuotationDetail").modal("hide");
+
+                // Notifikasi sukses
                 Swal.fire({
-                    title: "Proses data terpilih?",
-                    text: `Anda memilih ${checkedBoxes.length} data untuk dimasukkan ke tabel.`,
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonText: "Ya, Masukkan!",
-                    cancelButtonText: "Batal",
+                    icon: "success",
+                    title: "Success",
+                    text: "Data quotation berhasil dimasukkan.",
                     customClass: {
                         confirmButton: "btn btn-primary",
-                        cancelButton: "btn btn-secondary",
                     },
                     buttonsStyling: false,
-                }).then((result) => {
-                    if (result.isConfirmed) {
-
-                        // 4. Kirim request AJAX ke backend
-                        $.ajax({
-                            url: "{{ route('sales-order.get-quotation-detail') }}",
-                            type: "POST",
-                            data: {
-                                ids: ids,
-                                _token: "{{ csrf_token() }}"
-                            },
-                            beforeSend: function() {
-                                $("#btnSubmitSelected")
-                                    .html(
-                                        '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
-                                    )
-                                    .prop("disabled", true);
-
-                            },
-                            success: function(response) {
-                                if (response.success) {
-
-                                    // Bersihkan atau siapkan array penampung global jika belum didefinisikan sebelumnya
-                                    if (typeof prDetailsData === 'undefined') {
-                                        window.prDetailsData = [];
-                                    }
-
-                                    // 5. Looping data response backend untuk dimasukkan ke array DataTables
-                                    response.data.forEach(function(item) {
-                                        let qtyAwal = parseFloat(item.qty || 0);
-                                        let sudahPO = parseFloat(item.sq_qty ||
-                                            0);
-                                        let sisaPr = qtyAwal -
-                                            sudahPO; // Batas maksimal kuantitas PR
-
-                                        if (sisaPr <= 0) {
-                                            return; // Jika sisa PR habis, jangan masukkan ke list
-                                        }
-
-                                        let unitPrice = item.unit_price;
-                                        let discount = item.discount;
-                                        let amount = item.amount;
-
-                                        prDetailsData.push({
-                                            detail_id: item
-                                                .id, // ID Detail PR tersimpan di sini
-                                            product_id: item.product_id,
-                                            data_produk: item
-                                                .product_name,
-                                            quantity: sisaPr,
-                                            sisa_pr: sisaPr, // <--- TAMBAHKAN INI: Sebagai acuan validasi batas maksimal
-                                            unit_id: item.unit_id,
-                                            unit: item.unit_name,
-                                            unit_price: unitPrice,
-                                            discount: discount,
-                                            amount: amount,
-                                            quotation_code: item
-                                                .quotation_code,
-                                        });
-                                    });
-
-                                    // 6. Refresh dan gambar ulang DataTables kamu
-                                    $('#table').DataTable()
-                                        .clear()
-                                        .rows.add(prDetailsData)
-                                        .draw();
-
-                                    // 7. Hitung ulang total matematika PO
-                                    if (typeof calculateGrandTotal === "function") {
-                                        calculateGrandTotal();
-                                    }
-                                    if (typeof calculateTotalOrder === "function") {
-                                        calculateTotalOrder();
-                                    }
-
-                                    // 8. Tutup Modal Requisition
-                                    $("#modalQuotationDetail").modal("hide");
-
-                                    // 9. Beri feedback sukses ke user
-                                    Swal.fire({
-                                        icon: "success",
-                                        title: "Success",
-                                        text: "Data quotation berhasil dimasukkan.",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary",
-                                        },
-                                        buttonsStyling: false,
-                                    });
-                                }
-                            },
-                            error: function(xhr) {
-                                Swal.fire({
-                                    icon: "error",
-                                    title: "Error",
-                                    text: "Terjadi kesalahan saat mengambil data.",
-                                });
-                            },
-                            complete: function() {
-                                // Kembalikan kondisi tombol submit ke semula
-                                $("#btnSubmitSelected")
-                                    .html(
-                                        '<i class="ti ti-check me-1"></i> Process Selected'
-                                    )
-                                    .prop("disabled", false);
-                            }
-                        });
-                    }
                 });
+
             });
 
             function submitUpdate(callback) {

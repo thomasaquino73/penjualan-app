@@ -20,7 +20,7 @@ class MenuBadge
 
         return DB::table($table)
             ->whereMonth($dateColumn, $month)
-            ->where('status', 'processing')
+            ->whereNotIn('status', ['draft', 'closed'])
             ->count();
     }
 }

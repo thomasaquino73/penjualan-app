@@ -195,9 +195,72 @@
 @include('partials.button.btn_addpayment')
 @include('partials.button.btn_submitform')
 @include('partials.button.select2_modal')
-@include('partials.js.calculate_total')
+{{-- @include('partials.js.calculate_total') --}}
 
 @push('scripts')
+    <script>
+        function calculateTotal() {
+            let qty = parseFloat(document.getElementById('quantity').value) || 0;
+            let price = parseFloat(document.getElementById('unit_price').value) || 0;
+            let discountInput = document.getElementById('discount_percent').value;
+
+            let subtotal = qty * price;
+
+            let remaining = subtotal;
+            let totalDiscount = 0;
+
+            if (discountInput) {
+                // Ambil semua angka dari input seperti "10+5+5"
+                let discounts = discountInput.split('+');
+
+                discounts.forEach(d => {
+                    let percent = parseFloat(d.trim()) || 0;
+
+                    let discValue = remaining * (percent / 100);
+                    totalDiscount += discValue;
+
+                    remaining -= discValue;
+                });
+            }
+
+            // Set hasil ke input discount (nominal)
+            document.getElementById('discount').value = totalDiscount.toFixed(2);
+
+            // Set total price
+            document.getElementById('amount').value = remaining.toFixed(2);
+        }
+
+        document.getElementById('discount').addEventListener('input', function() {
+
+            let qty = parseFloat(document.getElementById('quantity').value) || 0;
+            let price = parseFloat(document.getElementById('unit_price').value) || 0;
+            let discountNominal = parseFloat(this.value) || 0;
+
+            let subtotal = qty * price;
+
+            if (discountNominal > subtotal) {
+                discountNominal = subtotal;
+                this.value = subtotal;
+            }
+
+            // Hitung discount %
+            let discountPercent = 0;
+            if (subtotal > 0) {
+                discountPercent = (discountNominal / subtotal) * 100;
+            }
+
+            document.getElementById('discount_percent').value = discountPercent.toFixed(2);
+
+            // Hitung total
+            let total = subtotal - discountNominal;
+            document.getElementById('amount').value = total.toFixed(2);
+
+        });
+
+        document.getElementById('quantity').addEventListener('input', calculateTotal);
+        document.getElementById('unit_price').addEventListener('input', calculateTotal);
+        document.getElementById('discount_percent').addEventListener('input', calculateTotal);
+    </script>
     <script>
         let prDetailsData = [];
 
@@ -322,9 +385,7 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-
                     let html = '';
-
                     $.each(response, function(index, item) {
                         let safeProductName = item.nama_barang.replace(/"/g,
                             '&quot;');
@@ -339,17 +400,19 @@
                                     data-id="${item.id}"
                                     data-product_id="${item.product_id}"
                                     data-product_name="${safeProductName}"
-                                    data-qty="${item.qty}"
+                                    data-outstanding_qty="${item.outstanding_qty}"
                                     data-unit_id="${item.unit_id}"
                                     data-unit_name="${item.unit_name}"
+                             
                                     data-quotation_id="${item.purchase_requisition_id}"
                                 >
                             </div>
                         </td>
 
                         <td>${item.nama_barang}</td>
-                        <td class="text-end">${item.qty}</td>
+                        <td class="text-end">${parseFloat(item.outstanding_qty)}</td>
                         <td>${item.unit_name}</td>
+                     
                     </tr>`;
                     });
 
@@ -506,710 +569,6 @@
 
                 // JIKA PO BEBAS (maxPrLimit tidak ada), AKAN LOLOS TANPA VALIDASI MAKSIMAL
             });
-
-
-            //==============================+++++++++++
-
-            // 5. Event Handler: Submit Form Modal Detail (Sekarang baris prDetailsData PASTI terbaca)
-            $("#formPrDetail").on("submit", function(e) {
-                e.preventDefault();
-
-                let productId = $("#product_id").val();
-                let productName = $("#product_id option:selected").text();
-                let quantity = parseFloat($("#quantity").val()) || 0;
-                let unitId = $("#unit_id").val();
-                let unitName = $("#unit_id option:selected").text();
-                let warehouseId = $("#warehouse_id").val();
-                let warehouseName = $("#warehouse_id option:selected").text();
-                let discountPercent = $("#discount_percent").val();
-                let detailId = $("#detail_id")
-                    .val(); // Ini adalah index row array (kosong jika barang baru)
-
-                let unitPrice = parseFloat($("#unit_price").val()) || 0;
-                let discount = parseFloat($("#discount").val()) || 0;
-                let tax = parseFloat($("#tax").val()) || 0;
-
-                let requiredDate = $("#required_date").val() || "";
-
-                // 1. Validasi Input Wajib
-                if (!productId || quantity <= 0 || !unitId || !warehouseId) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Oops...",
-                        text: "Please fill all required fields! (Product, Valid Quantity, Warehouse, and Unit)",
-                        customClass: {
-                            confirmButton: "btn btn-danger",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return false;
-                }
-
-                // 2. Validasi Duplikasi Produk
-                let isDuplicate = false;
-                if (prDetailsData && prDetailsData.length > 0) {
-                    for (let i = 0; i < prDetailsData.length; i++) {
-                        if (prDetailsData[i].product_id == productId) {
-                            if (detailId === "") {
-                                // Jika tambah baru dan produk sudah ada di tabel
-                                isDuplicate = true;
-                                break;
-                            } else if (detailId !== "" && i != detailId) {
-                                // Jika sedang edit, tapi produk diubah ke produk lain yang sudah ada di tabel
-                                isDuplicate = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (isDuplicate) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Product Already Exists!",
-                        html: `The product <b>"${productName}"</b> is already registered.<br>Please edit the item if you want to change it.`,
-                        customClass: {
-                            confirmButton: "btn btn-danger",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return false;
-                }
-
-                // 3. Matematika Kalkulasi Amount (Tax dalam persen)
-                let subTotal = quantity * unitPrice;
-                let totalDiscount = discount; // Diskon nominal tetap
-                let setelahDiskon = subTotal - totalDiscount;
-                let totalTax = setelahDiskon * (tax / 100);
-                let amount = setelahDiskon + totalTax;
-
-                // 4. Menyusun Object Data Baru / Hasil Editan Form
-                let itemData = {
-                    product_id: productId,
-                    data_produk: productName,
-                    quantity: quantity,
-                    unit_id: unitId,
-                    unit: unitName,
-                    warehouse_id: warehouseId || null,
-                    warehouse: warehouseName || '-',
-                    unit_price: unitPrice,
-                    discount_percent: discountPercent,
-                    discount: discount,
-                    tax: tax,
-                    amount: amount,
-                    required_date: requiredDate,
-                };
-
-                // 5. Logika Penyimpanan Berdasarkan 2 Cara Pengisian PO
-                if (detailId === "") {
-                    // --- CARA A: PO ISI SENDIRI (TAMBAH BARU MANUAL) ---
-                    prDetailsData.push(itemData);
-                } else {
-                    // --- CARA B: AMBIL DARI PR & EDIT DATA ---
-                    // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
-                    // Properti bawaan PR seperti 'requisition_code' & 'purchase_requisition_detail_id'
-                    // akan otomatis aman dan dipertahankan.
-                    prDetailsData[detailId] = {
-                        ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)
-                        ...itemData // Update dengan data baru dari form modal
-                    };
-                }
-
-                // 6. Refresh Tampilan & Hitung Total Akhir PO
-                table.clear().rows.add(prDetailsData).draw();
-
-                // Panggil fungsi hitung total keseluruhan halaman PO kamu
-                if (typeof calculateGrandTotal === "function") calculateGrandTotal();
-                if (typeof calculateTotalOrder === "function") calculateTotalOrder();
-
-                // Tutup Modal Form Detail
-                $("#modalPrDetail").modal("hide");
-            });
-
-
-
-
-            // A. Jika User Mengetik di Kolom PERSEN (%)
-            $("#percent").on("input", function() {
-                let subTotal = parseFloat($("#sub_total").val()) || 0;
-                let percent = parseFloat($(this).val()) || 0;
-
-                // Batasi agar persen tidak minus atau lebih dari 100
-                if (percent < 0) {
-                    percent = 0;
-                    $(this).val(0);
-                }
-                if (percent > 100) {
-                    percent = 100;
-                    $(this).val(100);
-                }
-
-                // Hitung nominal Rupiahnya
-                let discountNominal = subTotal * (percent / 100);
-
-                // Masukkan hasil ke kolom Rupiah (discount_all)
-                $("#discount_all").val(Math.round(discountNominal));
-
-                // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
-                calculateTotalOrder();
-            });
-
-            // B. Jika User Mengetik di Kolom NOMINAL (Rp)
-            $("#discount_all").on("input", function() {
-                let subTotal = parseFloat($("#sub_total").val()) || 0;
-                let discountNominal = parseFloat($(this).val()) || 0;
-
-                // Batasi agar nominal diskon tidak melebihi subtotal
-                if (discountNominal < 0) {
-                    discountNominal = 0;
-                    $(this).val(0);
-                }
-                if (discountNominal > subTotal) {
-                    discountNominal = subTotal;
-                    $(this).val(subTotal);
-                }
-
-                // Hitung Persentasenya
-                let percent = 0;
-                if (subTotal > 0) {
-                    percent = (discountNominal / subTotal) * 100;
-                }
-
-                // Masukkan hasil ke kolom persen (ambil 2 angka di belakang koma agar presisi)
-                $("#percent").val(percent % 1 === 0 ? percent : percent.toFixed(2));
-
-                // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
-                calculateTotalOrder();
-            });
-
-            $(document).on("change", "#product_id", function() {
-                let productId = $(this).val();
-                let unitSelect = $("#unit_id");
-                let priceInput = $("#unit_price");
-                let dropdownBtn = $("#btn-history-po");
-                let dropdownMenu = $("#po-price-dropdown-menu");
-                let helperText = $("#po-history-helper");
-
-                // Pastikan ID selector ini sesuai dengan ID Select Supplier di form utama kamu
-                let supplierId = $("#supplier_id").val();
-
-                if (!productId) {
-                    unitSelect.empty().append("<option></option>").trigger("change");
-                    priceInput.val("");
-                    dropdownBtn.prop("disabled", true);
-                    dropdownMenu.empty();
-                    helperText.text("Pilih produk untuk melacak riwayat harga beli.");
-                    return;
-                }
-
-                // Tambahan Validasi: Ingatkan user jika supplier belum dipilih
-                if (!supplierId) {
-                    alert(
-                        "Silahkan pilih Supplier terlebih dahulu pada form utama PO!",
-                    );
-                    $(this).val("").trigger("change"); // Reset pilihan produk
-                    return;
-                }
-
-                // ==========================================
-                // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
-                // ==========================================
-                $.ajax({
-                    url: `/get-units-by-product/${productId}`,
-                    type: "GET",
-                    dataType: "json",
-                    beforeSend: function() {
-                        unitSelect
-                            .html("<option>Loading units...</option>")
-                            .prop("disabled", true);
-                    },
-                    success: function(response) {
-                        unitSelect
-                            .empty()
-                            .append("<option></option>")
-                            .prop("disabled", false);
-
-                        if (response && response.length > 0) {
-                            $.each(response, function(key, item) {
-                                unitSelect.append(
-                                    `<option value="${item.id}">${item.name}</option>`,
-                                );
-                            });
-                        } else {
-                            unitSelect.append(
-                                '<option value="">No unit available</option>',
-                            );
-                        }
-
-                        unitSelect.trigger("change");
-
-                        let pendingUnitId = unitSelect.data("pending-val");
-                        if (pendingUnitId) {
-                            unitSelect.val(pendingUnitId).trigger("change");
-                            unitSelect.removeData("pending-val");
-                        }
-                    },
-                    error: function() {
-                        console.error("Gagal memuat list unit dari Controller.");
-                        unitSelect
-                            .empty()
-                            .append("<option></option>")
-                            .prop("disabled", false)
-                            .trigger("change");
-                    },
-                });
-
-                // ==========================================
-                // 2. AJAX History PO + Fallback Harga Master
-                // ==========================================
-                $.ajax({
-                    url: `/purchase-order/po/price-history?product_id=${productId}&supplier_id=${supplierId}`,
-                    type: "GET",
-                    dataType: "json",
-                    beforeSend: function() {
-                        // Jangan hapus isi textbox jika sudah ada nilainya (misal saat mode EDIT)
-                        if (priceInput.val() === "" || priceInput.val() == "0") {
-                            priceInput.val("0");
-                        }
-                        dropdownBtn.prop("disabled", true);
-                        dropdownMenu.empty();
-                        helperText.text("Mencari riwayat harga...");
-                    },
-                    success: function(response) {
-                        if (response.success && response.history.length > 0) {
-                            dropdownBtn.prop("disabled", false);
-                            helperText
-                                .attr("class", "form-text text-success")
-                                .text(
-                                    "Riwayat ditemukan. Klik icon untuk ganti harga lama.",
-                                );
-
-                            // Render ulang list dropdown menu
-                            $.each(response.history, function(index, item) {
-                                // 1. Ambil nilai harga dan tanggal dari objek item
-                                let harga = item.harga;
-                                let tanggalMentah = item.tanggal;
-
-                                // 2. Format Tanggal (Contoh Hasil: 23-05-2026 14:30)
-                                let formattedDate = "-";
-                                if (tanggalMentah) {
-                                    let d = new Date(tanggalMentah);
-                                    let tgl = String(d.getDate()).padStart(2, "0");
-                                    let bln = String(d.getMonth() + 1).padStart(2,
-                                        "0"); // Bulan dimulai dari 0
-                                    let thn = d.getFullYear();
-                                    let jam = String(d.getHours()).padStart(2, "0");
-                                    let mnt = String(d.getMinutes()).padStart(2, "0");
-
-                                    formattedDate =
-                                        `${tgl}-${bln}-${thn} ${jam}:${mnt}`;
-                                }
-
-                                // 3. Format Tampilan Harga Ke Rupiah
-                                let formattedPrice =
-                                    `Rp ${Number(harga).toLocaleString("id-ID")}`;
-
-                                // 4. Susun konten teks menu dropdown (Harga di kiri, Tanggal & Badge di kanan)
-                                let badgeTerakhir =
-                                    index === 0 ?
-                                    `<span class="badge bg-label-success text-xs ms-1">Terakhir</span>` :
-                                    "";
-
-                                let itemContent = `
-                                        <div class="d-flex flex-column w-100">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span><strong>${formattedPrice}</strong></span>
-                                                ${badgeTerakhir}
-                                            </div>
-                                            <small class="text-muted" style="font-size: 11px;">
-                                                <i class="ti ti-calendar text-xs me-1"></i>${formattedDate}
-                                            </small>
-                                        </div>
-                                    `;
-
-                                let li = $("<li></li>");
-                                let a = $(
-                                    `<a class="dropdown-item d-flex align-items-center py-2" href="#" style="min-width: 220px;">${itemContent}</a>`,
-                                );
-
-                                // Ketika item di klik, harga dimasukkan ke textbox
-                                a.on("click", function(e) {
-                                    e.preventDefault();
-                                    priceInput.val(harga);
-                                });
-
-                                li.append(a);
-                                dropdownMenu.append(li);
-                            });
-                        } else {
-                            helperText
-                                .attr("class", "form-text text-muted")
-                                .text(
-                                    "Belum ada riwayat harga dengan supplier ini. Silahkan isi harga manual.",
-                                );
-                            dropdownBtn.prop("disabled", true);
-                            if (priceInput.val() === "") {
-                                priceInput.val("0");
-                            }
-                        }
-                    },
-                    error: function(xhr) {
-                        console.error("Gagal mengambil data riwayat harga:", xhr);
-                        helperText
-                            .attr("class", "form-text text-danger")
-                            .text("Gagal memuat riwayat harga.");
-                    },
-                });
-            });
-
-            $("#vehicle_id").select2({
-                placeholder: "Select Shipping",
-                width: "100%",
-            });
-
-            // $("#btnSubmitSelected").on("click", function() {
-            //     let checkedBoxes = $(".checkItem:checked");
-
-            //     // 1. Validasi jika tidak ada PR yang dicentang
-            //     if (checkedBoxes.length === 0) {
-            //         Swal.fire({
-            //             icon: "warning",
-            //             title: "Peringatan",
-            //             text: "Silakan pilih minimal satu data requisition!",
-            //             customClass: {
-            //                 confirmButton: "btn btn-danger",
-            //             },
-            //             buttonsStyling: false,
-            //         });
-            //         return;
-            //     }
-
-            //     // 2. Ambil ID requisition yang dicentang
-            //     let ids = [];
-            //     checkedBoxes.each(function() {
-            //         ids.push($(this).val());
-            //     });
-
-            //     // 3. Tampilkan konfirmasi SweetAlert sebelum memproses
-            //     Swal.fire({
-            //         title: "Proses data terpilih?",
-            //         text: `Anda memilih ${checkedBoxes.length} data untuk dimasukkan ke tabel.`,
-            //         icon: "question",
-            //         showCancelButton: true,
-            //         confirmButtonText: "Ya, Masukkan!",
-            //         cancelButtonText: "Batal",
-            //         customClass: {
-            //             confirmButton: "btn btn-primary",
-            //             cancelButton: "btn btn-secondary",
-            //         },
-            //         buttonsStyling: false,
-            //     }).then((result) => {
-            //         if (result.isConfirmed) {
-
-            //             // 4. Kirim request AJAX ke backend
-            //             $.ajax({
-            //                 url: "{{ route('purchase-order.get-requisition-detail') }}",
-            //                 type: "POST",
-            //                 data: {
-            //                     ids: ids,
-            //                     _token: "{{ csrf_token() }}"
-            //                 },
-            //                 beforeSend: function() {
-            //                     $("#btnSubmitSelected")
-            //                         .html(
-            //                             '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
-            //                         )
-            //                         .prop("disabled", true);
-            //                 },
-            //                 success: function(response) {
-            //                     if (response.success) {
-
-            //                         // Bersihkan atau siapkan array penampung global jika belum didefinisikan sebelumnya
-            //                         if (typeof prDetailsData === 'undefined') {
-            //                             window.prDetailsData = [];
-            //                         }
-
-            //                         // 5. Looping data response backend untuk dimasukkan ke array DataTables
-            //                         response.data.forEach(function(item) {
-            //                             let qtyAwal = parseFloat(item.qty || 0);
-            //                             let sudahPO = parseFloat(item.po_qty ||
-            //                                 0);
-            //                             let sisaPr = qtyAwal -
-            //                                 sudahPO; // Batas maksimal kuantitas PR
-
-            //                             if (sisaPr <= 0) {
-            //                                 return; // Jika sisa PR habis, jangan masukkan ke list
-            //                             }
-
-            //                             let unitPrice = 0;
-            //                             let discount = 0;
-            //                             let amount = sisaPr * unitPrice;
-
-            //                             prDetailsData.push({
-            //                                 detail_id: item
-            //                                     .id, // ID Detail PR tersimpan di sini
-            //                                 product_id: item.product_id,
-            //                                 data_produk: item
-            //                                     .product_name,
-            //                                 quantity: sisaPr,
-            //                                 sisa_pr: sisaPr,
-            //                                 unit_id: item.unit_id,
-            //                                 unit: item.unit_name,
-            //                                 warehouse_id: item
-            //                                     .warehouse_id || null,
-            //                                 warehouse: item
-            //                                     .warehouse_name || '-',
-            //                                 unit_price: unitPrice,
-            //                                 discount: discount,
-            //                                 amount: amount,
-            //                                 requisition_code: item
-            //                                     .requisition_code,
-            //                                 required_date: item
-            //                                     .required_date,
-            //                                 notes: item.notes
-            //                             });
-            //                         });
-
-            //                         // 6. Refresh dan gambar ulang DataTables kamu
-            //                         $('#table').DataTable()
-            //                             .clear()
-            //                             .rows.add(prDetailsData)
-            //                             .draw();
-
-            //                         // 7. Hitung ulang total matematika PO
-            //                         if (typeof calculateGrandTotal === "function") {
-            //                             calculateGrandTotal();
-            //                         }
-            //                         if (typeof calculateTotalOrder === "function") {
-            //                             calculateTotalOrder();
-            //                         }
-
-            //                         // 8. Tutup Modal Requisition
-            //                         $("#modalRequisitionDetail").modal("hide");
-
-            //                         // 9. Beri feedback sukses ke user
-            //                         Swal.fire({
-            //                             icon: "success",
-            //                             title: "Success",
-            //                             text: "Data requisition berhasil dimasukkan.",
-            //                             customClass: {
-            //                                 confirmButton: "btn btn-primary",
-            //                             },
-            //                             buttonsStyling: false,
-            //                         });
-            //                     }
-            //                 },
-            //                 error: function(xhr) {
-            //                     Swal.fire({
-            //                         icon: "error",
-            //                         title: "Error",
-            //                         text: "Terjadi kesalahan saat mengambil data.",
-            //                     });
-            //                 },
-            //                 complete: function() {
-            //                     // Kembalikan kondisi tombol submit ke semula
-            //                     $("#btnSubmitSelected")
-            //                         .html(
-            //                             '<i class="ti ti-check me-1"></i> Process Selected'
-            //                         )
-            //                         .prop("disabled", false);
-            //                 }
-            //             });
-            //         }
-            //     });
-            // });
-
-
-
-            $(document).on('input change', '.input-qty', function() {
-                let inputField = $(this);
-                let currentQty = parseFloat(inputField.val()) || 0;
-
-                // Ambil data batasan PR jika ada (jika input manual / bukan PR, nilainya akan undefined)
-                let maxPrLimit = inputField.data('sisa-pr');
-
-                // JIKA AMBIL DATA DARI PR (maxPrLimit memiliki nilai)
-                if (maxPrLimit !== undefined && maxPrLimit !== null && maxPrLimit !== '') {
-                    maxPrLimit = parseFloat(maxPrLimit);
-
-                    if (currentQty > maxPrLimit) {
-                        Swal.fire({
-                            icon: "warning",
-                            title: "Melebihi Sisa PR",
-                            text: `Kuantitas tidak boleh melebihi sisa permintaan PR (Maksimal: ${maxPrLimit}).`,
-                            customClass: {
-                                confirmButton: "btn btn-warning"
-                            },
-                            buttonsStyling: false
-                        });
-
-                        // Kembalikan otomatis nilainya ke batas maksimal sisa PR
-                        inputField.val(maxPrLimit).trigger('change');
-                        return;
-                    }
-                }
-
-                // JIKA PO BEBAS / INPUT MANUAL
-                // Kode di bawah ini tetap berjalan bebas tanpa interupsi batas maksimal...
-            });
-
-            $('#supplier_id').on('change', function() {
-
-                let supplierId = $(this).val();
-
-                $('#bank_id').empty().append('<option value="">Pilih Rekening</option>');
-                $('#taxpayer_data').val('');
-
-                if (!supplierId) {
-                    return;
-                }
-
-                $.ajax({
-                    url: '/purchase-order/' + supplierId + '/data',
-                    type: 'GET',
-                    success: function(response) {
-
-                        // Isi rekening
-                        $.each(response.rekening, function(index, item) {
-
-                            $('#bank_id').append(`
-                    <option value="${item.id}">
-                        ${item.bank_name} - ${item.nomor_rekening}
-                        (${item.nama_rekening})
-                    </option>
-                    `);
-
-                        });
-
-                        $('#bank_id').trigger('change');
-
-                        // Isi NPWP
-                        if (response.pajak) {
-                            $('#taxpayer_data').val(response.pajak.tipe_id_pajak + ' :' +
-                                response.pajak.nomor_wajib_pajak);
-                        }
-                        if (response.supplier) {
-                            let alamat = [];
-                            if (response.supplier.alamat_pembayaran)
-                                alamat.push(response.supplier.alamat_pembayaran);
-                            let kotaProvinsi = [];
-                            if (response.supplier.kota)
-                                kotaProvinsi.push(response.supplier.kota);
-                            if (response.supplier.provinsi)
-                                kotaProvinsi.push(response.supplier.provinsi);
-                            if (response.supplier.kodepos)
-                                kotaProvinsi.push(response.supplier.kodepos);
-                            if (kotaProvinsi.length > 0)
-                                alamat.push(kotaProvinsi.join(', '));
-                            if (response.supplier.negara)
-                                alamat.push(response.supplier.negara);
-                            $('#shipping_address').val(alamat.join('\n'));
-                        }
-
-                    }
-                });
-
-            });
-        });
-        $(document).on("click", "#btn-history-address", function() {
-            let supplierId = $("#supplier_id").val();
-            loadSupplierAddress(supplierId);
-        });
-        $(document).on("click", ".select-address", function() {
-            $("#shipping_address").val($(this).data("address"));
-        });
-
-        function loadSupplierAddress(supplierId) {
-            if (!supplierId) return;
-            $.ajax({
-                url: `/purchase-order/get-supplier-address/${supplierId}`,
-                type: "GET",
-                dataType: "json",
-                success: function(response) {
-                    let dropdownMenu = $("#address-dropdown-menu");
-                    dropdownMenu.empty();
-                    if (response.success) {
-                        let item = response.data;
-                        dropdownMenu.append(`
-                    <li class="w-100">
-                        <a class="dropdown-item select-address p-2 d-block text-dark"
-                           href="javascript:void(0);"
-                           data-address="${item.address.replace(/\n/g,'&#10;')}"
-                           style="white-space: normal;">
-                            <strong class="d-block">${item.address_name}</strong>
-                            <span class="text-muted small" style="white-space: pre-line;">
-                                ${item.address}
-                            </span>
-                        </a>
-                    </li>
-                `);
-                    } else {
-                        dropdownMenu.append(`
-                    <li>
-                        <span class="dropdown-item text-muted">
-                            Tidak ada alamat.
-                        </span>
-                    </li>
-                `);
-                    }
-                }
-            });
-
-        }
-
-        // Ketika tombol map/history alamat diklik
-        // $(document).on("click", "#btn-history-address", function() {
-        //     // Ambil nilai company_id yang sedang terpilih saat ini
-        //     let companyId = $("#company_id").val("1");
-        //     // Jalankan fungsi AJAX bawaanmu
-        //     loadAddressHistory(companyId);
-        // });
-
-        // // Event ketika salah satu list alamat di dalam dropdown diklik
-        // $(document).on("click", ".select-address", function() {
-        //     let chosenAddress = $(this).data("address");
-
-        //     $("#shipping_address").val(chosenAddress);
-        // });
-
-        // function loadAddressHistory(companyId) {
-        //     if (!companyId) return;
-
-        //     $.ajax({
-        //         url: `/purchase-order/get-company-addresses/${companyId}`,
-        //         type: "GET",
-        //         dataType: "json",
-        //         success: function(response) {
-        //             let dropdownMenu = $("#address-dropdown-menu");
-        //             dropdownMenu.empty();
-
-        //             if (response.success && response.data.length > 0) {
-        //                 response.data.forEach(function(item) {
-        //                     // Ditambahkan class p-2, text-dark, dan w-100 agar warna tulisan muncul dan areanya lebar
-        //                     let listItem = `
-    //                 <li class="w-100">
-    //                     <a class="dropdown-item select-address p-2 d-block text-dark" href="javascript:void(0);" data-address="${item.address}" style="white-space: normal;">
-    //                         <strong class="text-dark d-block mb-1">${item.address_name}</strong>
-    //                         <span class="text-muted small d-block">${item.address}</span>
-    //                     </a>
-    //                 </li>
-    //             `;
-        //                     dropdownMenu.append(listItem);
-        //                 });
-        //             } else {
-        //                 dropdownMenu.append(
-        //                     '<li><span class="dropdown-item text-muted p-2">No address history found</span></li>',
-        //                 );
-        //             }
-        //         },
-        //         error: function(xhr) {
-        //             console.error("Gagal memuat alamat:", xhr.responseText);
-        //         },
-        //     });
-        // }
-    </script>
-    <script>
-        $(document).ready(function() {
 
             // ========================================================
             // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
@@ -1374,21 +733,73 @@
                                 text: '<i class="ti ti-edit me-1"></i> Edit',
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
-                                action: function(e, dt) {
-                                    let data = dt.row({
+                                action: function(e, dt, node, config) {
+
+                                    const row = dt.row({
                                         selected: true
-                                    }).data();
-                                    if (!data) return;
+                                    });
+
+                                    if (!row.any()) {
+                                        Swal.fire({
+                                            icon: "warning",
+                                            title: "Warning",
+                                            text: "Please select one data first."
+                                        });
+                                        return;
+                                    }
+
+                                    const data = row.data();
+                                    const rowIndex = row.index();
 
                                     window.isEditingMode = true;
 
-                                    $("#detail_id").val(data.detail_id);
+                                    // Reset error
+                                    $("#formPrDetail .error").html("");
 
-                                    $("#modal_purchase_requisition_detail_id")
-                                        .val(data.detail_id || data
-                                            .purchase_requisition_detail_id || "");
+                                    // ==========================
+                                    // HEADER
+                                    // ==========================
 
-                                    $("#modal_requisition_code").val(data.requisition_code || "");
+                                    $("#modalTitle").text("Edit entry");
+                                    $("#btnSubmitModal").text("Update");
+
+                                    // ==========================
+                                    // HIDDEN
+                                    // ==========================
+
+                                    $("#detail_id").val(rowIndex);
+
+                                    $("#modal_purchase_requisition_detail_id").val(
+                                        data.detail_id ??
+                                        data.purchase_requisition_detail_id ??
+                                        ""
+                                    );
+
+                                    $("#modal_requisition_code").val(
+                                        data.requisition_code ?? ""
+                                    );
+
+                                    // ==========================
+                                    // TEXTBOX
+                                    // ==========================
+
+                                    $("#quantity").val(data.quantity ?? "");
+
+                                    $("#unit_price").val(data.unit_price ?? 0);
+
+                                    $("#discount").val(data.discount ?? 0);
+
+                                    $("#discount_percent").val(data.discount_percent ?? 0);
+
+                                    $("#tax").val(data.tax ?? 0);
+
+                                    $("#total_price").val(data.amount ?? 0);
+
+                                    $("#available_stok").val(data.available_stok ?? "");
+
+                                    // ==========================
+                                    // ATTRIBUTE
+                                    // ==========================
 
                                     if (data.sisa_pr != null) {
                                         $("#quantity").attr("data-sisa-pr", data.sisa_pr);
@@ -1396,24 +807,29 @@
                                         $("#quantity").removeAttr("data-sisa-pr");
                                     }
 
-                                    $("#quantity").val(data.quantity ?? 0);
+                                    // ==========================
+                                    // SELECT
+                                    // ==========================
+
+                                    $("#warehouse_id")
+                                        .val(data.warehouse_id)
+                                        .trigger("change.select2");
+
+                                    // simpan unit yg dipilih
                                     $("#unit_id").data("pending-val", data.unit_id);
-                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
-                                    $("#product_id").val(data.product_id).trigger("change");
 
-                                    $("#unit_price").val(data.unit_price ?? 0);
-                                    $("#discount").val(data.discount ?? 0);
-                                    $("#discount_percent").val(data.discount_percent ?? 0);
-                                    $("#tax").val(data.tax ?? 0);
-                                    $("#amount").val(data.amount ?? 0);
+                                    // simpan harga lama
+                                    $("#unit_price").data("pending-price", data.unit_price);
 
-                                    $("#modalTitle").text("Edit entry");
-                                    $("#btnSubmitModal").text("Update");
-
+                                    // buka modal dulu
                                     $("#modalPrDetail").modal("show");
-                                },
-                            },
 
+                                    // terakhir trigger product
+                                    $("#product_id")
+                                        .val(data.product_id)
+                                        .trigger("change");
+                                }
+                            },
                             // =======================
                             // 🗑 DELETE
                             // =======================
@@ -1507,12 +923,554 @@
                 // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
                 table.rows().invalidate();
 
-                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
+            //==============================+++++++++++
+
+            // 5. Event Handler: Submit Form Modal Detail (Sekarang baris prDetailsData PASTI terbaca)
+            $("#formPrDetail").on("submit", function(e) {
+                e.preventDefault();
+
+                let productId = $("#product_id").val();
+                let productName = $("#product_id option:selected").text();
+                let quantity = parseFloat($("#quantity").val()) || 0;
+                let unitId = $("#unit_id").val();
+                let unitName = $("#unit_id option:selected").text();
+                let warehouseId = $("#warehouse_id").val();
+                let warehouseName = $("#warehouse_id option:selected").text();
+                let detailId = $("#detail_id")
+                    .val(); // Ini adalah index row array (kosong jika barang baru)
+
+                let unitPrice = parseFloat($("#unit_price").val()) || 0;
+                let discountPercent = $("#discount_percent").val() || 0;
+                let discount = parseFloat($("#discount").val()) || 0;
+                let tax = parseFloat($("#tax").val()) || 0;
+
+                let requiredDate = $("#required_date").val() || "";
+
+                // 1. Validasi Input Wajib
+                if (!productId || quantity <= 0 || !unitId) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Oops...",
+                        text: "Please fill all required fields! (Product, Valid Quantity, and Unit)",
+                        customClass: {
+                            confirmButton: "btn btn-danger",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return false;
+                }
+
+                // 2. Validasi Duplikasi Produk
+                let isDuplicate = false;
+                if (prDetailsData && prDetailsData.length > 0) {
+                    for (let i = 0; i < prDetailsData.length; i++) {
+                        if (prDetailsData[i].product_id == productId) {
+                            if (detailId === "") {
+                                // Jika tambah baru dan produk sudah ada di tabel
+                                isDuplicate = true;
+                                break;
+                            } else if (detailId !== "" && i != detailId) {
+                                // Jika sedang edit, tapi produk diubah ke produk lain yang sudah ada di tabel
+                                isDuplicate = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (isDuplicate) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Product Already Exists!",
+                        html: `The product <b>"${productName}"</b> is already registered.<br>Please edit the item if you want to change it.`,
+                        customClass: {
+                            confirmButton: "btn btn-danger",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return false;
+                }
+
+                // 3. Matematika Kalkulasi Amount (Tax dalam persen)
+                let subTotal = quantity * unitPrice;
+                let totalDiscount = discount; // Diskon nominal tetap
+                let setelahDiskon = subTotal - totalDiscount;
+                let totalTax = setelahDiskon * (tax / 100);
+                let amount = setelahDiskon + totalTax;
+
+                // 4. Menyusun Object Data Baru / Hasil Editan Form
+                let itemData = {
+                    product_id: productId,
+                    data_produk: productName,
+                    quantity: quantity,
+                    unit_id: unitId,
+                    unit: unitName,
+                    warehouse_id: warehouseId,
+                    warehouse: warehouseName,
+                    unit_price: unitPrice,
+                    discount_percent: discountPercent,
+                    discount: discount,
+                    tax: tax,
+                    amount: amount,
+                    required_date: requiredDate,
+                };
+
+                // 5. Logika Penyimpanan Berdasarkan 2 Cara Pengisian PO
+                if (detailId === "") {
+                    // --- CARA A: PO ISI SENDIRI (TAMBAH BARU MANUAL) ---
+                    prDetailsData.push(itemData);
+                } else {
+                    // --- CARA B: AMBIL DARI PR & EDIT DATA ---
+                    // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
+                    // Properti bawaan PR seperti 'quotation_code' & 'purchase_quotation_detail_id'
+                    // akan otomatis aman dan dipertahankan.
+                    prDetailsData[detailId] = {
+                        ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)
+                        ...itemData // Update dengan data baru dari form modal
+                    };
+                }
+
+                // 6. Refresh Tampilan & Hitung Total Akhir PO
+                table.clear().rows.add(prDetailsData).draw();
+
+                // Panggil fungsi hitung total keseluruhan halaman PO kamu
+                if (typeof calculateGrandTotal === "function") calculateGrandTotal();
+                if (typeof calculateTotalOrder === "function") calculateTotalOrder();
+
+                // Tutup Modal Form Detail
+                $("#modalPrDetail").modal("hide");
+            });
+
+
+            // A. Jika User Mengetik di Kolom PERSEN (%)
+            $("#percent").on("input", function() {
+                let subTotal = parseFloat($("#sub_total").val()) || 0;
+                let percent = parseFloat($(this).val()) || 0;
+
+                // Batasi agar persen tidak minus atau lebih dari 100
+                if (percent < 0) {
+                    percent = 0;
+                    $(this).val(0);
+                }
+                if (percent > 100) {
+                    percent = 100;
+                    $(this).val(100);
+                }
+
+                // Hitung nominal Rupiahnya
+                let discountNominal = subTotal * (percent / 100);
+
+                // Masukkan hasil ke kolom Rupiah (discount_all)
+                $("#discount_all").val(Math.round(discountNominal));
+
+                // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
+                calculateTotalOrder();
+            });
+
+            // B. Jika User Mengetik di Kolom NOMINAL (Rp)
+            $("#discount_all").on("input", function() {
+                let subTotal = parseFloat($("#sub_total").val()) || 0;
+                let discountNominal = parseFloat($(this).val()) || 0;
+
+                // Batasi agar nominal diskon tidak melebihi subtotal
+                if (discountNominal < 0) {
+                    discountNominal = 0;
+                    $(this).val(0);
+                }
+                if (discountNominal > subTotal) {
+                    discountNominal = subTotal;
+                    $(this).val(subTotal);
+                }
+
+                // Hitung Persentasenya
+                let percent = 0;
+                if (subTotal > 0) {
+                    percent = (discountNominal / subTotal) * 100;
+                }
+
+                // Masukkan hasil ke kolom persen (ambil 2 angka di belakang koma agar presisi)
+                $("#percent").val(percent % 1 === 0 ? percent : percent.toFixed(2));
+
+                // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
+                calculateTotalOrder();
+            });
+
+            // $(document).on("change", "#product_id", function() {
+            //     let productId = $(this).val();
+            //     let unitSelect = $("#unit_id");
+            //     let priceInput = $("#unit_price");
+            //     let dropdownBtn = $("#btn-history-po");
+            //     let dropdownMenu = $("#po-price-dropdown-menu");
+            //     let helperText = $("#po-history-helper");
+
+            //     // Pastikan ID selector ini sesuai dengan ID Select Supplier di form utama kamu
+            //     let supplierId = $("#supplier_id").val();
+
+            //     if (!productId) {
+            //         unitSelect.empty().append("<option></option>").trigger("change");
+            //         priceInput.val("");
+            //         dropdownBtn.prop("disabled", true);
+            //         dropdownMenu.empty();
+            //         helperText.text("Pilih produk untuk melacak riwayat harga beli.");
+            //         return;
+            //     }
+
+            //     // Tambahan Validasi: Ingatkan user jika supplier belum dipilih
+            //     if (!supplierId) {
+            //         alert(
+            //             "Silahkan pilih Supplier terlebih dahulu pada form utama PO!",
+            //         );
+            //         $(this).val("").trigger("change"); // Reset pilihan produk
+            //         return;
+            //     }
+
+            //     // ==========================================
+            //     // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
+            //     // ==========================================
+            //     $.ajax({
+            //         url: `/get-units-by-product/${productId}`,
+            //         type: "GET",
+            //         dataType: "json",
+            //         beforeSend: function() {
+            //             unitSelect
+            //                 .html("<option>Loading units...</option>")
+            //                 .prop("disabled", true);
+            //         },
+            //         success: function(response) {
+            //             unitSelect
+            //                 .empty()
+            //                 .append("<option></option>")
+            //                 .prop("disabled", false);
+
+            //             if (response && response.length > 0) {
+            //                 $.each(response, function(key, item) {
+            //                     unitSelect.append(
+            //                         `<option value="${item.id}">${item.name}</option>`,
+            //                     );
+            //                 });
+            //             } else {
+            //                 unitSelect.append(
+            //                     '<option value="">No unit available</option>',
+            //                 );
+            //             }
+
+            //             unitSelect.trigger("change");
+
+            //             let pendingUnitId = unitSelect.data("pending-val");
+            //             if (pendingUnitId) {
+            //                 unitSelect.val(pendingUnitId).trigger("change");
+            //                 unitSelect.removeData("pending-val");
+            //             }
+            //         },
+            //         error: function() {
+            //             console.error("Gagal memuat list unit dari Controller.");
+            //             unitSelect
+            //                 .empty()
+            //                 .append("<option></option>")
+            //                 .prop("disabled", false)
+            //                 .trigger("change");
+            //         },
+            //     });
+
+            //     // ==========================================
+            //     // 2. AJAX History PO + Fallback Harga Master
+            //     // ==========================================
+            //     $.ajax({
+            //         url: `/purchase-order/po/price-history?product_id=${productId}&supplier_id=${supplierId}`,
+            //         type: "GET",
+            //         dataType: "json",
+            //         beforeSend: function() {
+            //             // Jangan hapus isi textbox jika sudah ada nilainya (misal saat mode EDIT)
+            //             if (priceInput.val() === "" || priceInput.val() == "0") {
+            //                 priceInput.val("0");
+            //             }
+            //             dropdownBtn.prop("disabled", true);
+            //             dropdownMenu.empty();
+            //             helperText.text("Mencari riwayat harga...");
+            //         },
+            //         success: function(response) {
+            //             if (response.success && response.history.length > 0) {
+            //                 dropdownBtn.prop("disabled", false);
+            //                 helperText
+            //                     .attr("class", "form-text text-success")
+            //                     .text(
+            //                         "Riwayat ditemukan. Klik icon untuk ganti harga lama.",
+            //                     );
+
+            //                 // Render ulang list dropdown menu
+            //                 $.each(response.history, function(index, item) {
+            //                     // 1. Ambil nilai harga dan tanggal dari objek item
+            //                     let harga = item.harga;
+            //                     let tanggalMentah = item.tanggal;
+
+            //                     // 2. Format Tanggal (Contoh Hasil: 23-05-2026 14:30)
+            //                     let formattedDate = "-";
+            //                     if (tanggalMentah) {
+            //                         let d = new Date(tanggalMentah);
+            //                         let tgl = String(d.getDate()).padStart(2, "0");
+            //                         let bln = String(d.getMonth() + 1).padStart(2,
+            //                             "0"); // Bulan dimulai dari 0
+            //                         let thn = d.getFullYear();
+            //                         let jam = String(d.getHours()).padStart(2, "0");
+            //                         let mnt = String(d.getMinutes()).padStart(2, "0");
+
+            //                         formattedDate =
+            //                             `${tgl}-${bln}-${thn} ${jam}:${mnt}`;
+            //                     }
+
+            //                     // 3. Format Tampilan Harga Ke Rupiah
+            //                     let formattedPrice =
+            //                         `Rp ${Number(harga).toLocaleString("id-ID")}`;
+
+            //                     // 4. Susun konten teks menu dropdown (Harga di kiri, Tanggal & Badge di kanan)
+            //                     let badgeTerakhir =
+            //                         index === 0 ?
+            //                         `<span class="badge bg-label-success text-xs ms-1">Terakhir</span>` :
+            //                         "";
+
+            //                     let itemContent = `
+        //                             <div class="d-flex flex-column w-100">
+        //                                 <div class="d-flex justify-content-between align-items-center mb-1">
+        //                                     <span><strong>${formattedPrice}</strong></span>
+        //                                     ${badgeTerakhir}
+        //                                 </div>
+        //                                 <small class="text-muted" style="font-size: 11px;">
+        //                                     <i class="ti ti-calendar text-xs me-1"></i>${formattedDate}
+        //                                 </small>
+        //                             </div>
+        //                         `;
+
+            //                     let li = $("<li></li>");
+            //                     let a = $(
+            //                         `<a class="dropdown-item d-flex align-items-center py-2" href="#" style="min-width: 220px;">${itemContent}</a>`,
+            //                     );
+
+            //                     // Ketika item di klik, harga dimasukkan ke textbox
+            //                     a.on("click", function(e) {
+            //                         e.preventDefault();
+            //                         priceInput.val(harga);
+            //                     });
+
+            //                     li.append(a);
+            //                     dropdownMenu.append(li);
+            //                 });
+            //             } else {
+            //                 helperText
+            //                     .attr("class", "form-text text-muted")
+            //                     .text(
+            //                         "Belum ada riwayat harga dengan supplier ini. Silahkan isi harga manual.",
+            //                     );
+            //                 dropdownBtn.prop("disabled", true);
+            //                 if (priceInput.val() === "") {
+            //                     priceInput.val("0");
+            //                 }
+            //             }
+            //         },
+            //         error: function(xhr) {
+            //             console.error("Gagal mengambil data riwayat harga:", xhr);
+            //             helperText
+            //                 .attr("class", "form-text text-danger")
+            //                 .text("Gagal memuat riwayat harga.");
+            //         },
+            //     });
+            // });
+
+            $(document).on("change", "#product_id", function() {
+                let productId = $(this).val();
+                let unitSelect = $("#unit_id");
+                let priceInput = $("#unit_price");
+                let dropdownBtn = $("#btn-history-po");
+                let dropdownMenu = $("#po-price-dropdown-menu");
+                let helperText = $("#po-history-helper");
+
+                // Pastikan ID selector ini sesuai dengan ID Select Customer di form utama kamu
+                let supplierId = $("#supplier_id").val();
+
+                if (!productId) {
+                    unitSelect.empty().append("<option></option>").trigger("change");
+                    priceInput.val("");
+                    dropdownBtn.prop("disabled", true);
+                    dropdownMenu.empty();
+                    helperText.text("Pilih produk untuk melacak riwayat harga beli.");
+                    return;
+                }
+
+                // Tambahan Validasi: Ingatkan user jika customer belum dipilih
+                if (!supplierId) {
+                    alert(
+                        "Silahkan pilih Customer terlebih dahulu pada form utama SO!",
+                    );
+                    $(this).val("").trigger("change"); // Reset pilihan produk
+                    return;
+                }
+
+                // ==========================================
+                // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
+                // ==========================================
+                $.ajax({
+                    url: window.routes.getUnits.replace(':id', productId),
+                    type: "GET",
+                    dataType: "json",
+                    beforeSend: function() {
+                        unitSelect
+                            .html("<option>Loading units...</option>")
+                            .prop("disabled", true);
+                    },
+                    success: function(response) {
+                        unitSelect
+                            .empty()
+                            .append("<option></option>")
+                            .prop("disabled", false);
+
+                        // FIX: Akses properti 'units' dari objek response
+                        let units = response.units;
+
+                        if (units && units.length > 0) {
+                            $.each(units, function(key, item) {
+                                unitSelect.append(
+                                    `<option value="${item.id}">${item.name}</option>`,
+                                );
+                            });
+                        } else {
+                            unitSelect.append(
+                                '<option value="">No unit available</option>',
+                            );
+                        }
+
+                        unitSelect.trigger("change");
+
+                        // Gunakan response.default_price
+                        // priceInput.val(response.default_price || 0);
+                        if (!window.isEditingMode) {
+                            priceInput.val(response.default_price || 0);
+                        }
+                        let pendingUnitId = unitSelect.data("pending-val");
+                        if (pendingUnitId) {
+                            unitSelect.val(pendingUnitId).trigger("change");
+                            unitSelect.removeData("pending-val");
+                        }
+                    },
+                    error: function() {
+                        unitSelect
+                            .empty()
+                            .append("<option></option>")
+                            .prop("disabled", false)
+                            .trigger("change");
+                    },
+                });
+
+                // ==========================================
+                // 2. AJAX History PO + Fallback Harga Master
+                // ==========================================
+                $.ajax({
+                    url: `/purchase-order/po/price-history?product_id=${productId}&supplier_id=${supplierId}`,
+                    type: "GET",
+                    dataType: "json",
+                    beforeSend: function() {
+                        // Jangan hapus isi textbox jika sudah ada nilainya (misal saat mode EDIT)
+                        if (priceInput.val() === "" || priceInput.val() == "0") {
+                            priceInput.val("0");
+                        }
+                        dropdownBtn.prop("disabled", true);
+                        dropdownMenu.empty();
+                        helperText.text("Mencari riwayat harga...");
+                    },
+                    success: function(response) {
+                        if (response.success && response.history.length > 0) {
+                            dropdownBtn.prop("disabled", false);
+                            helperText
+                                .attr("class", "form-text text-success")
+                                .text(
+                                    "Riwayat ditemukan. Klik icon untuk ganti harga lama.",
+                                );
+
+                            // Render ulang list dropdown menu
+                            $.each(response.history, function(index, item) {
+                                // 1. Ambil nilai harga dan tanggal dari objek item
+                                let harga = item.harga;
+                                let tanggalMentah = item.tanggal;
+
+                                // 2. Format Tanggal (Contoh Hasil: 23-05-2026 14:30)
+                                let formattedDate = "-";
+                                if (tanggalMentah) {
+                                    let d = new Date(tanggalMentah);
+                                    let tgl = String(d.getDate()).padStart(2, "0");
+                                    let bln = String(d.getMonth() + 1).padStart(2,
+                                        "0"); // Bulan dimulai dari 0
+                                    let thn = d.getFullYear();
+                                    let jam = String(d.getHours()).padStart(2, "0");
+                                    let mnt = String(d.getMinutes()).padStart(2, "0");
+
+                                    formattedDate =
+                                        `${tgl}-${bln}-${thn} ${jam}:${mnt}`;
+                                }
+
+                                // 3. Format Tampilan Harga Ke Rupiah
+                                let formattedPrice =
+                                    `Rp ${Number(harga).toLocaleString("id-ID")}`;
+
+                                // 4. Susun konten teks menu dropdown (Harga di kiri, Tanggal & Badge di kanan)
+                                let badgeTerakhir =
+                                    index === 0 ?
+                                    `<span class="badge bg-label-success text-xs ms-1">Terakhir</span>` :
+                                    "";
+
+                                let itemContent = `
+                                        <div class="d-flex flex-column w-100">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span><strong>${formattedPrice}</strong></span>
+                                                ${badgeTerakhir}
+                                            </div>
+                                            <small class="text-muted" style="font-size: 11px;">
+                                                <i class="ti ti-calendar text-xs me-1"></i>${formattedDate}
+                                            </small>
+                                        </div>
+                                    `;
+
+                                let li = $("<li></li>");
+                                let a = $(
+                                    `<a class="dropdown-item d-flex align-items-center py-2" href="#" style="min-width: 220px;">${itemContent}</a>`,
+                                );
+
+                                // Ketika item di klik, harga dimasukkan ke textbox
+                                a.on("click", function(e) {
+                                    e.preventDefault();
+                                    priceInput.val(harga);
+                                    calculateTotal();
+                                });
+
+                                li.append(a);
+                                dropdownMenu.append(li);
+                            });
+                        } else {
+                            helperText
+                                .attr("class", "form-text text-muted")
+                                .text(
+                                    "Belum ada riwayat harga dengan customer ini. Silahkan isi harga manual.",
+                                );
+                            dropdownBtn.prop("disabled", true);
+                            if (priceInput.val() === "") {
+                                priceInput.val("0");
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        helperText
+                            .attr("class", "form-text text-danger")
+                            .text("Gagal memuat riwayat harga.");
+                    },
+                });
+            });
+
+            $("#vehicle_id").select2({
+                placeholder: "Select Shipping",
+                width: "100%",
+            });
+
+
             $("#btnSubmitSelected").on("click", function() {
-
                 let checkedBoxes = $(".checkItem:checked");
-
                 if (checkedBoxes.length === 0) {
                     Swal.fire({
                         icon: "warning",
@@ -1531,22 +1489,21 @@
                 }
 
                 checkedBoxes.each(function() {
-                    let rawProductName = $(this).attr("data-product_name");
+
                     let item = {
                         detail_id: $(this).data("id"),
                         product_id: $(this).data("product_id"),
-                        data_produk: rawProductName,
-                        quantity: parseFloat($(this).data("qty")),
+                        data_produk: $(this).data("product_name"),
+                        quantity: parseFloat($(this).data("outstanding_qty")),
                         sisa_pr: parseFloat($(this).data("qty")),
                         unit_id: $(this).data("unit_id"),
                         unit: $(this).data("unit_name"),
                         warehouse_id: null,
                         warehouse: null,
-                        unit_price: null,
-                        discount_percent: null,
-                        discount: null,
-                        amount: null,
-                        order_code: $(this).data("order_code"),
+                        unit_price: 0,
+                        discount: 0,
+                        amount: 0,
+                        order_code: $(this).data("code"),
                     };
 
                     // Hindari data ganda
@@ -1564,7 +1521,7 @@
                 Swal.fire({
                     icon: "success",
                     title: "Success",
-                    text: "Data Order berhasil dimasukkan.",
+                    text: "Data requisition berhasil dimasukkan.",
                     customClass: {
                         confirmButton: "btn btn-primary",
                     },
@@ -1572,6 +1529,152 @@
                 });
 
             });
+
+
+
+            $(document).on('input change', '.input-qty', function() {
+                let inputField = $(this);
+                let currentQty = parseFloat(inputField.val()) || 0;
+
+                // Ambil data batasan PR jika ada (jika input manual / bukan PR, nilainya akan undefined)
+                let maxPrLimit = inputField.data('sisa-pr');
+
+                // JIKA AMBIL DATA DARI PR (maxPrLimit memiliki nilai)
+                if (maxPrLimit !== undefined && maxPrLimit !== null && maxPrLimit !== '') {
+                    maxPrLimit = parseFloat(maxPrLimit);
+
+                    if (currentQty > maxPrLimit) {
+                        Swal.fire({
+                            icon: "warning",
+                            title: "Melebihi Sisa PR",
+                            text: `Kuantitas tidak boleh melebihi sisa permintaan PR (Maksimal: ${maxPrLimit}).`,
+                            customClass: {
+                                confirmButton: "btn btn-warning"
+                            },
+                            buttonsStyling: false
+                        });
+
+                        // Kembalikan otomatis nilainya ke batas maksimal sisa PR
+                        inputField.val(maxPrLimit).trigger('change');
+                        return;
+                    }
+                }
+
+                // JIKA PO BEBAS / INPUT MANUAL
+                // Kode di bawah ini tetap berjalan bebas tanpa interupsi batas maksimal...
+            });
+
+            $('#supplier_id').on('change', function() {
+
+                let supplierId = $(this).val();
+
+                $('#bank_id').empty().append('<option value="">Pilih Rekening</option>');
+                $('#taxpayer_data').val('');
+
+                if (!supplierId) {
+                    return;
+                }
+
+                $.ajax({
+                    url: '/purchase-order/' + supplierId + '/data',
+                    type: 'GET',
+                    success: function(response) {
+
+                        // Isi rekening
+                        $.each(response.rekening, function(index, item) {
+
+                            $('#bank_id').append(`
+                    <option value="${item.id}">
+                        ${item.bank_name} - ${item.nomor_rekening}
+                        (${item.nama_rekening})
+                    </option>
+                    `);
+
+                        });
+
+                        $('#bank_id').trigger('change');
+
+                        // Isi NPWP
+                        if (response.pajak) {
+                            $('#taxpayer_data').val(response.pajak.tipe_id_pajak + ' :' +
+                                response.pajak.nomor_wajib_pajak);
+                        }
+                        if (response.supplier) {
+                            let alamat = [];
+                            if (response.supplier.alamat_pembayaran)
+                                alamat.push(response.supplier.alamat_pembayaran);
+                            let kotaProvinsi = [];
+                            if (response.supplier.kota)
+                                kotaProvinsi.push(response.supplier.kota);
+                            if (response.supplier.provinsi)
+                                kotaProvinsi.push(response.supplier.provinsi);
+                            if (response.supplier.kodepos)
+                                kotaProvinsi.push(response.supplier.kodepos);
+                            if (kotaProvinsi.length > 0)
+                                alamat.push(kotaProvinsi.join(', '));
+                            if (response.supplier.negara)
+                                alamat.push(response.supplier.negara);
+                            $('#shipping_address').val(alamat.join('\n'));
+                        }
+
+                    }
+                });
+
+            });
+        });
+        $(document).on("click", "#btn-history-address", function() {
+            let supplierId = $("#supplier_id").val();
+            loadSupplierAddress(supplierId);
+        });
+        $(document).on("click", ".select-address", function() {
+            $("#shipping_address").val($(this).data("address"));
+        });
+
+        function loadSupplierAddress(supplierId) {
+            if (!supplierId) return;
+            $.ajax({
+                url: `/purchase-order/get-supplier-address/${supplierId}`,
+                type: "GET",
+                dataType: "json",
+                success: function(response) {
+                    let dropdownMenu = $("#address-dropdown-menu");
+                    dropdownMenu.empty();
+                    if (response.success) {
+                        let item = response.data;
+                        dropdownMenu.append(`
+                    <li class="w-100">
+                        <a class="dropdown-item select-address p-2 d-block text-dark"
+                           href="javascript:void(0);"
+                           data-address="${item.address.replace(/\n/g,'&#10;')}"
+                           style="white-space: normal;">
+                            <strong class="d-block">${item.address_name}</strong>
+                            <span class="text-muted small" style="white-space: pre-line;">
+                                ${item.address}
+                            </span>
+                        </a>
+                    </li>
+                `);
+                    } else {
+                        dropdownMenu.append(`
+                    <li>
+                        <span class="dropdown-item text-muted">
+                            Tidak ada alamat.
+                        </span>
+                    </li>
+                `);
+                    }
+                }
+            });
+
+
+
+        }
+    </script>
+    <script>
+        $(document).ready(function() {
+
+
+
         });
     </script>
 @endpush

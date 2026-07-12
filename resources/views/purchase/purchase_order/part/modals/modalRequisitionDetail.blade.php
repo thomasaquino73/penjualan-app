@@ -8,12 +8,12 @@
               <div class="modal-body">
                   <div class="row">
                       <div class="col-12 mb-3">
-                          <label class="form-label" for="sq_number">Sales Requisition Number</label>
+                          <label class="form-label" for="sq_number">Purchase Requisition Number</label>
                           <select name="sq_number" id="sq_number" class="form-select select2-modal2"
                               data-placeholder="Select Requisition Number" multiple>
                               <option></option>
                               @foreach ($number as $item)
-                                  <option value="{{ $item->id }}">{{ $item->sales_quotation_code }}</option>
+                                  <option value="{{ $item->id }}">{{ $item->code }}</option>
                               @endforeach
                           </select>
                           <span class="error text-danger" id="sq_numberError"></span>
