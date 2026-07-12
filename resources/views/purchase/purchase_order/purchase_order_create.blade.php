@@ -264,11 +264,13 @@
         $("#showModalpr").on("click", function(e) {
             e.preventDefault();
 
-            let tbody = $("#requisitionTableBody");
-            var supplierId = $("#supplier_id").val();
-
-            // Validasi wajib pilih supplier dulu
-            if (!supplierId || supplierId === "") {
+            var supplierID = $("#supplier_id").val();
+            $("#sq_number")
+                .empty()
+                .append('<option value="">Select Requisition</option>')
+                .val(null)
+                .trigger("change");
+            if (!supplierID) {
                 Swal.fire({
                     icon: "warning",
                     title: "Warning!",
@@ -280,56 +282,85 @@
                     },
                     buttonsStyling: false,
                 });
-                return false;
+                return;
             }
 
-            // Reset checkbox 'Check All' menjadi tidak tercentang saat modal dibuka
-            $("#checkAll").prop("checked", false);
-
-            tbody.html(
-                '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>',
-            );
-            $("#modalRequisitionDetail").modal("show");
-
-            // Ambil data PR berstatus processing
             $.ajax({
                 url: "{{ route('purchase-order.requisitions.processing') }}",
                 type: "GET",
-                dataType: "json",
                 success: function(response) {
-                    tbody.empty();
 
-                    if (response && response.length > 0) {
-                        $.each(response, function(key, item) {
-                            let dateFormatted = new Date(item.created_at).toLocaleDateString(
-                                "id-ID");
+                    let option = '<option value="">Select Quotation</option>';
 
-                            // Tambahkan baris PR ke tabel modal
-                            tbody.append(`
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input class="form-check-input checkItem" type="checkbox" value="${item.id}">
-                                    </div>
-                                </td>
-                                <td><strong>${item.code}</strong></td>
-                                <td>${dateFormatted}</td>
-                            </tr>
-                        `);
-                        });
-                    } else {
-                        tbody.html(
-                            '<tr><td colspan="3" class="text-center text-muted">No processing data found.</td></tr>',
-                        );
-                    }
-                },
-                error: function(xhr) {
-                    tbody.html(
-                        '<tr><td colspan="3" class="text-center text-danger">Failed to fetch data.</td></tr>',
-                    );
-                },
+                    $.each(response, function(i, item) {
+                        option += `<option value="${item.id}">
+                                ${item.code}
+                           </option>`;
+                    });
+
+                    $("#sq_number").html(option);
+
+                    $("#modalRequisitionDetail").modal("show");
+                }
             });
         });
+
+        $('#sq_number').on('change', function() {
+
+            let quotationIds = $(this).val();
+
+            if (!quotationIds || quotationIds.length === 0) {
+                $('#quotationTableBody').html('');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('purchase-order.getQuotationDetail') }}",
+                type: "POST",
+                data: {
+                    quotation_ids: quotationIds,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+
+                    let html = '';
+
+                    $.each(response, function(index, item) {
+                        let safeProductName = item.nama_barang.replace(/"/g,
+                            '&quot;');
+                        html += `
+                    <tr>
+                        <td>
+                            <div class="form-check form-check-primary">
+                                <input
+                                    class="form-check-input checkItem"
+                                    type="checkbox"
+
+                                    data-id="${item.id}"
+                                    data-product_id="${item.product_id}"
+                                    data-product_name="${safeProductName}"
+                                    data-qty="${item.qty}"
+                                    data-unit_id="${item.unit_id}"
+                                    data-unit_name="${item.unit_name}"
+                                    data-quotation_id="${item.purchase_requisition_id}"
+                                >
+                            </div>
+                        </td>
+
+                        <td>${item.nama_barang}</td>
+                        <td class="text-end">${item.qty}</td>
+                        <td>${item.unit_name}</td>
+                    </tr>`;
+                    });
+
+                    $("#checkAll").prop("checked", false);
+                    $("#quotationTableBody").html(html);
+
+                }
+            });
+
+        });
+
         //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
         $("#checkAll").on("change", function() {
             // Jika checkAll dicentang, semua .checkItem ikut dicentang, begitu sebaliknya
@@ -442,304 +473,7 @@
         });
 
         $(document).ready(function() {
-            // ========================================================
-            // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
-            // ========================================================
-            function refreshDataIndices() {
-                if (Array.isArray(prDetailsData)) {
-                    prDetailsData.forEach((item, index) => {
-                        item.urutan_lokal = index; // Membuat nomor ID unik lokal berbasis index array
-                    });
-                }
-            }
-            // Jalankan fungsi sebelum tabel diinisialisasi
-            refreshDataIndices();
 
-            let table = new DataTable("#table", {
-                processing: true,
-                serverSide: false,
-                responsive: true,
-                select: true,
-                searching: false,
-
-                // 1. Tambahkan indeks pengurutan awal ke kolom pertama [0] agar engine rowReorder aktif
-                order: [
-                    [0, 'asc']
-                ],
-
-                lengthMenu: [
-                    [10, 25, 50, -1],
-                    [10, 25, 50, "All"],
-                ],
-
-                // 2. Hubungkan fungsi pencarian indeks dinamis berdasarkan data objek array langsung
-                rowReorder: {
-                    selector: 'td:first-child',
-                    dataSrc: function(row) {
-                        return prDetailsData.indexOf(row);
-                    }
-                },
-
-                data: prDetailsData,
-                columns: [{
-                        // 3. Menggunakan data: null agar aman dari error unknown parameter
-                        data: null,
-                        orderable: true, // Wajib TRUE agar baris bisa digeser
-                        className: "text-center reorder-pointer",
-                        searchable: false,
-                        render: function(data, type, row, meta) {
-                            // Memberikan angka visual statis sesuai baris di layar saat ini
-                            if (type === 'display') {
-                                return meta.row + 1;
-                            }
-                            // Kembalikan indeks array murni ke internal DataTables agar kalkulasi drag & drop berjalan
-                            return prDetailsData.indexOf(row);
-                        },
-                    },
-                    {
-                        data: "data_produk",
-                        render: function(data, type, row) {
-                            if (row.requisition_code) {
-                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.requisition_code}</small>`;
-                            }
-                            return `<strong>${data}</strong>`;
-                        }
-                    },
-                    {
-                        data: "quantity",
-                        className: "text-end",
-                        render: function(data) {
-                            return parseFloat(data ?? 0).toLocaleString('id-ID');
-                        }
-                    },
-                    {
-                        data: "unit",
-                        className: "text-center"
-                    },
-                    {
-                        data: "unit_price",
-                        className: "text-end",
-                        render: function(data) {
-                            return parseFloat(data ?? 0).toLocaleString('id-ID', {
-                                minimumFractionDigits: 0
-                            });
-                        }
-                    },
-                    {
-                        data: "discount",
-                        className: "text-end",
-                        render: function(data) {
-                            return parseFloat(data ?? 0).toLocaleString('id-ID', {
-                                minimumFractionDigits: 0
-                            });
-                        }
-                    },
-                    {
-                        data: "amount",
-                        className: "text-end",
-                        render: function(data) {
-                            return `<strong>${parseFloat(data ?? 0).toLocaleString('id-ID', { minimumFractionDigits: 0 })}</strong>`;
-                        }
-                    },
-                    {
-                        data: 'warehouse',
-                        render: function(data) {
-                            return data ? data : '-';
-                        }
-                    },
-                ],
-                layout: {
-                    topStart: {
-                        buttons: [
-                            // =======================
-                            // ➕ ADD
-                            // =======================
-                            {
-                                text: '<i class="ti ti-plus me-1"></i> New',
-                                className: "btn btn-primary btn-sm me-2 AddNew",
-                                action: function() {
-                                    let supplierId = $("#supplier_id").val();
-
-                                    if (!supplierId) {
-                                        Swal.fire({
-                                            icon: "warning",
-                                            title: "Warning!",
-                                            text: "Please select Supplier first before adding new data.",
-                                            confirmButtonText: "OK",
-                                            customClass: {
-                                                confirmButton: "btn btn-danger",
-                                            },
-                                            buttonsStyling: false,
-                                        });
-                                        return;
-                                    }
-
-                                    window.isEditingMode = false;
-
-                                    $("#formPrDetail")[0].reset();
-
-                                    $("#detail_id").val("");
-                                    $("#modal_purchase_requisition_detail_id").val("");
-                                    $("#modal_requisition_code").val("");
-
-                                    $("#warehouse_id").val("").trigger("change");
-
-                                    if ($.fn.select2) {
-                                        $("#product_id").val("").trigger("change");
-                                        $("#unit_id").val("").trigger("change");
-                                    }
-
-                                    $("#quantity").removeAttr("data-sisa-pr");
-
-                                    $("#modalTitle").text("Create new entry");
-                                    $("#btnSubmitModal").text("Create");
-
-                                    $("#modalPrDetail").modal("show");
-                                },
-                            },
-
-                            // =======================
-                            // ✏️ EDIT
-                            // =======================
-                            {
-                                text: '<i class="ti ti-edit me-1"></i> Edit',
-                                className: "btn btn-warning btn-sm me-2",
-                                extend: "selectedSingle",
-                                action: function(e, dt) {
-                                    let data = dt.row({
-                                        selected: true
-                                    }).data();
-                                    if (!data) return;
-
-                                    window.isEditingMode = true;
-
-                                    $("#detail_id").val(data.detail_id);
-
-                                    $("#modal_purchase_requisition_detail_id")
-                                        .val(data.detail_id || data
-                                            .purchase_requisition_detail_id || "");
-
-                                    $("#modal_requisition_code").val(data.requisition_code || "");
-
-                                    if (data.sisa_pr != null) {
-                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
-                                    } else {
-                                        $("#quantity").removeAttr("data-sisa-pr");
-                                    }
-
-                                    $("#quantity").val(data.quantity ?? 0);
-                                    $("#unit_id").data("pending-val", data.unit_id);
-                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
-                                    $("#product_id").val(data.product_id).trigger("change");
-
-                                    $("#unit_price").val(data.unit_price ?? 0);
-                                    $("#discount").val(data.discount ?? 0);
-                                    $("#discount_percent").val(data.discount_percent ?? 0);
-                                    $("#tax").val(data.tax ?? 0);
-                                    $("#amount").val(data.amount ?? 0);
-
-                                    $("#modalTitle").text("Edit entry");
-                                    $("#btnSubmitModal").text("Update");
-
-                                    $("#modalPrDetail").modal("show");
-                                },
-                            },
-
-                            // =======================
-                            // 🗑 DELETE
-                            // =======================
-                            {
-                                text: '<i class="ti ti-trash me-1"></i> Delete',
-                                className: "btn btn-danger btn-sm me-2",
-                                extend: "selected",
-                                action: function(e, dt) {
-                                    let data = dt.row({
-                                        selected: true
-                                    }).data();
-                                    if (!data) return;
-
-                                    let name = data.data_produk || "";
-
-                                    Swal.fire({
-                                        title: "Are you sure?",
-                                        text: "Want to delete data: " + name,
-                                        icon: "warning",
-                                        showCancelButton: true,
-                                        confirmButtonText: "Yes, delete it!",
-                                        cancelButtonText: "Cancel",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary me-3",
-                                            cancelButton: "btn btn-label-secondary",
-                                        },
-                                        buttonsStyling: false,
-                                    }).then(function(result) {
-                                        if (result.isConfirmed) {
-                                            prDetailsData = prDetailsData.filter(item =>
-                                                item.detail_id !== data.detail_id ||
-                                                item.data_produk !== data.data_produk
-                                            );
-
-                                            dt.clear().rows.add(prDetailsData).draw();
-
-                                            calculateGrandTotal();
-                                            calculateTotalOrder();
-
-                                            toastr.success("Deleted Data Successfully",
-                                                "", {
-                                                    timeOut: 1500,
-                                                    progressBar: true,
-                                                });
-                                        }
-                                    });
-                                },
-                            },
-
-                            // =======================
-                            // 🔄 CLEAR ALL
-                            // =======================
-                            {
-                                text: '<i class="ti ti-refresh me-1"></i> Clear All',
-                                className: "btn btn-secondary btn-sm",
-                                action: function(e, dt) {
-                                    prDetailsData = [];
-                                    dt.clear().draw();
-
-                                    calculateGrandTotal();
-                                    calculateTotalOrder();
-
-                                    $("#percent").val(0);
-                                },
-                            },
-                        ],
-                    },
-                },
-            });
-
-            // ========================================================
-            // 🔄 EVENT SINKRONISASI COCOK UNTUK STRUKTUR JAVASCRIPT ARRAY
-            // ========================================================
-            table.on('row-reorder', function(e, diff, edit) {
-                // Jika tidak ada perubahan posisi penyeretan, abaikan proses
-                if (diff.length === 0) return;
-
-                // Lakukan loop manipulasi urutan elemen array asli di javascript menggunakan splice
-                diff.forEach(function(change) {
-                    let movedRowData = table.row(change.node).data();
-                    let oldIndex = prDetailsData.indexOf(movedRowData);
-
-                    if (oldIndex !== -1) {
-                        // Hapus dari posisi lama
-                        prDetailsData.splice(oldIndex, 1);
-                        // Masukkan tepat ke indeks baris baru hasil geser visual
-                        prDetailsData.splice(change.newPosition, 0, movedRowData);
-                    }
-                });
-
-                // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
-                table.rows().invalidate();
-
-                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
-            });
 
             $("#btnSubmitModal").on("click", function(e) {
                 let qtyInput = $("#quantity");
@@ -1285,257 +1019,7 @@
             //     });
             // });
 
-            $("#btnSubmitSelected").on("click", function() {
 
-                let checkedBoxes = $(".checkItem:checked");
-
-                // ==========================
-                // Validasi
-                // ==========================
-                if (checkedBoxes.length === 0) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Peringatan",
-                        text: "Silakan pilih minimal satu data requisition!",
-                        customClass: {
-                            confirmButton: "btn btn-danger",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return;
-                }
-
-                // ==========================
-                // Ambil ID Header PR
-                // ==========================
-                let ids = [];
-
-                checkedBoxes.each(function() {
-                    ids.push($(this).val());
-                });
-
-                // ==========================
-                // Ambil Detail PR yang sudah ada di tabel
-                // ==========================
-                let usedDetailIds = [];
-
-                if (typeof prDetailsData !== "undefined") {
-                    prDetailsData.forEach(function(item) {
-
-                        if (item.purchase_requisition_detail_id) {
-                            usedDetailIds.push(item.purchase_requisition_detail_id);
-                        }
-
-                        // kompatibel jika sebelumnya memakai detail_id
-                        else if (item.detail_id) {
-                            usedDetailIds.push(item.detail_id);
-                        }
-
-                    });
-                }
-
-                Swal.fire({
-                    title: "Proses data terpilih?",
-                    text: "Anda memilih " + checkedBoxes.length +
-                        " data untuk dimasukkan ke tabel.",
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonText: "Ya, Masukkan!",
-                    cancelButtonText: "Batal",
-                    customClass: {
-                        confirmButton: "btn btn-primary",
-                        cancelButton: "btn btn-secondary",
-                    },
-                    buttonsStyling: false,
-                }).then((result) => {
-
-                    if (!result.isConfirmed) {
-                        return;
-                    }
-
-                    $.ajax({
-
-                        url: "{{ route('purchase-order.get-requisition-detail') }}",
-                        type: "POST",
-
-                        data: {
-                            ids: ids,
-                            used_detail_ids: usedDetailIds,
-                            _token: "{{ csrf_token() }}"
-                        },
-
-                        beforeSend: function() {
-
-                            $("#btnSubmitSelected")
-                                .html(
-                                    '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
-                                )
-                                .prop("disabled", true);
-
-                        },
-
-                        success: function(response) {
-
-                            if (!response.success) {
-
-                                Swal.fire({
-                                    icon: "warning",
-                                    title: "Peringatan",
-                                    text: response.message,
-                                });
-
-                                return;
-                            }
-
-                            if (typeof prDetailsData === "undefined") {
-                                window.prDetailsData = [];
-                            }
-
-                            response.data.forEach(function(item) {
-
-                                // ==========================
-                                // Hindari duplikat
-                                // ==========================
-                                let exists = prDetailsData.some(function(row) {
-
-                                    return (
-                                        row
-                                        .purchase_requisition_detail_id ==
-                                        item
-                                        .purchase_requisition_detail_id
-                                    );
-
-                                });
-
-                                if (exists) {
-                                    return;
-                                }
-
-                                let qty = parseFloat(item.outstanding_qty ??
-                                    item.qty ?? 0);
-                                let unitPrice = parseFloat(item.unit_price ??
-                                    0);
-                                let discount = parseFloat(item.discount ?? 0);
-                                let amount = qty * unitPrice;
-                                prDetailsData.push({
-
-                                    id: item.id,
-
-                                    purchase_requisition_detail_id: item
-                                        .purchase_requisition_detail_id,
-
-                                    purchase_requisition_id: item
-                                        .purchase_requisition_id,
-
-                                    product_id: item.product_id,
-
-                                    data_produk: item.product_name,
-
-                                    product_name: item.product_name,
-
-                                    quantity: qty,
-
-                                    qty: qty,
-
-                                    pr_qty: parseFloat(item.pr_qty),
-
-                                    po_qty: parseFloat(item.po_qty),
-
-                                    outstanding_qty: qty,
-
-                                    sisa_pr: qty,
-
-                                    unit_id: item.unit_id,
-
-                                    unit: item.unit_name,
-
-                                    unit_name: item.unit_name,
-
-                                    warehouse_id: item.warehouse_id ??
-                                        null,
-
-                                    warehouse: item.warehouse_name ??
-                                        "-",
-
-                                    unit_price: unitPrice,
-
-                                    discount: discount,
-
-                                    amount: amount,
-
-                                    tax: parseFloat(item.tax ?? 0),
-
-                                    requisition_code: item
-                                        .requisition_code,
-
-                                    required_date: item.required_date,
-
-                                    pr_status: item.pr_status,
-
-                                    notes: item.notes
-
-                                });
-
-                            });
-
-                            let table = $("#table").DataTable();
-
-                            table.clear();
-                            table.rows.add(prDetailsData);
-                            table.draw();
-
-                            if (typeof calculateGrandTotal === "function") {
-                                calculateGrandTotal();
-                            }
-
-                            if (typeof calculateTotalOrder === "function") {
-                                calculateTotalOrder();
-                            }
-
-                            $("#modalRequisitionDetail").modal("hide");
-
-                            Swal.fire({
-                                icon: "success",
-                                title: "Success",
-                                text: "Data requisition berhasil dimasukkan.",
-                                customClass: {
-                                    confirmButton: "btn btn-primary",
-                                },
-                                buttonsStyling: false,
-                            });
-
-                        },
-
-                        error: function(xhr) {
-
-                            let message = "Terjadi kesalahan saat mengambil data.";
-
-                            if (xhr.responseJSON && xhr.responseJSON.message) {
-                                message = xhr.responseJSON.message;
-                            }
-
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error",
-                                text: message,
-                            });
-
-                        },
-
-                        complete: function() {
-
-                            $("#btnSubmitSelected")
-                                .html(
-                                    '<i class="ti ti-check me-1"></i> Process Selected')
-                                .prop("disabled", false);
-
-                        }
-
-                    });
-
-                });
-
-            });
 
             $(document).on('input change', '.input-qty', function() {
                 let inputField = $(this);
@@ -1723,5 +1207,371 @@
         //         },
         //     });
         // }
+    </script>
+    <script>
+        $(document).ready(function() {
+
+            // ========================================================
+            // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
+            // ========================================================
+            function refreshDataIndices() {
+                if (Array.isArray(prDetailsData)) {
+                    prDetailsData.forEach((item, index) => {
+                        item.urutan_lokal = index; // Membuat nomor ID unik lokal berbasis index array
+                    });
+                }
+            }
+            // Jalankan fungsi sebelum tabel diinisialisasi
+            refreshDataIndices();
+
+            let table = new DataTable("#table", {
+                processing: true,
+                serverSide: false,
+                responsive: true,
+                select: true,
+                searching: false,
+
+                // 1. Tambahkan indeks pengurutan awal ke kolom pertama [0] agar engine rowReorder aktif
+                order: [
+                    [0, 'asc']
+                ],
+
+                lengthMenu: [
+                    [10, 25, 50, -1],
+                    [10, 25, 50, "All"],
+                ],
+
+                // 2. Hubungkan fungsi pencarian indeks dinamis berdasarkan data objek array langsung
+                rowReorder: {
+                    selector: 'td:first-child',
+                    dataSrc: function(row) {
+                        return prDetailsData.indexOf(row);
+                    }
+                },
+
+                data: prDetailsData,
+                columns: [{
+                        // 3. Menggunakan data: null agar aman dari error unknown parameter
+                        data: null,
+                        orderable: true, // Wajib TRUE agar baris bisa digeser
+                        className: "text-center reorder-pointer",
+                        searchable: false,
+                        render: function(data, type, row, meta) {
+                            // Memberikan angka visual statis sesuai baris di layar saat ini
+                            if (type === 'display') {
+                                return meta.row + 1;
+                            }
+                            // Kembalikan indeks array murni ke internal DataTables agar kalkulasi drag & drop berjalan
+                            return prDetailsData.indexOf(row);
+                        },
+                    },
+                    {
+                        data: "data_produk",
+                        render: function(data, type, row) {
+                            if (row.order_code) {
+                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.order_code}</small>`;
+                            }
+                            return `<strong>${data}</strong>`;
+                        }
+                    },
+                    {
+                        data: "quantity",
+                        className: "text-end",
+                        render: function(data) {
+                            return parseFloat(data ?? 0).toLocaleString('id-ID');
+                        }
+                    },
+                    {
+                        data: "unit",
+                        className: "text-center"
+                    },
+                    {
+                        data: "unit_price",
+                        className: "text-end",
+                        render: function(data) {
+                            return parseFloat(data ?? 0).toLocaleString('id-ID', {
+                                minimumFractionDigits: 0
+                            });
+                        }
+                    },
+                    {
+                        data: "discount",
+                        className: "text-end",
+                        render: function(data) {
+                            return parseFloat(data ?? 0).toLocaleString('id-ID', {
+                                minimumFractionDigits: 0
+                            });
+                        }
+                    },
+                    {
+                        data: "amount",
+                        className: "text-end",
+                        render: function(data) {
+                            return `<strong>${parseFloat(data ?? 0).toLocaleString('id-ID', { minimumFractionDigits: 0 })}</strong>`;
+                        }
+                    },
+                    {
+                        data: 'warehouse',
+                        render: function(data) {
+                            return data ? data : '-';
+                        }
+                    },
+                ],
+                layout: {
+                    topStart: {
+                        buttons: [
+                            // =======================
+                            // ➕ ADD
+                            // =======================
+                            {
+                                text: '<i class="ti ti-plus me-1"></i> New',
+                                className: "btn btn-primary btn-sm me-2 AddNew",
+                                action: function() {
+                                    let supplierId = $("#supplier_id").val();
+
+                                    if (!supplierId) {
+                                        Swal.fire({
+                                            icon: "warning",
+                                            title: "Warning!",
+                                            text: "Please select Supplier first before adding new data.",
+                                            confirmButtonText: "OK",
+                                            customClass: {
+                                                confirmButton: "btn btn-danger",
+                                            },
+                                            buttonsStyling: false,
+                                        });
+                                        return;
+                                    }
+
+                                    window.isEditingMode = false;
+
+                                    $("#formPrDetail")[0].reset();
+
+                                    $("#detail_id").val("");
+                                    $("#modal_purchase_requisition_detail_id").val("");
+                                    $("#modal_requisition_code").val("");
+
+                                    $("#warehouse_id").val("").trigger("change");
+
+                                    if ($.fn.select2) {
+                                        $("#product_id").val("").trigger("change");
+                                        $("#unit_id").val("").trigger("change");
+                                    }
+
+                                    $("#quantity").removeAttr("data-sisa-pr");
+
+                                    $("#modalTitle").text("Create new entry");
+                                    $("#btnSubmitModal").text("Create");
+
+                                    $("#modalPrDetail").modal("show");
+                                },
+                            },
+
+                            // =======================
+                            // ✏️ EDIT
+                            // =======================
+                            {
+                                text: '<i class="ti ti-edit me-1"></i> Edit',
+                                className: "btn btn-warning btn-sm me-2",
+                                extend: "selectedSingle",
+                                action: function(e, dt) {
+                                    let data = dt.row({
+                                        selected: true
+                                    }).data();
+                                    if (!data) return;
+
+                                    window.isEditingMode = true;
+
+                                    $("#detail_id").val(data.detail_id);
+
+                                    $("#modal_purchase_requisition_detail_id")
+                                        .val(data.detail_id || data
+                                            .purchase_requisition_detail_id || "");
+
+                                    $("#modal_requisition_code").val(data.requisition_code || "");
+
+                                    if (data.sisa_pr != null) {
+                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
+                                    } else {
+                                        $("#quantity").removeAttr("data-sisa-pr");
+                                    }
+
+                                    $("#quantity").val(data.quantity ?? 0);
+                                    $("#unit_id").data("pending-val", data.unit_id);
+                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
+                                    $("#product_id").val(data.product_id).trigger("change");
+
+                                    $("#unit_price").val(data.unit_price ?? 0);
+                                    $("#discount").val(data.discount ?? 0);
+                                    $("#discount_percent").val(data.discount_percent ?? 0);
+                                    $("#tax").val(data.tax ?? 0);
+                                    $("#amount").val(data.amount ?? 0);
+
+                                    $("#modalTitle").text("Edit entry");
+                                    $("#btnSubmitModal").text("Update");
+
+                                    $("#modalPrDetail").modal("show");
+                                },
+                            },
+
+                            // =======================
+                            // 🗑 DELETE
+                            // =======================
+                            {
+                                text: '<i class="ti ti-trash me-1"></i> Delete',
+                                className: "btn btn-danger btn-sm me-2",
+                                extend: "selected",
+                                action: function(e, dt) {
+                                    let data = dt.row({
+                                        selected: true
+                                    }).data();
+                                    if (!data) return;
+
+                                    let name = data.data_produk || "";
+
+                                    Swal.fire({
+                                        title: "Are you sure?",
+                                        text: "Want to delete data: " + name,
+                                        icon: "warning",
+                                        showCancelButton: true,
+                                        confirmButtonText: "Yes, delete it!",
+                                        cancelButtonText: "Cancel",
+                                        customClass: {
+                                            confirmButton: "btn btn-primary me-3",
+                                            cancelButton: "btn btn-label-secondary",
+                                        },
+                                        buttonsStyling: false,
+                                    }).then(function(result) {
+                                        if (result.isConfirmed) {
+                                            prDetailsData = prDetailsData.filter(item =>
+                                                item.detail_id !== data.detail_id ||
+                                                item.data_produk !== data.data_produk
+                                            );
+
+                                            dt.clear().rows.add(prDetailsData).draw();
+
+                                            calculateGrandTotal();
+                                            calculateTotalOrder();
+
+                                            toastr.success("Deleted Data Successfully",
+                                                "", {
+                                                    timeOut: 1500,
+                                                    progressBar: true,
+                                                });
+                                        }
+                                    });
+                                },
+                            },
+
+                            // =======================
+                            // 🔄 CLEAR ALL
+                            // =======================
+                            {
+                                text: '<i class="ti ti-refresh me-1"></i> Clear All',
+                                className: "btn btn-secondary btn-sm",
+                                action: function(e, dt) {
+                                    prDetailsData = [];
+                                    dt.clear().draw();
+
+                                    calculateGrandTotal();
+                                    calculateTotalOrder();
+
+                                    $("#percent").val(0);
+                                },
+                            },
+                        ],
+                    },
+                },
+            });
+
+            // ========================================================
+            // 🔄 EVENT SINKRONISASI COCOK UNTUK STRUKTUR JAVASCRIPT ARRAY
+            // ========================================================
+            table.on('row-reorder', function(e, diff, edit) {
+                // Jika tidak ada perubahan posisi penyeretan, abaikan proses
+                if (diff.length === 0) return;
+
+                // Lakukan loop manipulasi urutan elemen array asli di javascript menggunakan splice
+                diff.forEach(function(change) {
+                    let movedRowData = table.row(change.node).data();
+                    let oldIndex = prDetailsData.indexOf(movedRowData);
+
+                    if (oldIndex !== -1) {
+                        // Hapus dari posisi lama
+                        prDetailsData.splice(oldIndex, 1);
+                        // Masukkan tepat ke indeks baris baru hasil geser visual
+                        prDetailsData.splice(change.newPosition, 0, movedRowData);
+                    }
+                });
+
+                // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
+                table.rows().invalidate();
+
+                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
+            });
+            $("#btnSubmitSelected").on("click", function() {
+
+                let checkedBoxes = $(".checkItem:checked");
+
+                if (checkedBoxes.length === 0) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Warning",
+                        text: "Silakan pilih minimal satu item requisition.",
+                        customClass: {
+                            confirmButton: "btn btn-danger",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return;
+                }
+
+                if (typeof prDetailsData === "undefined") {
+                    window.prDetailsData = [];
+                }
+
+                checkedBoxes.each(function() {
+                    let rawProductName = $(this).attr("data-product_name");
+                    let item = {
+                        detail_id: $(this).data("id"),
+                        product_id: $(this).data("product_id"),
+                        data_produk: rawProductName,
+                        quantity: parseFloat($(this).data("qty")),
+                        sisa_pr: parseFloat($(this).data("qty")),
+                        unit_id: $(this).data("unit_id"),
+                        unit: $(this).data("unit_name"),
+                        warehouse_id: null,
+                        warehouse: null,
+                        unit_price: null,
+                        discount_percent: null,
+                        discount: null,
+                        amount: null,
+                        order_code: $(this).data("order_code"),
+                    };
+
+                    // Hindari data ganda
+                    let exists = prDetailsData.some(x => x.detail_id == item.detail_id);
+
+                    if (!exists) {
+                        prDetailsData.push(item);
+                    }
+                });
+
+                table.clear().rows.add(prDetailsData).draw();
+
+                $("#modalRequisitionDetail").modal("hide");
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Success",
+                    text: "Data Order berhasil dimasukkan.",
+                    customClass: {
+                        confirmButton: "btn btn-primary",
+                    },
+                    buttonsStyling: false,
+                });
+
+            });
+        });
     </script>
 @endpush

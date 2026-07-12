@@ -29,9 +29,6 @@
                                   <th>Item</th>
                                   <th>Quantity</th>
                                   <th>Unit</th>
-                                  <th>Unit Price</th>
-                                  <th>Discount</th>
-                                  <th>Total</th>
                               </tr>
                           </thead>
                           <tbody id="quotationTableBody">

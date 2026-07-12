@@ -591,6 +591,30 @@ class PurchaseOrderController extends Controller
 
         return response()->json($orders);
     }
+      public function getQuotationDetail(Request $request)
+    {
+        $year = date('Y');
+
+        $ids = $request->requisition_ids;
+
+        $details = DB::table("purchase_requisition_detail_$year as d")
+            ->join('data_barang as b', 'b.id', '=', 'd.product_id')
+            ->join('basic_code_detail as u', 'u.id', '=', 'd.unit_id')
+            ->select(
+                'd.id',
+                'd.purchase_requisition_id',
+                'd.product_id',
+                'b.nama_barang',
+                'd.qty',
+                'u.detail as unit_name',
+                'd.unit_id'
+            )
+            ->whereIn('d.purchase_requisition_id', $ids)
+            ->where('d.active', 1)
+            ->get();
+
+        return response()->json($details);
+    }
 
     public function getPrice($id)
     {

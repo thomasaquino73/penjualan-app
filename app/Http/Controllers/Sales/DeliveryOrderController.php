@@ -481,8 +481,9 @@ class DeliveryOrderController extends Controller
         return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
-    public function create()
+    public function create(Request $r)
     {
+        $status = ['processing', 'partial'];
         $x = [
             'title' => 'Delivery Order New',
             'breadcrumb' => [
@@ -495,6 +496,10 @@ class DeliveryOrderController extends Controller
             'warehouse' => Warehouse::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
+            'sqNumber' => SalesOrder::whereIn('status', $status)
+                ->where('active', 1)
+                ->where('customer_id', $r->customer_id)
+                ->get(),
 
         ];
 
@@ -1301,19 +1306,41 @@ class DeliveryOrderController extends Controller
         ]);
     }
 
-    public function getProcessingData(Request $request)
+     public function getQuotation($customerId)
     {
-        $orders = SalesOrder::with([
-            'details' => function ($query) {
-                $query->whereColumn('so_qty', '<', 'qty');
-            },
-        ])
-            ->where('customer_id', $request->customer_id)
-        // ->whereNotIn('status', ['processing', 'closed', 'completed'])
-            ->whereIn('status', ['processing', 'partial'])
+        $status = ['processing', 'partial'];
+
+        $data = SalesOrder::whereIn('status', $status)
+            ->where('active', 1)
+            ->where('customer_id', $customerId)
+            ->select('id', 'sales_order_code')
             ->get();
 
-        return response()->json($orders);
+        return response()->json($data);
+    }
+     public function getQuotationDetail(Request $request)
+    {
+        $year = date('Y');
+
+        $ids = $request->order_ids;
+
+        $details = DB::table("sales_order_detail_$year as d")
+            ->join('data_barang as b', 'b.id', '=', 'd.product_id')
+            ->join('basic_code_detail as u', 'u.id', '=', 'd.unit_id')
+            ->select(
+                'd.id',
+                'd.sales_order_id',
+                'd.product_id',
+                'b.nama_barang',
+                'd.qty',
+                'u.detail as unit_name',
+                'd.unit_id'
+            )
+            ->whereIn('d.sales_order_id', $ids)
+            ->where('d.active', 1)
+            ->get();
+
+        return response()->json($details);
     }
 
     public function getStock(Request $request)

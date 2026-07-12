@@ -609,7 +609,7 @@
                 // Tambahan Validasi: Ingatkan user jika customer belum dipilih
                 if (!customerId) {
                     alert(
-                        "Silahkan pilih Customer terlebih dahulu pada form utama SQ!",
+                        "Silahkan pilih Customer terlebih dahulu pada form utama SO!",
                     );
                     $(this).val("").trigger("change"); // Reset pilihan produk
                     return;
@@ -633,8 +633,11 @@
                             .append("<option></option>")
                             .prop("disabled", false);
 
-                        if (response && response.length > 0) {
-                            $.each(response, function(key, item) {
+                        // FIX: Akses properti 'units' dari objek response
+                        let units = response.units;
+
+                        if (units && units.length > 0) {
+                            $.each(units, function(key, item) {
                                 unitSelect.append(
                                     `<option value="${item.id}">${item.name}</option>`,
                                 );
@@ -647,6 +650,11 @@
 
                         unitSelect.trigger("change");
 
+                        // Gunakan response.default_price
+                        // priceInput.val(response.default_price || 0);
+                        if (!window.isEditingMode) {
+                            priceInput.val(response.default_price || 0);
+                        }
                         let pendingUnitId = unitSelect.data("pending-val");
                         if (pendingUnitId) {
                             unitSelect.val(pendingUnitId).trigger("change");
@@ -654,7 +662,6 @@
                         }
                     },
                     error: function() {
-                        console.error("Gagal memuat list unit dari Controller.");
                         unitSelect
                             .empty()
                             .append("<option></option>")
@@ -667,7 +674,7 @@
                 // 2. AJAX History PO + Fallback Harga Master
                 // ==========================================
                 $.ajax({
-                    url: `/sales-quotation/sq/price-history?product_id=${productId}&customer_id=${customerId}`,
+                    url: `/sales-order/so/price-history?product_id=${productId}&customer_id=${customerId}`,
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -680,8 +687,6 @@
                         helperText.text("Mencari riwayat harga...");
                     },
                     success: function(response) {
-                        calculateTotalOrder();
-                        calculateGrandTotal();
                         if (response.success && response.history.length > 0) {
                             dropdownBtn.prop("disabled", false);
                             helperText
@@ -743,7 +748,6 @@
                                     e.preventDefault();
                                     priceInput.val(harga);
                                     calculateTotal();
-
                                 });
 
                                 li.append(a);
@@ -762,7 +766,6 @@
                         }
                     },
                     error: function(xhr) {
-                        console.error("Gagal mengambil data riwayat harga:", xhr);
                         helperText
                             .attr("class", "form-text text-danger")
                             .text("Gagal memuat riwayat harga.");

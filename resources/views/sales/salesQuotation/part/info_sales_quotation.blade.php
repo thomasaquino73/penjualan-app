@@ -6,13 +6,17 @@
             <div class="col-md-8">
                 <div class="input-group input-group-merge">
                     <span class="input-group-text"><i class="ti ti-credit-card"></i> </span>
-                    <select name="payment_term_id" id="payment_term_id" class="form-select">
+                    <select name="payment_term_id" id="payment_term_id" class="form-select"
+                        data-placeholder="Select Payment Term">
                         <option></option>
                         @foreach ($paymentTerm as $pay)
                             <option value="{{ $pay->id }}">{{ $pay->nama }}</option>
                         @endforeach
                         <option></option>
                     </select>
+                    <button type="button" class="btn btn-primary btn-sm" id="btnAddTerm">
+                        <i class="ti ti-plus"></i>
+                    </button>
                 </div>
                 <span class="error text-danger" id="payment_term_idError"></span>
 

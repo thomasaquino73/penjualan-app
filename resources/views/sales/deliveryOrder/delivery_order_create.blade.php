@@ -142,7 +142,7 @@
                     <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
                         <i class="fa fa-plus-circle me-1"></i> Save and Create New
                     </button>
-                    <a href="{{ route('sales-order.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{{ route('delivery-order.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>
@@ -150,16 +150,10 @@
     @include('sales.deliveryOrder.part.modal_delivery_order')
     @include('sales.deliveryOrder.part.modalOrderDetail')
 @endsection
-@push('style')
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
-@endpush
+@include('partials.tabel.css')
+@include('partials.tabel.js')
+@include('partials.button.btn_submitform')
 @push('scripts')
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
-
-    <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
-    <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
         let prDetailsData = [];
         $(function() {
@@ -177,6 +171,14 @@
                     placeholder: $this.attr("data-placeholder"),
                     width: "100%",
                     dropdownParent: $("#modalPrDetail"),
+                });
+            });
+            $(".select2-modal2").each(function() {
+                var $this = $(this);
+                $this.wrap('<div class="position-relative"></div>').select2({
+                    placeholder: $this.attr("data-placeholder"),
+                    width: "100%",
+                    dropdownParent: $("#modalOrderDetail"),
                 });
             });
 
@@ -702,93 +704,7 @@
 
             });
 
-            let saveAndNew = false;
-            let activeBtn = null;
 
-            $(document).on("click", '.card-footer button[type="submit"]', function() {
-                saveAndNew = $(this).data("save-and-new");
-                activeBtn = $(this);
-            });
-
-
-            $("#postForm").on("submit", function(e) {
-                e.preventDefault();
-
-                // 1. Tangkap tombol yang ditekan (lebih akurat)
-                let submitter = e.originalEvent.submitter;
-                let saveAndNew = $(submitter).data("save-and-new") === true;
-                let btnTextOriginal = $(submitter).html();
-
-                // 2. Validasi awal (Frontend)
-                if (typeof prDetailsData === "undefined" || prDetailsData.length === 0) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Empty Items",
-                        text: "Please add at least one item detail to the table before saving.",
-                        confirmButtonText: "OK",
-                        customClass: {
-                            confirmButton: "btn btn-primary waves-effect waves-light",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return false;
-                }
-
-                let formData = new FormData(this);
-                formData.append("save_and_new", saveAndNew ? 1 : 0);
-                formData.append("items_detail", JSON.stringify(prDetailsData));
-
-                $.ajax({
-                    url: $(this).attr("action"),
-                    method: $(this).attr("method"),
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: "json",
-                    beforeSend: function() {
-                        $(submitter).html(
-                                '<i class="fa fa-spin fa-spinner me-1"></i> Processing...')
-                            .prop("disabled", true);
-                        $(".card-footer button").prop("disabled", true);
-                    },
-                    complete: function() {
-                        // Kembalikan teks asli ke tombol yang diklik
-                        // $(submitter).html(btnTextOriginal).prop("disabled", false);
-                        $(".card-footer button").prop("disabled", false);
-                    },
-                    success: function(response) {
-                        Swal.fire({
-                                icon: "success",
-                                title: "Success",
-                                text: response.message,
-                                customClass: {
-                                    confirmButton: "btn btn-primary waves-effect waves-light",
-                                },
-                                buttonsStyling: false,
-                            })
-                            .then(() => {
-                                window.location.href = response.redirect;
-                            });
-                    },
-                    error: function(xhr) {
-                        resetValidation();
-                        let errors = xhr.responseJSON?.errors;
-                        $.each(errors, function(key, value) {
-                            displayFieldError(key, value[0]);
-                        });
-                        Swal.fire({
-                            icon: "error",
-                            title: "Failed",
-                            text: xhr.responseJSON?.message || "Error",
-                            customClass: {
-                                confirmButton: "btn btn-primary waves-effect waves-light",
-                            },
-                            buttonsStyling: false,
-                        });
-
-                    }
-                });
-            });
 
             // ==========================================
             // 1. EVENT KLIK UNTUK MEMBUKA MODAL PR
@@ -796,11 +712,13 @@
             $("#showModalpr").on("click", function(e) {
                 e.preventDefault();
 
-                let tbody = $("#requisitionTableBody");
                 var customerId = $("#customer_id").val();
-
-                // Validasi wajib pilih customer dulu
-                if (!customerId || customerId === "") {
+                $("#sq_number")
+                    .empty()
+                    .append('<option value="">Select Order</option>')
+                    .val(null)
+                    .trigger("change");
+                if (!customerId) {
                     Swal.fire({
                         icon: "warning",
                         title: "Warning!",
@@ -812,59 +730,83 @@
                         },
                         buttonsStyling: false,
                     });
-                    return false;
+                    return;
                 }
 
-                // Reset checkbox 'Check All' menjadi tidak tercentang saat modal dibuka
-                $("#checkAll").prop("checked", false);
-
-                tbody.html(
-                    '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>',
-                );
-                $("#modalOrderDetail").modal("show");
-
-                // Ambil data PR berstatus processing
                 $.ajax({
-                    url: "{{ route('delivery-order.so.processing') }}",
+                    url: "/delivery-order/get-order/" + customerId,
                     type: "GET",
-                    dataType: "json",
+                    success: function(response) {
+
+                        let option = '<option value="">Select Order</option>';
+
+                        $.each(response, function(i, item) {
+                            option += `<option value="${item.id}">
+                                ${item.sales_order_code}
+                           </option>`;
+                        });
+
+                        $("#sq_number").html(option);
+
+                        $("#modalOrderDetail").modal("show");
+                    }
+                });
+            });
+
+            $('#sq_number').on('change', function() {
+
+                let orderIds = $(this).val();
+
+                if (!orderIds || orderIds.length === 0) {
+                    $('#quotationTableBody').html('');
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ route('delivery-order.getQuotationDetail') }}",
+                    type: "POST",
                     data: {
-                        customer_id: customerId
+                        order_ids: orderIds,
+                        _token: "{{ csrf_token() }}"
                     },
                     success: function(response) {
-                        tbody.empty();
 
-                        if (response && response.length > 0) {
-                            $.each(response, function(key, item) {
-                                let dateFormatted = new Date(item.created_at)
-                                    .toLocaleDateString(
-                                        "id-ID");
+                        let html = '';
 
-                                // Tambahkan baris PR ke tabel modal
-                                tbody.append(`
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input class="form-check-input checkItem" type="checkbox" value="${item.id}">
-                                    </div>
-                                </td>
-                                <td><strong>${item.sales_order_code}</strong></td>
-                                <td>${dateFormatted}</td>
-                            </tr>
-                        `);
-                            });
-                        } else {
-                            tbody.html(
-                                '<tr><td colspan="3" class="text-center text-muted">No processing data found.</td></tr>',
-                            );
-                        }
-                    },
-                    error: function(xhr) {
-                        tbody.html(
-                            '<tr><td colspan="3" class="text-center text-danger">Failed to fetch data.</td></tr>',
-                        );
-                    },
+                        $.each(response, function(index, item) {
+                            let safeProductName = item.nama_barang.replace(/"/g,
+                                '&quot;');
+                            html += `
+                    <tr>
+                        <td>
+                            <div class="form-check form-check-primary">
+                                <input
+                                    class="form-check-input checkItem"
+                                    type="checkbox"
+
+                                    data-id="${item.id}"
+                                    data-product_id="${item.product_id}"
+                                    data-product_name="${safeProductName}"
+                                    data-qty="${item.qty}"
+                                    data-unit_id="${item.unit_id}"
+                                    data-unit_name="${item.unit_name}"
+                                    data-order_id="${item.sales_order_id}"
+                                >
+                            </div>
+                        </td>
+
+                        <td>${item.nama_barang}</td>
+                        <td class="text-end">${item.qty}</td>
+                        <td>${item.unit_name}</td>
+                    </tr>`;
+                        });
+
+                        $("#checkAll").prop("checked", false);
+                        $("#quotationTableBody").html(html);
+
+                    }
                 });
+
             });
             //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
             $("#checkAll").on("change", function() {
@@ -882,14 +824,14 @@
             });
 
             $("#btnSubmitSelected").on("click", function() {
+
                 let checkedBoxes = $(".checkItem:checked");
 
-                // 1. Validasi jika tidak ada PR yang dicentang
                 if (checkedBoxes.length === 0) {
                     Swal.fire({
                         icon: "warning",
-                        title: "Peringatan",
-                        text: "Silakan pilih minimal satu data po!",
+                        title: "Warning",
+                        text: "Silakan pilih minimal satu item quotation.",
                         customClass: {
                             confirmButton: "btn btn-danger",
                         },
@@ -898,147 +840,47 @@
                     return;
                 }
 
-                // 2. Ambil ID requisition yang dicentang
-                let ids = [];
+                if (typeof prDetailsData === "undefined") {
+                    window.prDetailsData = [];
+                }
+
                 checkedBoxes.each(function() {
-                    ids.push($(this).val());
-                });
+                    let rawProductName = $(this).attr("data-product_name");
+                    let item = {
+                        detail_id: $(this).data("id"),
+                        product_id: $(this).data("product_id"),
+                        data_produk: rawProductName,
+                        quantity: parseFloat($(this).data("qty")),
+                        sisa_pr: parseFloat($(this).data("qty")),
+                        unit_id: $(this).data("unit_id"),
+                        unit: $(this).data("unit_name"),
+                        warehouse_id: null,
+                        warehouse: null,
+                        order_code: $(this).data("order_code"),
+                    };
 
-                // 3. Tampilkan konfirmasi SweetAlert sebelum memproses
-                Swal.fire({
-                    title: "Proses data terpilih?",
-                    text: `Anda memilih ${checkedBoxes.length} data untuk dimasukkan ke tabel.`,
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonText: "Ya, Masukkan!",
-                    cancelButtonText: "Batal",
-                    customClass: {
-                        confirmButton: "btn btn-primary",
-                        cancelButton: "btn btn-secondary",
-                    },
-                    buttonsStyling: false,
-                }).then((result) => {
-                    if (result.isConfirmed) {
+                    // Hindari data ganda
+                    let exists = prDetailsData.some(x => x.detail_id == item.detail_id);
 
-                        // 4. Kirim request AJAX ke backend
-                        $.ajax({
-                            url: "{{ route('delivery-order.get-order-detail') }}",
-                            type: "POST",
-                            data: {
-                                ids: ids,
-                                _token: "{{ csrf_token() }}"
-                            },
-                            beforeSend: function() {
-                                $("#btnSubmitSelected")
-                                    .html(
-                                        '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
-                                    )
-                                    .prop("disabled", true);
-                            },
-                            success: function(response) {
-                                if (response.success) {
-
-                                    // ===========================
-                                    // Isi data header ke form
-                                    // ===========================
-                                    if (response.header.length > 0) {
-                                        let header = response.header[0];
-
-                                        $('#fob_id').val(header.fob_id).trigger(
-                                            'change');
-                                        $('#description').val(header.description);
-
-                                        // Contoh jika ada field lain
-                                        // $('#supplier').val(header.supplier_id).trigger('change');
-                                        // $('#currency').val(header.currency_id).trigger('change');
-                                        // $('#remarks').val(header.remarks);
-                                    }
-
-
-                                    // Bersihkan atau siapkan array penampung global jika belum didefinisikan sebelumnya
-                                    if (typeof prDetailsData === 'undefined') {
-                                        window.prDetailsData = [];
-                                    }
-
-                                    // 5. Looping data response backend untuk dimasukkan ke array DataTables
-                                    response.data.forEach(function(item) {
-                                        // let qtyAwal = parseFloat(item.qty || 0);
-                                        // let sudahPO = parseFloat(item
-                                        //     .received_qty || 0);
-                                        let sisaPr = parseFloat(item.quantity ||
-                                            0);
-
-                                        if (sisaPr <= 0) {
-                                            return; // Jika sisa habis, jangan masukkan ke list
-                                        }
-
-                                        prDetailsData.push({
-                                            detail_id: item.id,
-                                            product_id: item.product_id,
-                                            data_produk: item
-                                                .product_name,
-                                            // Pastikan key ini ada agar render di DataTable tidak error
-                                            requisition_code: item
-                                                .order_code,
-                                            // quantity: sisaPr,
-                                            quantity: sisaPr,
-                                            sisa_pr: sisaPr,
-                                            unit_id: item.unit_id,
-                                            unit: item.unit_name,
-                                            warehouse: item.warehouse,
-                                            warehouse_id: item
-                                                .warehouse_id, // Sesuaikan dengan controller Anda
-
-                                            order_code: item
-                                                .order_code
-                                        });
-                                    });
-
-                                    // Refresh Tabel
-                                    let table = $('#table').DataTable();
-                                    table.clear().rows.add(prDetailsData).draw();
-
-                                    // 7. Hitung ulang total matematika PO
-                                    // if (typeof calculateGrandTotal === "function") {
-                                    //     calculateGrandTotal();
-                                    // }
-                                    // if (typeof calculateTotalOrder === "function") {
-                                    //     calculateTotalOrder();
-                                    // }
-
-                                    // 8. Tutup Modal Requisition
-                                    $("#modalOrderDetail").modal("hide");
-
-                                    // 9. Beri feedback sukses ke user
-                                    Swal.fire({
-                                        icon: "success",
-                                        title: "Success",
-                                        text: "Data order berhasil dimasukkan.",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary",
-                                        },
-                                        buttonsStyling: false,
-                                    });
-                                }
-                            },
-                            error: function(xhr) {
-                                Swal.fire({
-                                    icon: "error",
-                                    title: "Error",
-                                    text: "Terjadi kesalahan saat mengambil data.",
-                                });
-                            },
-                            complete: function() {
-                                // Kembalikan kondisi tombol submit ke semula
-                                $("#btnSubmitSelected")
-                                    .html(
-                                        '<i class="ti ti-check me-1"></i> Process Selected'
-                                    )
-                                    .prop("disabled", false);
-                            }
-                        });
+                    if (!exists) {
+                        prDetailsData.push(item);
                     }
                 });
+
+                table.clear().rows.add(prDetailsData).draw();
+
+                $("#modalOrderDetail").modal("hide");
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Success",
+                    text: "Data Order berhasil dimasukkan.",
+                    customClass: {
+                        confirmButton: "btn btn-primary",
+                    },
+                    buttonsStyling: false,
+                });
+
             });
 
             var initialCustomerId = $('#customer_id').val();

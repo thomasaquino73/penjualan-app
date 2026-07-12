@@ -1467,11 +1467,13 @@ class SalesOrderController extends Controller
         $ids = $request->quotation_ids;
 
         $details = DB::table("sales_quotation_detail_$year as d")
+            ->join("sales_quotation_$year as q", "q.id", "=", "d.sales_quotation_id")
             ->join('data_barang as b', 'b.id', '=', 'd.product_id')
             ->join('basic_code_detail as u', 'u.id', '=', 'd.unit_id')
             ->select(
                 'd.id',
                 'd.sales_quotation_id',
+                'q.sales_quotation_code',   // <-- tambahkan ini
                 'd.product_id',
                 'b.nama_barang',
                 'd.qty',
@@ -1487,92 +1489,6 @@ class SalesOrderController extends Controller
             ->get();
 
         return response()->json($details);
-    }
-
-    public function submitToPending($id)
-    {
-        // 1. Ambil tahun berjalan secara dinamis
-        $year = date('Y');
-        $tableName = "sales_order_{$year}";
-
-        // 2. Gunakan Query Builder dengan nama tabel dinamis agar pencarian ID aman
-        $poData = DB::table($tableName)->where('id', $id)->first();
-
-        // Jika data memang benar-benar tidak ditemukan di database
-        if (! $poData) {
-            return response()->json(['success' => false, 'message' => 'Data Sales Order tidak ditemukan.'], 404);
-        }
-
-        // 3. Validasi Keamanan: Pastikan hanya pembuat draft yang bisa mengajukannya
-        if ($poData->status !== 'draft' || $poData->created_by != Auth::user()->id) {
-            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengajukan data ini.'], 403);
-        }
-
-        // 4. Lakukan pembaruan status menggunakan Query Builder demi stabilitas tabel dinamis
-        DB::table($tableName)->where('id', $id)->update([
-            'status' => 'pending',
-            'updated_by' => Auth::user()->id,
-            'updated_at' => now(), // Mengisi timestamp bawaan laravel secara manual karena menggunakan Query Builder
-        ]);
-
-        return response()->json(['success' => true, 'message' => 'Sales Order berhasil diajukan!']);
-    }
-
-    public function changeStatus(Request $request, $id)
-    {
-        // 1. Ambil tahun berjalan secara dinamis untuk dynamic table
-        $year = date('Y');
-        $tableName = "sales_order_{$year}";
-
-        // 2. Cari data SO berdasarkan ID menggunakan Query Builder
-        $poData = DB::table($tableName)->where('id', $id)->first();
-
-        // Validasi jika data tidak ditemukan
-        if (! $poData) {
-            return response()->json(['error' => 'Data Purchase Order tidak ditemukan.'], 404);
-        }
-
-        // 3. Validasi Keamanan: Pastikan yang mengubah status BUKAN orang yang membuat dokumen (Anti Self-Approval)
-        if ($poData->created_by === Auth::user()->id) {
-            return response()->json(['error' => 'You may not approve/reject documents you create yourself!'], 403);
-        }
-
-        // 4. Validasi Input Status (Memastikan hanya menerima 'approved' atau 'rejected')
-        $statusTarget = $request->input('status');
-        if (! in_array($statusTarget, ['approved', 'rejected'])) {
-            return response()->json(['error' => 'Status target tidak valid.'], 400);
-        }
-
-        // 5. Eksekusi Update ke Database
-        DB::table($tableName)->where('id', $id)->update([
-            'status' => $statusTarget,
-            'pic_by' => Auth::id(),
-            'pic_at' => now(), // Isi timestamp manual karena menggunakan Query Builder
-        ]);
-
-        // ==========================================
-        // 5b. OTOMATISASI: Kirim dokumen hanya jika statusnya 'approved'
-        // ==========================================
-        if ($statusTarget === 'approved') {
-            try {
-                // Panggil fungsi atau service pengiriman dokumen Anda di sini.
-                // Contoh jika menggunakan Mail Laravel:
-                // Mail::to($poData->vendor_email)->send(new PurchaseOrderMail($poData));
-
-                // Atau jika menggunakan job queue (Sangat disarankan agar performa aplikasi tetap cepat):
-                // SendPurchaseOrderJob::dispatch($poData);
-
-            } catch (\Exception $e) {
-            }
-        }
-
-        // 6. Return response dengan pesan dinamis sesuai aksi (Approve / Reject)
-        $messageText = $statusTarget === 'approved' ? 'approved' : 'rejected';
-
-        return response()->json([
-            'success' => true,
-            'message' => "Purchase Order status successfully {$messageText}!",
-        ], 200);
     }
 
     public function sendSupplier($id)

@@ -259,6 +259,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/table-pr', [PurchaseOrderController::class, 'table_pr'])->name('table_pr');
         Route::get('/trash', [PurchaseOrderController::class, 'trash'])->name('trash');
         Route::get('/get-processing-requisitions', [PurchaseOrderController::class, 'getProcessingData'])->name('requisitions.processing');
+         Route::post('/get-quotation-detail', [SalesOrderController::class, 'getQuotationDetail'])->name('getQuotationDetail');
         Route::post('/{id}/submit', [PurchaseOrderController::class, 'submitToPending'])->name('submit');
         Route::post('/{id}/process', [PurchaseOrderController::class, 'processData'])->name('process');
         Route::post('/change-status/{id}', [PurchaseOrderController::class, 'changeStatus']);
@@ -293,25 +294,21 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/sales-order/get-quotation/{customer}', [SalesOrderController::class, 'getQuotation'])->name('sales-order.getQuotation');
-    Route::get('/sales-order/get-processing-order', [SalesOrderController::class, 'getProcessingData'])->name('sales-order.quotation.processing');
-    Route::get('/sales-order/get-processing-proforma', [SalesOrderController::class, 'getProcessingProforma'])->name('sales-order.proforma.processing');
-    Route::post('/sales-order/get-quotation-detail-2', [SalesOrderController::class, 'getQuotationDetail2'])->name('sales-order.get-quotation-detail');
+    // Route::get('/sales-order/get-processing-order', [SalesOrderController::class, 'getProcessingData'])->name('sales-order.quotation.processing');
+    // Route::post('/sales-order/get-quotation-detail-2', [SalesOrderController::class, 'getQuotationDetail2'])->name('sales-order.get-quotation-detail');
     Route::post('/sales-order/get-quotation-detail', [SalesOrderController::class, 'getQuotationDetail'])->name('sales-order.getQuotationDetail');
     Route::post('/sales-order/get-proforma-detail', [SalesOrderController::class, 'getProformaDetail'])->name('sales-order.get-proforma-detail');
     Route::get('/sales-order/{id}/data', [SalesOrderController::class, 'getCustomerData'])->name('sales-order.getCustomerData');
-    Route::post('/sales-order/{id}/process', [SalesOrderController::class, 'processData'])->name('sales-order.process');
-    Route::get('/sales-order/get-units-by-product/{id}', [SalesOrderController::class, 'getUnitsByProduct'])->name('sales-order.get_units');
+    // Route::post('/sales-order/{id}/process', [SalesOrderController::class, 'processData'])->name('sales-order.process');
+    // Route::get('/sales-order/get-units-by-product/{id}', [SalesOrderController::class, 'getUnitsByProduct'])->name('sales-order.get_units');
     Route::get('/sales-order/wh/get-stock', [SalesOrderController::class, 'getStock'])->name('sales-order.wh.get-stock');
     Route::patch('/sales-order/{id}/close', [SalesOrderController::class, 'CloseDocument'])->name('sales-order.close');
-    Route::post('/sales-order/send-supplier/{id}', [SalesOrderController::class, 'sendSupplier'])->name('sales-order.send-supplier');
-    Route::post('/sales-order/change-status/{id}', [SalesOrderController::class, 'changeStatus']);
     Route::post('/sales-order/restore-multiple', [SalesOrderController::class, 'restoreMultiple']);
     Route::put('/sales-order/restore/{id}', [SalesOrderController::class, 'restore'])->name('sales-order.restore');
     Route::post('/sales-order/delete-multiple', [SalesOrderController::class, 'deleteMultiple']);
     Route::get('/sales-order/print/{id}', [SalesOrderController::class, 'print'])->name('sales-order.print');
     Route::get('/sales-order/so/price-history', [SalesOrderController::class, 'getPriceHistory']);
     Route::get('/sales-order/trash', [SalesOrderController::class, 'trash'])->name('sales-order.trash');
-    Route::post('/sales-order/{id}/submit', [SalesOrderController::class, 'submitToPending'])->name('sales-order.submit');
     Route::resource('sales-order', SalesOrderController::class);
 
     Route::patch('/sales-quotation/{id}/close', [SalesQuotationController::class, 'CloseDocument'])->name('sales-quotation.close');
@@ -331,10 +328,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/item-transfer/{id}/submit', [ItemTransferController::class, 'submitToPending'])->name('item-transfer.submit');
     Route::resource('item-transfer', ItemTransferController::class);
 
+    Route::get('/delivery-order/get-order/{customer}', [DeliveryOrderController::class, 'getQuotation'])->name('delivery-order.getQuotation');
+    Route::post('/delivery-order/get-quotation-detail', [DeliveryOrderController::class, 'getQuotationDetail'])->name('delivery-order.getQuotationDetail');
+
     Route::get('/delivery-order/get-kontak/{customer_id}', [DeliveryOrderController::class, 'getKontakByCustomer']);
     Route::get('/delivery-order/wh/get-stock', [DeliveryOrderController::class, 'getStock'])->name('delivery-order.wh.get-stock');
     Route::post('/delivery-order/get-order-detail', [DeliveryOrderController::class, 'getOrderDetail'])->name('delivery-order.get-order-detail');
-    Route::get('/delivery-order/get-processing-so', [DeliveryOrderController::class, 'getProcessingData'])->name('delivery-order.so.processing');
     Route::get('/delivery-order/print/{id}', [DeliveryOrderController::class, 'print'])->name('delivery-order.print');
     Route::post('/delivery-order/delete-multiple', [DeliveryOrderController::class, 'deleteMultiple']);
     Route::post('/delivery-order/restore-multiple', [DeliveryOrderController::class, 'restoreMultiple']);
