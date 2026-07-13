@@ -12,9 +12,9 @@
                           <select name="sq_number" id="sq_number" class="form-select select2-modal2"
                               data-placeholder="Select Order Number" multiple>
                               <option></option>
-                              @foreach ($sqNumber as $item)
+                              {{-- @foreach ($sqNumber as $item)
                                   <option value="{{ $item->id }}">{{ $item->sales_order_code }}</option>
-                              @endforeach
+                              @endforeach --}}
                           </select>
                           <span class="error text-danger" id="sq_numberError"></span>
                       </div>
@@ -29,6 +29,7 @@
                                   <th>Item</th>
                                   <th>Quantity</th>
                                   <th>Unit</th>
+                                  <th>Warehouse</th>
                               </tr>
                           </thead>
                           <tbody id="quotationTableBody">

@@ -216,17 +216,7 @@ class SalesOrderController extends Controller
                     return '';
                 })
                 ->addColumn('total', function ($row) {
-                    // 1. Hitung total kotor (sum amount) dari detail item SO
-                    $subTotal = SalesOrderDetail::where('sales_order_id', $row->id)
-                        ->where('active', 1)
-                        ->sum('amount');
-
-                    // 2. Hitung grand total: Subtotal dikurangi diskon nominal yang ada di tabel induk ($row)
-                    // Gunakan ?? 0 jika kolom disc_nominal di database bisa bernilai null
-                    $grandTotal = $subTotal - ($row->disc_nominal ?? 0);
-
-                    // 3. Kembalikan nilai yang sudah dikonversi dan diformat
-                    return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
+                    return format_uang(convert_currency($row->grand_total, $row->currency_id ?? 1));
                 })
                 ->addColumn('action', function ($row) {
 
@@ -564,11 +554,6 @@ class SalesOrderController extends Controller
             'defaultTax' => $defaultTax,
             'company' => $company->defaultCurrency,
 
-            'sqNumber' => SalesQuotation::whereIn('status', $status)
-                ->where('active', 1)
-                ->where('customer_id', $r->customer_id)
-                ->get(),
-
         ];
 
         return view('sales.salesOrder.sales_order_create', $x);
@@ -852,11 +837,6 @@ class SalesOrderController extends Controller
             'jsonDetails' => $detailDataMapped,
             'taxes' => $taxes,
             'defaultTax' => $defaultTax,
-
-            'sqNumber' => SalesQuotation::whereIn('status', $status)
-                ->where('active', 1)
-                ->where('customer_id', $r->customer_id)
-                ->get(),
         ];
 
         return view('sales.salesOrder.sales_order_edit', $x);
@@ -1557,6 +1537,7 @@ class SalesOrderController extends Controller
                 'd.unit_id'
             )
             ->whereIn('d.sales_quotation_id', $ids)
+            ->where('d.outstanding_qty', '<>', 0)
             ->where('d.active', 1)
             ->get();
 

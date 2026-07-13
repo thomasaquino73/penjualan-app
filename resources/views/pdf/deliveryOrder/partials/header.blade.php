@@ -1,21 +1,17 @@
 <header>
-
-    <table class="w-100 header-table">
+    <table class="header-table">
         <tr>
-            <td style="width: 55%;">
-                <table>
-                    <tr>
-                        <td class="logo-box">
-                            <img src="{{ public_path('image/logo/logo_print.png') }}" alt="Logo Perusahaan"
-                                style="width: 300px; height: 100px;margin-top:10px">
-                        </td>
-                    </tr>
-                </table>
+            <td style="width:50%; vertical-align:middle;">
+                <img src="{{ public_path('image/logo/logo_print_dotmatrix.bmp') }}" style="width:270px; height:100px">
             </td>
-            <td style="width: 45%;">
-                <div class="company-title">{{ $company->nama_perusahaan }}</div>
-                <div class="company-address">
-                    {{ $company->alamat }}
+
+            <td style="width:50%; text-align:right; vertical-align:middle;">
+                <div class="company-title">
+                    {{ $company->nama_perusahaan }}
+                </div>
+
+                <div class="company-address" style="width:'90px'">
+                    {!! nl2br(e($company->alamat)) !!}
                 </div>
             </td>
         </tr>

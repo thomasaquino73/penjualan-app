@@ -239,23 +239,54 @@
                 loadAvailableStock();
             });
 
+            // ========================================================
+            // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
+            // ========================================================
+            function refreshDataIndices() {
+                if (Array.isArray(prDetailsData)) {
+                    prDetailsData.forEach((item, index) => {
+                        item.urutan_lokal = index; // Membuat nomor ID unik lokal berbasis index array
+                    });
+                }
+            }
+            // Jalankan fungsi sebelum tabel diinisialisasi
+            refreshDataIndices();
+
             let table = new DataTable("#table", {
                 processing: true,
                 serverSide: false,
                 responsive: true,
                 select: true,
                 searching: false,
+                // 1. Tambahkan indeks pengurutan awal ke kolom pertama [0] agar engine rowReorder aktif
+                order: [
+                    [0, 'asc']
+                ],
                 lengthMenu: [
                     [10, 25, 50, -1],
                     [10, 25, 50, "All"],
                 ],
+                // 2. Hubungkan fungsi pencarian indeks dinamis berdasarkan data objek array langsung
+                rowReorder: {
+                    selector: 'td:first-child',
+                    dataSrc: function(row) {
+                        return prDetailsData.indexOf(row);
+                    }
+                },
                 data: prDetailsData,
                 columns: [{
+                        // 3. Menggunakan data: null agar aman dari error unknown parameter
                         data: null,
-                        orderable: false,
+                        orderable: true, // Wajib TRUE agar baris bisa digeser
+                        className: "text-center reorder-pointer",
                         searchable: false,
                         render: function(data, type, row, meta) {
-                            return meta.row + 1;
+                            // Memberikan angka visual statis sesuai baris di layar saat ini
+                            if (type === 'display') {
+                                return meta.row + 1;
+                            }
+                            // Kembalikan indeks array murni ke internal DataTables agar kalkulasi drag & drop berjalan
+                            return prDetailsData.indexOf(row);
                         },
                     },
                     {
@@ -430,6 +461,32 @@
                         ],
                     },
                 },
+            });
+
+            // ========================================================
+            // 🔄 EVENT SINKRONISASI COCOK UNTUK STRUKTUR JAVASCRIPT ARRAY
+            // ========================================================
+            table.on('row-reorder', function(e, diff, edit) {
+                // Jika tidak ada perubahan posisi penyeretan, abaikan proses
+                if (diff.length === 0) return;
+
+                // Lakukan loop manipulasi urutan elemen array asli di javascript menggunakan splice
+                diff.forEach(function(change) {
+                    let movedRowData = table.row(change.node).data();
+                    let oldIndex = prDetailsData.indexOf(movedRowData);
+
+                    if (oldIndex !== -1) {
+                        // Hapus dari posisi lama
+                        prDetailsData.splice(oldIndex, 1);
+                        // Masukkan tepat ke indeks baris baru hasil geser visual
+                        prDetailsData.splice(change.newPosition, 0, movedRowData);
+                    }
+                });
+
+                // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
+                table.rows().invalidate();
+
+                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
 
             $('#formPrDetail').on('submit', function(e) {
@@ -787,17 +844,20 @@
                                     data-id="${item.id}"
                                     data-product_id="${item.product_id}"
                                     data-product_name="${safeProductName}"
-                                    data-qty="${item.qty}"
+                                    data-qty="${item.outstanding_qty}"
                                     data-unit_id="${item.unit_id}"
                                     data-unit_name="${item.unit_name}"
+                                    data-warehouse_id="${item.warehouse_id}"
+                                    data-warehouse_name="${item.warehouse_name}"
                                     data-order_id="${item.sales_order_id}"
                                 >
                             </div>
                         </td>
 
                         <td>${item.nama_barang}</td>
-                        <td class="text-end">${item.qty}</td>
+                         <td class="text-end">${parseFloat(item.outstanding_qty)}</td>
                         <td>${item.unit_name}</td>
+                        <td>${item.warehouse_name}</td>
                     </tr>`;
                         });
 
@@ -854,8 +914,8 @@
                         sisa_pr: parseFloat($(this).data("qty")),
                         unit_id: $(this).data("unit_id"),
                         unit: $(this).data("unit_name"),
-                        warehouse_id: null,
-                        warehouse: null,
+                        warehouse_id: $(this).data("warehouse_id"),
+                        warehouse: $(this).data("warehouse_name"),
                         order_code: $(this).data("order_code"),
                     };
 
@@ -866,7 +926,7 @@
                         prDetailsData.push(item);
                     }
                 });
-
+                console.log("Data yang akan dimasukkan:", prDetailsData);
                 table.clear().rows.add(prDetailsData).draw();
 
                 $("#modalOrderDetail").modal("hide");

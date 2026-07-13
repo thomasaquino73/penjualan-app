@@ -42,10 +42,13 @@ return new class extends Migration
         Schema::create("delivery_order_detail_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('delivery_order_id');
+            $table->integer('urutan')->default(0);
             $table->unsignedBigInteger('sales_order_detail_id')->nullable();
             $table->unsignedBigInteger('data_barang_id');
             $table->unsignedBigInteger('unit_id');
             $table->unsignedBigInteger('warehouse_id');
+            $table->decimal('do_qty', 18, 4)->default(0)->comment('Qty yang sudah sukses di-ambil');
+            $table->decimal('outstanding_qty', 18, 4)->default(0);
             $table->decimal('qty', 15, 4);
             $table->timestamps();
         });

@@ -3,17 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Purchase Order - PT. Almex Bintang Timur</title>
+    <title>Delivery Order - PT. Almex Bintang Timur</title>
     <style>
         /* Pengaturan Kertas Cetak A5 Landscape */
         @page {
             size: A5 landscape;
-            margin-top: 120px;
-            /* Sesuaikan dengan tinggi header */
-            margin-bottom: 50px;
-            /* Sesuaikan dengan tinggi footer */
-            margin-left: 12px;
-            margin-right: 12px;
+            margin: 120px 27px 50px 27px;
         }
 
         /* Definisi Header di setiap halaman */
@@ -22,7 +17,7 @@
             top: -110px;
             left: 0;
             right: 0;
-            height: 100px;
+            height: 90px;
         }
 
         /* Definisi Footer di setiap halaman */
@@ -130,20 +125,31 @@
         /* Tabel Utama Barang */
         .items-table {
             width: 100%;
-            margin-top: 5px;
-            font-size: 8.5pt;
+            margin-top: 8px;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            font-size: 8.1pt;
         }
 
         .items-table th {
-            background-color: #1a446c;
-            color: #ffffff;
-            font-weight: normal;
-            padding: 4px 6px;
+            border: 1px solid #000;
+            padding: 5px;
+            text-align: center;
+            font-weight: bold;
+            background: transparent;
+            /* tanpa warna */
+            color: #000;
         }
 
         .items-table td {
-            padding: 3px 6px;
-            border-bottom: 1px solid #eee;
+            border: 1px solid #000;
+            padding: 4px 5px;
+            vertical-align: top;
+        }
+
+        .items-table td:nth-child(3),
+        .items-table td:nth-child(4) {
+            text-align: center;
         }
 
         /* Ringkasan & Footer Table */
@@ -163,8 +169,8 @@
         }
 
         .total-row {
-            background-color: #1a446c;
-            color: #ffffff;
+            /* background-color: #1a446c; */
+            color: #000;
             font-weight: bold;
         }
 
@@ -185,45 +191,29 @@
             font-weight: bold;
         }
 
-        header {
-            position: fixed;
-            top: -110px;
-            /* Sesuaikan dengan margin-top di @page */
-            left: 0;
-            right: 0;
-            height: 100px;
-        }
-
         .header-table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
         }
 
-        .logo-box {
-            width: 250px;
-            /* Sesuai dengan lebar gambar logo */
-            padding-right: 15px;
+        .header-table td {
             vertical-align: middle;
         }
 
         .company-title {
-            font-size: 16pt;
-            /* Dikecilkan agar pas untuk A5 */
+            font-size: 14pt;
             font-weight: bold;
-            text-align: right;
             line-height: 1.1;
-            color: #1a446c;
-            /* Warna navy perusahaan */
-            margin-bottom: 3px;
+            text-align: right;
+            word-wrap: break-word;
+            white-space: normal;
         }
 
         .company-address {
-            font-size: 8pt;
-            /* Font kecil untuk alamat */
+            font-size: 6.5pt;
             text-align: right;
             line-height: 1.2;
-            color: #555;
-            font-style: italic;
         }
     </style>
 </head>
@@ -232,7 +222,6 @@
     <header>
         <div class="header-content">
             @include('pdf.deliveryOrder.partials.header')
-            <div class="divider"></div>
         </div>
     </header>
 
@@ -247,11 +236,14 @@
                     <div class="section-title">Kepada</div>
                     <div class="recipient-box">
                         <strong>{{ $model->customerID->nama_customer }}</strong><br>
-                        {{ $model->address }}
+                        <span style="font-size: 8.5px"> {!! nl2br(e($model->address)) !!} </span>
                     </div>
                 </td>
 
                 <td style="width: 50%; vertical-align: top; padding-left: 20px;">
+                    <div style="text-align:center; font-size:18px; font-weight:bold; margin-bottom:8px;">
+                        SURAT JALAN
+                    </div>
                     <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
                         <tr>
                             <td style="border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 5px;">
@@ -283,29 +275,7 @@
                         </tr>
                     </table>
                 </td>
-                {{-- <table style="width: auto; border-collapse: collapse;">
-                        <tr>
-                            <td style="width: 80px; padding: 2px;">Nomor</td>
-                            <td style="width: 10px; padding: 2px;">:</td>
-                            <td style="padding: 2px;">{{ $model->delivery_order_code }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 2px;">Tanggal</td>
-                            <td style="padding: 2px;">:</td>
-                            <td style="padding: 2px;">{{ date('d M Y', strtotime($model->delivery_order_date)) }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 2px;">Ekspedisi</td>
-                            <td style="padding: 2px;">:</td>
-                            <td style="padding: 2px;">{{ $model->shippingID?->nama ?? '-' }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 2px;">PO No.</td>
-                            <td style="padding: 2px;">:</td>
-                            <td style="padding: 2px;">{{ $model->no_document }}</td>
-                        </tr>
-                    </table> --}}
-                {{-- </td> --}}
+
             </tr>
         </table>
 
@@ -359,28 +329,35 @@
                 <tr>
                     <td style="width:25%; text-align:center; vertical-align:top;">
                         <div class="approval-title">Dibuat,</div>
-                        <div style="height:40px;"></div>
-                        <div style="font-weight:bold; text-decoration:underline;">
-                            {{ $model->status == 'processing' ? $model->creator->fullname : '' }}
+                        <div style="height:70px;"></div>
+
+                        <div
+                            style="
+        width:80%;
+        margin:0 auto;
+        border-bottom:1px solid #000;
+        height:10px;
+    ">
                         </div>
                     </td>
 
                     <td style="width:25%; text-align:center; vertical-align:top;">
-                        <div class="approval-title">
-                            {{ $model->status == 'processing' ? 'Disetujui' : 'Dibuat oleh' }}
-                        </div>
-                        <div style="height:40px;">
-                            <img src="{{ public_path($model->status == 'processing' ? 'image/logo/STEMPEL.png' : 'image/logo/69fd6d6ab719c1778216298.png') }}"
-                                style="height:40px;">
-                        </div>
-                        <div style="font-weight:bold; text-decoration:underline;">
-                            {{ $model->status == 'processing' ? 'Yohanes Lukman' : $model->creator->fullname }}
+                        <div class="approval-title">Disetujui,</div>
+                        <div style="height:70px;"></div>
+
+                        <div
+                            style="
+        width:80%;
+        margin:0 auto;
+        border-bottom:1px solid #000;
+        height:10px;
+    ">
                         </div>
                     </td>
 
                     <td style="width:25%; text-align:center; vertical-align:top;">
                         <div class="approval-title">Pengirim,</div>
-                        <div style="height:40px;"></div>
+                        <div style="height:70px;"></div>
 
                         <div
                             style="
@@ -394,7 +371,7 @@
 
                     <td style="width:25%; text-align:center; vertical-align:top;">
                         <div class="approval-title">Penerima,</div>
-                        <div style="height:40px;"></div>
+                        <div style="height:70px;"></div>
 
                         <div
                             style="

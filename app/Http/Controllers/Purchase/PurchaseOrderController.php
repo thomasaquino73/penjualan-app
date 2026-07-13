@@ -592,7 +592,7 @@ class PurchaseOrderController extends Controller
         return response()->json($orders);
     }
 
-public function getQuotationDetail(Request $request)
+    public function getQuotationDetail(Request $request)
     {
         $year = date('Y');
 
@@ -605,7 +605,7 @@ public function getQuotationDetail(Request $request)
             ->select(
                 'd.id',
                 'd.purchase_requisition_id',
-                'q.code',  
+                'q.code',
                 'd.product_id',
                 'b.nama_barang',
                 'd.outstanding_qty',

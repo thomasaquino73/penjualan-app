@@ -39,7 +39,7 @@ class DeliveryOrderRequest extends FormRequest
 
             $id = $this->route('delivery_order');
 
-            $rules['code'] = [
+            $rules['delivery_order_code'] = [
                 'required',
                 Rule::unique('delivery_order_'.date('Y'), 'delivery_order_code')->ignore($id),
             ];

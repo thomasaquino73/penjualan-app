@@ -152,16 +152,10 @@
     @include('sales.deliveryOrder.part.modal_delivery_order')
     @include('sales.deliveryOrder.part.modalOrderDetail')
 @endsection
-@push('style')
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
-@endpush
+@include('partials.tabel.css')
+@include('partials.tabel.js')
+@include('partials.button.btn_submitform')
 @push('scripts')
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
-
-    <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
-    <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
         let prDetailsData = [
             @if (isset($model) && $model->details)
@@ -201,6 +195,14 @@
                     placeholder: $this.attr("data-placeholder"),
                     width: "100%",
                     dropdownParent: $("#modalPrDetail"),
+                });
+            });
+            $(".select2-modal2").each(function() {
+                var $this = $(this);
+                $this.wrap('<div class="position-relative"></div>').select2({
+                    placeholder: $this.attr("data-placeholder"),
+                    width: "100%",
+                    dropdownParent: $("#modalOrderDetail"),
                 });
             });
 
@@ -260,6 +262,18 @@
             $(document).on('change select2:select', '#unit_id', function() {
                 loadAvailableStock();
             });
+            // ========================================================
+            // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
+            // ========================================================
+            function refreshDataIndices() {
+                if (Array.isArray(prDetailsData)) {
+                    prDetailsData.forEach((item, index) => {
+                        item.urutan_lokal = index; // Membuat nomor ID unik lokal berbasis index array
+                    });
+                }
+            }
+            // Jalankan fungsi sebelum tabel diinisialisasi
+            refreshDataIndices();
 
             let table = new DataTable("#table", {
                 processing: true,
@@ -267,17 +281,35 @@
                 responsive: true,
                 select: true,
                 searching: false,
+                // 1. Tambahkan indeks pengurutan awal ke kolom pertama [0] agar engine rowReorder aktif
+                order: [
+                    [0, 'asc']
+                ],
                 lengthMenu: [
                     [10, 25, 50, -1],
                     [10, 25, 50, "All"],
                 ],
+                // 2. Hubungkan fungsi pencarian indeks dinamis berdasarkan data objek array langsung
+                rowReorder: {
+                    selector: 'td:first-child',
+                    dataSrc: function(row) {
+                        return prDetailsData.indexOf(row);
+                    }
+                },
                 data: prDetailsData,
                 columns: [{
+                        // 3. Menggunakan data: null agar aman dari error unknown parameter
                         data: null,
-                        orderable: false,
+                        orderable: true, // Wajib TRUE agar baris bisa digeser
+                        className: "text-center reorder-pointer",
                         searchable: false,
                         render: function(data, type, row, meta) {
-                            return meta.row + 1;
+                            // Memberikan angka visual statis sesuai baris di layar saat ini
+                            if (type === 'display') {
+                                return meta.row + 1;
+                            }
+                            // Kembalikan indeks array murni ke internal DataTables agar kalkulasi drag & drop berjalan
+                            return prDetailsData.indexOf(row);
                         },
                     },
                     {
@@ -451,6 +483,32 @@
                         ],
                     },
                 },
+            });
+
+            // ========================================================
+            // 🔄 EVENT SINKRONISASI COCOK UNTUK STRUKTUR JAVASCRIPT ARRAY
+            // ========================================================
+            table.on('row-reorder', function(e, diff, edit) {
+                // Jika tidak ada perubahan posisi penyeretan, abaikan proses
+                if (diff.length === 0) return;
+
+                // Lakukan loop manipulasi urutan elemen array asli di javascript menggunakan splice
+                diff.forEach(function(change) {
+                    let movedRowData = table.row(change.node).data();
+                    let oldIndex = prDetailsData.indexOf(movedRowData);
+
+                    if (oldIndex !== -1) {
+                        // Hapus dari posisi lama
+                        prDetailsData.splice(oldIndex, 1);
+                        // Masukkan tepat ke indeks baris baru hasil geser visual
+                        prDetailsData.splice(change.newPosition, 0, movedRowData);
+                    }
+                });
+
+                // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
+                table.rows().invalidate();
+
+                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
 
             $('#formPrDetail').on('submit', function(e) {
@@ -725,93 +783,7 @@
 
             });
 
-            let saveAndNew = false;
-            let activeBtn = null;
 
-            $(document).on("click", '.card-footer button[type="submit"]', function() {
-                saveAndNew = $(this).data("save-and-new");
-                activeBtn = $(this);
-            });
-
-
-            $("#postForm").on("submit", function(e) {
-                e.preventDefault();
-
-                // 1. Tangkap tombol yang ditekan (lebih akurat)
-                let submitter = e.originalEvent.submitter;
-                let saveAndNew = $(submitter).data("save-and-new") === true;
-                let btnTextOriginal = $(submitter).html();
-
-                // 2. Validasi awal (Frontend)
-                if (typeof prDetailsData === "undefined" || prDetailsData.length === 0) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Empty Items",
-                        text: "Please add at least one item detail to the table before saving.",
-                        confirmButtonText: "OK",
-                        customClass: {
-                            confirmButton: "btn btn-primary waves-effect waves-light",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return false;
-                }
-
-                let formData = new FormData(this);
-                formData.append("save_and_new", saveAndNew ? 1 : 0);
-                formData.append("items_detail", JSON.stringify(prDetailsData));
-
-                $.ajax({
-                    url: $(this).attr("action"),
-                    method: $(this).attr("method"),
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: "json",
-                    beforeSend: function() {
-                        $(submitter).html(
-                                '<i class="fa fa-spin fa-spinner me-1"></i> Processing...')
-                            .prop("disabled", true);
-                        $(".card-footer button").prop("disabled", true);
-                    },
-                    complete: function() {
-                        // Kembalikan teks asli ke tombol yang diklik
-                        // $(submitter).html(btnTextOriginal).prop("disabled", false);
-                        $(".card-footer button").prop("disabled", false);
-                    },
-                    success: function(response) {
-                        Swal.fire({
-                                icon: "success",
-                                title: "Success",
-                                text: response.message,
-                                customClass: {
-                                    confirmButton: "btn btn-primary waves-effect waves-light",
-                                },
-                                buttonsStyling: false,
-                            })
-                            .then(() => {
-                                window.location.href = response.redirect;
-                            });
-                    },
-                    error: function(xhr) {
-                        resetValidation();
-                        let errors = xhr.responseJSON?.errors;
-                        $.each(errors, function(key, value) {
-                            displayFieldError(key, value[0]);
-                        });
-                        Swal.fire({
-                            icon: "error",
-                            title: "Failed",
-                            text: xhr.responseJSON?.message || "Error",
-                            customClass: {
-                                confirmButton: "btn btn-primary waves-effect waves-light",
-                            },
-                            buttonsStyling: false,
-                        });
-
-                    }
-                });
-            });
 
             // ==========================================
             // 1. EVENT KLIK UNTUK MEMBUKA MODAL PR
@@ -819,11 +791,13 @@
             $("#showModalpr").on("click", function(e) {
                 e.preventDefault();
 
-                let tbody = $("#requisitionTableBody");
                 var customerId = $("#customer_id").val();
-
-                // Validasi wajib pilih customer dulu
-                if (!customerId || customerId === "") {
+                $("#sq_number")
+                    .empty()
+                    .append('<option value="">Select Order</option>')
+                    .val(null)
+                    .trigger("change");
+                if (!customerId) {
                     Swal.fire({
                         icon: "warning",
                         title: "Warning!",
@@ -835,59 +809,83 @@
                         },
                         buttonsStyling: false,
                     });
-                    return false;
+                    return;
                 }
 
-                // Reset checkbox 'Check All' menjadi tidak tercentang saat modal dibuka
-                $("#checkAll").prop("checked", false);
-
-                tbody.html(
-                    '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>',
-                );
-                $("#modalOrderDetail").modal("show");
-
-                // Ambil data PR berstatus processing
                 $.ajax({
-                    url: "{{ route('delivery-order.so.processing') }}",
+                    url: "/delivery-order/get-order/" + customerId,
                     type: "GET",
-                    dataType: "json",
+                    success: function(response) {
+
+                        let option = '<option value="">Select Order</option>';
+
+                        $.each(response, function(i, item) {
+                            option += `<option value="${item.id}">
+                                ${item.sales_order_code}
+                           </option>`;
+                        });
+
+                        $("#sq_number").html(option);
+
+                        $("#modalOrderDetail").modal("show");
+                    }
+                });
+            });
+
+            $('#sq_number').on('change', function() {
+
+                let orderIds = $(this).val();
+
+                if (!orderIds || orderIds.length === 0) {
+                    $('#quotationTableBody').html('');
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ route('delivery-order.getQuotationDetail') }}",
+                    type: "POST",
                     data: {
-                        customer_id: customerId
+                        order_ids: orderIds,
+                        _token: "{{ csrf_token() }}"
                     },
                     success: function(response) {
-                        tbody.empty();
 
-                        if (response && response.length > 0) {
-                            $.each(response, function(key, item) {
-                                let dateFormatted = new Date(item.created_at)
-                                    .toLocaleDateString(
-                                        "id-ID");
+                        let html = '';
 
-                                // Tambahkan baris PR ke tabel modal
-                                tbody.append(`
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input class="form-check-input checkItem" type="checkbox" value="${item.id}">
-                                    </div>
-                                </td>
-                                <td><strong>${item.sales_order_code}</strong></td>
-                                <td>${dateFormatted}</td>
-                            </tr>
-                        `);
-                            });
-                        } else {
-                            tbody.html(
-                                '<tr><td colspan="3" class="text-center text-muted">No processing data found.</td></tr>',
-                            );
-                        }
-                    },
-                    error: function(xhr) {
-                        tbody.html(
-                            '<tr><td colspan="3" class="text-center text-danger">Failed to fetch data.</td></tr>',
-                        );
-                    },
+                        $.each(response, function(index, item) {
+                            let safeProductName = item.nama_barang.replace(/"/g,
+                                '&quot;');
+                            html += `
+                    <tr>
+                        <td>
+                            <div class="form-check form-check-primary">
+                                <input
+                                    class="form-check-input checkItem"
+                                    type="checkbox"
+
+                                    data-id="${item.id}"
+                                    data-product_id="${item.product_id}"
+                                    data-product_name="${safeProductName}"
+                                    data-qty="${item.qty}"
+                                    data-unit_id="${item.unit_id}"
+                                    data-unit_name="${item.unit_name}"
+                                    data-order_id="${item.sales_order_id}"
+                                >
+                            </div>
+                        </td>
+
+                        <td>${item.nama_barang}</td>
+                        <td class="text-end">${item.qty}</td>
+                        <td>${item.unit_name}</td>
+                    </tr>`;
+                        });
+
+                        $("#checkAll").prop("checked", false);
+                        $("#quotationTableBody").html(html);
+
+                    }
                 });
+
             });
             //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
             $("#checkAll").on("change", function() {

@@ -1,16 +1,16 @@
-<div class="modal fade" id="modalQuotationDetail">
+<div class="modal fade" id="modalDeliveryDetail">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">Quotation Processing</h5>
+                <h5 class="modal-title" id="modalTitle">Delivery Processing</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="row">
                     <div class="col-12 mb-3">
-                        <label class="form-label" for="sq_number">Sales Quotation Number</label>
+                        <label class="form-label" for="sq_number">Delivery Number</label>
                         <select name="sq_number" id="sq_number" class="form-select select2-modal2"
-                            data-placeholder="Select Quotation Number" multiple>
+                            data-placeholder="Select Delivery Number" multiple>
                             <option></option>
 
                         </select>
@@ -32,7 +32,7 @@
                                 <th>Total</th>
                             </tr>
                         </thead>
-                        <tbody id="quotationTableBody">
+                        <tbody id="orderTableBody">
                         </tbody>
                     </table>
                 </div>

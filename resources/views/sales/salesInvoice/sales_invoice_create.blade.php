@@ -33,7 +33,7 @@
                         </button>
                         <ul class="dropdown-menu">
                             <li><button class="dropdown-item btn-info btn-sm " id="showModalpr">
-                                    <i class="ti ti-clipboard me-1"></i>ORDERS
+                                    <i class="ti ti-clipboard me-1"></i>DELIVERY
                                 </button></li>
                         </ul>
                     </div>
@@ -211,18 +211,16 @@
         </div>
     </div>
     @include('sales.salesInvoice.part.modal_sales_invoice')
-    @include('sales.salesInvoice.part.modalOrderDetail')
+    @include('sales.salesInvoice.part.modalDeliveryOrder')
 @endsection
-@push('style')
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.bootstrap5.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
-@endpush
+@include('partials.tabel.css')
+@include('partials.tabel.js')
+@include('partials.button.btn_addshipping')
+@include('partials.button.btn_addpayment')
+@include('partials.button.btn_submitform')
+@include('partials.button.select2_modal')
+@include('partials.js.calculate_total')
 @push('scripts')
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
-
-    <script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.js"></script>
-    <script src="https://cdn.datatables.net/select/2.0.3/js/select.bootstrap5.js"></script>
     <script>
         let prDetailsData = [];
         $(function() {
@@ -237,11 +235,13 @@
         $("#showModalpr").on("click", function(e) {
             e.preventDefault();
 
-            let tbody = $("#quotationTableBody");
             var customerId = $("#customer_id").val();
-
-            // Validasi wajib pilih customer dulu
-            if (!customerId || customerId === "") {
+            $("#sq_number")
+                .empty()
+                .append('<option value="">Select Quotation</option>')
+                .val(null)
+                .trigger("change");
+            if (!customerId) {
                 Swal.fire({
                     icon: "warning",
                     title: "Warning!",
@@ -253,60 +253,95 @@
                     },
                     buttonsStyling: false,
                 });
-                return false;
+                return;
             }
 
-            // Reset checkbox 'Check All' menjadi tidak tercentang saat modal dibuka
-            $("#checkAll").prop("checked", false);
-
-            tbody.html(
-                '<tr><td colspan="3" class="text-center"><i class="fa fa-spin fa-spinner me-1"></i> Loading data...</td></tr>',
-            );
-            $("#modalOrderDetail").modal("show");
-
-            // Ambil data PR berstatus processing
             $.ajax({
-                url: "{{ route('sales-invoice.order.processing') }}",
+                url: "/sales-invoice/get-delivery/" + customerId,
                 type: "GET",
-                dataType: "json",
-                data: {
-                    customer_id: customerId
-                },
                 success: function(response) {
-                    tbody.empty();
 
-                    if (response && response.length > 0) {
-                        $.each(response, function(key, item) {
-                            let dateFormatted = new Date(item.created_at).toLocaleDateString(
-                                "id-ID");
+                    let option = '<option value="">Select Delivery</option>';
 
-                            // Tambahkan baris PR ke tabel modal
-                            tbody.append(`
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input class="form-check-input checkItem" type="checkbox" value="${item.id}">
-                                    </div>
-                                </td>
-                                <td><strong>${item.sales_order_code}</strong></td>
-                                <td>${dateFormatted}</td>
-                            </tr>
-                        `);
-                        });
-                    } else {
-                        tbody.html(
-                            '<tr><td colspan="3" class="text-center text-muted">No processing data found.</td></tr>',
-                        );
-                    }
-                },
-                error: function(xhr) {
-                    tbody.html(
-                        '<tr><td colspan="3" class="text-center text-danger">Failed to fetch data.</td></tr>',
-                    );
-                },
+                    $.each(response, function(i, item) {
+                        option += `<option value="${item.id}">
+                                ${item.delivery_order_code}
+                           </option>`;
+                    });
+
+                    $("#sq_number").html(option);
+
+                    $("#modalDeliveryDetail").modal("show");
+                }
             });
         });
 
+        $('#sq_number').on('change', function() {
+
+            let quotationIds = $(this).val();
+
+            if (!quotationIds || quotationIds.length === 0) {
+                $('#orderTableBody').html('');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('sales-invoice.getDeliveryDetail') }}",
+                type: "POST",
+                data: {
+                    quotation_ids: quotationIds,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    let html = '';
+
+                    if (response.success && response.data.length > 0) {
+                        $.each(response.data, function(index, item) {
+                            let safeProductName = (item.product_name || '').replace(/"/g,
+                                '&quot;');
+
+                            // Konversi ke angka yang valid sebelum toLocaleString
+                            let price = parseFloat(item.unit_price) || 0;
+                            let discount = parseFloat(item.discount) || 0;
+                            let amount = parseFloat(item.amount) || 0;
+
+                            html += `
+                                <tr>
+                                    <td>
+                                        <input class="form-check-input checkItem" type="checkbox"
+                                            data-id="${item.id}"
+                                            data-product_id="${item.product_id}"
+                                            data-product_name="${safeProductName}"
+                                            data-qty="${item.qty}"
+                                            data-outstanding_qty="${item.outstanding_qty}" 
+                                            data-unit_id="${item.unit_id}"
+                                            data-unit_name="${item.unit_name}"
+                                            data-warehouse_id="${item.warehouse_id}"
+                                            data-warehouse_name="${item.warehouse_name}"
+                                            data-unit_price="${price}"
+                                            data-discount="${discount}"
+                                            data-amount="${amount}"
+                                            data-delivery_order_code="${item.order_code}" 
+                                        >
+                                    </td>
+                                    <td>${item.product_name}</td>
+                                    <td class="text-end">${item.qty}</td>
+                                    <td>${item.unit_name}</td>
+                                    <td class="text-end">${price.toLocaleString('id-ID')}</td>
+                                    <td class="text-end">${discount.toLocaleString('id-ID')}</td>
+                                    <td class="text-end">${amount.toLocaleString('id-ID')}</td>
+                                </tr>`;
+                        });
+                    } else {
+                        html =
+                            '<tr><td colspan="7" class="text-center">Tidak ada data ditemukan</td></tr>';
+                    }
+
+                    $("#orderTableBody").html(html);
+                }
+            });
+
+        });
 
         $("#btnAddShipping").click(function() {
             Swal.fire({
@@ -404,6 +439,14 @@
                     dropdownParent: $("#modalPrDetail"),
                 });
             });
+            $(".select2-modal2").each(function() {
+                var $this = $(this);
+                $this.wrap('<div class="position-relative"></div>').select2({
+                    placeholder: $this.attr("data-placeholder"),
+                    width: "100%",
+                    dropdownParent: $("#modalDeliveryDetail"),
+                });
+            });
 
             $("#customer_contact_id").select2({
                 placeholder: "Select Contact",
@@ -419,23 +462,54 @@
                 width: "100%",
             });
 
+            // ========================================================
+            // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
+            // ========================================================
+            function refreshDataIndices() {
+                if (Array.isArray(prDetailsData)) {
+                    prDetailsData.forEach((item, index) => {
+                        item.urutan_lokal = index; // Membuat nomor ID unik lokal berbasis index array
+                    });
+                }
+            }
+            // Jalankan fungsi sebelum tabel diinisialisasi
+            refreshDataIndices();
+
             let table = new DataTable("#table", {
                 processing: true,
                 serverSide: false,
                 responsive: true,
                 select: true,
                 searching: false,
+                // 1. Tambahkan indeks pengurutan awal ke kolom pertama [0] agar engine rowReorder aktif
+                order: [
+                    [0, 'asc']
+                ],
                 lengthMenu: [
                     [10, 25, 50, -1],
                     [10, 25, 50, "All"],
                 ],
+                // 2. Hubungkan fungsi pencarian indeks dinamis berdasarkan data objek array langsung
+                rowReorder: {
+                    selector: 'td:first-child',
+                    dataSrc: function(row) {
+                        return prDetailsData.indexOf(row);
+                    }
+                },
                 data: prDetailsData,
                 columns: [{
+                        // 3. Menggunakan data: null agar aman dari error unknown parameter
                         data: null,
-                        orderable: false,
+                        orderable: true, // Wajib TRUE agar baris bisa digeser
+                        className: "text-center reorder-pointer",
                         searchable: false,
                         render: function(data, type, row, meta) {
-                            return meta.row + 1;
+                            // Memberikan angka visual statis sesuai baris di layar saat ini
+                            if (type === 'display') {
+                                return meta.row + 1;
+                            }
+                            // Kembalikan indeks array murni ke internal DataTables agar kalkulasi drag & drop berjalan
+                            return prDetailsData.indexOf(row);
                         },
                     },
                     {
@@ -629,6 +703,31 @@
                         ],
                     },
                 },
+            });
+            // ========================================================
+            // 🔄 EVENT SINKRONISASI COCOK UNTUK STRUKTUR JAVASCRIPT ARRAY
+            // ========================================================
+            table.on('row-reorder', function(e, diff, edit) {
+                // Jika tidak ada perubahan posisi penyeretan, abaikan proses
+                if (diff.length === 0) return;
+
+                // Lakukan loop manipulasi urutan elemen array asli di javascript menggunakan splice
+                diff.forEach(function(change) {
+                    let movedRowData = table.row(change.node).data();
+                    let oldIndex = prDetailsData.indexOf(movedRowData);
+
+                    if (oldIndex !== -1) {
+                        // Hapus dari posisi lama
+                        prDetailsData.splice(oldIndex, 1);
+                        // Masukkan tepat ke indeks baris baru hasil geser visual
+                        prDetailsData.splice(change.newPosition, 0, movedRowData);
+                    }
+                });
+
+                // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
+                table.rows().invalidate();
+
+                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
 
             function loadAvailableStock() {
@@ -953,178 +1052,6 @@
                 // JIKA PO BEBAS (maxPrLimit tidak ada), AKAN LOLOS TANPA VALIDASI MAKSIMAL
             });
 
-            let saveAndNew = false;
-            let activeBtn = null;
-
-            $(document).on("click", '.card-footer button[type="submit"]', function() {
-                saveAndNew = $(this).data("save-and-new");
-                activeBtn = $(this);
-            });
-
-            $("#postForm").on("submit", function(e) {
-                e.preventDefault();
-
-                let form = this;
-                let formData = new FormData(form);
-
-                if (!activeBtn) {
-                    activeBtn = $("#postForm").find(
-                        'button[data-save-and-new="false"]',
-                    );
-                    saveAndNew = false;
-                }
-                // START LOADING
-                activeBtn.html(
-                    '<i class="fa fa-spin fa-spinner me-1"></i> Checking...',
-                );
-                $(".card-footer button").prop("disabled", true);
-
-                if (
-                    typeof prDetailsData === "undefined" ||
-                    prDetailsData.length === 0
-                ) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Empty Items",
-                        text: "Please add at least one item detail to the table before saving.",
-                        confirmButtonText: "OK",
-                        customClass: {
-                            confirmButton: "btn btn-primary waves-effect waves-light",
-                        },
-                        buttonsStyling: false,
-                    }).then(() => {
-                        // AFTER MODAL CLOSED
-                        let closeBtn = $("#postForm").find(
-                            'button[data-save-and-new="false"]',
-                        );
-                        let newBtn = $("#postForm").find(
-                            'button[data-save-and-new="true"]',
-                        );
-
-                        closeBtn.html(
-                            '<i class="fa fa-upload me-1"></i> Save and Close',
-                        );
-                        newBtn.html(
-                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
-                        );
-
-                        $(".card-footer button").prop("disabled", false);
-                    });
-
-                    return false;
-                }
-
-                let warehouseKosong = [];
-
-                prDetailsData.forEach(function(item, index) {
-                    if (
-                        item.warehouse_id === null ||
-                        item.warehouse_id === "" ||
-                        typeof item.warehouse_id === "undefined"
-                    ) {
-                        warehouseKosong.push(index + 1);
-                    }
-                });
-
-                if (warehouseKosong.length > 0) {
-
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Warehouse Belum Dipilih",
-                        html: "Warehouse wajib dipilih ",
-                        confirmButtonText: "OK",
-                        customClass: {
-                            confirmButton: "btn btn-primary waves-effect waves-light",
-                        },
-                        buttonsStyling: false,
-                    }).then(() => {
-
-                        let closeBtn = $("#postForm").find(
-                            'button[data-save-and-new="false"]'
-                        );
-                        let newBtn = $("#postForm").find(
-                            'button[data-save-and-new="true"]'
-                        );
-
-                        closeBtn.html(
-                            '<i class="fa fa-upload me-1"></i> Save and Close'
-                        );
-                        newBtn.html(
-                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New'
-                        );
-
-                        $(".card-footer button").prop("disabled", false);
-                    });
-
-                    return false;
-                }
-
-                formData.append("save_and_new", saveAndNew ? 1 : 0);
-                formData.append("items_detail", JSON.stringify(prDetailsData));
-
-                $.ajax({
-                    url: $(form).attr("action"),
-                    method: $(form).attr("method"),
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: "json",
-                    beforeSend: function() {
-                        activeBtn.html(
-                            '<i class="fa fa-spin fa-spinner me-1"></i> Sending...',
-                        );
-                        $(".card-footer button").prop("disabled", true);
-                    },
-                    complete: function() {
-                        let closeBtn = $("#postForm").find(
-                            'button[data-save-and-new="false"]',
-                        );
-                        let newBtn = $("#postForm").find(
-                            'button[data-save-and-new="true"]',
-                        );
-                        closeBtn.html(
-                            '<i class="fa fa-upload me-1"></i> Save and Close',
-                        );
-                        newBtn.html(
-                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
-                        );
-                        $(".card-footer button").prop("disabled", false);
-                    },
-                    success: function(response) {
-                        Swal.fire({
-                            icon: "success",
-                            title: "Data Created Successfully",
-                            text: response.message,
-                            customClass: {
-                                confirmButton: "btn btn-primary waves-effect waves-light",
-                            },
-                            buttonsStyling: false,
-                        }).then(() => {
-                            window.location.href = response.redirect;
-                        });
-                    },
-                    error: function(xhr) {
-                        resetValidation();
-                        let errors = xhr.responseJSON?.errors;
-                        $.each(errors, function(key, value) {
-                            displayFieldError(key, value[0]);
-                        });
-                        Swal.fire({
-                            icon: "error",
-                            title: "Failed to Create Data",
-                            text: xhr.responseJSON.message ||
-                                "Please check your data again.",
-                            customClass: {
-                                confirmButton: "btn btn-primary waves-effect waves-light",
-                            },
-                            buttonsStyling: false,
-                        });
-
-
-                    },
-                });
-            });
-
             $("#formPrDetail").on("submit", function(e) {
                 e.preventDefault();
 
@@ -1293,14 +1220,14 @@
             });
 
             $("#btnSubmitSelected").on("click", function() {
+
                 let checkedBoxes = $(".checkItem:checked");
 
-                // 1. Validasi jika tidak ada PR yang dicentang
                 if (checkedBoxes.length === 0) {
                     Swal.fire({
                         icon: "warning",
-                        title: "Peringatan",
-                        text: "Silakan pilih minimal satu data quotation!",
+                        title: "Warning",
+                        text: "Silakan pilih minimal satu item delivery.",
                         customClass: {
                             confirmButton: "btn btn-danger",
                         },
@@ -1309,139 +1236,55 @@
                     return;
                 }
 
-                // 2. Ambil ID quotation yang dicentang
-                let ids = [];
+                if (typeof prDetailsData === "undefined") {
+                    window.prDetailsData = [];
+                }
+
                 checkedBoxes.each(function() {
-                    ids.push($(this).val());
-                });
 
-                // 3. Tampilkan konfirmasi SweetAlert sebelum memproses
-                Swal.fire({
-                    title: "Proses data terpilih?",
-                    text: `Anda memilih ${checkedBoxes.length} data untuk dimasukkan ke tabel.`,
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonText: "Ya, Masukkan!",
-                    cancelButtonText: "Batal",
-                    customClass: {
-                        confirmButton: "btn btn-primary",
-                        cancelButton: "btn btn-secondary",
-                    },
-                    buttonsStyling: false,
-                }).then((result) => {
-                    if (result.isConfirmed) {
+                    let item = {
+                        detail_id: $(this).data("id"),
+                        product_id: $(this).data("product_id"),
+                        data_produk: $(this).data("product_name"),
+                        quantity: parseFloat($(this).data("outstanding_qty")) || 0,
+                        sisa_pr: parseFloat($(this).data("qty")) || 0,
+                        unit_id: $(this).data("unit_id"),
 
-                        // 4. Kirim request AJAX ke backend
-                        $.ajax({
-                            url: "{{ route('sales-invoice.get-order-detail') }}",
-                            type: "POST",
-                            data: {
-                                ids: ids,
-                                _token: "{{ csrf_token() }}"
-                            },
-                            beforeSend: function() {
-                                $("#btnSubmitSelected")
-                                    .html(
-                                        '<i class="fa fa-spinner fa-spin me-1"></i> Processing...'
-                                    )
-                                    .prop("disabled", true);
-                            },
-                            success: function(response) {
-                                if (response.success) {
+                        // MENGGUNAKAN FALLBACK (JIKA UNDEFINED, MAKA ISI DENGAN "-")
+                        unit: $(this).data("unit_name") !== undefined ? $(this).data(
+                            "unit_name") : "-",
 
-                                    // Bersihkan atau siapkan array penampung global jika belum didefinisikan sebelumnya
-                                    if (typeof prDetailsData === 'undefined') {
-                                        window.prDetailsData = [];
-                                    }
+                        warehouse_id: $(this).data("warehouse_id"),
+                        warehouse: $(this).data("warehouse_name") || "-",
+                        unit_price: parseFloat($(this).data("unit_price")) || 0,
+                        discount: parseFloat($(this).data("discount")) || 0,
+                        amount: parseFloat($(this).data("amount")) || 0,
+                        order_code: $(this).data("delivery_order_code") || "-",
+                    };
 
-
-                                    // 5. Looping data response backend untuk dimasukkan ke array DataTables
-                                    response.data.forEach(function(item) {
-                                        let qtyAwal = parseFloat(item.qty || 0);
-                                        let sudahPO = parseFloat(item.sq_qty ||
-                                            0);
-                                        let sisaPr = qtyAwal -
-                                            sudahPO; // Batas maksimal kuantitas PR
-
-                                        if (sisaPr <= 0) {
-                                            return; // Jika sisa PR habis, jangan masukkan ke list
-                                        }
-
-                                        let unitPrice = item.unit_price;
-                                        let discount = item.discount;
-                                        let amount = item.amount;
-                                        let payment_term_id = item
-                                            .payment_term_id;
-
-                                        prDetailsData.push({
-                                            detail_id: item
-                                                .id, // ID Detail PR tersimpan di sini
-                                            product_id: item.product_id,
-                                            data_produk: item
-                                                .product_name,
-                                            quantity: sisaPr,
-                                            sisa_pr: sisaPr,
-                                            unit_id: item.unit_id,
-                                            unit: item.unit_name,
-                                            warehouse_id: item
-                                                .warehouse_id,
-                                            warehouse: item
-                                                .warehouse_name,
-                                            unit_price: unitPrice,
-                                            discount: discount,
-                                            amount: amount,
-                                            order_code: item
-                                                .order_code,
-                                        });
-                                    });
-
-                                    // 6. Refresh dan gambar ulang DataTables kamu
-                                    $('#table').DataTable()
-                                        .clear()
-                                        .rows.add(prDetailsData)
-                                        .draw();
-
-                                    // 7. Hitung ulang total matematika PO
-                                    if (typeof calculateGrandTotal === "function") {
-                                        calculateGrandTotal();
-                                    }
-                                    if (typeof calculateTotalOrder === "function") {
-                                        calculateTotalOrder();
-                                    }
-
-                                    // 8. Tutup Modal Requisition
-                                    $("#modalOrderDetail").modal("hide");
-
-                                    // 9. Beri feedback sukses ke user
-                                    Swal.fire({
-                                        icon: "success",
-                                        title: "Success",
-                                        text: "Data Penjualan berhasil dimasukkan.",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary",
-                                        },
-                                        buttonsStyling: false,
-                                    });
-                                }
-                            },
-                            error: function(xhr) {
-                                Swal.fire({
-                                    icon: "error",
-                                    title: "Error",
-                                    text: "Terjadi kesalahan saat mengambil data.",
-                                });
-                            },
-                            complete: function() {
-                                // Kembalikan kondisi tombol submit ke semula
-                                $("#btnSubmitSelected")
-                                    .html(
-                                        '<i class="ti ti-check me-1"></i> Process Selected'
-                                    )
-                                    .prop("disabled", false);
-                            }
-                        });
+                    let exists = prDetailsData.some(x => x.detail_id == item.detail_id);
+                    if (!exists) {
+                        prDetailsData.push(item);
                     }
                 });
+
+                table.clear().rows.add(prDetailsData).draw();
+
+                calculateGrandTotal();
+                calculateTotalOrder();
+
+                $("#modalDeliveryDetail").modal("hide");
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Success",
+                    text: "Data quotation berhasil dimasukkan.",
+                    customClass: {
+                        confirmButton: "btn btn-primary",
+                    },
+                    buttonsStyling: false,
+                });
+
             });
 
 

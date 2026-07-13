@@ -10,10 +10,10 @@ use App\Models\Inventory\Barang;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
+use App\Models\Sales\DeliveryOrder;
+use App\Models\Sales\DeliveryOrderDetail;
 use App\Models\Sales\SalesInvoice;
 use App\Models\Sales\SalesInvoiceDetail;
-use App\Models\Sales\SalesOrder;
-use App\Models\Sales\SalesOrderDetail;
 use App\Models\Sales\SalesQuotation;
 use App\Models\Sales\SalesQuotationDetail;
 use App\Models\Setting\Company;
@@ -473,8 +473,8 @@ class SalesInvoiceController extends Controller
                             'discount_percent' => $discountPercent,
                             'discount' => $discount,
                             'amount' => $item['amount'] ?? $amount,
-                            'so_qty' => $qtyInputForm, // Sinkronisasi: so_qty di SO = qty SO
-                            'outstanding_qty' => 0, // Karena SO adalah tahap akhir, outstanding di SO biasanya 0
+                            'so_qty' => 0, // Sinkronisasi: so_qty di SO = qty SO
+                            'outstanding_qty' => $qtyInputForm, // Karena SO adalah tahap akhir, outstanding di SO biasanya 0
                             'status' => 'open',
                             'active' => 1,
                             'created_by' => Auth::id(),
@@ -1535,81 +1535,72 @@ class SalesInvoiceController extends Controller
         return response()->json(['success' => true, 'message' => 'Sales Invoice berhasil diajukan!']);
     }
 
-    public function getOrderData(Request $request)
+    public function getDelivery($customerId)
     {
-        $orders = SalesOrder::with([
+
+        $orders = DeliveryOrder::with([
             'details' => function ($query) {
-                $query->whereColumn('so_qty', '<', 'qty');
+                $query->whereNotNull('sales_order_detail_id');
             },
         ])
-            ->where('customer_id', $request->customer_id)
-            ->whereNotIn('status', ['draft', 'closed', 'done'])
+            ->where('customer_id', $customerId)
+            ->where('status', 'processing')
+            ->whereHas('details', function ($query) {
+                $query->whereNotNull('sales_order_detail_id');
+            })
             ->get();
 
         return response()->json($orders);
     }
 
-    public function getOrderDetail(Request $request)
+    public function getDeliveryDetail(Request $request)
     {
-        $ids = $request->ids;
+        $ids = $request->quotation_ids; 
 
         if (empty($ids)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak ada data SQ yang dipilih.',
-                'data' => [],
-            ]);
+            return response()->json(['success' => false, 'data' => []]);
         }
 
-        $details = SalesOrderDetail::with([
-            'produkID',
-            'unitID',
-            'salesOrder',
-        ])
-            ->whereIn('sales_order_id', $ids)
-            ->where('active', 1)
-            ->whereHas('salesOrder', function ($q) {
-                $q->whereIn('status', ['processing', 'partial']);
-            })
+        // Load relasi salesOrderDetail
+        $details = DeliveryOrderDetail::with([
+                'produkID', 
+                'unitID', 
+                'deliveryOrder', 
+                'salesOrderDetail' // WAJIB ADA DI SINI
+            ])
+            ->whereIn('delivery_order_id', $ids)
             ->get();
 
         $formattedData = $details->map(function ($item) {
-            // LOGIKA PENENTUAN SISA:
-            // Cek apakah outstanding_qty ada (tidak null) dan bukan 0
             $sisaQty = ($item->outstanding_qty !== null && $item->outstanding_qty > 0)
-                       ? (float) $item->outstanding_qty
-                       : (float) $item->qty;
+                        ? (float) $item->outstanding_qty
+                        : (float) $item->qty;
+
+            $price = (float) ($item->salesOrderDetail->unit_price ?? 0);
+            $discount = (float) ($item->salesOrderDetail->discount ?? 0);
 
             return [
                 'id' => $item->id,
-                'sales_invoice_detail_id' => $item->id,
-                'sales_invoice_id' => $item->sales_invoice_id,
-                'product_id' => $item->product_id,
-                'product_name' => $item->produkID->nama_barang ?? '',
-                'data_produk' => $item->produkID->nama_barang ?? '',
-
-                // Gunakan $sisaQty yang sudah dihitung di atas
-                'quantity' => $sisaQty,
+                'product_id' => $item->data_barang_id, // Sesuaikan dengan field di DB
+                'product_name' => $item->produkID->nama_barang ?? '-',
+                
                 'qty' => $sisaQty,
-
+                'outstanding_qty' => $item->outstanding_qty ?? $sisaQty,
+                
                 'unit_id' => $item->unit_id,
-                'unit_name' => $item->unitID->detail ?? '',
+                'unit_name' => $item->unitID->detail ?? '-',
+                
                 'warehouse_id' => $item->warehouse_id,
-                'warehouse_name' => $item->warehouseID->nama_gudang ?? '',
-                // 'unit' => $item->unitID->detail ?? '',
-                'unit_price' => $item->unit_price,
-                'discount' => $item->discount,
-                'amount' => $item->unit_price * $sisaQty, // Update amount berdasarkan sisa
-                'tax' => 0,
-                'order_code' => $item->salesOrder->sales_order_code ?? '',
-                'sales_order_status' => $item->salesOrder->status ?? '',
+                'warehouse_name' => $item->warehouseID->nama_gudang ?? '-', // Sesuaikan nama field gudang
+                
+                'unit_price' => $price,
+                'discount' => $discount,
+                'amount' => (float)(($price * $sisaQty) - $discount),
+                'order_code' => $item->deliveryOrder->delivery_order_code ?? '-',
             ];
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $formattedData,
-        ]);
+        return response()->json(['success' => true, 'data' => $formattedData]);
     }
 
     public function getCustomerData($customerId)
