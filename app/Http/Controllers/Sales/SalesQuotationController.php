@@ -173,20 +173,20 @@ class SalesQuotationController extends Controller
                             $btn .= '<hr class="dropdown-divider">';
                         }
 
-                        // ✅ EDIT
-                        if ($user->can('sales_quotation-edit') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item" href="'.route('sales-quotation.edit', $row->id).'">
+                    }
+                    // ✅ EDIT
+                    if ($user->can('sales_quotation-edit') && $row->status == 'draft') {
+                        $btn .= '<a class="dropdown-item" href="'.route('sales-quotation.edit', $row->id).'">
                         <i class="far fa-edit me-1"></i> Edit
                      </a>';
-                        }
+                    }
 
-                        // ✅ DELETE
-                        if ($user->can('sales_quotation-delete') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                    // ✅ DELETE
+                    if ($user->can('sales_quotation-delete') && $row->status == 'draft') {
+                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                         data-id="'.$row->id.'" data-name="'.$row->sales_quotation_code.'">
                         <i class="ti ti-trash me-1"></i> Delete
                      </a>';
-                        }
                     }
 
                     // ─── INFO JIKA SUDAH DIPROSES ─────────────────────────────

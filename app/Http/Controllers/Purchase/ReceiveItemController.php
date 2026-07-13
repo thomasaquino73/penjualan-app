@@ -161,37 +161,23 @@ class ReceiveItemController extends Controller
                 <ul class="dropdown-menu">';
 
                     // ─── OWNER ACTION ─────────────────────────────
-                    if ($row->created_by == $currentUserId) {
 
-                        // ✅ EDIT
-                        if ($user->can('receive-item-edit') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item" href="'.route('receive-item.edit', $row->id).'">
-                        <i class="far fa-edit me-1"></i> Edit
-                     </a>';
-                        }
-
-                        // ✅ DELETE
-                        if ($user->can('receive-item-delete') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
-                        data-id="'.$row->id.'" data-name="'.$row->receive_item_code.'">
-                        <i class="ti ti-trash me-1"></i> Delete
-                     </a>';
-                        }
-                    }
-
-                    // ─── INFO JIKA SUDAH DIPROSES ─────────────────────────────
-                    if ($row->status == 'processing') {
+                    // ✅ EDIT
+                    if ($user->can('receive-item-edit') && $row->status == 'draft') {
                         $btn .= '<a class="dropdown-item" href="'.route('receive-item.edit', $row->id).'">
                         <i class="far fa-edit me-1"></i> Edit
                      </a>';
                     }
 
-                    //         if ($row->status != 'closed') {
-                    //             $btn .= '<a class="dropdown-item"
-                    //     href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->receive_item_code.'">
-                    //     <i class="ti ti-lock"></i> Close RI
-                    //  </a>';
-                    //         }
+                    // ✅ DELETE
+                    if ($user->can('receive-item-delete') && $row->status == 'draft') {
+                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                        data-id="'.$row->id.'" data-name="'.$row->receive_item_code.'">
+                        <i class="ti ti-trash me-1"></i> Delete
+                     </a>';
+                    }
+
+                    // ─── INFO JIKA SUDAH DIPROSES ─────────────────────────────
 
                     $btn .= '<a class="dropdown-item"
                 href="'.route('receive-item.show', $row->id).'">

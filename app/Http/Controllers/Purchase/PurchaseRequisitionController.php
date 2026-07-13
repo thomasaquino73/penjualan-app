@@ -154,31 +154,30 @@ class PurchaseRequisitionController extends Controller
                     <i class="ti ti-menu-2 ti-xs me-1"></i>
                 </button>
                 <ul class="dropdown-menu">';
-
                     // ─── OWNER ACTION ─────────────────────────────
                     if ($row->created_by == $currentUserId) {
 
                         if ($row->status == 'draft') {
                             $btn .= '<a class="dropdown-item btn-submit-pr" href="javascript:void(0)" data-id="'.$row->id.'" data-status="processing">
-                        <i class="ti ti-send me-1"></i> Processing Requisition
+                        <i class="ti ti-send me-1"></i> Send to process
                      </a>';
                             $btn .= '<hr class="dropdown-divider">';
                         }
 
-                        // ✅ EDIT
-                        if ($user->can('permintaan_pembelian-edit') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'">
+                    }
+                    // ✅ EDIT
+                    if ($user->can('permintaan_pembelian-edit') && $row->status == 'draft') {
+                        $btn .= '<a class="dropdown-item" href="'.route('permintaan-pembelian.edit', $row->id).'">
                         <i class="far fa-edit me-1"></i> Edit
                      </a>';
-                        }
+                    }
 
-                        // ✅ DELETE
-                        if ($user->can('permintaan_pembelian-delete') && $row->status == 'draft') {
-                            $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
+                    // ✅ DELETE
+                    if ($user->can('permintaan_pembelian-delete') && $row->status == 'draft') {
+                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
                         data-id="'.$row->id.'" data-name="'.$row->code.'">
                         <i class="ti ti-trash me-1"></i> Delete
                      </a>';
-                        }
                     }
 
                     // ─── INFO JIKA SUDAH DIPROSES ─────────────────────────────

@@ -235,11 +235,24 @@ class SalesOrderController extends Controller
                                 <ul class="dropdown-menu">
                         ';
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | 1. OWNER ACTION
-                    |--------------------------------------------------------------------------
-                    */
+                    if ($row->created_by == $currentUserId) {
+                        if ($row->status == 'draft') {
+
+                            $btn .= '
+                                <a class="dropdown-item btn-process"
+                                    href="javascript:void(0)"
+                                    data-id="'.$row->id.'">
+
+                                    <i class="ti ti-send me-1"></i>
+                                    Send To Process
+                                </a>
+                            ';
+                            $btn .= '<hr class="dropdown-divider">';
+
+                        }
+
+                    }
+
                     if (
                         $user->can('sales_order-edit') &&
                         in_array($row->status, ['draft', 'pending', 'processing'])
@@ -273,36 +286,6 @@ class SalesOrderController extends Controller
                                 </a>
                             ';
                     }
-                    if ($row->created_by == $currentUserId) {
-
-                        // SEND TO APPROVAL
-                        // if ($row->status == 'draft') {
-
-                        //     $btn .= '
-                        //         <a class="dropdown-item btn-submit-po"
-                        //             href="javascript:void(0)"
-                        //             data-id="'.$row->id.'">
-
-                        //             <i class="ti ti-send me-1"></i>
-                        //             Send To Approval
-                        //         </a>
-                        //     ';
-                        // }
-                        if ($row->status == 'draft') {
-
-                            $btn .= '
-                                <a class="dropdown-item btn-process"
-                                    href="javascript:void(0)"
-                                    data-id="'.$row->id.'">
-
-                                    <i class="ti ti-send me-1"></i>
-                                    Send To Process
-                                </a>
-                            ';
-                        }
-                        // EDIT
-
-                    }
 
                     /*
                     |--------------------------------------------------------------------------
@@ -310,80 +293,11 @@ class SalesOrderController extends Controller
                     |--------------------------------------------------------------------------
                     */
 
-                    if (
-                        $row->created_by != $currentUserId &&
-                        $user->can('sales_order-approval')
-                    ) {
-
-                        if ($row->status == 'pending') {
-
-                            $btn .= '
-                                    <a class="dropdown-item text-success btn-approval-po"
-                                        href="javascript:void(0)"
-                                        data-status="approved"
-                                        data-id="'.$row->id.'">
-
-                                        <i class="ti ti-check me-1"></i>
-                                        Approve SO
-                                    </a>
-                                ';
-
-                            $btn .= '
-                                    <a class="dropdown-item text-danger btn-approval-po"
-                                        href="javascript:void(0)"
-                                        data-status="rejected"
-                                        data-id="'.$row->id.'">
-
-                                        <i class="ti ti-x me-1"></i>
-                                        Reject SO
-                                    </a>
-                                ';
-                        }
-                    }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | 3. SEND TO SUPPLIER
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        $row->status == 'approved'
-                        // $row->status == 'approved' &&
-                        // $user->can('sales_order-send-supplier')
-                    ) {
-
-                        $btn .= '
-                            <a class="dropdown-item text-info btn-send-supplier"
-                                href="javascript:void(0)"
-                                data-id="'.$row->id.'">
-
-                                <i class="ti ti-mail-fast me-1"></i>
-                                Send To Supplier
-                            </a>
-                        ';
-                    }
-
                     /*
                     |--------------------------------------------------------------------------
                     | 4. RECEIVE ITEM
                     |--------------------------------------------------------------------------
                     */
-
-                    if (
-                        in_array($row->status, ['sent', 'partially_received']) &&
-                        $user->can('sales_order-receive')
-                    ) {
-
-                        $btn .= '
-                    <a class="dropdown-item text-primary"
-                        href="'.route('sales-order.receive', $row->id).'">
-
-                        <i class="ti ti-package-import me-1"></i>
-                        Receive Item
-                    </a>
-                ';
-                    }
 
                     /*
                     |--------------------------------------------------------------------------

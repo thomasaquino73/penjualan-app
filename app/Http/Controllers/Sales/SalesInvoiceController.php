@@ -237,6 +237,8 @@ class SalesInvoiceController extends Controller
                                     Send To Processing
                                 </a>
                             ';
+                            $btn .= '<hr class="dropdown-divider">';
+
                         }
 
                         // EDIT
@@ -463,8 +465,8 @@ class SalesInvoiceController extends Controller
                         // 1. Simpan ke Sales Invoice Detail
                         $salesInvoiceDetail = SalesInvoiceDetail::create([
                             'sales_invoice_id' => $salesInvoice->id,
-                            'sales_order_detail_id' => $sqDetailId,
-                            'sales_order_code_id' => $soCodeID,
+                            // 'sales_order_detail_id' => $sqDetailId,
+                            // 'sales_order_code_id' => $soCodeID,
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
@@ -501,26 +503,25 @@ class SalesInvoiceController extends Controller
                         ]);
 
                         if ($sqDetailId) {
-                            $sqDetail = DB::table("sales_order_detail_{$currentYear}")->where('id', $sqDetailId)->first();
+                            $sqDetail = DB::table("delivery_order_detail_{$currentYear}")->where('id', $sqDetailId)->first();
 
                             if ($sqDetail) {
                                 // Hitung total akumulasi qty yang sudah masuk SO untuk item ini
-                                $totalSoForThisItem = SalesInvoiceDetail::where('sales_order_detail_id', $sqDetailId)
-                                    ->where('active', 1)
+                                $totalSoForThisItem = DeliveryOrderDetail::where('sales_order_detail_id', $sqDetailId)
                                     ->sum('qty');
 
-                                // Update so_qty dan outstanding_qty di SQ Detail
+                                // Update sq_qty dan outstanding_qty di SQ Detail
                                 $newOutstanding = max(0, ($sqDetail->qty - $totalSoForThisItem));
 
-                                DB::table("sales_order_detail_{$currentYear}")
+                                DB::table("delivery_order_detail_{$currentYear}")
                                     ->where('id', $sqDetailId)
                                     ->update([
-                                        'so_qty' => $totalSoForThisItem,
+                                        'do_qty' => $totalSoForThisItem,
                                         'outstanding_qty' => $newOutstanding,
                                     ]);
 
-                                if (! in_array($sqDetail->sales_order_id, $involvedSqIds)) {
-                                    $involvedSqIds[] = $sqDetail->sales_order_id;
+                                if (! in_array($sqDetail->delivery_order_id, $involvedSqIds)) {
+                                    $involvedSqIds[] = $sqDetail->delivery_order_id;
                                 }
                             }
                         }
@@ -528,22 +529,22 @@ class SalesInvoiceController extends Controller
                     }
 
                     foreach ($involvedSqIds as $sqId) {
-                        $allDetails = DB::table("sales_order_detail_{$currentYear}")
-                            ->where('sales_order_id', $sqId)
+                        $allDetails = DB::table("delivery_order_detail_{$currentYear}")
+                            ->where('delivery_order_id', $sqId)
                             ->get();
 
                         $totalRequested = $allDetails->sum('qty');
-                        $totalOrdered = $allDetails->sum('so_qty');
+                        $totalOrdered = $allDetails->sum('do_qty');
 
                         if ($totalOrdered >= $totalRequested) {
-                            $newStatus = 'completed';
+                            $newStatus = 'closed';
                         } elseif ($totalOrdered > 0) {
                             $newStatus = 'partial';
                         } else {
                             $newStatus = 'processing';
                         }
 
-                        DB::table("sales_order_{$currentYear}")
+                        DB::table("delivery_order_{$currentYear}")
                             ->where('id', $sqId)
                             ->update(['status' => $newStatus]);
                     }
@@ -1555,7 +1556,7 @@ class SalesInvoiceController extends Controller
 
     public function getDeliveryDetail(Request $request)
     {
-        $ids = $request->quotation_ids; 
+        $ids = $request->quotation_ids;
 
         if (empty($ids)) {
             return response()->json(['success' => false, 'data' => []]);
@@ -1563,11 +1564,11 @@ class SalesInvoiceController extends Controller
 
         // Load relasi salesOrderDetail
         $details = DeliveryOrderDetail::with([
-                'produkID', 
-                'unitID', 
-                'deliveryOrder', 
-                'salesOrderDetail' // WAJIB ADA DI SINI
-            ])
+            'produkID',
+            'unitID',
+            'deliveryOrder',
+            'salesOrderDetail', // WAJIB ADA DI SINI
+        ])
             ->whereIn('delivery_order_id', $ids)
             ->get();
 
@@ -1583,19 +1584,19 @@ class SalesInvoiceController extends Controller
                 'id' => $item->id,
                 'product_id' => $item->data_barang_id, // Sesuaikan dengan field di DB
                 'product_name' => $item->produkID->nama_barang ?? '-',
-                
+
                 'qty' => $sisaQty,
                 'outstanding_qty' => $item->outstanding_qty ?? $sisaQty,
-                
+
                 'unit_id' => $item->unit_id,
                 'unit_name' => $item->unitID->detail ?? '-',
-                
+
                 'warehouse_id' => $item->warehouse_id,
                 'warehouse_name' => $item->warehouseID->nama_gudang ?? '-', // Sesuaikan nama field gudang
-                
+
                 'unit_price' => $price,
                 'discount' => $discount,
-                'amount' => (float)(($price * $sisaQty) - $discount),
+                'amount' => (float) (($price * $sisaQty) - $discount),
                 'order_code' => $item->deliveryOrder->delivery_order_code ?? '-',
             ];
         });

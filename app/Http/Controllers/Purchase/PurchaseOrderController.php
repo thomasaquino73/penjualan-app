@@ -241,6 +241,24 @@ class PurchaseOrderController extends Controller
                     |--------------------------------------------------------------------------
                     */
 
+                    if ($row->created_by == $currentUserId) {
+
+                        if ($row->status == 'draft') {
+
+                            $btn .= '
+                                <a class="dropdown-item btn-process"
+                                    href="javascript:void(0)"
+                                    data-id="'.$row->id.'">
+
+                                    <i class="ti ti-send me-1"></i>
+                                    Send To Process
+                                </a>
+                            ';
+                            $btn .= '<hr class="dropdown-divider">';
+                        }
+
+                    }
+
                     // EDIT
                     if (
                         $user->can('purchase_order-edit') &&
@@ -274,36 +292,6 @@ class PurchaseOrderController extends Controller
                                     Delete
                                 </a>
                             ';
-                    }
-
-                    if ($row->created_by == $currentUserId) {
-
-                        // SEND TO APPROVAL
-                        // if ($row->status == 'draft') {
-
-                        //     $btn .= '
-                        //         <a class="dropdown-item btn-submit-po"
-                        //             href="javascript:void(0)"
-                        //             data-id="'.$row->id.'">
-
-                        //             <i class="ti ti-send me-1"></i>
-                        //             Send To Approval
-                        //         </a>
-                        //     ';
-                        // }
-                        if ($row->status == 'draft') {
-
-                            $btn .= '
-                                <a class="dropdown-item btn-process"
-                                    href="javascript:void(0)"
-                                    data-id="'.$row->id.'">
-
-                                    <i class="ti ti-send me-1"></i>
-                                    Send To Process
-                                </a>
-                            ';
-                        }
-
                     }
 
                     /*
