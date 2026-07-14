@@ -225,6 +225,7 @@ class ProformaInvoiceController extends Controller
                                     Send To Processing
                                 </a>
                             ';
+                            $btn .= '<hr class="dropdown-divider">';
                         }
 
                         // EDIT

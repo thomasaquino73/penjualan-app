@@ -227,7 +227,6 @@
             const datePicker = flatpickr("#sales_invoice_date", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                minDate: "today",
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
             });
         });
@@ -313,7 +312,7 @@
                                             data-product_id="${item.product_id}"
                                             data-product_name="${safeProductName}"
                                             data-qty="${item.qty}"
-                                            data-outstanding_qty="${item.outstanding_qty}" 
+                                            data-outstanding_qty="${item.outstanding_qty}"
                                             data-unit_id="${item.unit_id}"
                                             data-unit_name="${item.unit_name}"
                                             data-warehouse_id="${item.warehouse_id}"
@@ -321,7 +320,7 @@
                                             data-unit_price="${price}"
                                             data-discount="${discount}"
                                             data-amount="${amount}"
-                                            data-delivery_order_code="${item.order_code}" 
+                                            data-delivery_order_code="${item.order_code}"
                                         >
                                     </td>
                                     <td>${item.product_name}</td>

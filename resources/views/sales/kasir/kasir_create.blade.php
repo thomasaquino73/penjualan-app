@@ -160,27 +160,10 @@
                         </div>
                     </div>
 
-
-                    <!-- Cash Received -->
-                    <div class="mb-3">
-                        <label class="form-label">Amount Received</label>
-                        <div class="input-group input-group-merge">
-                            <span class="input-group-text">{{ $mataUangDefault->symbol }}</span>
-                            <input type="number" id="amount_receive" name="amount_receive" class="form-control"
-                                placeholder="0" min="0">
-                        </div>
-                    </div>
-
-                    <!-- Change -->
-                    <div class="mb-3">
-                        <label class="form-label">Change</label>
-                        <input type="text" class="form-control text-success fw-bold text-end bg-light" value=""
-                            readonly>
-                    </div>
                     <!-- Payment Method -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Payment Method</label>
-                        <select name="" id="" class="form-select select2"
+                        <select name="payment_method" id="payment_method" class="form-select select2"
                             data-placeholder="Select Payment">
                             <option></option>
                             <option value="Cash">Tunai</option>
@@ -188,6 +171,31 @@
                             <option value="Transfer">Transfer</option>
                         </select>
                     </div>
+
+                    <div id="cash_section" style="display:none;">
+
+                        <!-- Cash Received -->
+                        <div class="mb-3">
+                            <label class="form-label">Amount Received</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text">{{ $mataUangDefault->symbol }}</span>
+                                <input type="number" id="amount_receive" name="amount_receive" class="form-control"
+                                    placeholder="0" min="0">
+                            </div>
+                        </div>
+
+                        <!-- Change -->
+                        <div class="mb-3">
+                            <label class="form-label">Change</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text">{{ $mataUangDefault->symbol }}</span>
+                                <input type="text" id="change_amount" class="form-control text-success fw-bold"
+                                    readonly>
+                            </div>
+                        </div>
+
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Shipping Method</label>
                         <select name="" id="" class="form-select select2"
@@ -230,6 +238,23 @@
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
             });
         });
+
+        function toggleCashSection() {
+
+            let paymentMethod = $("#payment_method").val();
+
+            if (paymentMethod === "Cash") {
+
+                $("#cash_section").slideDown();
+
+            } else {
+
+                $("#cash_section").slideUp();
+
+                $("#amount_receive").val("");
+                $("#change_amount").val("");
+            }
+        }
 
         $("#showModalpr").on("click", function(e) {
             e.preventDefault();
