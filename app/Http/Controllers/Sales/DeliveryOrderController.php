@@ -120,19 +120,9 @@ class DeliveryOrderController extends Controller
                             $text = 'Processing';
                             break;
 
-                        case 'approved':
-                            $badge = 'bg-label-success';
-                            $text = 'Approved';
-                            break;
-
-                        case 'sent':
-                            $badge = 'bg-label-primary';
-                            $text = 'Sent To Supplier';
-                            break;
-
-                        case 'partially_received':
+                        case 'partial':
                             $badge = 'bg-label-info';
-                            $text = 'Partially Received';
+                            $text = 'Partially Invoice';
                             break;
 
                         case 'completed':
@@ -140,10 +130,6 @@ class DeliveryOrderController extends Controller
                             $text = 'Completed';
                             break;
 
-                        case 'rejected':
-                            $badge = 'bg-label-danger';
-                            $text = 'Rejected';
-                            break;
 
                         case 'cancelled':
                             $badge = 'bg-danger';

@@ -146,6 +146,223 @@
             }
 
             // subtotal setelah diskon
+            let subtotal = grandSubTotal;
+
+            // subtotal setelah diskon
+            let subtotalAfterDiscount = subtotal - discount;
+
+            if (subtotalAfterDiscount < 0) {
+                subtotalAfterDiscount = 0;
+            }
+
+            let dpp = subtotalAfterDiscount;
+            let tax = 0;
+            let totalOrder = subtotalAfterDiscount;
+
+            if (kenaPajak && taxPercent > 0) {
+
+                $("#ppn_container").show();
+
+                if (totalInclude) {
+
+                    // Harga SUDAH termasuk pajak
+                    dpp = subtotalAfterDiscount / (1 + (taxPercent / 100));
+                    tax = subtotalAfterDiscount - dpp;
+                    totalOrder = subtotalAfterDiscount;
+
+                } else {
+
+                    // Harga BELUM termasuk pajak
+                    dpp = subtotalAfterDiscount;
+                    tax = dpp * taxPercent / 100;
+                    totalOrder = dpp + tax;
+                }
+
+            } else {
+
+                $("#ppn_container").hide();
+
+                dpp = subtotalAfterDiscount;
+                tax = 0;
+                totalOrder = subtotalAfterDiscount;
+            }
+
+            // Label tax
+            $("#taxes").text(
+                taxPercent > 0 ?
+                `Tax (${taxPercent}%)` :
+                "Tax"
+            );
+
+            // ===================================================
+            // SUB TOTAL TETAP DARI TABEL (JANGAN DPP)
+            // ===================================================
+            $("#sub_total").val(Math.round(subtotal));
+
+            // Simpan DPP jika diperlukan
+            $("#dpp_amount").val(Math.round(dpp));
+
+            $("#tax_amount").val(Math.round(tax));
+
+            $("#total_order").val(Math.round(totalOrder));
+        }
+
+        // ===============================
+        // EVENT
+        // ===============================
+
+        $("#kena_pajak").on("change", function() {
+
+            if ($(this).is(":checked")) {
+
+                $("#tax_container").show();
+
+                if (DEFAULT_TAX_ID) {
+                    $("#tax_id").val(DEFAULT_TAX_ID);
+                }
+
+            } else {
+
+                $("#tax_container").hide();
+
+                $("#tax_id").val("");
+
+                $("#total_termasuk_pajak").prop("checked", false);
+
+            }
+
+            calculateTotalOrder();
+        });
+
+        $("#tax_id").on("change", function() {
+
+            calculateTotalOrder();
+
+        });
+
+        $("#total_termasuk_pajak").on("change", function() {
+
+            if ($(this).is(":checked")) {
+
+                $("#kena_pajak").prop("checked", true);
+
+                if ($("#tax_id").val() == "" && DEFAULT_TAX_ID) {
+                    $("#tax_id").val(DEFAULT_TAX_ID);
+                }
+                $("#tax_container").hide();
+
+            } else {
+                $("#tax_container").show();
+            }
+
+            calculateTotalOrder();
+
+        });
+
+        $("#discount_all").on("input", function() {
+
+            calculateTotalOrder();
+
+        });
+
+        $("#percent").on("input", function() {
+
+            let subtotal = getGrandSubTotal();
+
+            let percent = parseFloat($(this).val()) || 0;
+
+            let nominal = subtotal * percent / 100;
+
+            $("#discount_all").val(Math.round(nominal));
+
+            calculateTotalOrder();
+
+        });
+    </script>
+    {{-- <script>
+        $("#sub_total, #discount_all").on("input", function() {
+            calculateTotalOrder();
+        });
+
+        // ===============================
+        // Ambil Grand Total dari Detail
+        // ===============================
+        function getGrandSubTotal() {
+
+            let total = 0;
+
+            $.each(prDetailsData, function(index, item) {
+                total += parseFloat(item.amount) || 0;
+            });
+
+            return total;
+        }
+
+        // ===============================
+        // Hitung Grand Total
+        // ===============================
+        function calculateGrandTotal() {
+
+            let grandSubTotal = getGrandSubTotal();
+
+            let currentPercent = parseFloat($("#percent").val()) || 0;
+
+            if (currentPercent > 0) {
+
+                let nominalDiscount = grandSubTotal * currentPercent / 100;
+
+                $("#discount_all").val(Math.round(nominalDiscount));
+
+            } else {
+
+                let nominalDiscount = parseFloat($("#discount_all").val()) || 0;
+
+                if (nominalDiscount > grandSubTotal) {
+                    nominalDiscount = grandSubTotal;
+                    $("#discount_all").val(Math.round(nominalDiscount));
+                }
+
+                let percent = grandSubTotal > 0 ?
+                    (nominalDiscount / grandSubTotal) * 100 :
+                    0;
+
+                $("#percent").val(
+                    percent % 1 === 0 ? percent : percent.toFixed(2)
+                );
+            }
+
+            calculateTotalOrder();
+        }
+
+        const TAXES = @json($taxes);
+        const DEFAULT_TAX_ID = {{ $defaultTax->id ?? 'null' }};
+
+        // ===============================
+        // Hitung Total Order
+        // ===============================
+        function calculateTotalOrder() {
+
+            // Selalu hitung subtotal dari tabel
+            let grandSubTotal = getGrandSubTotal();
+
+            let discount = parseFloat($("#discount_all").val()) || 0;
+
+            let kenaPajak = $("#kena_pajak").is(":checked");
+            let totalInclude = $("#total_termasuk_pajak").is(":checked");
+
+            let selectedTaxId = $("#tax_id").val();
+
+            let taxPercent = 0;
+
+            if (selectedTaxId) {
+                let selectedTax = TAXES.find(t => t.id == selectedTaxId);
+
+                if (selectedTax) {
+                    taxPercent = parseFloat(selectedTax.percentage) || 0;
+                }
+            }
+
+            // subtotal setelah diskon
             let subtotal = grandSubTotal - discount;
 
             if (subtotal < 0)
@@ -286,5 +503,5 @@
             calculateTotalOrder();
 
         });
-    </script>
+    </script> --}}
 @endpush
