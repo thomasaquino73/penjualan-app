@@ -743,35 +743,35 @@ class SalesInvoiceController extends Controller
                 ->delete();
             $currentYear = date('Y');
 
-$oldDetails = SalesInvoiceDetail::where('sales_invoice_id', $salesInvoice->id)->get();
+            $oldDetails = SalesInvoiceDetail::where('sales_invoice_id', $salesInvoice->id)->get();
 
-$affectedDoIds = [];
+            $affectedDoIds = [];
 
-foreach ($oldDetails as $detail) {
+            foreach ($oldDetails as $detail) {
 
-    if (!$detail->sales_order_detail_id) {
-        continue;
-    }
+                if (! $detail->sales_order_detail_id) {
+                    continue;
+                }
 
-    $doDetail = DB::table("delivery_order_detail_{$currentYear}")
-        ->where('id', $detail->sales_order_detail_id)
-        ->first();
+                $doDetail = DB::table("delivery_order_detail_{$currentYear}")
+                    ->where('id', $detail->sales_order_detail_id)
+                    ->first();
 
-    if (!$doDetail) {
-        continue;
-    }
+                if (! $doDetail) {
+                    continue;
+                }
 
-    $newDoQty = max(0, $doDetail->do_qty - $detail->qty);
+                $newDoQty = max(0, $doDetail->do_qty - $detail->qty);
 
-    DB::table("delivery_order_detail_{$currentYear}")
-        ->where('id', $detail->sales_order_detail_id)
-        ->update([
-            'do_qty' => $newDoQty,
-            'outstanding_qty' => $doDetail->qty - $newDoQty,
-        ]);
+                DB::table("delivery_order_detail_{$currentYear}")
+                    ->where('id', $detail->sales_order_detail_id)
+                    ->update([
+                        'do_qty' => $newDoQty,
+                        'outstanding_qty' => $doDetail->qty - $newDoQty,
+                    ]);
 
-    $affectedDoIds[] = $doDetail->delivery_order_id;
-}
+                $affectedDoIds[] = $doDetail->delivery_order_id;
+            }
             // ==========================
             // HAPUS DETAIL LAMA
             // ==========================

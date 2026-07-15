@@ -209,6 +209,7 @@
 
                 if (!productId || !warehouseId || !unitId) {
                     $('#available_stok').val('');
+                    $('#modalTitle').text('Create new entry');
                     return;
                 }
 
@@ -221,21 +222,23 @@
                         unit_id: unitId
                     },
                     success: function(res) {
+
+                        console.log('RESPONSE STOCK:', res);
+
                         $('#available_stok').val(res.stock);
-                        console.log('RESPONSE STOCK:', res.stock);
 
                         $('#modalTitle').text(
-                            `Create new entry (Available Stock: ${res.stock} ${res.unit})`
+                            `Create new entry `
                         );
+                    },
+                    error: function(xhr) {
+                        console.log(xhr.responseText);
+                        $('#available_stok').val(0);
                     }
                 });
             }
 
-            $(document).on('change', '#product_id, #warehouse_id', function() {
-                loadAvailableStock();
-            });
-
-            $(document).on('change select2:select', '#unit_id', function() {
+            $(document).on('change', '#product_id, #warehouse_id, #unit_id', function() {
                 loadAvailableStock();
             });
 

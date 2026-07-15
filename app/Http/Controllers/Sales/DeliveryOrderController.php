@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DeliveryOrderRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
+use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\StockBalance;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
@@ -130,7 +131,6 @@ class DeliveryOrderController extends Controller
                             $text = 'Completed';
                             break;
 
-
                         case 'cancelled':
                             $badge = 'bg-danger';
                             $text = 'Cancelled';
@@ -190,36 +190,7 @@ class DeliveryOrderController extends Controller
 
                     return $html;
                 })
-                ->addColumn('cekbok', function ($row) {
 
-                    if (
-                        auth()->user()->can('delivery_order-delete') &&
-                        $row->status === 'processing'
-                    ) {
-                        return '
-                            <div class="form-check form-check-primary">
-                                <input class="form-check-input checkItem"
-                                    type="checkbox"
-                                    value="'.$row->id.'">
-                            </div>
-                        ';
-                    }
-
-                    return '';
-                })
-                // ->addColumn('total', function ($row) {
-                //     // 1. Hitung total kotor (sum amount) dari detail item DO
-                //     $subTotal = DeliveryOrderDetail::where('delivery_order_id', $row->id)
-                //         ->where('active', 1)
-                //         ->sum('amount');
-
-                //     // 2. Hitung grand total: Subtotal dikurangi diskon nominal yang ada di tabel induk ($row)
-                //     // Gunakan ?? 0 jika kolom disc_nominal di database bisa bernilai null
-                //     $grandTotal = $subTotal - ($row->disc_nominal ?? 0);
-
-                //     // 3. Kembalikan nilai yang sudah dikonversi dan diformat
-                //     return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
-                // })
                 ->addColumn('action', function ($row) {
 
                     $currentUserId = Auth::user()->id;
@@ -407,7 +378,7 @@ class DeliveryOrderController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'delivery_order_date', 'customer'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'delivery_order_date', 'customer'])
                 ->make(true);
         }
 
@@ -565,20 +536,63 @@ class DeliveryOrderController extends Controller
                             'warehouse_id' => $item['warehouse_id'],
                         ]);
 
-                        // 3. Stock Mutation
+                        // =====================================================
+                        // 3. Simpan Mutasi Stok (Selalu dalam Base Unit)
+                        // =====================================================
+
+                        $product = Barang::findOrFail($item['product_id']);
+
+                        $baseUnitId = $product->unit_id; // satuan dasar barang
+
+                        $qtyInput = (float) ($item['quantity'] ?? $item['qty'] ?? 0);
+                        $unitInput = $item['unit_id'];
+
+                        $totalBaseQty = $qtyInput;
+
+                        // Jika unit transaksi bukan unit dasar
+                        if ($unitInput != $baseUnitId) {
+
+                            $conversion = DataBarangConversion::where('data_barang_id', $item['product_id'])
+                                ->where('from_unit_id', $unitInput)
+                                ->where('to_unit_id', $baseUnitId)
+                                ->first();
+
+                            if (! $conversion) {
+                                throw new \Exception(
+                                    "Konversi satuan tidak ditemukan untuk produk {$product->nama_barang}"
+                                );
+                            }
+
+                            $totalBaseQty = $qtyInput * $conversion->qty;
+                        }
+
                         $customer = Customer::find($r->customer_id);
+
                         StockMutation::create([
                             'data_barang_id' => $item['product_id'],
-                            'document_id' => $deliveryOrder->id,
-                            'unit_id' => $item['unit_id'],
+
+                            // unit sesuai transaksi DO
+                            'unit_id' => $unitInput,
+
                             'warehouse_id' => $item['warehouse_id'],
+
                             'date_stock' => $data['delivery_order_date'],
-                            'qty_transaksi' => $qty,
-                            'total_base_qty' => $qty,
+
+                            // qty keluar sesuai satuan transaksi
+                            'qty_transaksi' => $qtyInput,
+
+                            // qty dikonversi ke satuan dasar
+                            'total_base_qty' => $totalBaseQty,
+
                             'type' => 'out',
+
+                            'document_id' => $deliveryOrder->id,
                             'document_number' => $deliveryOrder->delivery_order_code,
                             'document_type' => 'delivery_order',
-                            'keterangan' => 'Pengiriman ke '.($customer->nama_customer ?? 'Customer').' via DO '.$deliveryOrder->delivery_order_code,
+
+                            'keterangan' => 'Pengiriman ke '.($customer->nama_customer ?? 'Customer').
+                                ' via DO '.$deliveryOrder->delivery_order_code,
+
                             'created_by' => Auth::id(),
                         ]);
 
@@ -845,30 +859,77 @@ class DeliveryOrderController extends Controller
                             ? $customer->nama_customer
                             : 'Customer Tidak Diketahui';
 
+                        /*
+            |--------------------------------------------------------------------------
+            | Stock Mutation OUT (Base Unit)
+            |--------------------------------------------------------------------------
+            */
+
+                        $product = Barang::findOrFail($item['product_id']);
+
+                        $baseUnitId = $product->unit_id;
+
+                        $qtyInput = (float) ($item['quantity'] ?? $item['qty'] ?? 0);
+
+                        $unitInput = $item['unit_id'];
+
+                        $totalBaseQty = $qtyInput;
+
+                        // Jika unit transaksi bukan unit dasar
+                        if ($unitInput != $baseUnitId) {
+
+                            $conversion = DataBarangConversion::where('data_barang_id', $item['product_id'])
+                                ->where('from_unit_id', $unitInput)
+                                ->where('to_unit_id', $baseUnitId)
+                                ->first();
+
+                            if (! $conversion) {
+                                throw new \Exception(
+                                    "Konversi satuan tidak ditemukan untuk produk {$product->nama_barang}"
+                                );
+                            }
+
+                            $totalBaseQty = $qtyInput * $conversion->qty;
+                        }
+                        StockMutation::where([
+                            'document_id' => $deliveryOrder->id,
+                            'document_type' => 'delivery_order',
+                        ])->delete();
+
                         StockMutation::create([
                             'document_id' => $deliveryOrder->id,
+
                             'data_barang_id' => $item['product_id'],
-                            'unit_id' => $item['unit_id'],
+
+                            // unit transaksi
+                            'unit_id' => $unitInput,
+
                             'warehouse_id' => $item['warehouse_id'],
-                            'date_stock' => Carbon::parse($r->delivery_order_date)->format('Y-m-d'),
-                            'qty_transaksi' => $qty,
-                            'total_base_qty' => $qty,
+
+                            'date_stock' => Carbon::parse($r->delivery_order_date)
+                                ->format('Y-m-d'),
+
+                            // qty sesuai input DO
+                            'qty_transaksi' => $qtyInput,
+
+                            // qty dalam satuan dasar
+                            'total_base_qty' => $totalBaseQty,
+
                             'type' => 'out',
+
                             'document_number' => $deliveryOrder->delivery_order_code,
+
                             'document_type' => 'delivery_order',
+
                             'keterangan' => sprintf(
                                 'Pengiriman barang ke customer %s melalui DO %s',
                                 $namaCustomer,
                                 $deliveryOrder->delivery_order_code
                             ),
+
                             'created_by' => Auth::id(),
                         ]);
 
-                        StockMutation::where([
-                            'document_number' => $deliveryOrder->delivery_order_code,
-                            'data_barang_id' => $old->data_barang_id,
-                            'warehouse_id' => $old->warehouse_id,
-                        ])->delete();
                     }
                 }
             }
@@ -896,18 +957,60 @@ class DeliveryOrderController extends Controller
         DB::beginTransaction();
 
         try {
-            $do = DeliveryOrder::findOrFail($id);
-            $do->update(['active' => 0, 'updated_by' => Auth::id()]);
-            StockMutation::where('document_type', 'delivery_order')
-                ->where('document_id', $do->id)
-                ->delete();
+
+            $do = DeliveryOrder::with('details')->findOrFail($id);
+
+            // 1. Kembalikan stock balance
+            foreach ($do->details as $detail) {
+
+                $mutation = StockMutation::where([
+                    'document_id' => $do->id,
+                    'document_type' => 'delivery_order',
+                    'data_barang_id' => $detail->data_barang_id,
+                    'warehouse_id' => $detail->warehouse_id,
+                ])->first();
+
+                if ($mutation) {
+
+                    StockBalance::where([
+                        'product_id' => $detail->data_barang_id,
+                        'warehouse_id' => $detail->warehouse_id,
+                    ])
+                        ->increment(
+                            'qty',
+                            $mutation->total_base_qty
+                        );
+
+                }
+            }
+
+            // 2. Hapus stock mutation
+            StockMutation::where([
+                'document_type' => 'delivery_order',
+                'document_id' => $do->id,
+            ])->delete();
+
+            // 3. Nonaktifkan DO
+            $do->update([
+                'active' => 0,
+                'updated_by' => Auth::id(),
+            ]);
+
             DB::commit();
 
-            return response()->json(['status' => 'success', 'message' => 'DO berhasil dibatalkan.'], 200);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'DO berhasil dibatalkan.',
+            ], 200);
+
         } catch (\Exception $e) {
+
             DB::rollBack();
 
-            return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan DO: '.$e->getMessage()], 500);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal membatalkan DO: '.$e->getMessage(),
+            ], 500);
         }
     }
 
@@ -984,36 +1087,6 @@ class DeliveryOrderController extends Controller
                     return $row->customerID->nama_customer ?? 'N/A';
                 })
 
-                ->addColumn('cekbok', function ($row) {
-
-                    if (
-                        auth()->user()->can('delivery_order-delete') &&
-                        $row->status === 'processing'
-                    ) {
-                        return '
-                            <div class="form-check form-check-primary">
-                                <input class="form-check-input checkItem"
-                                    type="checkbox"
-                                    value="'.$row->id.'">
-                            </div>
-                        ';
-                    }
-
-                    return '';
-                })
-                // ->addColumn('total', function ($row) {
-                //     // 1. Hitung total kotor (sum amount) dari detail item DO
-                //     $subTotal = DeliveryOrderDetail::where('delivery_order_id', $row->id)
-                //         ->where('active', 1)
-                //         ->sum('amount');
-
-                //     // 2. Hitung grand total: Subtotal dikurangi diskon nominal yang ada di tabel induk ($row)
-                //     // Gunakan ?? 0 jika kolom disc_nominal di database bisa bernilai null
-                //     $grandTotal = $subTotal - ($row->disc_nominal ?? 0);
-
-                //     // 3. Kembalikan nilai yang sudah dikonversi dan diformat
-                //     return format_uang(convert_currency($grandTotal, $row->currency_id ?? 1));
-                // })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -1028,7 +1101,7 @@ class DeliveryOrderController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'delivery_order_date', 'customer'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'delivery_order_date', 'customer'])
                 ->make(true);
         }
 
@@ -1043,45 +1116,6 @@ class DeliveryOrderController extends Controller
         return view('sales.deliveryOrder.delivery_order_trash', $x);
     }
 
-    public function deleteMultiple(Request $request)
-    {
-        DB::beginTransaction();
-
-        try {
-            $ids = $request->ids;
-
-            if (! $ids || count($ids) == 0) {
-                return response()->json(['success' => false, 'message' => 'Tidak ada data yang dipilih.'], 400);
-            }
-
-            // 1. Ambil semua detail dari SO yang akan dihapus untuk sinkronisasi PR
-            DeliveryOrderDetail::whereIn('delivery_order_id', $ids)->get();
-            $involvedPrIds = [];
-
-            // 2. Tandai SO dan Detail SO sebagai tidak aktif (active = 0)
-            DeliveryOrder::whereIn('id', $ids)->update([
-                'active' => 0,
-                'updated_by' => Auth::id(),
-            ]);
-            $this->deleteStockMutation($ids);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Delivery Order berhasil dihapus dan status PR telah diperbarui.',
-            ], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus data: '.$e->getMessage(),
-            ], 500);
-        }
-    }
-
     private function deleteStockMutation($documentIds)
     {
         StockMutation::where('document_type', 'delivery_order')
@@ -1094,7 +1128,18 @@ class DeliveryOrderController extends Controller
         DB::beginTransaction();
 
         try {
+
             $do = DeliveryOrder::with('details')->findOrFail($id);
+
+            // Cegah restore stok dua kali
+            $mutationExists = StockMutation::where([
+                'document_id' => $do->id,
+                'document_type' => 'delivery_order',
+            ])->exists();
+
+            if ($mutationExists) {
+                throw new \Exception('Stock mutation DO ini sudah ada.');
+            }
 
             $do->update([
                 'active' => 1,
@@ -1103,23 +1148,66 @@ class DeliveryOrderController extends Controller
 
             foreach ($do->details as $detail) {
 
+                $product = Barang::findOrFail($detail->data_barang_id);
+
+                $baseUnitId = $product->unit_id;
+
+                $qtyInput = (float) $detail->qty;
+
+                $unitInput = $detail->unit_id;
+
+                $totalBaseQty = $qtyInput;
+
+                // Konversi ke satuan dasar
+                if ($unitInput != $baseUnitId) {
+
+                    $conversion = DataBarangConversion::where('data_barang_id', $detail->data_barang_id)
+                        ->where('from_unit_id', $unitInput)
+                        ->where('to_unit_id', $baseUnitId)
+                        ->first();
+
+                    if (! $conversion) {
+                        throw new \Exception(
+                            "Konversi satuan tidak ditemukan untuk produk {$product->nama_barang}"
+                        );
+                    }
+
+                    $totalBaseQty = $qtyInput * $conversion->qty;
+                }
+
                 StockMutation::create([
+
                     'data_barang_id' => $detail->data_barang_id,
-                    'unit_id' => $detail->unit_id,
+
+                    // satuan transaksi DO
+                    'unit_id' => $unitInput,
+
                     'warehouse_id' => $detail->warehouse_id,
+
                     'date_stock' => $do->delivery_order_date,
-                    'qty_transaksi' => $detail->qty,
-                    'total_base_qty' => $detail->qty,
+
+                    // qty sesuai DO
+                    'qty_transaksi' => $qtyInput,
+
+                    // qty base unit
+                    'total_base_qty' => $totalBaseQty,
+
+                    'type' => 'out',
+
+                    'document_id' => $do->id,
+
+                    'document_number' => $do->delivery_order_code,
+
+                    'document_type' => 'delivery_order',
+
                     'keterangan' => sprintf(
                         'Pengiriman barang ke customer %s melalui DO %s',
                         $do->customerID->nama_customer ?? 'Customer Tidak Diketahui',
                         $do->delivery_order_code
                     ),
-                    'type' => 'out',
-                    'document_id' => $do->id,
-                    'document_number' => $do->delivery_order_code,
-                    'document_type' => 'delivery_order',
+
                     'created_by' => Auth::id(),
+
                 ]);
             }
 
@@ -1138,64 +1226,7 @@ class DeliveryOrderController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 500);
-        }
-    }
 
-    public function restoreMultiple(Request $request)
-    {
-        DB::beginTransaction();
-
-        try {
-            $ids = $request->ids;
-
-            if (! $ids || count($ids) == 0) {
-                return response()->json(['success' => false, 'message' => 'Tidak ada data yang dipilih.'], 400);
-            }
-
-            // 1. Update status SO jadi aktif
-            DeliveryOrder::whereIn('id', $ids)->update([
-                'active' => 1,
-                'updated_by' => Auth::id(),
-            ]);
-
-            $do = DeliveryOrder::whereIn('id', $ids)->first();
-
-            foreach ($do->details as $detail) {
-
-                StockMutation::create([
-                    'data_barang_id' => $detail->data_barang_id,
-                    'unit_id' => $detail->unit_id,
-                    'warehouse_id' => $detail->warehouse_id,
-                    'date_stock' => $do->delivery_order_date,
-                    'qty_transaksi' => $detail->qty,
-                    'total_base_qty' => $detail->qty,
-                    'keterangan' => sprintf(
-                        'Pengiriman barang ke customer %s melalui DO %s',
-                        $do->customerID->nama_customer ?? 'Customer Tidak Diketahui',
-                        $do->delivery_order_code
-                    ),
-                    'type' => 'out',
-                    'document_id' => $do->id,
-                    'document_number' => $do->delivery_order_code,
-                    'document_type' => 'delivery_order',
-                    'created_by' => Auth::id(),
-                ]);
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Delivery Order terpilih berhasil dikembalikan.',
-            ], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal merestore data: '.$e->getMessage(),
-            ], 500);
         }
     }
 
@@ -1307,60 +1338,132 @@ class DeliveryOrderController extends Controller
         return response()->json($details);
     }
 
+    // public function getStock(Request $request)
+    // {
+    //     $request->validate([
+    //         'product_id' => 'required|integer|exists:data_barang,id',
+    //         'warehouse_id' => 'required|integer|exists:warehouse,id',
+    //     ]);
+
+    //     // ambil cut off date dari company
+    //     $company = Company::first(); // atau pakai company aktif kalau multi-company
+
+    //     $cutoffDate = $company?->cut_off_date;
+
+    //     $stock = $this->realStock(
+    //         $request->product_id,
+    //         $request->warehouse_id,
+    //         $request->unit_id,
+    //         $cutoffDate
+    //     );
+
+    //     $barang = Barang::with('unitID')
+    //         ->find($request->product_id);
+    //     $unit = BasicCodeDetail::where('master_id', 2)->find($request->unit_id);
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'stock' => $stock ?? 0,
+    //         'unit' => $unit?->detail ?? '',
+    //         'cutoff_date' => $cutoffDate,
+    //     ]);
+
+    // }
+
     public function getStock(Request $request)
     {
-        $request->validate([
-            'product_id' => 'required|integer|exists:data_barang,id',
-            'warehouse_id' => 'required|integer|exists:warehouse,id',
-        ]);
-
-        // ambil cut off date dari company
-        $company = Company::first(); // atau pakai company aktif kalau multi-company
-
-        $cutoffDate = $company?->cut_off_date;
+        $productId = $request->product_id;
+        $warehouseId = $request->warehouse_id;
+        $unitId = $request->unit_id;
 
         $stock = $this->realStock(
-            $request->product_id,
-            $request->warehouse_id,
-            $request->unit_id,
-            $cutoffDate
+            $productId,
+            $warehouseId,
+            $unitId
         );
 
-        $barang = Barang::with('unitID')
-            ->find($request->product_id);
         $unit = BasicCodeDetail::where('master_id', 2)->find($request->unit_id);
 
         return response()->json([
-            'success' => true,
-            'stock' => $stock ?? 0,
-            'unit' => $unit?->detail ?? '',
-            'cutoff_date' => $cutoffDate,
+            'stock' => floor($stock),
+            'unit' => $unit?->nama_unit ?? '',
         ]);
-
     }
 
     public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
     {
-        $unitId = (int) $unitId;
         $today = now()->format('Y-m-d');
 
-        // Jika cutoffDate null, kita anggap mulai dari tanggal yang sangat lampau atau hari ini
-        $startDate = $cutoffDate ?? $today;
+        if (! $cutoffDate) {
+            $cutoffDate = Company::value('cut_off_date');
+        }
 
-        return DB::table('stock_mutations')
-            ->where('data_barang_id', (int) $productId)
-            ->where('warehouse_id', (int) $warehouseId)
-            ->where('unit_id', $unitId)
-            // Filter rentang: date_stock harus >= cutoffDate DAN <= hari ini
+        $startDate = $cutoffDate ?? '2000-01-01';
+
+        $barang = Barang::find($productId);
+
+        if (! $barang) {
+            return 0;
+        }
+
+        // stok dalam BASE UNIT
+        $stock = DB::table('stock_mutations')
+            ->where('data_barang_id', $productId)
+            ->where('warehouse_id', $warehouseId)
             ->whereBetween('date_stock', [$startDate, $today])
             ->selectRaw("
-            SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
-            -
-            SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
-            as stock
+            COALESCE(SUM(
+                CASE 
+                    WHEN type='in' THEN total_base_qty
+                    WHEN type='out' THEN -total_base_qty
+                    ELSE 0
+                END
+            ),0) stock
         ")
-            ->value('stock') ?? 0;
+            ->value('stock');
+
+        // jika pilih satuan dasar
+        if ((int) $unitId === (int) $barang->unit_id) {
+            return $stock;
+        }
+
+        // cari konversi
+        $conversion = DataBarangConversion::where('data_barang_id', $productId)
+            ->where('from_unit_id', $unitId)
+            ->where('to_unit_id', $barang->unit_id)
+            ->first();
+
+        if (! $conversion || $conversion->qty <= 0) {
+            return 0;
+        }
+
+        return round(
+            $stock / $conversion->qty,
+            2
+        );
     }
+    // public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
+    // {
+    //     $unitId = (int) $unitId;
+    //     $today = now()->format('Y-m-d');
+
+    //     // Jika cutoffDate null, kita anggap mulai dari tanggal yang sangat lampau atau hari ini
+    //     $startDate = $cutoffDate ?? $today;
+
+    //     return DB::table('stock_mutations')
+    //         ->where('data_barang_id', (int) $productId)
+    //         ->where('warehouse_id', (int) $warehouseId)
+    //         ->where('unit_id', $unitId)
+    //         // Filter rentang: date_stock harus >= cutoffDate DAN <= hari ini
+    //         ->whereBetween('date_stock', [$startDate, $today])
+    //         ->selectRaw("
+    //         SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
+    //         -
+    //         SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
+    //         as stock
+    //     ")
+    //         ->value('stock') ?? 0;
+    // }
 
     public function print($id)
     {

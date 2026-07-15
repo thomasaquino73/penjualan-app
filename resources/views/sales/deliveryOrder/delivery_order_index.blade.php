@@ -37,11 +37,7 @@
                         </a>
                     @endcanany
 
-                    @canany(['delivery_order-delete'])
-                        <button id="deleteSelected" class="btn btn-danger btn-sm">
-                            <i class="ti ti-trash me-1"></i> Delete Selected
-                        </button>
-                    @endcanany
+
 
                 </div>
             </div>
@@ -67,11 +63,7 @@
             <table class="table table-bordered" id="table">
                 <thead class="border-top" style="background-color: #AEDEFC; ">
                     <tr>
-                        <th>
-                            <div class="form-check form-check-primary mt-3">
-                                <input class="form-check-input" type="checkbox" value="" id="checkAll">
-                            </div>
-                        </th>
+
                         <th>#</th>
                         <th>DO Number</th>
                         <th>Date</th>
@@ -116,11 +108,6 @@
                     }
                 },
                 columns: [{
-                        data: 'cekbok',
-                        name: 'cekbok',
-                        orderable: false,
-                        searchable: false
-                    }, {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
                         orderable: false,

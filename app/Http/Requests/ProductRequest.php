@@ -40,8 +40,10 @@ class ProductRequest extends FormRequest
         ];
 
         if ($this->isMethod('POST')) {
-            // Store
-            // code tidak divalidasi karena dibuat otomatis
+            $rules['nama_barang'] = [
+                'required',
+                Rule::unique('data_barang', 'nama_barang')->ignore($id),
+            ];
         }
 
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {

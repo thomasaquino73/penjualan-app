@@ -276,6 +276,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/get-order-detail', [ReceiveItemController::class, 'getOrderDetail'])->name('get-order-detail');
         Route::get('/get-processing-po', [ReceiveItemController::class, 'getProcessingData'])->name('po.processing');
         Route::get('/trash', [ReceiveItemController::class, 'trash'])->name('trash');
+        Route::put('restore/{id}', [ReceiveItemController::class, 'restore'])->name('restore');
         Route::resource('', ReceiveItemController::class)->parameters(['' => 'receive_item']);
     });
 
@@ -325,7 +326,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/item-transfer/wh/get-stock', [ItemTransferController::class, 'getStock'])->name('item-transfer.wh.get-stock');
     Route::post('/item-transfer/change-status/{id}', [ItemTransferController::class, 'changeStatus']);
     Route::get('/item-transfer/print/{id}', [ItemTransferController::class, 'print'])->name('item-transfer.print');
-    Route::post('/item-transfer/{id}/submit', [ItemTransferController::class, 'submitToPending'])->name('item-transfer.submit');
+    Route::post('/item-transfer/{id}/submit', [ItemTransferController::class, 'submitToProcess'])->name('item-transfer.submit');
+    Route::put('/item-transfer/restore/{id}', [ItemTransferController::class, 'restore'])->name('item-transfer.restore');
+    Route::get('/item-transfer/trash', [ItemTransferController::class, 'trash'])->name('item-transfer.trash');
     Route::resource('item-transfer', ItemTransferController::class);
 
     Route::get('/delivery-order/get-order/{customer}', [DeliveryOrderController::class, 'getQuotation'])->name('delivery-order.getQuotation');
@@ -335,8 +338,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/delivery-order/wh/get-stock', [DeliveryOrderController::class, 'getStock'])->name('delivery-order.wh.get-stock');
     Route::post('/delivery-order/get-order-detail', [DeliveryOrderController::class, 'getOrderDetail'])->name('delivery-order.get-order-detail');
     Route::get('/delivery-order/print/{id}', [DeliveryOrderController::class, 'print'])->name('delivery-order.print');
-    Route::post('/delivery-order/delete-multiple', [DeliveryOrderController::class, 'deleteMultiple']);
-    Route::post('/delivery-order/restore-multiple', [DeliveryOrderController::class, 'restoreMultiple']);
     Route::put('/delivery-order/restore/{id}', [DeliveryOrderController::class, 'restore'])->name('delivery-order.restore');
     Route::get('/delivery-order/trash', [DeliveryOrderController::class, 'trash'])->name('delivery-order.trash');
     Route::resource('delivery-order', DeliveryOrderController::class);

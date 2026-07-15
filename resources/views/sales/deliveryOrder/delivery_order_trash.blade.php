@@ -30,11 +30,7 @@
                         <i class="ti ti-chevron-left me-1"></i> Back
                     </a>
 
-                    @canany(['sales_order-restore'])
-                        <button id="restoreSelected" class="btn btn-success btn-sm ">
-                            <i class="ti ti-refresh me-1"></i> Restore Selected
-                        </button>
-                    @endcanany
+
 
                 </div>
             </div>
@@ -60,11 +56,7 @@
             <table class="table table-bordered" id="table">
                 <thead class="border-top" style="background-color: #FFEF9F; ">
                     <tr>
-                        <th>
-                            <div class="form-check form-check-primary mt-3">
-                                <input class="form-check-input" type="checkbox" value="" id="checkAll">
-                            </div>
-                        </th>
+
                         <th>#</th>
                         <th>DO Number</th>
                         <th>Date</th>
@@ -108,11 +100,6 @@
                     }
                 },
                 columns: [{
-                        data: 'cekbok',
-                        name: 'cekbok',
-                        orderable: false,
-                        searchable: false
-                    }, {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
                         orderable: false,
@@ -194,68 +181,7 @@
                     }
                 });
             });
-            $('#restoreSelected').on('click', function() {
 
-                let ids = [];
-
-                $('.checkItem:checked').each(function() {
-                    ids.push($(this).val());
-                });
-
-                if (ids.length === 0) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'An error occurred. Please try again later.',
-                        text: 'Please select data first!',
-                        timer: 5000,
-                        customClass: {
-                            confirmButton: 'btn btn-primary waves-effect waves-light'
-                        },
-                        buttonsStyling: false
-                    });
-                    return;
-                }
-
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "Data will be restored!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, restore it!',
-                    cancelButtonText: 'Cancel',
-                    customClass: {
-                        confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
-                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
-                    },
-                    buttonsStyling: false
-                }).then((result) => {
-
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: '/delivery-order/restore-multiple',
-                            type: 'POST',
-                            data: {
-                                ids: ids,
-                                _token: '{{ csrf_token() }}'
-                            },
-                            success: function(res) {
-                                toastr.success('Restored Data Successfully', '', {
-                                    timeOut: 1500,
-                                    progressBar: true,
-                                    closeButton: false,
-                                    positionClass: 'toast-top-right',
-                                });
-                                $('#table').DataTable().ajax.reload();
-                            },
-                            error: function() {
-                                Swal.fire('Error!', 'Failed to restore data.', 'error');
-                            }
-                        });
-                    }
-
-                });
-
-            });
 
         });
     </script>

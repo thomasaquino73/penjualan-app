@@ -31,11 +31,12 @@
                             <i class="ti ti-plus me-1"></i> Add Data
                         </a>
                     @endcanany
-                    @canany(['item_transfer-delete'])
-                        <button id="deleteSelected" class="btn btn-danger btn-sm">
-                            <i class="ti ti-trash me-1"></i> Delete Selected
-                        </button>
+                    @canany(['item_transfer-trash'])
+                        <a href="{{ route('item-transfer.trash') }}" class="btn btn-sm btn-secondary ">
+                            <i class="ti ti-trash me-1"></i>Trash Bin
+                        </a>
                     @endcanany
+
 
                 </div>
             </div>
@@ -46,11 +47,6 @@
             <table class="table" id="table">
                 <thead style="background-color: #AEDEFC; ">
                     <tr>
-                        <th>
-                            <div class="form-check form-check-primary mt-3">
-                                <input class="form-check-input" type="checkbox" value="" id="checkAll">
-                            </div>
-                        </th>
                         <th>#</th>
                         <th>Number</th>
                         <th>Date</th>
@@ -91,11 +87,6 @@
                 ],
                 ajax: '{{ route('item-transfer.index') }}',
                 columns: [{
-                        data: 'cekbok',
-                        name: 'cekbok',
-                        orderable: false,
-                        searchable: false
-                    }, {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
                         orderable: false,
@@ -133,7 +124,7 @@
                     },
                 ]
             });
-            $(document).on('click', '.btn-submit', function() {
+            $(document).on('click', '.process-data', function() {
                 let id = $(this).data('id');
                 let url = "{{ route('item-transfer.submit', ':id') }}".replace(':id', id);
 
@@ -203,90 +194,67 @@
                     }
                 });
             });
-            $(document).on('click', '.btn-approval', function() {
-                let id = $(this).data('id');
-                let statusTarget = $(this).data('status'); // Nilai dari HTML: 'approved' atau 'rejected'
 
-                // =========================================================================
-                // PERBAIKAN: Mengubah acuan kata 'processing' menjadi 'approved'
-                // =========================================================================
-                let isApprove = statusTarget === 'approved';
-                let textKeterangan = isApprove ? 'approve' : 'reject';
-                let confirmBtnColor = isApprove ? '#28a745' : '#dc3545';
-                let confirmBtnText = isApprove ? 'Yes, Approve!' : 'Yes, Reject!';
-                let confirmBtnClass = isApprove ?
-                    'btn btn-success me-3 waves-effect waves-light' :
-                    'btn btn-danger me-3 waves-effect waves-light';
+            $('body').on('click', '#delete', function() {
+                let id = $(this).data('id');
+                let name = $(this).data('name');
+                let token = $("meta[name='csrf-token']").attr("content");
 
                 Swal.fire({
                     title: 'Are you sure?',
-                    // PERBAIKAN: Mengubah teks berkas menjadi Item Transfer
-                    text: `You are about to ${textKeterangan} this Item Transfer document.`,
+                    text: "Want to delete data: " + name,
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: confirmBtnColor,
-                    confirmButtonText: confirmBtnText,
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel',
                     customClass: {
-                        confirmButton: confirmBtnClass,
+                        confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
                         cancelButton: 'btn btn-label-secondary waves-effect waves-light'
                     },
                     buttonsStyling: false
-                }).then((result) => {
+                }).then(function(result) {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: '/item-transfer/change-status/' + id,
-                            type: "POST",
+                            url: `/item-transfer/${id}`,
+                            type: "DELETE",
+                            cache: false,
                             data: {
-                                _token: "{{ csrf_token() }}",
-                                id: id,
-                                status: statusTarget
+                                _token: token
                             },
                             success: function(response) {
-                                Swal.fire({
-                                    title: 'Success!',
-                                    text: response.message ||
-                                        'The status has been updated successfully.',
-                                    icon: 'success',
-                                    showCancelButton: false,
-                                    confirmButtonColor: '#28a745',
-                                    confirmButtonText: 'OK',
-                                    customClass: {
-                                        confirmButton: 'btn btn-success'
-                                    },
-                                    buttonsStyling: false
+                                table.draw();
+                                toastr.success('Deleted Data Successfully', '', {
+                                    timeOut: 1500,
+                                    progressBar: true,
+                                    closeButton: false,
+                                    positionClass: 'toast-top-right',
                                 });
-
-                                // Reload table tanpa melompat ke page 1 lagi
-                                if ($.fn.DataTable.isDataTable('#table')) {
-                                    $('#table').DataTable().ajax.reload(null, false);
-                                }
                             },
-                            error: function(err) {
-                                let errorMessage = 'Something went wrong.';
-                                if (err.responseJSON && err.responseJSON.error) {
-                                    errorMessage = err.responseJSON.error;
-                                } else if (err.responseJSON && err.responseJSON
-                                    .message) {
-                                    errorMessage = err.responseJSON.message;
-                                }
-
+                            error: function(jqXHR, textStatus, errorThrown) {
                                 Swal.fire({
-                                    title: 'Failed!',
-                                    text: errorMessage,
                                     icon: 'error',
-                                    showCancelButton: false,
-                                    confirmButtonColor: '#3085d6',
-                                    confirmButtonText: 'OK',
+                                    title: 'Failed to delete',
+                                    text: 'An error occurred. Please try again later.',
+                                    timer: 5000,
                                     customClass: {
-                                        confirmButton: 'btn btn-primary'
-                                    },
-                                    buttonsStyling: false
+                                        confirmButton: 'btn btn-info waves-effect waves-light'
+                                    }
                                 });
+                            }
+                        });
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Cancelled',
+                            text: 'Your data is safe.',
+                            customClass: {
+                                confirmButton: 'btn btn-info waves-effect waves-light'
                             }
                         });
                     }
                 });
             });
+
 
         });
     </script>

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ReceiveItemRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
+use App\Models\Inventory\DataBarangConversion;
+use App\Models\Inventory\StockBalance;
 use App\Models\Inventory\Warehouse;
 use App\Models\Purchase\PurchaseOrder;
 use App\Models\Purchase\PurchaseOrderDetail;
@@ -17,6 +19,7 @@ use App\Models\Setting\Shipping;
 use App\Models\StockMutation;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -133,66 +136,54 @@ class ReceiveItemController extends Controller
 
                     return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
                 })
-                ->addColumn('cekbok', function ($row) {
-
-                    if (
-                        auth()->user()->can('purchase_order-delete') &&
-                        $row->status === 'draft'
-                    ) {
-                        return '
-                            <div class="form-check form-check-primary">
-                                <input class="form-check-input checkItem"
-                                    type="checkbox"
-                                    value="'.$row->id.'">
-                            </div>
-                        ';
-                    }
-
-                    return '';
-                })
                 ->addColumn('action', function ($row) {
-                    $currentUserId = Auth::user()->id;
                     $user = Auth::user();
 
                     $btn = '<div class="btn-group">
-                <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown">
-                    <i class="ti ti-menu-2 ti-xs me-1"></i>
-                </button>
-                <ul class="dropdown-menu">';
+                    <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light"
+                        data-bs-toggle="dropdown">
+                        <i class="ti ti-menu-2 ti-xs me-1"></i>
+                    </button>
+                    <ul class="dropdown-menu">';
 
-                    // ─── OWNER ACTION ─────────────────────────────
-
-                    // ✅ EDIT
-                    if ($user->can('receive-item-edit') && $row->status == 'draft') {
-                        $btn .= '<a class="dropdown-item" href="'.route('receive-item.edit', $row->id).'">
-                        <i class="far fa-edit me-1"></i> Edit
-                     </a>';
+                    // Edit
+                    if ($user->can('receive_item-edit') && $row->status !== 'closed') {
+                        $btn .= '
+                        <a class="dropdown-item" href="'.route('receive-item.edit', $row->id).'">
+                            <i class="far fa-edit me-1"></i> Edit
+                        </a>';
                     }
 
-                    // ✅ DELETE
-                    if ($user->can('receive-item-delete') && $row->status == 'draft') {
-                        $btn .= '<a class="dropdown-item" href="javascript:void(0)" id="delete"
-                        data-id="'.$row->id.'" data-name="'.$row->receive_item_code.'">
-                        <i class="ti ti-trash me-1"></i> Delete
-                     </a>';
+                    // Delete
+                    if ($user->can('receive_item-delete')) {
+                        $btn .= '
+                        <a class="dropdown-item" href="javascript:void(0)" id="delete"
+                            data-id="'.$row->id.'"
+                            data-name="'.$row->receive_item_code.'">
+                            <i class="ti ti-trash me-1"></i> Delete
+                        </a>';
                     }
 
-                    // ─── INFO JIKA SUDAH DIPROSES ─────────────────────────────
+                    // Detail
 
-                    $btn .= '<a class="dropdown-item"
-                href="'.route('receive-item.show', $row->id).'">
-                <i class="ti ti-list-details"></i> Detail
-             </a>';
-                    $btn .= '<a class="dropdown-item" target="_blank"
-                href="'.route('receive-item.print', $row->id).'">
-                <i class="ti ti-printer"></i> Print
-             </a>';
+                    // $btn .= '
+                    //     <a class="dropdown-item" href="' . route('receive-item.show', $row->id) . '">
+                    //         <i class="ti ti-list-details me-1"></i> Detail
+                    //     </a>';
+
+                    // Print
+
+                    $btn .= '
+                        <a class="dropdown-item" target="_blank"
+                            href="'.route('receive-item.print', $row->id).'">
+                            <i class="ti ti-printer me-1"></i> Print
+                        </a>';
 
                     $btn .= '</ul></div>';
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'date', 'supplier'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'date', 'supplier'])
                 ->make(true);
         }
 
@@ -321,7 +312,7 @@ class ReceiveItemController extends Controller
             }
 
             if (! $receiveItem) {
-                throw new \Exception('Gagal membuat Receive Item: Nomor sudah penuh atau sistem sibuk.');
+                throw new Exception('Gagal membuat Receive Item: Nomor sudah penuh atau sistem sibuk.');
             }
 
             if ($itemsDetailRaw) {
@@ -372,18 +363,58 @@ class ReceiveItemController extends Controller
                             }
                         }
 
-                        // 3. Simpan Mutasi Stok
+                        // =====================================================
+                        // 3. Simpan Mutasi Stok (Selalu disimpan dalam Base Unit)
+                        // =====================================================
+
+                        $product = Barang::findOrFail($item['product_id']);
+
+                        $baseUnitId = $product->unit_id; // satuan dasar barang
+
+                        $qtyInput = (float) ($item['quantity'] ?? 0);
+                        $unitInput = $item['unit_id'];
+
+                        $totalBaseQty = $qtyInput;
+
+                        // Jika transaksi bukan menggunakan satuan dasar
+                        if ($unitInput != $baseUnitId) {
+
+                            $conversion = DataBarangConversion::where('data_barang_id', $item['product_id'])
+                                ->where('from_unit_id', $unitInput)
+                                ->where('to_unit_id', $baseUnitId)
+                                ->first();
+
+                            if (! $conversion) {
+                                throw new Exception(
+                                    "Konversi satuan tidak ditemukan untuk produk {$product->nama_barang}"
+                                );
+                            }
+
+                            $totalBaseQty = $qtyInput * $conversion->qty;
+                        }
+
                         StockMutation::create([
                             'data_barang_id' => $item['product_id'],
-                            'unit_id' => $item['unit_id'],
-                            'warehouse_id' => $item['warehouse_id'] ?? null,
+                            'unit_id' => $unitInput, // unit transaksi
+                            'warehouse_id' => $item['warehouse_id'],
                             'date_stock' => $data['receive_item_date'],
-                            'qty_transaksi' => $qtyInputForm,
-                            'total_base_qty' => $qtyInputForm,
+
+                            // Qty sesuai transaksi
+                            'qty_transaksi' => $qtyInput,
+
+                            // Qty dalam satuan dasar
+                            'total_base_qty' => $totalBaseQty,
+
                             'type' => 'in',
-                            'keterangan' => 'Penerimaan Barang dari '.$receiveItem->supplierId->nama_supplier.', No.Dokumen : '.$request->no_dokumen,
-                            'created_by' => Auth::id(),
+
+                            'keterangan' => 'Penerimaan Barang dari '.$receiveItem->supplierId->nama_supplier.
+                                                  ', No.Dokumen : '.$request->no_dokumen,
+
+                            'document_id' => $receiveItem->id,
+                            'document_number' => $receiveItem->receive_item_code,
                             'document_type' => 'receive_item',
+
+                            'created_by' => Auth::id(),
                         ]);
                     }
 
@@ -413,7 +444,7 @@ class ReceiveItemController extends Controller
                 'redirect' => $redirectUrl,
             ], 200);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
 
             return response()->json([
@@ -592,6 +623,132 @@ class ReceiveItemController extends Controller
         return view('purchase.receive_item.receive_item_edit', $x);
     }
 
+    // public function update(ReceiveItemRequest $request, $id)
+    // {
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $currentYear = date('Y');
+    //         $receiveItem = ReceiveItem::findOrFail($id);
+
+    //         // 1. ROLLBACK: Kembalikan received_qty dan hitung ulang outstanding_qty di PO Detail lama
+    //         $oldDetails = ReceiveItemDetail::where('receive_item_id', $id)->get();
+    //         foreach ($oldDetails as $oldDetail) {
+    //             if ($oldDetail->purchase_order_detail_id) {
+    //                 $poDetail = DB::table("purchase_order_detail_{$currentYear}")->where('id', $oldDetail->purchase_order_detail_id)->first();
+    //                 if ($poDetail) {
+    //                     $newReceived = max(0, $poDetail->received_qty - $oldDetail->qty);
+    //                     $newOutstanding = $poDetail->qty - $newReceived;
+
+    //                     DB::table("purchase_order_detail_{$currentYear}")->where('id', $oldDetail->purchase_order_detail_id)
+    //                         ->update([
+    //                             'received_qty' => $newReceived,
+    //                             'outstanding_qty' => $newOutstanding,
+    //                         ]);
+    //                 }
+    //             }
+    //         }
+
+    //         // 2. HAPUS: Hapus detail lama dan mutasi stok lama
+    //         ReceiveItemDetail::where('receive_item_id', $id)->delete();
+    //         StockMutation::where('document_type', 'receive_item')
+    //             ->where('keterangan', 'like', "%No.Dokumen : {$receiveItem->no_dokumen}%")
+    //             ->delete();
+
+    //         // 3. UPDATE: Data Master
+    //         $data = $request->validated();
+    //         $itemsDetailRaw = $request->input('items_detail');
+    //         unset($data['items_detail']);
+
+    //         $data['receive_item_date'] = Carbon::parse($request->receive_item_date)->format('Y-m-d');
+    //         $data['tanggal_kirim'] = $request->tanggal_kirim ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
+    //         $data['updated_by'] = Auth::id();
+    //         $data['address'] = $request->address;
+
+    //         $receiveItem->update($data);
+
+    //         // 4. SIMPAN: Data Detail Baru
+    //         if ($itemsDetailRaw) {
+    //             $items = is_array($itemsDetailRaw) ? $itemsDetailRaw : json_decode($itemsDetailRaw, true);
+    //             $involvedPrIds = [];
+
+    //             foreach ($items as $item) {
+    //                 $prDetailId = $item['purchase_order_detail_id'] ?? $item['pr_detail_id'] ?? null;
+    //                 $qtyInput = floatval($item['quantity'] ?? $item['qty'] ?? 0);
+
+    //                 ReceiveItemDetail::create([
+    //                     'receive_item_id' => $receiveItem->id,
+    //                     'purchase_order_detail_id' => $prDetailId,
+    //                     'product_id' => $item['product_id'],
+    //                     'qty' => $qtyInput,
+    //                     'unit_id' => $item['unit_id'],
+    //                     'warehouse_id' => $item['warehouse_id'],
+    //                     'active' => 1,
+    //                 ]);
+
+    //                 // Update PO Detail baru dengan perhitungan Outstanding
+    //                 if ($prDetailId) {
+    //                     $poDetail = DB::table("purchase_order_detail_{$currentYear}")->where('id', $prDetailId)->first();
+    //                     if ($poDetail) {
+    //                         // Ambil total akumulasi terbaru setelah data baru masuk
+    //                         $totalReceived = ReceiveItemDetail::where('purchase_order_detail_id', $prDetailId)
+    //                             ->where('active', 1)
+    //                             ->sum('qty');
+
+    //                         $outstanding = max(0, $poDetail->qty - $totalReceived);
+
+    //                         DB::table("purchase_order_detail_{$currentYear}")->where('id', $prDetailId)
+    //                             ->update([
+    //                                 'received_qty' => $totalReceived,
+    //                                 'outstanding_qty' => $outstanding,
+    //                             ]);
+
+    //                         $involvedPrIds[] = $poDetail->purchase_order_id;
+    //                     }
+    //                 }
+
+    //                 // Simpan Mutasi Stok Baru
+    //                 StockMutation::create([
+    //                     'data_barang_id' => $item['product_id'],
+    //                     'unit_id' => $item['unit_id'],
+    //                     'warehouse_id' => $item['warehouse_id'],
+    //                     'date_stock' => $data['receive_item_date'],
+    //                     'qty_transaksi' => $qtyInput,
+    //                     'total_base_qty' => $qtyInput,
+    //                     'type' => 'in',
+    //                     'keterangan' => 'Penerimaan Barang, No.Dokumen : '.$request->no_dokumen,
+    //                     'created_by' => Auth::id(),
+    //                     'document_type' => 'receive_item',
+    //                 ]);
+    //             }
+
+    //             // 5. OTOMASI STATUS PO MASTER
+    //             foreach (array_unique($involvedPrIds) as $prId) {
+    //                 $allDetails = DB::table("purchase_order_detail_{$currentYear}")->where('purchase_order_id', $prId)->get();
+    //                 $totalRequested = $allDetails->sum('qty');
+    //                 $totalOrdered = $allDetails->sum('received_qty');
+
+    //                 $newStatus = ($totalOrdered >= $totalRequested) ? 'completed' : (($totalOrdered > 0) ? 'partially_received' : 'processing');
+    //                 DB::table("purchase_order_{$currentYear}")->where('id', $prId)->update(['status' => $newStatus]);
+    //             }
+    //         }
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'title' => 'Success',
+    //             'message' => 'Receive Item berhasil diupdate',
+    //             'redirect' => route('receive-item.index'),
+    //         ]);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json(['status' => 'error', 'message' => 'Gagal: '.$e->getMessage()], 500);
+    //     }
+    // }
+
     public function update(ReceiveItemRequest $request, $id)
     {
         DB::beginTransaction();
@@ -642,7 +799,22 @@ class ReceiveItemController extends Controller
                 $involvedPrIds = [];
 
                 foreach ($items as $item) {
-                    $prDetailId = $item['purchase_order_detail_id'] ?? $item['pr_detail_id'] ?? null;
+                    // $prDetailId = $item['purchase_order_detail_id'] ?? $item['pr_detail_id'] ?? null;
+                    $prDetailId = null;
+
+                    if (! empty($item['purchase_order_detail_id'])) {
+                        $prDetailId = (int) $item['purchase_order_detail_id'];
+                    } elseif (! empty($item['pr_detail_id'])) {
+                        $prDetailId = (int) $item['pr_detail_id'];
+                    } elseif (! empty($item['detail_id'])) {
+                        $poDetail = DB::table("purchase_order_detail_{$currentYear}")
+                            ->where('product_id', $item['product_id'])
+                            ->first();
+
+                        if ($poDetail) {
+                            $prDetailId = $poDetail->id;
+                        }
+                    }
                     $qtyInput = floatval($item['quantity'] ?? $item['qty'] ?? 0);
 
                     ReceiveItemDetail::create([
@@ -677,17 +849,46 @@ class ReceiveItemController extends Controller
                     }
 
                     // Simpan Mutasi Stok Baru
+                    $product = Barang::findOrFail($item['product_id']);
+
+                    $baseUnitId = $product->unit_id;
+                    $unitInput = $item['unit_id'];
+
+                    $totalBaseQty = $qtyInput;
+
+                    if ($unitInput != $baseUnitId) {
+
+                        $conversion = DataBarangConversion::where('data_barang_id', $item['product_id'])
+                            ->where('from_unit_id', $unitInput)
+                            ->where('to_unit_id', $baseUnitId)
+                            ->first();
+
+                        if (! $conversion) {
+                            throw new Exception(
+                                "Konversi satuan untuk {$product->nama_barang} belum dibuat."
+                            );
+                        }
+
+                        $totalBaseQty = $qtyInput * $conversion->qty;
+                    }
                     StockMutation::create([
                         'data_barang_id' => $item['product_id'],
-                        'unit_id' => $item['unit_id'],
+                        'unit_id' => $unitInput,
                         'warehouse_id' => $item['warehouse_id'],
                         'date_stock' => $data['receive_item_date'],
+
                         'qty_transaksi' => $qtyInput,
-                        'total_base_qty' => $qtyInput,
+                        'total_base_qty' => $totalBaseQty,
+
                         'type' => 'in',
+
                         'keterangan' => 'Penerimaan Barang, No.Dokumen : '.$request->no_dokumen,
+
                         'created_by' => Auth::id(),
+
                         'document_type' => 'receive_item',
+                        'document_id' => $receiveItem->id,
+                        'document_number' => $receiveItem->receive_item_code,
                     ]);
                 }
 
@@ -711,7 +912,7 @@ class ReceiveItemController extends Controller
                 'redirect' => route('receive-item.index'),
             ]);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
 
             return response()->json(['status' => 'error', 'message' => 'Gagal: '.$e->getMessage()], 500);
@@ -761,71 +962,419 @@ class ReceiveItemController extends Controller
         DB::beginTransaction();
 
         try {
-            // 1. Cari PO yang akan dihapus
-            $po = ReceiveItem::findOrFail($id);
 
-            // 2. Ambil detail PO untuk mendapatkan referensi PR Detail yang terkait
-            $poDetails = ReceiveItemDetail::where('receive_item_id', $po->id)->get();
-            $involvedPrIds = [];
+            $ri = ReceiveItem::findOrFail($id);
 
-            foreach ($poDetails as $poDetail) {
-                if ($poDetail->purchase_order_detail_id) {
-                    // Catat ID PR Master-nya
-                    $prDetail = PurchaseOrderDetail::where('id', $poDetail->purchase_order_detail_id)
+            // Ambil detail RI aktif
+            $riDetails = ReceiveItemDetail::where('receive_item_id', $ri->id)
+                ->where('active', 1)
+                ->get();
+
+            $involvedPoIds = [];
+
+            /*
+            |--------------------------------------------------------------------------
+            | 1. KURANGI STOCK BALANCE + HAPUS STOCK MUTATION
+            |--------------------------------------------------------------------------
+            */
+            foreach ($riDetails as $detail) {
+
+                // Ambil mutation RI
+                $mutation = StockMutation::where([
+                    'document_id' => $ri->id,
+                    'document_type' => 'receive_item',
+                    'data_barang_id' => $detail->product_id,
+                    'warehouse_id' => $detail->warehouse_id,
+                ])->first();
+
+                if ($mutation) {
+
+                    // Kurangi stock balance berdasarkan base qty
+                    StockBalance::where([
+                        'product_id' => $detail->product_id,
+                        'warehouse_id' => $detail->warehouse_id,
+                    ])
+                        ->decrement(
+                            'qty',
+                            $mutation->total_base_qty
+                        );
+
+                    // Hapus mutation
+                    $mutation->delete();
+
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Ambil PO yang terkait
+                |--------------------------------------------------------------------------
+                */
+
+                if ($detail->purchase_order_detail_id) {
+
+                    $poDetail = DB::table(
+                        'purchase_order_detail_'.date('Y')
+                    )
+                        ->where('id', $detail->purchase_order_detail_id)
                         ->first();
 
-                    if ($prDetail && ! in_array($prDetail->receive_item_id, $involvedPrIds)) {
-                        $involvedPrIds[] = $prDetail->receive_item_id;
+                    if ($poDetail && ! in_array($poDetail->purchase_order_id, $involvedPoIds)) {
+
+                        $involvedPoIds[] = $poDetail->purchase_order_id;
+
                     }
                 }
+
             }
 
-            // 3. Nonaktifkan PO dan Detail PO
-            $po->update(['active' => 0, 'updated_by' => Auth::id()]);
-            ReceiveItemDetail::where('receive_item_id', $po->id)->update(['active' => 0]);
+            /*
+            |--------------------------------------------------------------------------
+            | 2. NONAKTIFKAN RECEIVE ITEM
+            |--------------------------------------------------------------------------
+            */
 
-            // 4. Update Ulang received_qty di setiap PR Detail yang terdampak
-            // Kita hitung ulang berdasarkan sisa PO yang masih 'active' = 1
-            foreach ($poDetails as $poDetail) {
-                if ($poDetail->purchase_order_detail_id) {
-                    $totalRemainingPo = ReceiveItemDetail::where('purchase_order_detail_id', $poDetail->purchase_order_detail_id)
+            $ri->update([
+                'active' => 0,
+                'updated_by' => Auth::id(),
+            ]);
+
+            ReceiveItemDetail::where('receive_item_id', $ri->id)
+                ->update([
+                    'active' => 0,
+                ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | 3. UPDATE ULANG PO DETAIL
+            |--------------------------------------------------------------------------
+            */
+
+            foreach ($riDetails as $detail) {
+
+                if ($detail->purchase_order_detail_id) {
+
+                    $totalReceived = ReceiveItemDetail::where(
+                        'purchase_order_detail_id',
+                        $detail->purchase_order_detail_id
+                    )
                         ->where('active', 1)
                         ->sum('qty');
 
-                    DB::table('purchase_order_detail_'.date('Y'))
-                        ->where('id', $poDetail->purchase_order_detail_id)
-                        ->update(['received_qty' => $totalRemainingPo]);
+                    DB::table(
+                        'purchase_order_detail_'.date('Y')
+                    )
+                        ->where(
+                            'id',
+                            $detail->purchase_order_detail_id
+                        )
+                        ->update([
+                            'received_qty' => $totalReceived,
+                            'outstanding_qty' => DB::raw(
+                                "qty - {$totalReceived}"
+                            ),
+                        ]);
+
                 }
+
             }
 
-            // 5. Update Status PR Master
-            foreach ($involvedPrIds as $prId) {
-                $allDetails = PurchaseOrderDetail::where('purchase_order_id', $prId)
+            /*
+            |--------------------------------------------------------------------------
+            | 4. UPDATE STATUS PO HEADER
+            |--------------------------------------------------------------------------
+            */
+
+            foreach ($involvedPoIds as $poId) {
+
+                $details = DB::table(
+                    'purchase_order_detail_'.date('Y')
+                )
+                    ->where(
+                        'purchase_order_id',
+                        $poId
+                    )
                     ->get();
 
-                $totalRequested = $allDetails->sum('qty');
-                $totalOrdered = $allDetails->sum('received_qty');
+                $requested = $details->sum('qty');
 
-                if ($totalOrdered >= $totalRequested) {
-                    $status = 'closed';
-                } elseif ($totalOrdered > 0) {
-                    $status = 'partial';
-                } else {
-                    $status = 'processing';
-                }
+                $received = $details->sum('received_qty');
 
-                PurchaseOrder::where('id', $prId)
-                    ->update(['status' => $status]);
+                $status =
+                    $received >= $requested
+                        ? 'completed'
+                        : ($received > 0 ? 'partial' : 'processing');
+
+                DB::table(
+                    'purchase_order_'.date('Y')
+                )
+                    ->where('id', $poId)
+                    ->update([
+                        'status' => $status,
+                    ]);
+
             }
 
             DB::commit();
 
-            return response()->json(['status' => 'success', 'message' => 'RI berhasil dibatalkan.'], 200);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Receive Item berhasil dibatalkan.',
+            ], 200);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
+
             DB::rollBack();
 
-            return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan RI: '.$e->getMessage()], 500);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal membatalkan RI: '.$e->getMessage(),
+            ], 500);
+
+        }
+    }
+
+    public function trash(Request $r)
+    {
+        if ($r->ajax()) {
+            // Ambil ID user yang sedang login
+            $userId = Auth::user()->id;
+
+            // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
+            $query = ReceiveItem::where('active', 0)
+                // ->where(function ($q) use ($userId) {
+                //     $q->where('status', '<>', 'draft')
+                //         ->orWhere(function ($subQ) use ($userId) {
+                //             $subQ->where('status', 'draft')
+                //                 ->where('created_by', $userId);
+                //         });
+                // })
+                ->orderby('receive_item_code', 'desc');
+            if ($r->status) {
+                $query->where('status', $r->status);
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('created_at', function ($row) {
+                    return $row->created_at
+                        ? (($row->creator->fullname ?? 'Unknown')).
+                            ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
+                        : 'N/A';
+                })
+                ->addColumn('updated_at', function ($row) {
+                    if ($row->updated_at) {
+                        $updaterName = $row->updater->fullname ?? 'Unknown';
+                        $timeAgo = $updaterName !== 'Unknown' ? $row->updated_at->diffForHumans() : 'N/A';
+
+                        return $updaterName.
+                            ' <br><small class="text-muted">'.$timeAgo.'</small>';
+                    }
+
+                    return 'N/A';
+                })
+                ->addColumn('date', function ($row) {
+                    return $row->receive_item_date ? Carbon::parse($row->receive_item_date)->format('d M Y') : 'N/A';
+                })
+                ->addColumn('supplier', function ($row) {
+                    return $row->supplier_id ? $row->supplierId->nama_supplier : 'N/A';
+                })
+                ->addColumn('status', function ($row) {
+                    switch ($row->status) {
+                        case 'draft':
+                            $badge = 'bg-label-secondary';
+                            $text = 'Draft';
+                            break;
+
+                        case 'processing':
+                            $badge = 'bg-label-info';
+                            $text = 'Processing';
+                            break;
+
+                            // ─── TAMBAHAN BADGE UNTUK STATUS PARTIAL ──────────────────
+                        case 'partial':
+                            $badge = 'bg-warning text-dark';
+                            $text = 'Partial RI';
+                            break;
+
+                        case 'closed':
+                            $badge = 'bg-dark';
+                            $text = 'Closed';
+                            break;
+
+                        case 'cancelled':
+                            $badge = 'bg-danger';
+                            $text = 'Cancelled';
+                            break;
+
+                        default:
+                            $badge = 'bg-label-secondary';
+                            $text = ucfirst($row->status);
+                            break;
+                    }
+
+                    return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '<div class="btn-group">
+                      <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ti ti-menu-2 ti-xs me-1"></i>
+                      </button>
+                      <ul class="dropdown-menu" style="">';
+
+                    if (auth()->user()->can('delivery_order-restore')) {
+                        $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
+                            data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
+                    }
+
+                    return $btn;
+                })
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'date', 'supplier'])
+                ->make(true);
+        }
+
+        $x = [
+            'title' => 'Deleted Receive Item ',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Deleted Receive Item', 'url' => ''],
+            ],
+        ];
+
+        return view('purchase.receive_item.receive_item_trash', $x);
+    }
+
+    public function restore($id)
+    {
+        DB::beginTransaction();
+
+        try {
+
+            $ri = ReceiveItem::with('details')->findOrFail($id);
+
+            // Cegah restore stok dua kali
+            $mutationExists = StockMutation::where([
+                'document_id' => $ri->id,
+                'document_type' => 'receive_item',
+            ])->exists();
+
+            if ($mutationExists) {
+                throw new Exception('Stock mutation Receive Item ini sudah ada.');
+            }
+
+            $ri->update([
+                'active' => 1,
+                'updated_by' => Auth::id(),
+            ]);
+
+            foreach ($ri->details as $detail) {
+
+                $product = Barang::findOrFail($detail->product_id);
+
+                $baseUnitId = $product->unit_id;
+
+                $qtyInput = (float) $detail->qty;
+
+                $unitInput = $detail->unit_id;
+
+                $totalBaseQty = $qtyInput;
+
+                // Konversi ke satuan dasar
+                if ($unitInput != $baseUnitId) {
+
+                    $conversion = DataBarangConversion::where('data_barang_id', $detail->product_id)
+                        ->where('from_unit_id', $unitInput)
+                        ->where('to_unit_id', $baseUnitId)
+                        ->first();
+
+                    if (! $conversion) {
+
+                        throw new Exception(
+                            "Konversi satuan tidak ditemukan untuk produk {$product->nama_barang}"
+                        );
+
+                    }
+
+                    $totalBaseQty = $qtyInput * $conversion->qty;
+
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Tambahkan kembali Stock Balance
+                |--------------------------------------------------------------------------
+                */
+
+                StockBalance::updateOrCreate(
+                    [
+                        'product_id' => $detail->product_id,
+                        'warehouse_id' => $detail->warehouse_id,
+                    ],
+                    [
+                        'qty' => DB::raw(
+                            "qty + {$totalBaseQty}"
+                        ),
+                    ]
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Buat ulang Stock Mutation IN
+                |--------------------------------------------------------------------------
+                */
+
+                StockMutation::create([
+
+                    'data_barang_id' => $detail->product_id,
+
+                    // unit transaksi
+                    'unit_id' => $unitInput,
+
+                    'warehouse_id' => $detail->warehouse_id,
+
+                    'date_stock' => $ri->receive_item_date,
+
+                    // qty transaksi
+                    'qty_transaksi' => $qtyInput,
+
+                    // qty base unit
+                    'total_base_qty' => $totalBaseQty,
+
+                    'type' => 'in',
+
+                    'document_id' => $ri->id,
+
+                    'document_number' => $ri->receive_item_code,
+
+                    'document_type' => 'receive_item',
+
+                    'keterangan' => sprintf(
+                        'Penerimaan barang dari supplier %s No RI %s',
+                        $ri->supplierId->nama_supplier ?? 'Supplier Tidak Diketahui',
+                        $ri->receive_item_code
+                    ),
+
+                    'created_by' => Auth::id(),
+
+                ]);
+
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Receive Item berhasil direstore.',
+            ]);
+
+        } catch (Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+
         }
     }
 }

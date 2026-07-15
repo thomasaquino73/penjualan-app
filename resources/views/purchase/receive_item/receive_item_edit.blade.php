@@ -271,7 +271,7 @@
             const datePicker = flatpickr("#receive_item_date", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                // defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
+                defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
             });
 
             const expectedDate = flatpickr("#tanggal_kirim", {
@@ -1066,6 +1066,8 @@
 
                                         prDetailsData.push({
                                             detail_id: item.id,
+                                            purchase_order_detail_id: item
+                                                .id,
                                             product_id: item.product_id,
                                             data_produk: item
                                                 .product_name,

@@ -342,7 +342,7 @@
                                 </div>
 
                                 <div style="font-weight:bold;text-decoration:underline;">
-                                    {{ $model->creator->fullname }}
+                                    {{-- {{ $model->creator->fullname }} --}}
                                 </div>
                             </td>
 
@@ -350,7 +350,7 @@
                                 <div class="approval-title">Disetujui Oleh</div>
 
                                 <div style="height:65px;">
-                                    <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height:80px;">
+                                    {{-- <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height:80px;"> --}}
                                 </div>
 
                                 <div style="font-weight:bold;text-decoration:underline;">

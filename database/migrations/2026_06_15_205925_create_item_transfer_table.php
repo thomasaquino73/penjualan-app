@@ -20,11 +20,7 @@ return new class extends Migration
             $table->date('transfer_date');
             $table->string('description')->nullable();
             $table->enum('status', [
-                'draft',
-                'pending',
-                'approved',
-                'completed',
-                'rejected',
+                'draft', 'processing', 'completed',
             ])->default('draft');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
