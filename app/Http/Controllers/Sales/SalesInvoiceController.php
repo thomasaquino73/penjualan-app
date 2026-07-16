@@ -449,43 +449,53 @@ class SalesInvoiceController extends Controller
             $salesInvoice = SalesInvoice::create($data);
 
             if ($itemsDetailRaw) {
+
                 $items = json_decode($itemsDetailRaw, true);
-                $involvedSqIds = [];
+                $involvedDoIds = [];
 
                 if (is_array($items) && count($items) > 0) {
-                    foreach ($items as $item) {
-                        $sqDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
-                        $soCodeID = $item['sales_order_code_id'] ?? $item['order_code'] ?? null;
-                        $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
-                        $unitPrice = floatval($item['unit_price'] ?? 0);
-                        $discount = floatval($item['discount'] ?? 0);
-                        $discountPercent = $item['discount_percent'] ?? 0;
-                        $amount = ($qtyInputForm * $unitPrice) - $discount;
 
-                        // 1. Simpan ke Sales Invoice Detail
+                    foreach ($items as $item) {
+
+                        $doDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
+                        $doId = $item['sales_order_code_id'] ?? $item['order_code'] ?? null;
+
+                        $qty = (float) ($item['quantity'] ?? $item['qty'] ?? 0);
+                        $unitPrice = (float) ($item['unit_price'] ?? 0);
+                        $discount = (float) ($item['discount'] ?? 0);
+                        $discountPercent = $item['discount_percent'] ?? 0;
+                        $amount = $item['amount'] ?? (($qty * $unitPrice) - $discount);
+
+                        // ============================
+                        // Simpan Sales Invoice Detail
+                        // ============================
                         $salesInvoiceDetail = SalesInvoiceDetail::create([
                             'sales_invoice_id' => $salesInvoice->id,
-                            // 'sales_order_detail_id' => $sqDetailId,
-                            // 'sales_order_code_id' => $soCodeID,
+                            'sales_order_detail_id' => $doDetailId,
+                            'sales_order_code_id' => $doId,
                             'product_id' => $item['product_id'],
-                            'qty' => $qtyInputForm,
+                            'qty' => $qty,
                             'unit_id' => $item['unit_id'],
                             'warehouse_id' => $item['warehouse_id'],
                             'unit_price' => $unitPrice,
                             'discount_percent' => $discountPercent,
                             'discount' => $discount,
-                            'amount' => $item['amount'] ?? $amount,
-                            'so_qty' => 0, // Sinkronisasi: so_qty di SO = qty SO
-                            'outstanding_qty' => $qtyInputForm, // Karena SO adalah tahap akhir, outstanding di SO biasanya 0
-                            'status' => 'open',
+                            'amount' => $amount,
+                            'so_qty' => $qty,
+                            'outstanding_qty' => 0,
+                            // 'status'                => 'confirmed',
                             'active' => 1,
                             'created_by' => Auth::id(),
                         ]);
+
+                        // ============================
+                        // History
+                        // ============================
                         DocumentTransactionHistory::create([
                             'module' => 'sales',
-                            'from_type' => 'SalesOrder',
-                            'from_id' => null,
-                            'from_detail_id' => null,
+                            'from_type' => 'DeliveryOrder',
+                            'from_id' => $doDetailId,
+                            'from_detail_id' => $doDetailId,
                             'to_type' => 'SalesInvoice',
                             'to_id' => $salesInvoice->id,
                             'to_detail_id' => $salesInvoiceDetail->id,
@@ -502,53 +512,69 @@ class SalesInvoiceController extends Controller
                             ]),
                         ]);
 
-                        if ($sqDetailId) {
-                            $sqDetail = DB::table("delivery_order_detail_{$currentYear}")->where('id', $sqDetailId)->first();
+                        // ============================
+                        // Update Delivery Order Detail
+                        // ============================
+                        if ($doDetailId) {
 
-                            if ($sqDetail) {
-                                // Hitung total akumulasi qty yang sudah masuk SO untuk item ini
-                                $totalSoForThisItem = DeliveryOrderDetail::where('sales_order_detail_id', $sqDetailId)
+                            $doDetail = DB::table("delivery_order_detail_{$currentYear}")
+                                ->where('id', $doDetailId)
+                                ->first();
+
+                            if ($doDetail) {
+
+                                // Total qty yang sudah dibuat Invoice
+                                $totalInvoiceQty = SalesInvoiceDetail::where('sales_order_detail_id', $doDetailId)
                                     ->sum('qty');
 
-                                // Update sq_qty dan outstanding_qty di SQ Detail
-                                $newOutstanding = max(0, ($sqDetail->qty - $totalSoForThisItem));
+                                $outstanding = max(0, $doDetail->qty - $totalInvoiceQty);
 
                                 DB::table("delivery_order_detail_{$currentYear}")
-                                    ->where('id', $sqDetailId)
+                                    ->where('id', $doDetailId)
                                     ->update([
-                                        'do_qty' => $totalSoForThisItem,
-                                        'outstanding_qty' => $newOutstanding,
+                                        'do_qty' => $totalInvoiceQty,
+                                        'outstanding_qty' => $outstanding,
+                                        // 'status'          => $outstanding == 0 ? 'confirmed' : 'partial',
+                                    ]);
+                                DB::table("delivery_order_{$currentYear}")
+                                    ->where('id', $doDetailId)
+                                    ->update([
+                                        // 'do_qty'          => $totalInvoiceQty,
+                                        // 'outstanding_qty' => $outstanding,
+                                        'status' => $outstanding == 0 ? 'confirmed' : 'partial',
                                     ]);
 
-                                if (! in_array($sqDetail->delivery_order_id, $involvedSqIds)) {
-                                    $involvedSqIds[] = $sqDetail->delivery_order_id;
-                                }
+                                $involvedDoIds[] = $doDetail->delivery_order_id;
                             }
                         }
-
                     }
 
-                    foreach ($involvedSqIds as $sqId) {
-                        $allDetails = DB::table("delivery_order_detail_{$currentYear}")
-                            ->where('delivery_order_id', $sqId)
+                    // ============================
+                    // Update Header Delivery Order
+                    // ============================
+                    foreach (array_unique($involvedDoIds) as $doId) {
+
+                        $details = DB::table("delivery_order_detail_{$currentYear}")
+                            ->where('delivery_order_id', $doId)
                             ->get();
 
-                        $totalRequested = $allDetails->sum('qty');
-                        $totalOrdered = $allDetails->sum('do_qty');
+                        $totalQty = $details->sum('qty');
+                        $totalInvoice = $details->sum('do_qty');
 
-                        if ($totalOrdered >= $totalRequested) {
-                            $newStatus = 'confirmed';
-                        } elseif ($totalOrdered > 0) {
-                            $newStatus = 'partial';
+                        if ($totalInvoice == 0) {
+                            $status = 'processing';
+                        } elseif ($totalInvoice < $totalQty) {
+                            $status = 'partial';
                         } else {
-                            $newStatus = 'processing';
+                            $status = 'confirmed';
                         }
 
                         DB::table("delivery_order_{$currentYear}")
-                            ->where('id', $sqId)
-                            ->update(['status' => $newStatus]);
+                            ->where('id', $doId)
+                            ->update([
+                                'status' => $status,
+                            ]);
                     }
-
                 }
             }
 
@@ -761,13 +787,26 @@ class SalesInvoiceController extends Controller
                     continue;
                 }
 
-                $newDoQty = max(0, $doDetail->do_qty - $detail->qty);
+                // $newDoQty = max(0, $doDetail->do_qty - $detail->qty);
+
+                // DB::table("delivery_order_detail_{$currentYear}")
+                //     ->where('id', $detail->sales_order_detail_id)
+                //     ->update([
+                //         'do_qty' => $newDoQty,
+                //         'outstanding_qty' => $doDetail->qty - $newDoQty,
+                //     ]);
+
+                $totalInvoiceQty = SalesInvoiceDetail::where('sales_order_detail_id', $detail->sales_order_detail_id)
+                    ->where('sales_invoice_id', '<>', $salesInvoice->id)
+                    ->sum('qty');
+
+                $outstanding = max(0, $doDetail->qty - $totalInvoiceQty);
 
                 DB::table("delivery_order_detail_{$currentYear}")
                     ->where('id', $detail->sales_order_detail_id)
                     ->update([
-                        'do_qty' => $newDoQty,
-                        'outstanding_qty' => $doDetail->qty - $newDoQty,
+                        'do_qty' => $totalInvoiceQty,
+                        'outstanding_qty' => $outstanding,
                     ]);
 
                 $affectedDoIds[] = $doDetail->delivery_order_id;
@@ -783,12 +822,14 @@ class SalesInvoiceController extends Controller
             foreach ($items as $item) {
 
                 $qty = floatval($item['quantity'] ?? $item['qty'] ?? 0);
-
+                $doDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
+                $doId = $item['delivery_order_id'] ?? null;
                 $salesInvoiceDetail = SalesInvoiceDetail::create([
 
                     'sales_invoice_id' => $salesInvoice->id,
 
-                    'sales_order_detail_id' => $item['sales_order_detail_id'] ?? null,
+                    // 'sales_order_detail_id' => $doDetailId,
+                    // 'sales_order_code_id' => $doId,
 
                     'product_id' => $item['product_id'],
 
@@ -823,58 +864,74 @@ class SalesInvoiceController extends Controller
                 |--------------------------------------------------------------------------
                 */
 
-                if ($salesInvoice->sales_order_id) {
-
-                    $fromType = 'SalesOrder';
-                    $fromId = $salesInvoice->sales_order_id;
-                    $fromDetailId = $salesInvoiceDetail->sales_order_detail_id;
-
-                } else {
-
-                    // Direct Invoice
-                    $fromType = 'SalesInvoice';
-                    $fromId = $salesInvoice->id;
-                    $fromDetailId = $salesInvoiceDetail->id;
-
-                }
-
                 DocumentTransactionHistory::create([
-
                     'module' => 'sales',
-
-                    'from_type' => $fromType,
-
-                    'from_id' => $fromId,
-
-                    'from_detail_id' => $fromDetailId,
-
+                    'from_type' => 'DeliveryOrder',
+                    'from_id' => $doId,
+                    'from_detail_id' => $doDetailId,
                     'to_type' => 'SalesInvoice',
-
                     'to_id' => $salesInvoice->id,
-
                     'to_detail_id' => $salesInvoiceDetail->id,
-
                     'transaction_type' => 'invoice',
-
                     'qty' => $salesInvoiceDetail->qty,
-
                     'unit_price' => $salesInvoiceDetail->unit_price,
-
                     'discount' => $salesInvoiceDetail->discount,
-
                     'amount' => $salesInvoiceDetail->amount,
-
                     'transaction_date' => $salesInvoice->sales_invoice_date,
-
-                    'metadata' => [
+                    'metadata' => json_encode([
                         'warehouse_id' => $salesInvoiceDetail->warehouse_id,
                         'product_id' => $salesInvoiceDetail->product_id,
                         'unit_id' => $salesInvoiceDetail->unit_id,
-                    ],
-
+                    ]),
                 ]);
-            }
 
+                if ($doDetailId) {
+
+                    $doDetail = DB::table("delivery_order_detail_{$currentYear}")
+                        ->where('id', $doDetailId)
+                        ->first();
+
+                    if ($doDetail) {
+
+                        $totalInvoiceQty = SalesInvoiceDetail::where('sales_order_detail_id', $doDetailId)
+                            ->sum('qty');
+
+                        $outstanding = max(0, $doDetail->qty - $totalInvoiceQty);
+
+                        DB::table("delivery_order_detail_{$currentYear}")
+                            ->where('id', $doDetailId)
+                            ->update([
+                                'do_qty' => $totalInvoiceQty,
+                                'outstanding_qty' => $outstanding,
+                            ]);
+
+                        $affectedDoIds[] = $doDetail->delivery_order_id;
+                    }
+                }
+            }
+            foreach (array_unique($affectedDoIds) as $doId) {
+
+                $details = DB::table("delivery_order_detail_{$currentYear}")
+                    ->where('delivery_order_id', $doId)
+                    ->get();
+
+                $totalQty = $details->sum('qty');
+                $totalInvoice = $details->sum('do_qty');
+
+                if ($totalInvoice == 0) {
+                    $status = 'processing';
+                } elseif ($totalInvoice < $totalQty) {
+                    $status = 'partial';
+                } else {
+                    $status = 'confirmed';
+                }
+
+                DB::table("delivery_order_{$currentYear}")
+                    ->where('id', $doId)
+                    ->update([
+                        'status' => $status,
+                    ]);
+            }
             DB::commit();
 
             return response()->json([
@@ -1477,61 +1534,6 @@ class SalesInvoiceController extends Controller
             'units' => $result, // Ubah struktur agar units dibungkus
             'default_price' => $defaultPrice,
         ]);
-    }
-
-    public function getStock(Request $request)
-    {
-        $request->validate([
-            'product_id' => 'required|integer|exists:data_barang,id',
-            'warehouse_id' => 'required|integer|exists:warehouse,id',
-        ]);
-
-        // ambil cut off date dari company
-        $company = Company::first(); // atau pakai company aktif kalau multi-company
-
-        $cutoffDate = $company?->cut_off_date;
-
-        $stock = $this->realStock(
-            $request->product_id,
-            $request->warehouse_id,
-            $request->unit_id,
-            $cutoffDate
-        );
-
-        $barang = Barang::with('unitID')
-            ->find($request->product_id);
-        $unit = BasicCodeDetail::where('master_id', 2)->find($request->unit_id);
-
-        return response()->json([
-            'success' => true,
-            'stock' => $stock ?? 0,
-            'unit' => $unit?->detail ?? '',
-            'cutoff_date' => $cutoffDate,
-        ]);
-
-    }
-
-    public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
-    {
-        $unitId = (int) $unitId;
-        $today = now()->format('Y-m-d');
-
-        // Jika cutoffDate null, kita anggap mulai dari tanggal yang sangat lampau atau hari ini
-        $startDate = $cutoffDate ?? $today;
-
-        return DB::table('stock_mutations')
-            ->where('data_barang_id', (int) $productId)
-            ->where('warehouse_id', (int) $warehouseId)
-            ->where('unit_id', $unitId)
-            // Filter rentang: date_stock harus >= cutoffDate DAN <= hari ini
-            ->whereBetween('date_stock', [$startDate, $today])
-            ->selectRaw("
-            SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
-            -
-            SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
-            as stock
-        ")
-            ->value('stock') ?? 0;
     }
 
     public function processData($id)

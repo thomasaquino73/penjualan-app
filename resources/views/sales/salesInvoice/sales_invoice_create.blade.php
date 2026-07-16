@@ -220,6 +220,7 @@
 @include('partials.button.btn_submitform')
 @include('partials.button.select2_modal')
 @include('partials.js.calculate_total')
+@include('partials.js.loadAvailableStock')
 @push('scripts')
     <script>
         let prDetailsData = [];
@@ -320,6 +321,7 @@
                                             data-unit_price="${price}"
                                             data-discount="${discount}"
                                             data-amount="${amount}"
+                                            data-delivery_order_id="${item.delivery_order_id}"
                                             data-delivery_order_code="${item.order_code}"
                                         >
                                     </td>
@@ -656,49 +658,8 @@
                 console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
 
-            function loadAvailableStock() {
 
-                let productId = $('#product_id').val();
-                let warehouseId = $('#warehouse_id').val();
-                let unitId = $('#unit_id').val();
 
-                console.log({
-                    productId,
-                    warehouseId,
-                    unitId
-                });
-
-                if (!productId || !warehouseId || !unitId) {
-                    $('#available_stok').val('');
-                    return;
-                }
-
-                $.ajax({
-                    url: "{{ route('sales-order.wh.get-stock') }}",
-                    type: "GET",
-                    data: {
-                        product_id: productId,
-                        warehouse_id: warehouseId,
-                        unit_id: unitId
-                    },
-                    success: function(res) {
-                        $('#available_stok').val(res.stock);
-                        console.log('RESPONSE STOCK:', res.stock);
-
-                        $('#modalTitle').text(
-                            `Create new entry (Available Stock: ${res.stock} ${res.unit})`
-                        );
-                    }
-                });
-            }
-
-            $(document).on('change', '#product_id, #warehouse_id', function() {
-                loadAvailableStock();
-            });
-
-            $(document).on('change select2:select', '#unit_id', function() {
-                loadAvailableStock();
-            });
 
             $('#customer_id').on('change', function() {
 
@@ -1170,22 +1131,19 @@
 
                     let item = {
                         detail_id: $(this).data("id"),
+                        delivery_order_id: $(this).data("delivery_order_id"),
+                        order_code: $(this).data("delivery_order_code"),
                         product_id: $(this).data("product_id"),
                         data_produk: $(this).data("product_name"),
                         quantity: parseFloat($(this).data("outstanding_qty")) || 0,
                         sisa_pr: parseFloat($(this).data("qty")) || 0,
                         unit_id: $(this).data("unit_id"),
-
-                        // MENGGUNAKAN FALLBACK (JIKA UNDEFINED, MAKA ISI DENGAN "-")
-                        unit: $(this).data("unit_name") !== undefined ? $(this).data(
-                            "unit_name") : "-",
-
+                        unit: $(this).data("unit_name") || "-",
                         warehouse_id: $(this).data("warehouse_id"),
                         warehouse: $(this).data("warehouse_name") || "-",
                         unit_price: parseFloat($(this).data("unit_price")) || 0,
                         discount: parseFloat($(this).data("discount")) || 0,
                         amount: parseFloat($(this).data("amount")) || 0,
-                        order_code: $(this).data("delivery_order_code") || "-",
                     };
 
                     let exists = prDetailsData.some(x => x.detail_id == item.detail_id);

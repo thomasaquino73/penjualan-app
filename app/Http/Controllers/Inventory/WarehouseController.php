@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\WarehouseRequest;
+use App\Models\BasicCodeDetail;
+use App\Models\Inventory\Barang;
+use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\Warehouse;
+use App\Models\Setting\Company;
 use Dotenv\Exception\ValidationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -399,5 +403,78 @@ class WarehouseController extends Controller
         ]);
 
         return response()->json(['success' => true]);
+    }
+
+    public function getStock(Request $request)
+    {
+        $productId = $request->product_id;
+        $warehouseId = $request->warehouse_id;
+        $unitId = $request->unit_id;
+
+        $stock = $this->realStock(
+            $productId,
+            $warehouseId,
+            $unitId
+        );
+
+        $unit = BasicCodeDetail::where('master_id', 2)->find($request->unit_id);
+
+        return response()->json([
+            'stock' => floor($stock),
+            'unit' => $unit?->nama_unit ?? '',
+        ]);
+    }
+
+    public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
+    {
+        $today = now()->format('Y-m-d');
+
+        if (! $cutoffDate) {
+            $cutoffDate = Company::value('cut_off_date');
+        }
+
+        $startDate = $cutoffDate ?? '2000-01-01';
+
+        $barang = Barang::find($productId);
+
+        if (! $barang) {
+            return 0;
+        }
+
+        // stok dalam BASE UNIT
+        $stock = DB::table('stock_mutations')
+            ->where('data_barang_id', $productId)
+            ->where('warehouse_id', $warehouseId)
+            ->whereBetween('date_stock', [$startDate, $today])
+            ->selectRaw("
+            COALESCE(SUM(
+                CASE
+                    WHEN type='in' THEN total_base_qty
+                    WHEN type='out' THEN -total_base_qty
+                    ELSE 0
+                END
+            ),0) stock
+        ")
+            ->value('stock');
+
+        // jika pilih satuan dasar
+        if ((int) $unitId === (int) $barang->unit_id) {
+            return $stock;
+        }
+
+        // cari konversi
+        $conversion = DataBarangConversion::where('data_barang_id', $productId)
+            ->where('from_unit_id', $unitId)
+            ->where('to_unit_id', $barang->unit_id)
+            ->first();
+
+        if (! $conversion || $conversion->qty <= 0) {
+            return 0;
+        }
+
+        return round(
+            $stock / $conversion->qty,
+            2
+        );
     }
 }

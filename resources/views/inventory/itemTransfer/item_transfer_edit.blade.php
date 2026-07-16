@@ -173,6 +173,8 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/select/2.0.3/css/select.bootstrap5.css">
 @endpush
 @push('scripts')
+    @include('inventory.itemTransfer.part.loadAvailableStock')
+    @include('partials.button.btn_submitform')
     <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
     <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.bootstrap5.js"></script>
 
@@ -217,39 +219,7 @@
             });
 
 
-            // function loadAvailableStock() {
 
-            //     let productId = $('#product_id').val();
-            //     let warehouseId = $('#from_warehouse_id').val();
-            //     let cutoffDate = $('#cutoff_date').val();
-
-            //     if (!productId || !warehouseId) {
-            //         $('#available_stok').val('');
-            //         return;
-            //     }
-
-            //     $.ajax({
-            //         url: "{{ route('item-transfer.wh.get-stock') }}",
-            //         type: "GET",
-            //         data: {
-            //             product_id: productId,
-            //             warehouse_id: warehouseId,
-            //             cutoff_date: cutoffDate
-            //         },
-            //         success: function(res) {
-            //             let stock = Number(res.stock);
-            //             $('#available_stok').val(stock);
-
-            //             $('#modalTitle').text(
-            //                 `Create new entry (Available Stock: ${stock} ${res.unit})`
-            //             );
-            //         }
-            //     });
-            // }
-
-            // $('#product_id').on('change', loadAvailableStock);
-            // $('#from_warehouse_id').on('change', loadAvailableStock);
-            // $('#cutoff_date').on('change', loadAvailableStock);
             let table = new DataTable('#table', {
                 processing: true,
                 serverSide: false,
@@ -579,109 +549,6 @@
                     showConfirmButton: false
                 });
             });
-
-            let saveAndNew = false;
-            let activeBtn = null;
-
-            $(document).on("click", '.card-footer button[type="submit"]', function() {
-                saveAndNew = $(this).data("save-and-new");
-                activeBtn = $(this);
-            });
-
-
-            $("#postForm").on("submit", function(e) {
-                e.preventDefault();
-
-                // 1. Tangkap tombol yang ditekan (lebih akurat)
-                let submitter = e.originalEvent.submitter;
-                let saveAndNew = $(submitter).data("save-and-new") === true;
-                let btnTextOriginal = $(submitter).html();
-
-                // 2. Validasi awal (Frontend)
-                if (typeof prDetailsData === "undefined" || prDetailsData.length === 0) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Empty Items",
-                        text: "Please add at least one item detail to the table before saving.",
-                        confirmButtonText: "OK",
-                        customClass: {
-                            confirmButton: "btn btn-primary waves-effect waves-light",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return false;
-                }
-
-                // Pindahkan pengecekan warehouse ke sini!
-                if ($("#from_warehouse_id").val() === $("#to_warehouse_id").val()) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Warning!",
-                        text: "Warehouse cannot be the same.",
-                        customClass: {
-                            confirmButton: "btn btn-primary waves-effect waves-light",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return false;
-                }
-
-                let formData = new FormData(this);
-                formData.append("save_and_new", saveAndNew ? 1 : 0);
-                formData.append("items_detail", JSON.stringify(prDetailsData));
-
-                $.ajax({
-                    url: $(this).attr("action"),
-                    method: $(this).attr("method"),
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: "json",
-                    beforeSend: function() {
-                        $(submitter).html(
-                                '<i class="fa fa-spin fa-spinner me-1"></i> Processing...')
-                            .prop("disabled", true);
-                        $(".card-footer button").prop("disabled", true);
-                    },
-                    complete: function() {
-                        // Kembalikan teks asli ke tombol yang diklik
-                        // $(submitter).html(btnTextOriginal).prop("disabled", false);
-                        $(".card-footer button").prop("disabled", false);
-                    },
-                    success: function(response) {
-                        Swal.fire({
-                                icon: "success",
-                                title: "Success",
-                                text: response.message,
-                                customClass: {
-                                    confirmButton: "btn btn-primary waves-effect waves-light",
-                                },
-                                buttonsStyling: false,
-                            })
-                            .then(() => {
-                                window.location.href = response.redirect;
-                            });
-                    },
-                    error: function(xhr) {
-                        resetValidation();
-                        let errors = xhr.responseJSON?.errors;
-                        $.each(errors, function(key, value) {
-                            displayFieldError(key, value[0]);
-                        });
-                        Swal.fire({
-                            icon: "error",
-                            title: "Failed",
-                            text: xhr.responseJSON?.message || "Error",
-                            customClass: {
-                                confirmButton: "btn btn-primary waves-effect waves-light",
-                            },
-                            buttonsStyling: false,
-                        });
-
-                    }
-                });
-            });
-
 
         });
     </script>

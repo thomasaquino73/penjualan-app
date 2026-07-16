@@ -213,6 +213,7 @@
 @include('partials.button.btn_submitform')
 @include('partials.button.select2_modal')
 @include('partials.js.calculate_total')
+@include('partials.js.loadAvailableStock')
 
 @push('scripts')
     <script>
@@ -743,56 +744,7 @@
 
             });
 
-            function loadAvailableStock() {
 
-                let productId = $('#product_id').val();
-                let warehouseId = $('#warehouse_id').val();
-                let unitId = $('#unit_id').val();
-
-
-
-                if (!productId || !warehouseId || !unitId) {
-                    $('#available_stok').val('');
-                    return;
-                }
-
-                $.ajax({
-                    url: "{{ route('sales-order.wh.get-stock') }}",
-                    type: "GET",
-                    data: {
-                        product_id: productId,
-                        warehouse_id: warehouseId,
-                        unit_id: unitId
-                    },
-                    success: function(res) {
-
-                        $('#available_stok').val(parseFloat(res.stock));
-
-                        if (window.isEditingMode) {
-
-                            $('#modalTitle').text(
-                                `Edit entry (Available Stock: ${parseFloat(res.stock)} ${res.unit})`
-                            );
-
-                        } else {
-
-                            $('#modalTitle').text(
-                                `Create new entry (Available Stock: ${parseFloat(res.stock)} ${res.unit})`
-                            );
-
-                        }
-
-                    }
-                });
-            }
-
-            $(document).on('change', '#product_id, #warehouse_id', function() {
-                loadAvailableStock();
-            });
-
-            $(document).on('change select2:select', '#unit_id', function() {
-                loadAvailableStock();
-            });
 
             $('#customer_id').on('change', function() {
 

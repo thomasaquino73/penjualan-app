@@ -153,6 +153,8 @@
 @include('partials.tabel.css')
 @include('partials.tabel.js')
 @include('partials.button.btn_submitform')
+@include('partials.js.loadAvailableStock')
+
 @push('scripts')
     <script>
         let prDetailsData = [];
@@ -193,54 +195,6 @@
                 width: "100%",
             });
 
-
-
-            function loadAvailableStock() {
-
-                let productId = $('#product_id').val();
-                let warehouseId = $('#warehouse_id').val();
-                let unitId = $('#unit_id').val();
-
-                console.log({
-                    productId,
-                    warehouseId,
-                    unitId
-                });
-
-                if (!productId || !warehouseId || !unitId) {
-                    $('#available_stok').val('');
-                    $('#modalTitle').text('Create new entry');
-                    return;
-                }
-
-                $.ajax({
-                    url: "{{ route('delivery-order.wh.get-stock') }}",
-                    type: "GET",
-                    data: {
-                        product_id: productId,
-                        warehouse_id: warehouseId,
-                        unit_id: unitId
-                    },
-                    success: function(res) {
-
-                        console.log('RESPONSE STOCK:', res);
-
-                        $('#available_stok').val(res.stock);
-
-                        $('#modalTitle').text(
-                            `Create new entry `
-                        );
-                    },
-                    error: function(xhr) {
-                        console.log(xhr.responseText);
-                        $('#available_stok').val(0);
-                    }
-                });
-            }
-
-            $(document).on('change', '#product_id, #warehouse_id, #unit_id', function() {
-                loadAvailableStock();
-            });
 
             // ========================================================
             // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL

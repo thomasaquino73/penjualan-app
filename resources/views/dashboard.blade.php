@@ -75,7 +75,20 @@
                         <small class="text-muted">Total {{ $TotalTransactions }} Transactions done in this
                             Month</small>
                     </div>
+                    <div class="dropdown">
+                        <button class="btn p-0" type="button" id="salesID" data-bs-toggle="dropdown" aria-haspopup="true"
+                            aria-expanded="false">
+                            <i class="ti ti-dots-vertical ti-sm text-muted"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="salesID">
+                            @can('sales_order-browse')
+                                <a class="dropdown-item " href="{{ route('sales-order.index') }}">
+                                    View All
+                                </a>
+                            @endcan
 
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <ul class="p-0 m-0">
@@ -90,7 +103,7 @@
                                     <div class="me-2">
                                         <h6 class="mb-0">{{ $tranTer->nama_barang }}</h6>
                                         <small class="text-muted d-block">
-                                            {{ $tranTer->total_transaksi }} kali penjualan
+                                            {{-- {{ $tranTer->total_transaksi }} kali penjualan --}}
                                         </small>
                                     </div>
 

@@ -122,7 +122,7 @@ class DeliveryOrderController extends Controller
                             break;
 
                         case 'partial':
-                            $badge = 'bg-label-info';
+                            $badge = 'bg-label-warning';
                             $text = 'Partially Invoice';
                             break;
 
@@ -135,9 +135,9 @@ class DeliveryOrderController extends Controller
                             $badge = 'bg-danger';
                             $text = 'Cancelled';
                             break;
-                        case 'closed':
-                            $badge = 'bg-dark';
-                            $text = 'Closed';
+                        case 'confirmed':
+                            $badge = 'bg-info';
+                            $text = 'Confirmed';
                             break;
 
                         default:
@@ -520,7 +520,9 @@ class DeliveryOrderController extends Controller
                         $realStock = $stockService->realStock($item['product_id'], $item['warehouse_id'], $item['unit_id']);
 
                         if ($realStock < $qty) {
-                            throw new \Exception("Stok barang {$item['product_name']} tidak mencukupi. Tersedia: {$realStock}, Permintaan: {$qty}");
+                            throw new \Exception(
+                                "Stok barang {$item['data_produk']} tidak mencukupi. Tersedia: {$realStock}, Permintaan: {$qty}"
+                            );
                         }
 
                         // 2. Simpan ke DeliveryOrderDetail
@@ -800,6 +802,7 @@ class DeliveryOrderController extends Controller
                     'document_number' => $deliveryOrder->delivery_order_code,
                     'data_barang_id' => $old->data_barang_id,
                 ])->delete();
+
             }
 
             // Hapus detail lama
@@ -842,7 +845,9 @@ class DeliveryOrderController extends Controller
                             'sales_order_detail_id' => $soDetailId,
                             'urutan' => $index,
                             'data_barang_id' => $item['product_id'],
+                            'do_qty' => 0,
                             'qty' => $qty,
+                            'outstanding_qty' => $qty,
                             'unit_id' => $item['unit_id'],
                             'warehouse_id' => $item['warehouse_id'],
                             'created_at' => now(),
@@ -1337,133 +1342,6 @@ class DeliveryOrderController extends Controller
 
         return response()->json($details);
     }
-
-    // public function getStock(Request $request)
-    // {
-    //     $request->validate([
-    //         'product_id' => 'required|integer|exists:data_barang,id',
-    //         'warehouse_id' => 'required|integer|exists:warehouse,id',
-    //     ]);
-
-    //     // ambil cut off date dari company
-    //     $company = Company::first(); // atau pakai company aktif kalau multi-company
-
-    //     $cutoffDate = $company?->cut_off_date;
-
-    //     $stock = $this->realStock(
-    //         $request->product_id,
-    //         $request->warehouse_id,
-    //         $request->unit_id,
-    //         $cutoffDate
-    //     );
-
-    //     $barang = Barang::with('unitID')
-    //         ->find($request->product_id);
-    //     $unit = BasicCodeDetail::where('master_id', 2)->find($request->unit_id);
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'stock' => $stock ?? 0,
-    //         'unit' => $unit?->detail ?? '',
-    //         'cutoff_date' => $cutoffDate,
-    //     ]);
-
-    // }
-
-    public function getStock(Request $request)
-    {
-        $productId = $request->product_id;
-        $warehouseId = $request->warehouse_id;
-        $unitId = $request->unit_id;
-
-        $stock = $this->realStock(
-            $productId,
-            $warehouseId,
-            $unitId
-        );
-
-        $unit = BasicCodeDetail::where('master_id', 2)->find($request->unit_id);
-
-        return response()->json([
-            'stock' => floor($stock),
-            'unit' => $unit?->nama_unit ?? '',
-        ]);
-    }
-
-    public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
-    {
-        $today = now()->format('Y-m-d');
-
-        if (! $cutoffDate) {
-            $cutoffDate = Company::value('cut_off_date');
-        }
-
-        $startDate = $cutoffDate ?? '2000-01-01';
-
-        $barang = Barang::find($productId);
-
-        if (! $barang) {
-            return 0;
-        }
-
-        // stok dalam BASE UNIT
-        $stock = DB::table('stock_mutations')
-            ->where('data_barang_id', $productId)
-            ->where('warehouse_id', $warehouseId)
-            ->whereBetween('date_stock', [$startDate, $today])
-            ->selectRaw("
-            COALESCE(SUM(
-                CASE 
-                    WHEN type='in' THEN total_base_qty
-                    WHEN type='out' THEN -total_base_qty
-                    ELSE 0
-                END
-            ),0) stock
-        ")
-            ->value('stock');
-
-        // jika pilih satuan dasar
-        if ((int) $unitId === (int) $barang->unit_id) {
-            return $stock;
-        }
-
-        // cari konversi
-        $conversion = DataBarangConversion::where('data_barang_id', $productId)
-            ->where('from_unit_id', $unitId)
-            ->where('to_unit_id', $barang->unit_id)
-            ->first();
-
-        if (! $conversion || $conversion->qty <= 0) {
-            return 0;
-        }
-
-        return round(
-            $stock / $conversion->qty,
-            2
-        );
-    }
-    // public function realStock($productId, $warehouseId, $unitId, $cutoffDate = null)
-    // {
-    //     $unitId = (int) $unitId;
-    //     $today = now()->format('Y-m-d');
-
-    //     // Jika cutoffDate null, kita anggap mulai dari tanggal yang sangat lampau atau hari ini
-    //     $startDate = $cutoffDate ?? $today;
-
-    //     return DB::table('stock_mutations')
-    //         ->where('data_barang_id', (int) $productId)
-    //         ->where('warehouse_id', (int) $warehouseId)
-    //         ->where('unit_id', $unitId)
-    //         // Filter rentang: date_stock harus >= cutoffDate DAN <= hari ini
-    //         ->whereBetween('date_stock', [$startDate, $today])
-    //         ->selectRaw("
-    //         SUM(CASE WHEN type = 'in' THEN qty_transaksi ELSE 0 END)
-    //         -
-    //         SUM(CASE WHEN type = 'out' THEN qty_transaksi ELSE 0 END)
-    //         as stock
-    //     ")
-    //         ->value('stock') ?? 0;
-    // }
 
     public function print($id)
     {

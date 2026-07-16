@@ -174,6 +174,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/warehouse/generate-id', [WarehouseController::class, 'generateId']);
     Route::get('/warehouse/trash', [WarehouseController::class, 'trash'])->name('warehouse.trash');
     Route::put('/warehouse/restore/{id}', [WarehouseController::class, 'restore'])->name('warehouse.restore');
+    Route::get('/warehouse/wh/get-stock', [WarehouseController::class, 'getStock'])->name('warehouse.wh.get-stock');
     Route::resource('warehouse', WarehouseController::class);
 
     Route::get('/stock-balance/{product}/{warehouse}', [DataBarangController::class, 'getStockBalance']);
@@ -302,7 +303,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales-order/{id}/data', [SalesOrderController::class, 'getCustomerData'])->name('sales-order.getCustomerData');
     Route::post('/sales-order/{id}/process', [SalesOrderController::class, 'processData'])->name('sales-order.process');
     // Route::get('/sales-order/get-units-by-product/{id}', [SalesOrderController::class, 'getUnitsByProduct'])->name('sales-order.get_units');
-    Route::get('/sales-order/wh/get-stock', [SalesOrderController::class, 'getStock'])->name('sales-order.wh.get-stock');
     Route::patch('/sales-order/{id}/close', [SalesOrderController::class, 'CloseDocument'])->name('sales-order.close');
     Route::post('/sales-order/restore-multiple', [SalesOrderController::class, 'restoreMultiple']);
     Route::put('/sales-order/restore/{id}', [SalesOrderController::class, 'restore'])->name('sales-order.restore');
@@ -335,7 +335,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/delivery-order/get-quotation-detail', [DeliveryOrderController::class, 'getQuotationDetail'])->name('delivery-order.getQuotationDetail');
 
     Route::get('/delivery-order/get-kontak/{customer_id}', [DeliveryOrderController::class, 'getKontakByCustomer']);
-    Route::get('/delivery-order/wh/get-stock', [DeliveryOrderController::class, 'getStock'])->name('delivery-order.wh.get-stock');
     Route::post('/delivery-order/get-order-detail', [DeliveryOrderController::class, 'getOrderDetail'])->name('delivery-order.get-order-detail');
     Route::get('/delivery-order/print/{id}', [DeliveryOrderController::class, 'print'])->name('delivery-order.print');
     Route::put('/delivery-order/restore/{id}', [DeliveryOrderController::class, 'restore'])->name('delivery-order.restore');
@@ -347,7 +346,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/sales-invoice/get-order-detail', [SalesInvoiceController::class, 'getDeliveryDetail'])->name('sales-invoice.getDeliveryDetail');
     Route::get('/sales-invoice/{id}/data', [SalesInvoiceController::class, 'getCustomerData'])->name('sales-invoice.getCustomerData');
     Route::post('/sales-invoice/{id}/process', [SalesInvoiceController::class, 'processData'])->name('sales-invoice.process');
-    Route::get('/sales-invoice/wh/get-stock', [SalesInvoiceController::class, 'getStock'])->name('sales-invoice.wh.get-stock');
     Route::post('/sales-invoice/restore-multiple', [SalesInvoiceController::class, 'restoreMultiple']);
     Route::put('/sales-invoice/restore/{id}', [SalesInvoiceController::class, 'restore'])->name('sales-invoice.restore');
     Route::post('/sales-invoice/delete-multiple', [SalesInvoiceController::class, 'deleteMultiple']);
@@ -362,7 +360,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/proforma-invoice/{id}/data', [ProformaInvoiceController::class, 'getCustomerData'])->name('proforma-invoice.getCustomerData');
     Route::get('/proforma-invoice/get-processing-order', [ProformaInvoiceController::class, 'getProcessingData'])->name('proforma-invoice.quotation.processing');
     Route::post('/proforma-invoice/{id}/process', [ProformaInvoiceController::class, 'processData'])->name('proforma-invoice.process');
-    Route::get('/proforma-invoice/wh/get-stock', [ProformaInvoiceController::class, 'getStock'])->name('proforma-invoice.wh.get-stock');
     Route::post('/proforma-invoice/restore-multiple', [ProformaInvoiceController::class, 'restoreMultiple']);
     Route::put('/proforma-invoice/restore/{id}', [ProformaInvoiceController::class, 'restore'])->name('proforma-invoice.restore');
     Route::post('/proforma-invoice/delete-multiple', [ProformaInvoiceController::class, 'deleteMultiple']);
