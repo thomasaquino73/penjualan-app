@@ -225,7 +225,6 @@
                 const datePicker = flatpickr("#sales_invoice_date", {
                     enableTime: false,
                     dateFormat: "d-m-Y",
-                    defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
                 });
             });
             // Show Modal Proforma
