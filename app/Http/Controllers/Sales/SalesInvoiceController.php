@@ -225,7 +225,6 @@ class SalesInvoiceController extends Controller
 
                     if ($row->created_by == $currentUserId) {
 
-                        // SEND TO APPROVAL
                         if ($row->status == 'draft') {
 
                             $btn .= '
@@ -241,7 +240,9 @@ class SalesInvoiceController extends Controller
 
                         }
 
-                        // EDIT
+                       
+                    }
+                     // EDIT
                         if (
                             $user->can('sales_invoice-edit') &&
                             in_array($row->status, ['draft', 'pending', 'processing'])
@@ -260,7 +261,7 @@ class SalesInvoiceController extends Controller
                         // DELETE
                         if (
                             $user->can('sales_invoice-delete') &&
-                            $row->status == 'draft'
+                            in_array($row->status, ['draft', 'pending', 'processing'])
                         ) {
 
                             $btn .= '
@@ -275,7 +276,6 @@ class SalesInvoiceController extends Controller
                                 </a>
                             ';
                         }
-                    }
 
                     /*
                     |--------------------------------------------------------------------------
@@ -435,6 +435,7 @@ class SalesInvoiceController extends Controller
             $data['sub_total'] = $request->sub_total;
             $data['disc_percent'] = $request->percent;
             $data['disc_nominal'] = $request->discount_all;
+            $data['po_number'] = $request->po_number;
             $data['grand_total'] = $request->total_order;
             $data['taxpayer_data'] = $request->taxpayer_data;
             $data['tax_id'] = $request->tax_id;
@@ -739,6 +740,7 @@ class SalesInvoiceController extends Controller
                 'sub_total' => $request->sub_total,
                 'disc_percent' => $request->percent,
                 'disc_nominal' => $request->discount_all,
+                'po_number' => $request->po_number,
                 'grand_total' => $request->total_order,
                 'jenis_pengiriman' => $request->jenis_pengiriman,
                 'kena_pajak' => $request->has('kena_pajak') ? 1 : 0,
@@ -820,42 +822,52 @@ class SalesInvoiceController extends Controller
             // SIMPAN DETAIL BARU
             // ==========================
             foreach ($items as $item) {
+               $qty = (float) ($item['quantity'] ?? $item['qty'] ?? 0);
 
-                $qty = floatval($item['quantity'] ?? $item['qty'] ?? 0);
-                $doDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
-                $doId = $item['delivery_order_id'] ?? null;
+                $doDetailId = $item['sales_order_detail_id']
+    ?? $item['detail_id']
+    ?? null;
+
+$doId = $item['sales_order_code_id']
+    ?? $item['delivery_order_id']
+    ?? $item['order_code']
+    ?? null;
+
+$doDetailId = empty($doDetailId) ? null : (int) $doDetailId;
+$doId       = empty($doId) ? null : (int) $doId;
+
                 $salesInvoiceDetail = SalesInvoiceDetail::create([
 
-                    'sales_invoice_id' => $salesInvoice->id,
+                    'sales_invoice_id'      => $salesInvoice->id,
 
-                    // 'sales_order_detail_id' => $doDetailId,
-                    // 'sales_order_code_id' => $doId,
+                    'sales_order_detail_id' => $doDetailId,
+                    'sales_order_code_id'   => $doId,
 
-                    'product_id' => $item['product_id'],
+                    'product_id'            => $item['product_id'],
 
-                    'qty' => $qty,
+                    'qty'                   => $qty,
 
-                    'unit_id' => $item['unit_id'],
+                    'unit_id'               => $item['unit_id'],
 
-                    'warehouse_id' => $item['warehouse_id'],
+                    'warehouse_id'          => $item['warehouse_id'],
 
-                    'unit_price' => floatval($item['unit_price'] ?? 0),
+                    'unit_price'            => (float) ($item['unit_price'] ?? 0),
 
-                    'discount_percent' => $item['discount_percent'] ?? 0,
+                    'discount_percent'      => $item['discount_percent'] ?? 0,
 
-                    'discount' => floatval($item['discount'] ?? 0),
+                    'discount'              => (float) ($item['discount'] ?? 0),
 
-                    'amount' => floatval($item['amount'] ?? 0),
+                    'amount'                => (float) ($item['amount'] ?? 0),
 
-                    'so_qty' => $qty,
+                    'so_qty'                => $qty,
 
-                    'outstanding_qty' => 0,
+                    'outstanding_qty'       => 0,
 
-                    'status' => 'open',
+                    'status'                => 'open',
 
-                    'active' => 1,
+                    'active'                => 1,
 
-                    'created_by' => Auth::id(),
+                    'created_by'            => Auth::id(),
                 ]);
 
                 /*
@@ -1571,16 +1583,8 @@ class SalesInvoiceController extends Controller
     public function getDelivery($customerId)
     {
 
-        $orders = DeliveryOrder::with([
-            'details' => function ($query) {
-                $query->whereNotNull('sales_order_detail_id');
-            },
-        ])
-            ->where('customer_id', $customerId)
+        $orders = DeliveryOrder::where('customer_id', $customerId)
             ->where('status', 'processing')
-            ->whereHas('details', function ($query) {
-                $query->whereNotNull('sales_order_detail_id');
-            })
             ->get();
 
         return response()->json($orders);

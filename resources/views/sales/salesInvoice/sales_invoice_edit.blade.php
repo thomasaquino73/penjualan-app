@@ -384,19 +384,26 @@
                 @if (isset($jsonDetails))
                     @foreach ($jsonDetails as $detail)
                         {
-                            'id': '{{ $detail['id'] }}',
-                            'sales_invoice_id': '{{ $detail['sales_invoice_id'] }}',
-                            'product_id': '{{ $detail['product_id'] }}',
-                            'data_produk': '{{ $detail['data_produk'] }}',
-                            'quantity': '{{ $detail['quantity'] }}',
-                            'unit_id': '{{ $detail['unit_id'] }}',
-                            'unit': '{{ $detail['unit'] }}',
-                            'warehouse_id': '{{ $detail['warehouse_id'] }}',
-                            'warehouse': '{{ $detail['warehouse'] }}',
-                            'unit_price': '{{ $detail['unit_price'] }}',
-                            'discount_percent': '{{ $detail['discount_percent'] }}',
-                            'discount': '{{ $detail['discount'] }}',
-                            'amount': '{{ $detail['amount'] }}',
+                            id: "{{ $detail['id'] }}",
+                            sales_invoice_id: "{{ $detail['sales_invoice_id'] }}",
+
+                            detail_id: "{{ $detail['sales_order_detail_id'] }}",
+                            delivery_order_id: "{{ $detail['sales_order_code_id'] ?? '' }}",
+
+                            product_id: "{{ $detail['product_id'] }}",
+                            data_produk: "{{ $detail['data_produk'] }}",
+                            quantity: "{{ $detail['quantity'] }}",
+
+                            unit_id: "{{ $detail['unit_id'] }}",
+                            unit: "{{ $detail['unit'] }}",
+
+                            warehouse_id: "{{ $detail['warehouse_id'] }}",
+                            warehouse: "{{ $detail['warehouse'] }}",
+
+                            unit_price: "{{ $detail['unit_price'] }}",
+                            discount_percent: "{{ $detail['discount_percent'] }}",
+                            discount: "{{ $detail['discount'] }}",
+                            amount: "{{ $detail['amount'] }}"
                         }
                         {{ !$loop->last ? ',' : '' }}
                     @endforeach

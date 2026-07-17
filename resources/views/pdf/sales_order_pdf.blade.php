@@ -22,7 +22,7 @@
                 <div class="section-title">Kepada</div>
                 <div class="recipient-box">
                     <strong>{{ $model->customerID->nama_customer }}</strong><br>
-                    {{ $model->address }}
+                      {!! nl2br(e($model->address)) !!}
                 </div>
             </td>
             <td style="width: 50%; vertical-align: top; padding-left: 20px;">
