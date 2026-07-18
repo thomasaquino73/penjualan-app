@@ -823,7 +823,7 @@
                     priceInput.val("");
                     dropdownBtn.prop("disabled", true);
                     dropdownMenu.empty();
-                    helperText.text("Pilih produk untuk melacak riwayat harga beli.");
+                    helperText.text("Pilih produk untuk melacak riwayat harga jual.");
                     return;
                 }
 

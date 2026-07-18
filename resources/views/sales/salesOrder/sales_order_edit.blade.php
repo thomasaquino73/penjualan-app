@@ -877,7 +877,7 @@
                 let dropdownMenu = $("#po-price-dropdown-menu");
                 let helperText = $("#po-history-helper");
 
-                // Pastikan ID selector ini sesuai dengan ID Select Supplier di form utama kamu
+                // Pastikan ID selector ini sesuai dengan ID Select Customer di form utama kamu
                 let customerId = $("#customer_id").val();
 
                 if (!productId) {
@@ -885,11 +885,11 @@
                     priceInput.val("");
                     dropdownBtn.prop("disabled", true);
                     dropdownMenu.empty();
-                    helperText.text("Pilih produk untuk melacak riwayat harga beli.");
+                    helperText.text("Pilih produk untuk melacak riwayat harga jual.");
                     return;
                 }
 
-                // Tambahan Validasi: Ingatkan user jika supplier belum dipilih
+                // Tambahan Validasi: Ingatkan user jika customer belum dipilih
                 if (!customerId) {
                     alert(
                         "Silahkan pilih Customer terlebih dahulu pada form utama SO!",

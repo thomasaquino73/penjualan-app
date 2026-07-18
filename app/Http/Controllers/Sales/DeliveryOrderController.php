@@ -248,65 +248,7 @@ class DeliveryOrderController extends Controller
                             ';
                     }
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | 2. APPROVAL ACTION
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        $row->created_by !== $currentUserId &&
-                        $user->can('delivery_order-approval')
-                    ) {
-
-                        if ($row->status == 'pending') {
-
-                            $btn .= '
-                                    <a class="dropdown-item text-success btn-approval-po"
-                                        href="javascript:void(0)"
-                                        data-status="approved"
-                                        data-id="'.$row->id.'">
-
-                                        <i class="ti ti-check me-1"></i>
-                                        Approve
-                                    </a>
-                                ';
-
-                            $btn .= '
-                                    <a class="dropdown-item text-danger btn-approval-po"
-                                        href="javascript:void(0)"
-                                        data-status="rejected"
-                                        data-id="'.$row->id.'">
-
-                                        <i class="ti ti-x me-1"></i>
-                                        Reject
-                                    </a>
-                                ';
-                        }
-                    }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | 3. SEND TO SUPPLIER
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        $row->status == 'approved'
-                        // $row->status == 'approved' &&
-                        // $user->can('delivery_order-send-supplier')
-                    ) {
-
-                        $btn .= '
-                            <a class="dropdown-item text-info btn-send-supplier"
-                                href="javascript:void(0)"
-                                data-id="'.$row->id.'">
-
-                                <i class="ti ti-mail-fast me-1"></i>
-                                Send To Supplier
-                            </a>
-                        ';
-                    }
+                    
 
                     /*
                     |--------------------------------------------------------------------------
@@ -320,41 +262,15 @@ class DeliveryOrderController extends Controller
                     ) {
 
                         $btn .= '
-            <a class="dropdown-item text-primary"
-                href="'.route('delivery-order.receive', $row->id).'">
+                            <a class="dropdown-item text-primary"
+                                href="'.route('delivery-order.receive', $row->id).'">
 
-                <i class="ti ti-package-import me-1"></i>
-                Receive Item
-            </a>
-        ';
+                                <i class="ti ti-package-import me-1"></i>
+                                Receive Item
+                            </a>
+                        ';
                     }
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        ! in_array($row->status, ['completed', 'cancelled']) &&
-                        $user->can('delivery_order-cancel')
-                    ) {
-
-                        $btn .= '
-            <a class="dropdown-item text-danger btn-cancel-po"
-                href="javascript:void(0)"
-                data-id="'.$row->id.'">
-
-                <i class="ti ti-circle-x me-1"></i>
-                Cancel
-            </a>
-        ';
-                    }
-                    if ($row->status != 'delivered') {
-                        $btn .= '<a class="dropdown-item"
-                href="javascript:void(0)" id="delivered"   data-id="'.$row->id.'" data-name="'.$row->delivery_order_code.'">
-                <i class="ti ti-lock"></i> Delivered
-             </a>';
-                    }
                     /*
                     |--------------------------------------------------------------------------
                     | 7. PRINT
@@ -362,19 +278,19 @@ class DeliveryOrderController extends Controller
                     */
 
                     $btn .= '
-        <a class="dropdown-item"
-            target="_blank"
-            href="'.route('delivery-order.print', $row->id).'">
+                        <a class="dropdown-item"
+                            target="_blank"
+                            href="'.route('delivery-order.print', $row->id).'">
 
-            <i class="ti ti-printer me-1"></i>
-            Print / PDF
-        </a>
-            ';
+                            <i class="ti ti-printer me-1"></i>
+                            Print / PDF
+                        </a>
+                            ';
 
-                    $btn .= '
-                    </ul>
-                </div>
-            ';
+                                $btn .= '
+                                </ul>
+                            </div>
+                        ';  
 
                     return $btn;
                 })

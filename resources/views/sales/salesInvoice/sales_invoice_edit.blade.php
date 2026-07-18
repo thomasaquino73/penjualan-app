@@ -613,46 +613,101 @@
                                     className: "btn btn-warning btn-sm me-2",
                                     extend: "selectedSingle",
                                     action: function(e, dt, node, config) {
-                                        let data = dt.row({
+
+                                        const row = dt.row({
                                             selected: true
-                                        }).data();
-                                        let rowIndex = dt.row({
-                                            selected: true
-                                        }).index();
+                                        });
+
+                                        if (!row.any()) {
+                                            Swal.fire({
+                                                icon: "warning",
+                                                title: "Warning",
+                                                text: "Please select one data first."
+                                            });
+                                            return;
+                                        }
+
+                                        const data = row.data();
+                                        const rowIndex = row.index();
 
                                         window.isEditingMode = true;
 
-                                        // Menyimpan index baris array untuk penanda update
-                                        $("#detail_id").val(rowIndex);
+                                        // Reset error
+                                        $("#formPrDetail .error").html("");
 
-                                        // --- AMANKAN DATA ID RELASI DI SINI ---
-                                        $("#modal_purchase_quotation_detail_id").val(data.detail_id ||
-                                            data.purchase_quotation_detail_id || "");
-                                        $("#modal_quotation_code").val(data.proforma_code || "");
-
-                                        // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
-                                        if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
-                                            $("#quantity").attr("data-sisa-pr", data.sisa_pr);
-                                        } else {
-                                            $("#quantity").removeAttr(
-                                                "data-sisa-pr"); // Jika PO bebas, hapus batasannya
-                                        }
-                                        // --------------------------------------
-                                        $("#quantity").val(data.quantity);
-                                        $("#unit_id").data("pending-val", data.unit_id);
-                                        $("#warehouse_id").val(data.warehouse_id).trigger("change");
-                                        $("#product_id").val(data.product_id).trigger("change");
-                                        $("#unit_price").val(data.unit_price);
-                                        $("#discount").val(data.discount || 0);
-                                        $("#total_price").val(data.amount || 0);
-                                        $("#tax").val(data.tax || 0);
+                                        // ==========================
+                                        // HEADER
+                                        // ==========================
 
                                         $("#modalTitle").text("Edit entry");
                                         $("#btnSubmitModal").text("Update");
+
+                                        // ==========================
+                                        // HIDDEN
+                                        // ==========================
+
+                                        $("#detail_id").val(rowIndex);
+
+                                        $("#modal_sales_quotation_detail_id").val(
+                                            data.detail_id ??
+                                            data.sales_quotation_detail_id ??
+                                            ""
+                                        );
+
+                                        $("#modal_requisition_code").val(
+                                            data.requisition_code ?? ""
+                                        );
+
+                                        // ==========================
+                                        // TEXTBOX
+                                        // ==========================
+
+                                        $("#quantity").val(data.quantity ?? "");
+
+                                        $("#unit_price").val(data.unit_price ?? 0);
+
+                                        $("#discount").val(data.discount ?? 0);
+
+                                        $("#discount_percent").val(data.discount_percent ?? 0);
+
+                                        $("#tax").val(data.tax ?? 0);
+
+                                        $("#total_price").val(data.amount ?? 0);
+
+                                        $("#available_stok").val(data.available_stok ?? "");
+
+                                        // ==========================
+                                        // ATTRIBUTE
+                                        // ==========================
+
+                                        if (data.sisa_pr != null) {
+                                            $("#quantity").attr("data-sisa-pr", data.sisa_pr);
+                                        } else {
+                                            $("#quantity").removeAttr("data-sisa-pr");
+                                        }
+
+                                        // ==========================
+                                        // SELECT
+                                        // ==========================
+
+                                        $("#warehouse_id")
+                                            .val(data.warehouse_id)
+                                            .trigger("change.select2");
+
+                                        // simpan unit yg dipilih
+                                        $("#unit_id").data("pending-val", data.unit_id);
+
+                                        // simpan harga lama
+                                        $("#unit_price").data("pending-price", data.unit_price);
+
+                                        // buka modal dulu
                                         $("#modalPrDetail").modal("show");
 
-
-                                    },
+                                        // terakhir trigger product
+                                        $("#product_id")
+                                            .val(data.product_id)
+                                            .trigger("change");
+                                    }
                                 },
                                 {
                                     text: '<i class="ti ti-trash me-1"></i> Delete',
@@ -811,7 +866,7 @@
                         priceInput.val("");
                         dropdownBtn.prop("disabled", true);
                         dropdownMenu.empty();
-                        helperText.text("Pilih produk untuk melacak riwayat harga beli.");
+                        helperText.text("Pilih produk untuk melacak riwayat harga jual.");
                         return;
                     }
 
@@ -828,7 +883,7 @@
                     // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
                     // ==========================================
                     $.ajax({
-                        url: `/sales-invoice/get-units-by-product/${productId}`,
+                        url: window.routes.getUnits.replace(':id', productId),
                         type: "GET",
                         dataType: "json",
                         beforeSend: function() {
@@ -860,8 +915,10 @@
                             unitSelect.trigger("change");
 
                             // Gunakan response.default_price
-                            priceInput.val(response.default_price || 0);
-
+                            // priceInput.val(response.default_price || 0);
+                            if (!window.isEditingMode) {
+                                priceInput.val(response.default_price || 0);
+                            }
                             let pendingUnitId = unitSelect.data("pending-val");
                             if (pendingUnitId) {
                                 unitSelect.val(pendingUnitId).trigger("change");
@@ -869,7 +926,6 @@
                             }
                         },
                         error: function() {
-                            console.error("Gagal memuat list unit dari Controller.");
                             unitSelect
                                 .empty()
                                 .append("<option></option>")
@@ -882,7 +938,7 @@
                     // 2. AJAX History PO + Fallback Harga Master
                     // ==========================================
                     $.ajax({
-                        url: `/sales-invoice/sq/price-history?product_id=${productId}&customer_id=${customerId}`,
+                        url: `/sales-invoice/si/price-history?product_id=${productId}&customer_id=${customerId}`,
                         type: "GET",
                         dataType: "json",
                         beforeSend: function() {
@@ -974,7 +1030,6 @@
                             }
                         },
                         error: function(xhr) {
-                            console.error("Gagal mengambil data riwayat harga:", xhr);
                             helperText
                                 .attr("class", "form-text text-danger")
                                 .text("Gagal memuat riwayat harga.");
