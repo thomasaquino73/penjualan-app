@@ -252,31 +252,35 @@ class PurchaseRequisitionController extends Controller
     }
 
     private function generateNumberId()
-    {
-        $tahun = date('Y');
-        $bulan = date('n');
-        $bulanRomawi = $this->bulanRomawi($bulan);
+{
+    $tahun = date('Y');
+    $bulan = date('n');
+    $bulanRomawi = $this->bulanRomawi($bulan);
 
-        // Prefix yang akan dicari
-        $prefix = "PR/{$tahun}/{$bulanRomawi}/";
+    $prefix = "PR/{$tahun}/{$bulanRomawi}/";
 
-        // Ambil nomor terakhir pada bulan & tahun yang sama
-        $last = PurchaseRequisition::where('code', 'like', $prefix.'%')
-            ->lockForUpdate()
-            ->orderByDesc('id')
-            ->first();
+    $last = PurchaseRequisition::where('code', 'like', $prefix . '%')
+        ->orderByRaw("
+            CAST(
+                REGEXP_REPLACE(
+                    SUBSTRING_INDEX(code,'/',-1),
+                    '[^0-9]',
+                    ''
+                ) AS UNSIGNED
+            ) DESC
+        ")
+        ->first();
 
-        if ($last) {
-            // Ambil 4 digit terakhir
-            $lastNumber = (int) substr($last->code, -4);
-            $nextNumber = $lastNumber + 1;
-        } else {
-            // Jika belum ada pada bulan ini mulai dari 0001
-            $nextNumber = 1;
-        }
-
-        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+    if ($last) {
+        preg_match('/(\d+)/', substr($last->code, strrpos($last->code, '/') + 1), $match);
+        $lastNumber = isset($match[1]) ? (int)$match[1] : 0;
+        $nextNumber = $lastNumber + 1;
+    } else {
+        $nextNumber = 1;
     }
+
+    return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+}
 
     public function create()
     {
