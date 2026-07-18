@@ -45,14 +45,7 @@
                             <option value="" selected hidden>Select Status</option>
                             <option value="">All Status</option>
                             <option value="draft">Draft</option>
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                            <option value="rejected">Rejected</option>
-                            <option value="sent">Sent</option>
-                            <option value="partially_received">Partially Received</option>
-                            <option value="completed">Completed</option>
-                            <option value="closed">Closed</option>
+                            <option value="paid">Paid</option>
                         </select>
                     </div>
                 </div>
@@ -61,16 +54,11 @@
             <table class="table table-binvoiceed" id="table">
                 <thead class="binvoice-top" style="background-color: #AEDEFC; ">
                     <tr>
-                        <th>
-                            <div class="form-check form-check-primary mt-3">
-                                <input class="form-check-input" type="checkbox" value="" id="checkAll">
-                            </div>
-                        </th>
                         <th>#</th>
                         <th>Number</th>
                         <th>Date</th>
                         <th>Customer</th>
-                        <th>Description</th>
+                        <th>Notes</th>
                         <th>Status</th>
                         <th>Total</th>
                         <th>Created</th>
@@ -82,3 +70,65 @@
         </div>
     </div>
 @endsection
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#selectStatus').on('change', function() {
+                table.ajax.reload();
+            });
+            var table = new DataTable('#table', {
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                lengthMenu: [
+                    [10, 25, 50, -1],
+                    [10, 25, 50, 'All']
+                ],
+                ajax: {
+                    url: '{{ route('penjualan-toko.index') }}',
+                    data: function(d) {
+                        d.status = $('#selectStatus').val();
+                    }
+                },
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'store_sales_code',
+                    },
+                    {
+                        data: 'store_sales_date',
+                    },
+                    {
+                        data: 'customer_name',
+                    },
+                    {
+                        data: 'notes',
+                    },
+                    {
+                        data: 'status',
+                    },
+                    {
+                        data: 'total',
+                    },
+
+                    {
+                        data: 'created_at',
+                    },
+                    {
+                        data: 'updated_at',
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    },
+                ]
+            });
+        });
+    </script>
+@endpush

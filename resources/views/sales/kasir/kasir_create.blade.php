@@ -3,30 +3,31 @@
     <!-- HEADER -->
     <div class="card mb-3">
         <div class="card-body d-flex justify-content-between align-items-center">
+            <form action="{{ route('penjualan-toko.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
+                @csrf
+                <!-- Kiri -->
+                <h4 class="fw-bold mb-0">🛒 Store Sales (POS)</h4>
 
-            <!-- Kiri -->
-            <h4 class="fw-bold mb-0">🛒 Store Sales (POS)</h4>
-
-            <!-- Kanan -->
-            <div class="d-flex gap-2">
-                <div class="mb-3">
-                    <label class="form-label">Cashier</label>
-                    <div class="input-group input-group-merge">
-                        <span class="input-group-text"><i class="ti ti-user"></i></span>
-                        <input type="text" value="{{ Auth()->user()->fullname }}" class="form-control" readonly>
+                <!-- Kanan -->
+                <div class="d-flex gap-2">
+                    <div class="mb-3">
+                        <label class="form-label">Cashier</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="ti ti-user"></i></span>
+                            <input type="text" value="{{ Auth()->user()->fullname }}" class="form-control" readonly>
+                        </div>
                     </div>
-                </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Date</label>
-                    <div class="input-group input-group-merge">
-                        <span class="input-group-text"><i class="ti ti-calendar"></i></span>
-                        <input type="text" value="" id="sales_date" name="sales_date" class="form-control"
-                            readonly>
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="ti ti-calendar"></i></span>
+                            <input type="text" value="" id="store_sales_date" name="store_sales_date"
+                                class="form-control" readonly>
+                        </div>
                     </div>
-                </div>
 
-            </div>
+                </div>
 
         </div>
     </div>
@@ -43,10 +44,10 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"> <i class="ti ti-barcode"></i>
                                 </span>
-                                <input type="text" name="id_barang" id="id_barang" class="form-control"
+                                <input type="text" name="store_sales_code" id="store_sales_code" class="form-control"
                                     value="{{ $idNumber }}">
                             </div>
-                            <span class="error text-danger" id="id_barangError"></span>
+                            <span class="error text-danger" id="store_sales_codeError"></span>
                         </div>
                         <div class="col-md-8">
                             <label class="form-label">Customer<small class="text-danger">*</small> </label>
@@ -56,7 +57,7 @@
                                 <input type="text" value="Pelanggan Umum" id="customer_name" name="customer_name"
                                     class="form-control" readonly>
                             </div>
-                            <span class="error text-danger" id="id_barangError"></span>
+                            <span class="error text-danger" id="customer_nameError"></span>
                         </div>
 
                     </div>
@@ -82,6 +83,7 @@
                                     <th>Price</th>
                                     <th>DISC</th>
                                     <th>AMOUNT</th>
+                                    <th>WAREHOUSE</th>
                                 </tr>
                             </thead>
                         </table>
@@ -156,29 +158,20 @@
 
 
                     <hr>
-
-
                     <!-- Total -->
                     <div class="d-flex justify-content-between align-items-center mb-3">
-
                         <div class="col-6 fw-bold">
                             Total
                         </div>
-
                         <div class="col-6">
-
                             <div class="input-group input-group-merge">
-
                                 <span class="input-group-text border-0 bg-transparent fw-bold text-primary fs-5">
                                     {{ $mataUangDefault->symbol }}
                                 </span>
-
                                 <input type="hidden" id="total_order" name="total_order">
-
                                 <input type="text" id="total_order_display"
                                     class="form-control border-0 bg-transparent shadow-none text-end fw-bold text-primary fs-5"
                                     placeholder="0" readonly>
-
                             </div>
 
                         </div>
@@ -195,6 +188,7 @@
                             <option value="Qris">Qris</option>
                             <option value="Transfer">Transfer</option>
                         </select>
+                        <span class="text-danger" id="payment_methodError"></span>
                     </div>
 
                     <div id="cash_section" style="display:none;">
@@ -213,8 +207,8 @@
                             <label class="form-label">Change</label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text">{{ $mataUangDefault->symbol }}</span>
-                                <input type="text" id="change_amount" class="form-control text-success fw-bold"
-                                    readonly>
+                                <input type="text" id="change_amount" name="change_amount"
+                                    class="form-control text-success fw-bold" readonly>
                             </div>
                         </div>
                     </div>
@@ -223,7 +217,7 @@
                             <label class="form-label">Bank</label>
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"><i class="ti ti-building"></i></span>
-                                <select name="" id="" class="form-select select2"
+                                <select name="bank_list_id" id="bank_list_id" class="form-select select2"
                                     data-placeholder="Select Bank">
                                     <option value=""></option>
                                     @foreach ($bank as $banks)
@@ -232,33 +226,44 @@
                                     @endforeach
                                 </select>
                             </div>
+                            <span class="text-danger" id="bank_list_idError"></span>
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Shipping Method</label>
-                        <select name="" id="" class="form-select select2"
+                        <select name="shipping_method" id="shipping_method" class="form-select select2"
                             data-placeholder="Select Shipping">
                             <option></option>
                             <option value="Pick Up">Diambil</option>
                             <option value="Delivery">Dikirim</option>
                         </select>
+                        <span class="text-danger" id="shipping_methodError"></span>
                     </div>
                     <!-- Notes -->
                     <div class="mb-3">
                         <label class="form-label">Notes (Optional)</label>
-                        <textarea class="form-control" rows="2" placeholder="Add notes..."></textarea>
+                        <textarea class="form-control" rows="2" name="notes" id="notes" placeholder="Add notes..."></textarea>
                     </div>
 
                     <!-- Buttons -->
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-outline-secondary w-50">Cancel</button>
-                        <button class="btn btn-success w-50 fw-bold">✔ Save & Pay</button>
+                    <div class="card-footer d-flex justify-content-end gap-2">
+                        <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
+                            <i class="fa fa-upload me-1"></i> Draft
+                        </button>
+
+                        <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
+                            <i class="fa fa-plus-circle me-1"></i> Save and Pay
+                        </button>
+
+                        <a href="{{ route('penjualan-toko.index') }}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
                     </div>
 
                 </div>
             </div>
-
+            </form>
         </div>
     </div>
     </div>
@@ -266,12 +271,13 @@
 @endsection
 @include('partials.tabel.css')
 @include('partials.tabel.js')
+@include('partials.js.loadAvailableStock')
 {{-- @include('partials.js.calculate_total') --}}
 @push('scripts')
     <script>
         let prDetailsData = [];
         $(function() {
-            const datePicker = flatpickr("#sales_date", {
+            const datePicker = flatpickr("#store_sales_date", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
                 defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
@@ -318,37 +324,13 @@
 
         });
 
-        $("#showModalpr").on("click", function(e) {
-            e.preventDefault();
-
-            $.ajax({
-                url: "/sales-order/get-quotation/" + customerId,
-                type: "GET",
-                success: function(response) {
-
-                    let option = '<option value="">Select Quotation</option>';
-
-                    $.each(response, function(i, item) {
-                        option += `<option value="${item.id}">
-                                ${item.sales_quotation_code}
-                           </option>`;
-                    });
-
-                    $("#sq_number").html(option);
-
-                    $("#modals").modal("show");
-                }
-            });
-        });
-
-
         $(document).ready(function() {
             $(".select2-modal").each(function() {
                 var $this = $(this);
                 $this.wrap('<div class="position-relative"></div>').select2({
                     placeholder: $this.attr("data-placeholder"),
                     width: "100%",
-                    dropdownParent: $("#modals"),
+                    dropdownParent: $("#modalPrDetail"),
                 });
             });
             // ========================================================
@@ -404,9 +386,9 @@
                     {
                         data: "data_produk",
                         render: function(data, type, row) {
-                            // Menampilkan kode referensi PR di bawah nama produk jika ada
-                            if (row.quotation_code) {
-                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.quotation_code}</small>`;
+                            if (row.order_code) {
+                                return `<strong>${data}</strong><br>
+                                        <small class="text-primary">Ref: ${row.order_code}</small>`;
                             }
                             return `<strong>${data}</strong>`;
                         }
@@ -447,6 +429,10 @@
                             return `<strong>${parseFloat(data ?? 0).toLocaleString('id-ID', { minimumFractionDigits: 0 })}</strong>`;
                         }
                     },
+                    {
+                        data: "warehouse",
+                        className: "text-center"
+                    },
                 ],
                 layout: {
                     topStart: {
@@ -455,6 +441,7 @@
                                 className: "btn btn-primary btn-sm me-2 AddNew",
                                 action: function(e, dt, node, config) {
                                     $("#formPrDetail")[0].reset();
+                                    $("#warehouse_id").val("").trigger("change");
                                     $("#detail_id").val("");
 
                                     if ($.fn.select2) {
@@ -464,7 +451,7 @@
 
                                     $("#modalTitle").text("Create new entry");
                                     $("#btnSubmitModal").text("Create");
-                                    $("#modals").modal("show");
+                                    $("#modalPrDetail").modal("show");
 
                                 },
                             },
@@ -549,6 +536,11 @@
                                     // ==========================
                                     // SELECT
                                     // ==========================
+
+                                    $("#warehouse_id")
+                                        .val(data.warehouse_id)
+                                        .trigger("change.select2");
+
                                     // simpan unit yg dipilih
                                     $("#unit_id").data("pending-val", data.unit_id);
 
@@ -648,10 +640,6 @@
                 console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
 
-
-
-
-
             $(document).on("change", "#product_id", function() {
                 let productId = $(this).val();
                 let unitSelect = $("#unit_id");
@@ -659,6 +647,18 @@
                 let dropdownBtn = $("#btn-history-po");
                 let dropdownMenu = $("#po-price-dropdown-menu");
                 let helperText = $("#po-history-helper");
+
+                // Pastikan ID selector ini sesuai dengan ID Select Customer di form utama kamu
+
+                if (!productId) {
+                    unitSelect.empty().append("<option></option>").trigger("change");
+                    priceInput.val("");
+                    dropdownBtn.prop("disabled", true);
+                    dropdownMenu.empty();
+                    helperText.text("Pilih produk untuk melacak riwayat harga jual.");
+                    return;
+                }
+
                 // ==========================================
                 // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
                 // ==========================================
@@ -714,6 +714,7 @@
                     },
                 });
 
+
             });
 
 
@@ -758,11 +759,13 @@
                 let quantity = parseFloat($("#quantity").val()) || 0;
                 let unitId = $("#unit_id").val();
                 let unitName = $("#unit_id option:selected").text();
+                let warehouseId = $("#warehouse_id").val();
+                let warehouseName = $("#warehouse_id option:selected").text();
                 let detailId = $("#detail_id")
                     .val(); // Ini adalah index row array (kosong jika barang baru)
 
                 let unitPrice = parseFloat($("#unit_price").val()) || 0;
-                let discountPercent = parseFloat($("#discount_percent").val()) || 0;
+                let discountPercent = $("#discount_percent").val() || 0;
                 let discount = parseFloat($("#discount").val()) || 0;
                 let tax = parseFloat($("#tax").val()) || 0;
 
@@ -827,9 +830,11 @@
                     quantity: quantity,
                     unit_id: unitId,
                     unit: unitName,
+                    warehouse_id: warehouseId,
+                    warehouse: warehouseName,
                     unit_price: unitPrice,
-                    discount: discount,
                     discount_percent: discountPercent,
+                    discount: discount,
                     tax: tax,
                     amount: amount,
                     required_date: requiredDate,
@@ -858,7 +863,7 @@
                 if (typeof calculateTotalOrder === "function") calculateTotalOrder();
 
                 // Tutup Modal Form Detail
-                $("#modals").modal("hide");
+                $("#modalPrDetail").modal("hide");
             });
 
             $("#percent").on("input", function() {
@@ -911,6 +916,171 @@
 
                 // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
                 calculateTotalOrder();
+            });
+
+            let saveAndNew = false;
+            let activeBtn = null;
+
+            $(document).on("click", '.card-footer button[type="submit"]', function() {
+                saveAndNew = $(this).data("save-and-new");
+                activeBtn = $(this);
+            });
+
+            $("#postForm").on("submit", function(e) {
+                e.preventDefault();
+
+                let form = this;
+                let formData = new FormData(form);
+
+                if (!activeBtn) {
+                    activeBtn = $("#postForm").find(
+                        'button[data-save-and-new="false"]',
+                    );
+                    saveAndNew = false;
+                }
+                // START LOADING
+                activeBtn.html(
+                    '<i class="fa fa-spin fa-spinner me-1"></i> Checking...',
+                );
+                $(".card-footer button").prop("disabled", true);
+
+                if (
+                    typeof prDetailsData === "undefined" ||
+                    prDetailsData.length === 0
+                ) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Empty Items",
+                        text: "Please add at least one item detail to the table before saving.",
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn btn-primary waves-effect waves-light",
+                        },
+                        buttonsStyling: false,
+                    }).then(() => {
+                        // AFTER MODAL CLOSED
+                        let closeBtn = $("#postForm").find(
+                            'button[data-save-and-new="false"]',
+                        );
+                        let newBtn = $("#postForm").find(
+                            'button[data-save-and-new="true"]',
+                        );
+
+                        closeBtn.html(
+                            '<i class="fa fa-upload me-1"></i> Draft',
+                        );
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Pay',
+                        );
+
+                        $(".card-footer button").prop("disabled", false);
+                    });
+
+                    return false;
+                }
+
+                // ===============================
+                // CHECK WAREHOUSE
+                // ===============================
+                let emptyWarehouse = prDetailsData.some(function(item) {
+                    return !item.warehouse_id || item.warehouse_id === "";
+                });
+
+                if (emptyWarehouse) {
+
+                    Swal.fire({
+                        icon: "error",
+                        title: "Warehouse Required",
+                        text: "Please select warehouse for all item details before saving.",
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn btn-primary waves-effect waves-light",
+                        },
+                        buttonsStyling: false,
+                    }).then(() => {
+
+                        let closeBtn = $("#postForm").find(
+                            'button[data-save-and-new="false"]',
+                        );
+                        let newBtn = $("#postForm").find(
+                            'button[data-save-and-new="true"]',
+                        );
+
+                        closeBtn.html(
+                            '<i class="fa fa-upload me-1"></i> Draft',
+                        );
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Pay',
+                        );
+
+                        $(".card-footer button").prop("disabled", false);
+                    });
+
+                    return false;
+                }
+
+                formData.append("save_and_new", saveAndNew ? 1 : 0);
+                formData.append("items_detail", JSON.stringify(prDetailsData));
+
+                $.ajax({
+                    url: $(form).attr("action"),
+                    method: $(form).attr("method"),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    beforeSend: function() {
+                        activeBtn.html(
+                            '<i class="fa fa-spin fa-spinner me-1"></i> Sending...',
+                        );
+                        $(".card-footer button").prop("disabled", true);
+                    },
+                    complete: function() {
+                        let closeBtn = $("#postForm").find(
+                            'button[data-save-and-new="false"]',
+                        );
+                        let newBtn = $("#postForm").find(
+                            'button[data-save-and-new="true"]',
+                        );
+                        closeBtn.html(
+                            '<i class="fa fa-upload me-1"></i> Draft',
+                        );
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Pay',
+                        );
+                        $(".card-footer button").prop("disabled", false);
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Data Created Successfully",
+                            text: response.message,
+                            customClass: {
+                                confirmButton: "btn btn-primary waves-effect waves-light",
+                            },
+                            buttonsStyling: false,
+                        }).then(() => {
+                            window.location.href = response.redirect;
+                        });
+                    },
+                    error: function(xhr) {
+                        resetValidation();
+                        let errors = xhr.responseJSON?.errors;
+                        $.each(errors, function(key, value) {
+                            displayFieldError(key, value[0]);
+                        });
+                        Swal.fire({
+                            icon: "error",
+                            title: "Failed to Create Data",
+                            text: xhr.responseJSON.message ||
+                                "Please check your data again.",
+                            customClass: {
+                                confirmButton: "btn btn-primary waves-effect waves-light",
+                            },
+                            buttonsStyling: false,
+                        });
+                    },
+                });
             });
 
 

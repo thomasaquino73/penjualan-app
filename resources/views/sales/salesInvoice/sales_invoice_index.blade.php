@@ -124,12 +124,12 @@
                 columns: [{
                         data: 'cekbok',
                         name: 'cekbok',
-                        invoiceable: false,
+                        orderable: false,
                         searchable: false
                     }, {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
-                        invoiceable: false,
+                        orderable: false,
                         searchable: false
                     },
                     {
@@ -160,7 +160,7 @@
                     {
                         data: 'action',
                         name: 'action',
-                        invoiceable: false,
+                        orderable: false,
                         searchable: false
                     },
                 ]

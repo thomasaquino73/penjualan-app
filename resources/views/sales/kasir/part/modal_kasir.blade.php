@@ -1,4 +1,4 @@
-  <div class="modal fade" id="modals">
+  <div class="modal fade" id="modalPrDetail">
       <div class="modal-dialog modal-md">
           <div class="modal-content">
               <div class="modal-header">
@@ -71,6 +71,23 @@
                               <input type="number" id="total_price" name="total_price" class="form-control"
                                   placeholder="0" readonly>
                               <span class="error text-danger" id="total_priceError"></span>
+                          </div>
+                          <div class="col-md-6 col-sm-12  mb-3">
+                              <label class="form-label" for="warehouse_id">Warehouse</label>
+                              <select name="warehouse_id" id="warehouse_id" class="form-select select2-modal"
+                                  data-placeholder="Select Warehouse">
+                                  <option></option>
+                                  @foreach ($warehouse as $wh)
+                                      <option value="{{ $wh->id }}">{{ $wh->nama_gudang }}</option>
+                                  @endforeach
+                              </select>
+                              <span class="error text-danger" id="warehouse_idError"></span>
+                          </div>
+                          <div class="col-md-6 col-sm-12 mb-3">
+                              <label class="form-label" for="available_stok">Available Stock</label>
+                              <input type="number" id="available_stok" name="available_stok" class="form-control"
+                                  readonly style="background-color: beige">
+                              <span class="error text-danger" id="available_stokError"></span>
                           </div>
                       </div>
                   </div>
