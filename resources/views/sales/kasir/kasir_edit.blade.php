@@ -3,8 +3,10 @@
     <!-- HEADER -->
     <div class="card mb-3">
         <div class="card-body d-flex justify-content-between align-items-center">
-            <form action="{{ route('penjualan-toko.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
+            <form action="{{ route('penjualan-toko.update', $model->id) }}" method="POST" id="postForm"
+                enctype="multipart/form-data">
                 @csrf
+                @method('PUT')
                 <!-- Kiri -->
                 <h4 class="fw-bold mb-0"><i class="ti ti-shopping-cart me-1"></i> Store Sales (POS)</h4>
 
@@ -14,7 +16,7 @@
                         <label class="form-label">Cashier</label>
                         <div class="input-group input-group-merge">
                             <span class="input-group-text"><i class="ti ti-user"></i></span>
-                            <input type="text" value="{{ Auth()->user()->fullname }}" class="form-control" readonly>
+                            <input type="text" value="{{ $model->creator->fullname }}" class="form-control" readonly>
                         </div>
                     </div>
 
@@ -22,8 +24,9 @@
                         <label class="form-label">Date</label>
                         <div class="input-group input-group-merge">
                             <span class="input-group-text"><i class="ti ti-calendar"></i></span>
-                            <input type="text" value="" id="store_sales_date" name="store_sales_date"
-                                class="form-control" readonly>
+                            <input type="text"
+                                value="{{ Carbon\Carbon::parse($model->store_sales_date)->format('d-m-Y') }}"
+                                id="store_sales_date" name="store_sales_date" class="form-control" readonly>
                         </div>
                     </div>
 
@@ -45,7 +48,7 @@
                                 <span class="input-group-text"> <i class="ti ti-barcode"></i>
                                 </span>
                                 <input type="text" name="store_sales_code" id="store_sales_code" class="form-control"
-                                    value="{{ $idNumber }}">
+                                    value="{{ $model->store_sales_code }}">
                             </div>
                             <span class="error text-danger" id="store_sales_codeError"></span>
                         </div>
@@ -110,10 +113,10 @@
                                     {{ $mataUangDefault->symbol }}
                                 </span>
 
-                                <input type="hidden" id="sub_total" name="sub_total">
+                                <input type="hidden" id="sub_total" name="sub_total" value="{{ $model->sub_total }}">
 
                                 <input type="text" id="sub_total_display" class="form-control border-0 text-end"
-                                    placeholder="0" readonly>
+                                    value="{{ format_rupiah($model->sub_total) }}" placeholder="0" readonly>
                             </div>
                         </div>
                     </div>
@@ -130,7 +133,7 @@
                                 </span>
 
                                 <input type="number" id="discount_all" name="discount_all" class="form-control"
-                                    placeholder="0" min="0">
+                                    placeholder="0" min="0" value="{{ format_rupiah($model->discount_all) }}">
                             </div>
                         </div>
                     </div>
@@ -148,10 +151,11 @@
                                     {{ $mataUangDefault->symbol }}
                                 </span>
 
-                                <input type="hidden" name="tax_amount" id="tax_amount">
+                                <input type="hidden" name="tax_amount" id="tax_amount"
+                                    value="{{ $model->tax_amount }}">
 
                                 <input type="text" id="tax_amount_display" class="form-control border-0 text-end"
-                                    readonly>
+                                    readonly value="{{ format_rupiah($model->tax_amount) }}">
                             </div>
                         </div>
                     </div>
@@ -168,10 +172,11 @@
                                 <span class="input-group-text border-0 bg-transparent fw-bold text-primary fs-5">
                                     {{ $mataUangDefault->symbol }}
                                 </span>
-                                <input type="hidden" id="total_order" name="total_order">
+                                <input type="hidden" id="total_order" name="total_order"
+                                    value="{{ $model->grand_total }}">
                                 <input type="text" id="total_order_display"
                                     class="form-control border-0 bg-transparent shadow-none text-end fw-bold text-primary fs-5"
-                                    placeholder="0" readonly>
+                                    placeholder="0" readonly value="{{ format_rupiah($model->grand_total) }}">
                             </div>
 
                         </div>
@@ -184,9 +189,10 @@
                         <select name="payment_method" id="payment_method" class="form-select select2"
                             data-placeholder="Select Payment">
                             <option></option>
-                            <option value="Cash">Tunai</option>
-                            <option value="Qris">Qris</option>
-                            <option value="Transfer">Transfer</option>
+                            <option value="Cash" {{ $model->payment_method == 'Cash' ? 'selected' : '' }}>Tunai</option>
+                            <option value="Qris" {{ $model->payment_method == 'Qris' ? 'selected' : '' }}>Qris</option>
+                            <option value="Transfer" {{ $model->payment_method == 'Transfer' ? 'selected' : '' }}>Transfer
+                            </option>
                         </select>
                         <span class="text-danger" id="payment_methodError"></span>
                     </div>
@@ -198,7 +204,7 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text">{{ $mataUangDefault->symbol }}</span>
                                 <input type="number" id="amount_receive" name="amount_receive" class="form-control"
-                                    placeholder="0" min="0">
+                                    placeholder="0" min="0" value="{{ format_rupiah($model->amount_receive) }}">
                             </div>
                         </div>
 
@@ -208,7 +214,8 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text">{{ $mataUangDefault->symbol }}</span>
                                 <input type="text" id="change_amount" name="change_amount"
-                                    class="form-control text-success fw-bold" readonly>
+                                    class="form-control text-success fw-bold" readonly
+                                    value="{{ format_rupiah($model->change_amount) }}">
                             </div>
                         </div>
                     </div>
@@ -221,7 +228,10 @@
                                     data-placeholder="Select Bank">
                                     <option value=""></option>
                                     @foreach ($bank as $banks)
-                                        <option value="{{ $banks->id }}">{{ $banks->bank_name }} -
+                                        <option value="{{ $banks->id }}"
+                                            {{ $model->bank_list_id == $banks->id ? 'selected' : '' }}>
+                                            {{ $banks->bank_name }}
+                                            -
                                             {{ $banks->account_number }} [{{ $banks->account_name }}]</option>
                                     @endforeach
                                 </select>
@@ -235,15 +245,17 @@
                         <select name="shipping_method" id="shipping_method" class="form-select select2"
                             data-placeholder="Select Shipping">
                             <option></option>
-                            <option value="Pick Up">Diambil</option>
-                            <option value="Delivery">Dikirim</option>
+                            <option value="Pick Up" {{ $model->shipping_method == 'Pick Up' ? 'selected' : '' }}>Diambil
+                            </option>
+                            <option value="Delivery" {{ $model->shipping_method == 'Delivery' ? 'selected' : '' }}>
+                                >Dikirim</option>
                         </select>
                         <span class="text-danger" id="shipping_methodError"></span>
                     </div>
                     <!-- Notes -->
                     <div class="mb-3">
                         <label class="form-label">Notes (Optional)</label>
-                        <textarea class="form-control" rows="2" name="notes" id="notes" placeholder="Add notes..."></textarea>
+                        <textarea class="form-control" rows="2" name="notes" id="notes" placeholder="Add notes...">{{ $model->notes }}</textarea>
                     </div>
 
                     <!-- Buttons -->
@@ -275,12 +287,33 @@
 {{-- @include('partials.js.calculate_total') --}}
 @push('scripts')
     <script>
-        let prDetailsData = [];
+        let prDetailsData = [
+            @if (isset($jsonDetails))
+                @foreach ($jsonDetails as $detail)
+                    {
+                        'id': '{{ $detail['id'] }}',
+                        'store_sales_id': '{{ $detail['store_sales_id'] }}',
+                        'product_id': '{{ $detail['product_id'] }}',
+                        'data_produk': '{{ $detail['data_produk'] }}',
+                        'quantity': '{{ $detail['quantity'] }}',
+                        'unit_id': '{{ $detail['unit_id'] }}',
+                        'unit': '{{ $detail['unit'] }}',
+                        'warehouse_id': '{{ $detail['warehouse_id'] }}',
+                        'warehouse': '{{ $detail['warehouse'] }}',
+                        'unit_price': '{{ $detail['unit_price'] }}',
+                        'discount_percent': '{{ $detail['discount_percent'] }}',
+                        'discount': '{{ $detail['discount'] }}',
+                        'amount': '{{ $detail['amount'] }}',
+                    }
+                    {{ !$loop->last ? ',' : '' }}
+                @endforeach
+            @endif
+        ];
+        const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
         $(function() {
             const datePicker = flatpickr("#store_sales_date", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
             });
         });
 
@@ -1069,7 +1102,7 @@
                     success: function(response) {
                         Swal.fire({
                             icon: "success",
-                            title: "Data Created Successfully",
+                            title: "Data Updated Successfully",
                             text: response.message,
                             customClass: {
                                 confirmButton: "btn btn-primary waves-effect waves-light",

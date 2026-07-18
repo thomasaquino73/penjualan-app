@@ -52,7 +52,15 @@ class KasirController extends Controller
     public function index(Request $r)
     {
 
-        $data = StoreSales::query();
+        $userId = Auth::user()->id;
+        $data = StoreSales::where(function ($q) use ($userId) {
+                $q->where('status', '<>', 'draft')
+                    ->orWhere(function ($subQ) use ($userId) {
+                        $subQ->where('status', 'draft')
+                            ->where('created_by', $userId);
+                    });
+            })
+            ->orderby('store_sales_code', 'desc');;
 
         if ($r->filled('status')) {
             $data->where('status', $r->status);
@@ -123,7 +131,7 @@ class KasirController extends Controller
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="ti ti-menu-2 ti-xs me-1"></i>
-                      
+
                       </button>
                       <ul class="dropdown-menu" style="">';
                     if (auth()->user()->can('penjualan_toko-edit')) {
@@ -216,6 +224,14 @@ class KasirController extends Controller
             'taxes' => $taxes,
         ]);
     }
+    private function rupiahToNumber($value)
+    {
+        if (empty($value)) {
+            return 0;
+        }
+
+        return str_replace(',', '.', str_replace('.', '', $value));
+    }
 
     public function store(StoreSalesRequest $request)
     {
@@ -236,9 +252,9 @@ class KasirController extends Controller
             $data['tax_id'] = $request->tax_id;
             $data['tax_percent'] = $request->tax_percent ?? 0;
             $data['tax_amount'] = $request->tax_amount ?? 0;
-            $data['grand_total'] = $request->grand_total ?? 0;
-            $data['amount_receive'] = $request->amount_receive ?? 0;
-            $data['change'] = $request->change ?? 0;
+            $data['grand_total'] = $request->total_order ?? 0;
+           $data['amount_receive'] = $this->rupiahToNumber($request->amount_receive);
+        $data['change_amount'] = $this->rupiahToNumber($request->change_amount);  
             $data['bank_list_id'] = $request->bank_list_id;
             $data['payment_method'] = $request->payment_method;
             $data['shipping_method'] = $request->shipping_method;
@@ -319,21 +335,14 @@ class KasirController extends Controller
                         $amount = $item['amount'] ?? (($qty * $unitPrice) - $discount);
 
                         StoreSalesDetail::create([
-
                             'store_sales_id' => $storeSales->id,
-
                             'product_id' => $item['product_id'],
-
                             'qty' => $qty,
-
                             'unit_id' => $item['unit_id'],
-
                             'unit_price' => $unitPrice,
-
                             'discount' => $discount,
-
                             'amount' => $amount,
-
+                            'warehouse_id' => ! empty($item['warehouse_id']) ? $item['warehouse_id'] : null,
                         ]);
                     }
                 }
@@ -366,21 +375,155 @@ class KasirController extends Controller
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+   
     public function edit(string $id)
-    {
-        //
+     {
+        $storeSales = StoreSales::with([
+            'details.produkID',
+            'details.unitID',
+        ])->findOrFail($id);
+        $company = Company::with('defaultCurrency')->first();
+        $taxes = Tax::where('is_active', true)
+            ->whereIn('usage', ['purchase', 'both'])
+            ->get();
+         $detailDataMapped = $storeSales->details->map(function ($detail) use ($storeSales) {
+            return [
+                'id' => $detail->id,
+                'store_sales_id' => $detail->store_sales_id,
+                'product_id' => $detail->product_id,
+                'data_produk' => $detail->produkID->nama_barang ?? 'Product Not Found',
+                'quantity' => (float) $detail->qty,
+                'unit_id' => $detail->unit_id,
+                'unit' => $detail->unitID->detail ?? '-',
+                'warehouse_id' => $detail->warehouse_id,
+                'warehouse' => $detail->warehouseID->nama_gudang ?? '-',
+                'unit_price' => (float) $detail->unit_price,
+                'discount_percent' => $detail->discount_percent,
+                'discount' => (float) $detail->discount,
+                'amount' => (float) $detail->amount,
+                'tax' => (float) ($detail->tax_amount ?? 0),
+            ];
+        });
+
+        return view('sales.kasir.kasir_edit', [
+            'title' => 'Add Product',
+            'idNumber' => $this->generateNumberId(),
+            'mataUangDefault' => $company->defaultCurrency,
+            'payment' => SyaratPembayaran::where('status', '<>', 0)->get(),
+            'shipping' => Shipping::where('status', 1)->get(),
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'warehouse' => Warehouse::where('status', '<>', 0)->get(),
+            'bank' => DB::table('bank_list')->get(),
+            'taxes' => $taxes,
+            'model' => $storeSales,
+            'jsonDetails' => $detailDataMapped,
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
+    public function update(StoreSalesRequest $request, $id)
+{
+    DB::beginTransaction();
+
+    try {
+
+        $storeSales = StoreSales::find($id);
+
+        if (!$storeSales) {
+            throw new \Exception('Store Sales tidak ditemukan.');
+        }
+
+        $data = $request->validated();
+        $itemsDetailRaw = $request->input('items_detail');
+
+        unset($data['items_detail']);
+
+        $data['store_sales_date'] = Carbon::parse($request->store_sales_date)->format('Y-m-d');
+
+        $data['sub_total'] = $request->sub_total ?? 0;
+        $data['disc_nominal'] = $request->disc_nominal ?? 0;
+        $data['tax_id'] = $request->tax_id;
+        $data['tax_percent'] = $request->tax_percent ?? 0;
+        $data['tax_amount'] = $request->tax_amount ?? 0;
+        $data['grand_total'] = $request->total_order ?? 0;
+        $data['amount_receive'] = $this->rupiahToNumber($request->amount_receive);
+        $data['change_amount'] = $this->rupiahToNumber($request->change_amount);    
+        $data['bank_list_id'] = $request->bank_list_id;
+        $data['payment_method'] = $request->payment_method;
+        $data['shipping_method'] = $request->shipping_method;
+        $data['notes'] = $request->notes;
+        $data['status'] = $request->save_and_new == 1 ? 'paid' : 'draft';
+        $data['updated_by'] = Auth::id();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update Header
+        |--------------------------------------------------------------------------
+        */
+        $storeSales->update($data);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Hapus Detail Lama
+        |--------------------------------------------------------------------------
+        */
+
+        StoreSalesDetail::where('store_sales_id', $storeSales->id)->delete();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Simpan Detail Baru
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($itemsDetailRaw)) {
+
+            $items = json_decode($itemsDetailRaw, true);
+
+            if (is_array($items) && count($items)) {
+
+                foreach ($items as $item) {
+
+                    $qty = (float) ($item['qty'] ?? 0);
+
+                    $unitPrice = (float) ($item['unit_price'] ?? 0);
+
+                    $discount = (float) ($item['discount'] ?? 0);
+
+                    $amount = $item['amount'] ?? (($qty * $unitPrice) - $discount);
+
+                    StoreSalesDetail::create([
+                        'store_sales_id' => $storeSales->id,
+                        'product_id'      => $item['product_id'],
+                        'qty'             => $qty,
+                        'unit_id'         => $item['unit_id'],
+                        'unit_price'      => $unitPrice,
+                        'discount'        => $discount,
+                        'amount'          => $amount,
+                        'warehouse_id'    => !empty($item['warehouse_id']) ? $item['warehouse_id'] : null,
+                    ]);
+                }
+            }
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Store Sales berhasil diperbarui.',
+            'redirect' => route('penjualan-toko.index'),
+        ]);
+
+    } catch (\Throwable $e) {
+
+        DB::rollBack();
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+        ], 500);
     }
+}
 
     /**
      * Remove the specified resource from storage.

@@ -768,7 +768,6 @@ class SalesOrderController extends Controller
 
         try {
             $currentYear = date('Y');
-
             // 1. Cek data master
             $salesOrder = DB::table("sales_order_{$currentYear}")->where('id', $id)->first();
             if (! $salesOrder) {

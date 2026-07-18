@@ -27,15 +27,15 @@ return new class extends Migration
             $table->decimal('tax_amount', 15, 2)->default(0)->nullable();
             $table->decimal('grand_total', 18, 2)->default(0)->nullable();
             $table->decimal('amount_receive', 18, 2)->default(0)->nullable();
-            $table->decimal('change', 18, 2)->default(0)->nullable();
+            $table->decimal('change_amount', 18, 2)->default(0)->nullable();
             $table->unsignedBigInteger('bank_list_id')->nullable();
             $table->enum('payment_method', ['Cash', 'Transfer', 'Qris'])->default('Cash');
             $table->enum('shipping_method', ['Pick Up', 'Delivery'])->default('Pick Up');
             $table->string('notes');
             $table->enum('status', [
-                'pending',
+                'draft',
                 'paid',
-            ])->default('pending');
+            ])->default('draft');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
@@ -49,6 +49,7 @@ return new class extends Migration
             $table->decimal('unit_price', 15, 2);
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('amount', 15, 2);
+            $table->unsignedBigInteger('warehouse_id')->nullable();
             $table->timestamps();
             // $table->foreign('store_sales_id')->references('id')->on("store_sales_{$this->year}")->onDelete('cascade');
         });

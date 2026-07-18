@@ -19,10 +19,6 @@ class SalesOrderRequest extends FormRequest
     {
 
         $rules = [
-            // 'sales_order_code' => [
-            //     'required',
-            //     Rule::unique('sales_order_'.date('Y'), 'sales_order_code')->ignore($id),
-            // ],
             'customer_id' => 'required',
             'sales_order_date' => 'required|date',
             'payment_term_id' => 'required',
@@ -39,7 +35,7 @@ class SalesOrderRequest extends FormRequest
 
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
 
-            $id = $this->route('sales_order');
+            $id = $this->route('penjualan-toko');
 
             $rules['sales_order_code'] = [
                 'required',

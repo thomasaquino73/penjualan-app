@@ -20,6 +20,24 @@ if (! function_exists('format_uang')) {
 
         return $symbol.' '.number_format($amount, $decimal, ',', '.');
     }
+
+    function format_rupiah($amount, $decimal = null)
+    {
+        $currency = session('currency_id')
+            ? Currency::find(session('currency_id'))
+            : null;
+
+
+        // default decimal per currency
+        if ($decimal === null) {
+            $decimal = $currency && $currency->code != 'IDR' ? 2 : 0;
+        }
+
+        return number_format($amount, $decimal, ',', '.');
+    }
+  
+
+  
 }
 if (! function_exists('format_rate')) {
     function format_rate($rate)
@@ -72,4 +90,6 @@ if (! function_exists('convert_currency')) {
 
         throw new Exception("Exchange Rate untuk konversi dari {$fromCode} ke {$toCode} belum di-input di sistem!");
     }
+
+      
 }
