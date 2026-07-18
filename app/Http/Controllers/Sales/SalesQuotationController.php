@@ -273,15 +273,15 @@ class SalesQuotationController extends Controller
     }
 
     private function generateNumberId()
-{
-    $tahun = date('Y');
-    $bulan = date('n');
-    $bulanRomawi = $this->bulanRomawi($bulan);
+    {
+        $tahun = date('Y');
+        $bulan = date('n');
+        $bulanRomawi = $this->bulanRomawi($bulan);
 
-    $prefix = "SQ/{$tahun}/{$bulanRomawi}/";
+        $prefix = "SQ/{$tahun}/{$bulanRomawi}/";
 
-    $last = SalesQuotation::where('sales_quotation_code', 'like', $prefix . '%')
-        ->orderByRaw("
+        $last = SalesQuotation::where('sales_quotation_code', 'like', $prefix.'%')
+            ->orderByRaw("
             CAST(
                 REGEXP_REPLACE(
                     SUBSTRING_INDEX(sales_quotation_code,'/',-1),
@@ -290,18 +290,18 @@ class SalesQuotationController extends Controller
                 ) AS UNSIGNED
             ) DESC
         ")
-        ->first();
+            ->first();
 
-    if ($last) {
-        preg_match('/(\d+)/', substr($last->sales_quotation_code, strrpos($last->sales_quotation_code, '/') + 1), $match);
-        $lastNumber = isset($match[1]) ? (int)$match[1] : 0;
-        $nextNumber = $lastNumber + 1;
-    } else {
-        $nextNumber = 1;
+        if ($last) {
+            preg_match('/(\d+)/', substr($last->sales_quotation_code, strrpos($last->sales_quotation_code, '/') + 1), $match);
+            $lastNumber = isset($match[1]) ? (int) $match[1] : 0;
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
-
-    return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-}
 
     public function create()
     {

@@ -340,15 +340,15 @@ class ProformaInvoiceController extends Controller
     }
 
     private function generateNumberId()
-{
-    $tahun = date('Y');
-    $bulan = date('n');
-    $bulanRomawi = $this->bulanRomawi($bulan);
+    {
+        $tahun = date('Y');
+        $bulan = date('n');
+        $bulanRomawi = $this->bulanRomawi($bulan);
 
-    $prefix = "PI/{$tahun}/{$bulanRomawi}/";
+        $prefix = "PI/{$tahun}/{$bulanRomawi}/";
 
-    $last = ProformaInvoice::where('proforma_invoice_code', 'like', $prefix . '%')
-        ->orderByRaw("
+        $last = ProformaInvoice::where('proforma_invoice_code', 'like', $prefix.'%')
+            ->orderByRaw("
             CAST(
                 REGEXP_REPLACE(
                     SUBSTRING_INDEX(proforma_invoice_code,'/',-1),
@@ -357,18 +357,18 @@ class ProformaInvoiceController extends Controller
                 ) AS UNSIGNED
             ) DESC
         ")
-        ->first();
+            ->first();
 
-    if ($last) {
-        preg_match('/(\d+)/', substr($last->proforma_invoice_code, strrpos($last->proforma_invoice_code, '/') + 1), $match);
-        $lastNumber = isset($match[1]) ? (int)$match[1] : 0;
-        $nextNumber = $lastNumber + 1;
-    } else {
-        $nextNumber = 1;
+        if ($last) {
+            preg_match('/(\d+)/', substr($last->proforma_invoice_code, strrpos($last->proforma_invoice_code, '/') + 1), $match);
+            $lastNumber = isset($match[1]) ? (int) $match[1] : 0;
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
-
-    return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-}
 
     public function create(Request $r)
     {

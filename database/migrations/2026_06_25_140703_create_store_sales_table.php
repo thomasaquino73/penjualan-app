@@ -19,7 +19,7 @@ return new class extends Migration
             $table->id();
             $table->string('store_sales_code')->unique();
             $table->date('store_sales_date');
-            $table->unsignedBigInteger('customer_id');
+            $table->string('customer_name');
             $table->decimal('sub_total', 18, 2)->default(0)->nullable();
             $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();
             $table->unsignedBigInteger('tax_id')->nullable();
@@ -28,6 +28,7 @@ return new class extends Migration
             $table->decimal('grand_total', 18, 2)->default(0)->nullable();
             $table->decimal('amount_receive', 18, 2)->default(0)->nullable();
             $table->decimal('change', 18, 2)->default(0)->nullable();
+            $table->unsignedBigInteger('bank_list_id')->nullable();
             $table->enum('payment_method', ['Cash', 'Transfer', 'Qris'])->default('Cash');
             $table->enum('shipping_method', ['Pick Up', 'Delivery'])->default('Pick Up');
             $table->string('notes');

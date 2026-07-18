@@ -210,15 +210,15 @@ class ReceiveItemController extends Controller
     }
 
     private function generateNumberId()
-{
-    $tahun = date('Y');
-    $bulan = date('n');
-    $bulanRomawi = $this->bulanRomawi($bulan);
+    {
+        $tahun = date('Y');
+        $bulan = date('n');
+        $bulanRomawi = $this->bulanRomawi($bulan);
 
-    $prefix = "RI/{$tahun}/{$bulanRomawi}/";
+        $prefix = "RI/{$tahun}/{$bulanRomawi}/";
 
-    $last = ReceiveItem::where('receive_item_code', 'like', $prefix . '%')
-        ->orderByRaw("
+        $last = ReceiveItem::where('receive_item_code', 'like', $prefix.'%')
+            ->orderByRaw("
             CAST(
                 REGEXP_REPLACE(
                     SUBSTRING_INDEX(receive_item_code,'/',-1),
@@ -227,18 +227,18 @@ class ReceiveItemController extends Controller
                 ) AS UNSIGNED
             ) DESC
         ")
-        ->first();
+            ->first();
 
-    if ($last) {
-        preg_match('/(\d+)/', substr($last->receive_item_code, strrpos($last->receive_item_code, '/') + 1), $match);
-        $lastNumber = isset($match[1]) ? (int)$match[1] : 0;
-        $nextNumber = $lastNumber + 1;
-    } else {
-        $nextNumber = 1;
+        if ($last) {
+            preg_match('/(\d+)/', substr($last->receive_item_code, strrpos($last->receive_item_code, '/') + 1), $match);
+            $lastNumber = isset($match[1]) ? (int) $match[1] : 0;
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
-
-    return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-}
 
     public function create()
     {

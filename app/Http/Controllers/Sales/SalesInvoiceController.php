@@ -241,15 +241,14 @@ class SalesInvoiceController extends Controller
 
                         }
 
-
                     }
-                     // EDIT
-                        if (
-                            $user->can('sales_invoice-edit') &&
-                            in_array($row->status, ['draft', 'pending', 'processing'])
-                        ) {
+                    // EDIT
+                    if (
+                        $user->can('sales_invoice-edit') &&
+                        in_array($row->status, ['draft', 'pending', 'processing'])
+                    ) {
 
-                            $btn .= '
+                        $btn .= '
                                 <a class="dropdown-item"
                                     href="'.route('sales-invoice.edit', $row->id).'">
 
@@ -257,15 +256,15 @@ class SalesInvoiceController extends Controller
                                     Edit
                                 </a>
                             ';
-                        }
+                    }
 
-                        // DELETE
-                        if (
-                            $user->can('sales_invoice-delete') &&
-                            in_array($row->status, ['draft', 'pending', 'processing'])
-                        ) {
+                    // DELETE
+                    if (
+                        $user->can('sales_invoice-delete') &&
+                        in_array($row->status, ['draft', 'pending', 'processing'])
+                    ) {
 
-                            $btn .= '
+                        $btn .= '
                                 <a class="dropdown-item text-danger"
                                     href="javascript:void(0)"
                                     id="delete"
@@ -276,7 +275,7 @@ class SalesInvoiceController extends Controller
                                     Delete
                                 </a>
                             ';
-                        }
+                    }
 
                     /*
                     |--------------------------------------------------------------------------
@@ -385,15 +384,15 @@ class SalesInvoiceController extends Controller
     // }
 
     private function generateNumberId()
-{
-    $tahun = date('Y');
-    $bulan = date('n');
-    $bulanRomawi = $this->bulanRomawi($bulan);
+    {
+        $tahun = date('Y');
+        $bulan = date('n');
+        $bulanRomawi = $this->bulanRomawi($bulan);
 
-    $prefix = "SI/{$tahun}/{$bulanRomawi}/";
+        $prefix = "SI/{$tahun}/{$bulanRomawi}/";
 
-    $last = SalesInvoice::where('sales_invoice_code', 'like', $prefix . '%')
-        ->orderByRaw("
+        $last = SalesInvoice::where('sales_invoice_code', 'like', $prefix.'%')
+            ->orderByRaw("
             CAST(
                 REGEXP_REPLACE(
                     SUBSTRING_INDEX(sales_invoice_code,'/',-1),
@@ -402,18 +401,19 @@ class SalesInvoiceController extends Controller
                 ) AS UNSIGNED
             ) DESC
         ")
-        ->first();
+            ->first();
 
-    if ($last) {
-        preg_match('/(\d+)/', substr($last->sales_invoice_code, strrpos($last->sales_invoice_code, '/') + 1), $match);
-        $lastNumber = isset($match[1]) ? (int)$match[1] : 0;
-        $nextNumber = $lastNumber + 1;
-    } else {
-        $nextNumber = 1;
+        if ($last) {
+            preg_match('/(\d+)/', substr($last->sales_invoice_code, strrpos($last->sales_invoice_code, '/') + 1), $match);
+            $lastNumber = isset($match[1]) ? (int) $match[1] : 0;
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
-    return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-}
     public function create()
     {
         // 🔥 Ambil semua pajak aktif (khusus pembelian & general)
@@ -637,38 +637,38 @@ class SalesInvoiceController extends Controller
     // }
 
     public function store(SalesInvoiceRequest $request)
-{
-    DB::beginTransaction();
+    {
+        DB::beginTransaction();
 
-    try {
+        try {
 
-        $currentYear = date('Y');
+            $currentYear = date('Y');
 
-        $data = $request->validated();
-        $itemsDetailRaw = $request->input('items_detail');
+            $data = $request->validated();
+            $itemsDetailRaw = $request->input('items_detail');
 
-        unset($data['items_detail']);
+            unset($data['items_detail']);
 
-        $data['created_by'] = Auth::id();
-        $data['sales_invoice_date'] = Carbon::parse($request->sales_invoice_date)->format('Y-m-d');
-        $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
-        $data['kena_pajak'] = $request->has('kena_pajak');
-        $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak');
-        $data['sub_total'] = $request->sub_total;
-        $data['disc_percent'] = $request->percent;
-        $data['disc_nominal'] = $request->discount_all;
-        $data['po_number'] = $request->po_number;
-        $data['grand_total'] = $request->total_order;
-        $data['taxpayer_data'] = $request->taxpayer_data;
-        $data['tax_id'] = $request->tax_id;
-        $data['tax_amount'] = $request->tax_amount;
+            $data['created_by'] = Auth::id();
+            $data['sales_invoice_date'] = Carbon::parse($request->sales_invoice_date)->format('Y-m-d');
+            $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
+            $data['kena_pajak'] = $request->has('kena_pajak');
+            $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak');
+            $data['sub_total'] = $request->sub_total;
+            $data['disc_percent'] = $request->percent;
+            $data['disc_nominal'] = $request->discount_all;
+            $data['po_number'] = $request->po_number;
+            $data['grand_total'] = $request->total_order;
+            $data['taxpayer_data'] = $request->taxpayer_data;
+            $data['tax_id'] = $request->tax_id;
+            $data['tax_amount'] = $request->tax_amount;
 
-        // do {
-        //     $generatedCode = $this->generateNumberId();
-        //     $exists = SalesInvoice::where('sales_invoice_code', $generatedCode)->exists();
-        // } while ($exists);
+            // do {
+            //     $generatedCode = $this->generateNumberId();
+            //     $exists = SalesInvoice::where('sales_invoice_code', $generatedCode)->exists();
+            // } while ($exists);
 
-        // Generate kode SO
+            // Generate kode SO
             $salesInvoice = null;
             $maxRetry = 10;
             $currentCode = $request->sales_invoice_code; // Ambil input awal dari user
@@ -708,149 +708,150 @@ class SalesInvoiceController extends Controller
                 throw new \Exception('Gagal membuat Sales Order: Nomor sudah penuh atau sistem sibuk.');
             }
 
-        // $data['sales_invoice_code'] = $generatedCode;
+            // $data['sales_invoice_code'] = $generatedCode;
 
-        // $salesInvoice = SalesInvoice::create($data);
+            // $salesInvoice = SalesInvoice::create($data);
 
-        if (!empty($itemsDetailRaw)) {
+            if (! empty($itemsDetailRaw)) {
 
-            $items = json_decode($itemsDetailRaw, true);
+                $items = json_decode($itemsDetailRaw, true);
 
-            if (is_array($items) && count($items)) {
+                if (is_array($items) && count($items)) {
 
-                $detailIds = collect($items)
-                    ->pluck('sales_order_detail_id')
-                    ->filter()
-                    ->values()
-                    ->toArray();
+                    $detailIds = collect($items)
+                        ->pluck('sales_order_detail_id')
+                        ->filter()
+                        ->values()
+                        ->toArray();
 
-                $doDetails = DB::table("delivery_order_detail_{$currentYear}")
-                    ->whereIn('id', $detailIds)
-                    ->get()
-                    ->keyBy('id');
+                    $doDetails = DB::table("delivery_order_detail_{$currentYear}")
+                        ->whereIn('id', $detailIds)
+                        ->get()
+                        ->keyBy('id');
 
-                $involvedDoIds = [];
+                    $involvedDoIds = [];
 
-                foreach ($items as $item) {
+                    foreach ($items as $item) {
 
-                    $doDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
-                    $doId = $item['sales_order_code_id'] ?? $item['order_code'] ?? null;
+                        $doDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
+                        $doId = $item['sales_order_code_id'] ?? $item['order_code'] ?? null;
 
-                    $qty = (float)($item['quantity'] ?? $item['qty'] ?? 0);
-                    $unitPrice = (float)($item['unit_price'] ?? 0);
-                    $discount = (float)($item['discount'] ?? 0);
-                    $discountPercent = $item['discount_percent'] ?? 0;
-                    $amount = $item['amount'] ?? (($qty * $unitPrice) - $discount);
+                        $qty = (float) ($item['quantity'] ?? $item['qty'] ?? 0);
+                        $unitPrice = (float) ($item['unit_price'] ?? 0);
+                        $discount = (float) ($item['discount'] ?? 0);
+                        $discountPercent = $item['discount_percent'] ?? 0;
+                        $amount = $item['amount'] ?? (($qty * $unitPrice) - $discount);
 
-                    $detail = SalesInvoiceDetail::create([
-                        'sales_invoice_id' => $salesInvoice->id,
-                        'sales_order_detail_id' => $doDetailId,
-                        'sales_order_code_id' => $doId,
-                        'product_id' => $item['product_id'],
-                        'qty' => $qty,
-                        'unit_id' => $item['unit_id'],
-                        'warehouse_id' => $item['warehouse_id'],
-                        'unit_price' => $unitPrice,
-                        'discount_percent' => $discountPercent,
-                        'discount' => $discount,
-                        'amount' => $amount,
-                        'so_qty' => $qty,
-                        'outstanding_qty' => 0,
-                        'active' => 1,
-                        'created_by' => Auth::id(),
-                    ]);
-
-                    DocumentTransactionHistory::create([
-                        'module' => 'sales',
-                        'from_type' => 'DeliveryOrder',
-                        'from_id' => $doDetailId,
-                        'from_detail_id' => $doDetailId,
-                        'to_type' => 'SalesInvoice',
-                        'to_id' => $salesInvoice->id,
-                        'to_detail_id' => $detail->id,
-                        'transaction_type' => 'invoice',
-                        'qty' => $detail->qty,
-                        'unit_price' => $detail->unit_price,
-                        'discount' => $detail->discount,
-                        'amount' => $detail->amount,
-                        'transaction_date' => $salesInvoice->sales_invoice_date,
-                        'metadata' => json_encode([
-                            'warehouse_id' => $detail->warehouse_id,
-                            'product_id' => $detail->product_id,
-                            'unit_id' => $detail->unit_id,
-                        ]),
-                    ]);
-
-                    if ($doDetailId && isset($doDetails[$doDetailId])) {
-                        $involvedDoIds[] = $doDetails[$doDetailId]->delivery_order_id;
-                    }
-                }
-
-                foreach ($detailIds as $detailId) {
-
-                    $doDetail = $doDetails[$detailId];
-
-                    $totalInvoiceQty = SalesInvoiceDetail::where('sales_order_detail_id', $detailId)
-                        ->sum('qty');
-
-                    $outstanding = max(0, $doDetail->qty - $totalInvoiceQty);
-
-                    DB::table("delivery_order_detail_{$currentYear}")
-                        ->where('id', $detailId)
-                        ->update([
-                            'do_qty' => $totalInvoiceQty,
-                            'outstanding_qty' => $outstanding,
+                        $detail = SalesInvoiceDetail::create([
+                            'sales_invoice_id' => $salesInvoice->id,
+                            'sales_order_detail_id' => $doDetailId,
+                            'sales_order_code_id' => $doId,
+                            'product_id' => $item['product_id'],
+                            'qty' => $qty,
+                            'unit_id' => $item['unit_id'],
+                            'warehouse_id' => $item['warehouse_id'],
+                            'unit_price' => $unitPrice,
+                            'discount_percent' => $discountPercent,
+                            'discount' => $discount,
+                            'amount' => $amount,
+                            'so_qty' => $qty,
+                            'outstanding_qty' => 0,
+                            'active' => 1,
+                            'created_by' => Auth::id(),
                         ]);
-                }
 
-                foreach (array_unique($involvedDoIds) as $deliveryOrderId) {
+                        DocumentTransactionHistory::create([
+                            'module' => 'sales',
+                            'from_type' => 'DeliveryOrder',
+                            'from_id' => $doDetailId,
+                            'from_detail_id' => $doDetailId,
+                            'to_type' => 'SalesInvoice',
+                            'to_id' => $salesInvoice->id,
+                            'to_detail_id' => $detail->id,
+                            'transaction_type' => 'invoice',
+                            'qty' => $detail->qty,
+                            'unit_price' => $detail->unit_price,
+                            'discount' => $detail->discount,
+                            'amount' => $detail->amount,
+                            'transaction_date' => $salesInvoice->sales_invoice_date,
+                            'metadata' => json_encode([
+                                'warehouse_id' => $detail->warehouse_id,
+                                'product_id' => $detail->product_id,
+                                'unit_id' => $detail->unit_id,
+                            ]),
+                        ]);
 
-                    $details = DB::table("delivery_order_detail_{$currentYear}")
-                        ->where('delivery_order_id', $deliveryOrderId)
-                        ->get();
-
-                    $totalQty = $details->sum('qty');
-                    $totalInvoice = $details->sum('do_qty');
-
-                    if ($totalInvoice == 0) {
-                        $status = 'processing';
-                    } elseif ($totalInvoice < $totalQty) {
-                        $status = 'partial';
-                    } else {
-                        $status = 'confirmed';
+                        if ($doDetailId && isset($doDetails[$doDetailId])) {
+                            $involvedDoIds[] = $doDetails[$doDetailId]->delivery_order_id;
+                        }
                     }
 
-                    DB::table("delivery_order_{$currentYear}")
-                        ->where('id', $deliveryOrderId)
-                        ->update([
-                            'status' => $status,
-                        ]);
+                    foreach ($detailIds as $detailId) {
+
+                        $doDetail = $doDetails[$detailId];
+
+                        $totalInvoiceQty = SalesInvoiceDetail::where('sales_order_detail_id', $detailId)
+                            ->sum('qty');
+
+                        $outstanding = max(0, $doDetail->qty - $totalInvoiceQty);
+
+                        DB::table("delivery_order_detail_{$currentYear}")
+                            ->where('id', $detailId)
+                            ->update([
+                                'do_qty' => $totalInvoiceQty,
+                                'outstanding_qty' => $outstanding,
+                            ]);
+                    }
+
+                    foreach (array_unique($involvedDoIds) as $deliveryOrderId) {
+
+                        $details = DB::table("delivery_order_detail_{$currentYear}")
+                            ->where('delivery_order_id', $deliveryOrderId)
+                            ->get();
+
+                        $totalQty = $details->sum('qty');
+                        $totalInvoice = $details->sum('do_qty');
+
+                        if ($totalInvoice == 0) {
+                            $status = 'processing';
+                        } elseif ($totalInvoice < $totalQty) {
+                            $status = 'partial';
+                        } else {
+                            $status = 'confirmed';
+                        }
+
+                        DB::table("delivery_order_{$currentYear}")
+                            ->where('id', $deliveryOrderId)
+                            ->update([
+                                'status' => $status,
+                            ]);
+                    }
                 }
             }
+
+            DB::commit();
+
+            $redirectUrl = $request->save_and_new == 1
+                ? route('sales-invoice.create')
+                : route('sales-invoice.index');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sales Invoice saved successfully!',
+                'redirect' => $redirectUrl,
+            ]);
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
         }
-
-        DB::commit();
-
-        $redirectUrl = $request->save_and_new == 1
-            ? route('sales-invoice.create')
-            : route('sales-invoice.index');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Sales Invoice saved successfully!',
-            'redirect' => $redirectUrl,
-        ]);
-
-    } catch (\Throwable $e) {
-
-        DB::rollBack();
-
-        return response()->json([
-            'status' => 'error',
-            'message' => $e->getMessage(),
-        ], 500);
     }
-}
+
     public function show(string $id)
     {
         //
@@ -1072,52 +1073,52 @@ class SalesInvoiceController extends Controller
             // SIMPAN DETAIL BARU
             // ==========================
             foreach ($items as $item) {
-               $qty = (float) ($item['quantity'] ?? $item['qty'] ?? 0);
+                $qty = (float) ($item['quantity'] ?? $item['qty'] ?? 0);
 
                 $doDetailId = $item['sales_order_detail_id']
                 ?? $item['detail_id']
                 ?? null;
 
-            $doId = $item['sales_order_code_id']
-                ?? $item['delivery_order_id']
-                ?? $item['order_code']
-                ?? null;
+                $doId = $item['sales_order_code_id']
+                    ?? $item['delivery_order_id']
+                    ?? $item['order_code']
+                    ?? null;
 
-            $doDetailId = empty($doDetailId) ? null : (int) $doDetailId;
-            $doId       = empty($doId) ? null : (int) $doId;
+                $doDetailId = empty($doDetailId) ? null : (int) $doDetailId;
+                $doId = empty($doId) ? null : (int) $doId;
 
                 $salesInvoiceDetail = SalesInvoiceDetail::create([
 
-                    'sales_invoice_id'      => $salesInvoice->id,
+                    'sales_invoice_id' => $salesInvoice->id,
 
                     'sales_order_detail_id' => $doDetailId,
-                    'sales_order_code_id'   => $doId,
+                    'sales_order_code_id' => $doId,
 
-                    'product_id'            => $item['product_id'],
+                    'product_id' => $item['product_id'],
 
-                    'qty'                   => $qty,
+                    'qty' => $qty,
 
-                    'unit_id'               => $item['unit_id'],
+                    'unit_id' => $item['unit_id'],
 
-                    'warehouse_id'          => $item['warehouse_id'],
+                    'warehouse_id' => $item['warehouse_id'],
 
-                    'unit_price'            => (float) ($item['unit_price'] ?? 0),
+                    'unit_price' => (float) ($item['unit_price'] ?? 0),
 
-                    'discount_percent'      => $item['discount_percent'] ?? 0,
+                    'discount_percent' => $item['discount_percent'] ?? 0,
 
-                    'discount'              => (float) ($item['discount'] ?? 0),
+                    'discount' => (float) ($item['discount'] ?? 0),
 
-                    'amount'                => (float) ($item['amount'] ?? 0),
+                    'amount' => (float) ($item['amount'] ?? 0),
 
-                    'so_qty'                => $qty,
+                    'so_qty' => $qty,
 
-                    'outstanding_qty'       => 0,
+                    'outstanding_qty' => 0,
 
-                    'status'                => 'open',
+                    'status' => 'open',
 
-                    'active'                => 1,
+                    'active' => 1,
 
-                    'created_by'            => Auth::id(),
+                    'created_by' => Auth::id(),
                 ]);
 
                 /*

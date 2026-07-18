@@ -424,15 +424,15 @@ class PurchaseInvoiceController extends Controller
     }
 
     private function generateNumberId()
-{
-    $tahun = date('Y');
-    $bulan = date('n');
-    $bulanRomawi = $this->bulanRomawi($bulan);
+    {
+        $tahun = date('Y');
+        $bulan = date('n');
+        $bulanRomawi = $this->bulanRomawi($bulan);
 
-    $prefix = "PI/{$tahun}/{$bulanRomawi}/";
+        $prefix = "PI/{$tahun}/{$bulanRomawi}/";
 
-    $last = PurchaseInvoice::where('code', 'like', $prefix . '%')
-        ->orderByRaw("
+        $last = PurchaseInvoice::where('code', 'like', $prefix.'%')
+            ->orderByRaw("
             CAST(
                 REGEXP_REPLACE(
                     SUBSTRING_INDEX(code,'/',-1),
@@ -441,18 +441,18 @@ class PurchaseInvoiceController extends Controller
                 ) AS UNSIGNED
             ) DESC
         ")
-        ->first();
+            ->first();
 
-    if ($last) {
-        preg_match('/(\d+)/', substr($last->code, strrpos($last->code, '/') + 1), $match);
-        $lastNumber = isset($match[1]) ? (int)$match[1] : 0;
-        $nextNumber = $lastNumber + 1;
-    } else {
-        $nextNumber = 1;
+        if ($last) {
+            preg_match('/(\d+)/', substr($last->code, strrpos($last->code, '/') + 1), $match);
+            $lastNumber = isset($match[1]) ? (int) $match[1] : 0;
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
-
-    return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-}
 
     public function create()
     {

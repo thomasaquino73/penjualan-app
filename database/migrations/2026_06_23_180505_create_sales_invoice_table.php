@@ -14,84 +14,69 @@ return new class extends Migration
     }
 
     public function up(): void
-    {
-        Schema::create("sales_invoice_{$this->year}", function (Blueprint $table) {
-            $table->id();
-            $table->string('sales_invoice_code')->unique();
-            $table->date('sales_invoice_date');
-            $table->unsignedBigInteger('sales_order_id')->nullable();
-            $table->unsignedBigInteger('payment_term_id')->nullable();
-            $table->unsignedBigInteger('salesman_id')->nullable();
-            $table->string('address')->nullable();
-            $table->string('description')->nullable();
-            $table->string('taxpayer_data')->nullable();
-            $table->unsignedBigInteger('customer_id');
-            $table->unsignedBigInteger('customer_contact_id')->nullable();
-            $table->boolean('kena_pajak')->default(1)->comment('kena pajak atau tidak')->nullable();
-            $table->boolean('total_termasuk_pajak')->default(1)->comment('harga total termasuk pajak')->nullable();
-            $table->enum('status', [
-                'draft',
-                'processing',
-                'unpaid',
-                'partial',
-                'paid',
-                'cancelled',
-                'closed',
-            ])->default('draft');
-            $table->decimal('sub_total', 18, 2)->default(0)->nullable();
-            $table->decimal('disc_percent', 5, 2)->default(0)->nullable();
-            $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();
-            $table->decimal('grand_total', 18, 2)->default(0)->nullable();
-            $table->decimal('paid_amount', 18, 2)->default(0)->nullable();
-            $table->decimal('outstanding_amount', 18, 2)->default(0)->nullable();
-            $table->unsignedBigInteger('tax_id')->nullable();
-            $table->decimal('tax_percent', 5, 2)->default(0)->nullable();
-            $table->decimal('tax_amount', 15, 2)->default(0)->nullable();
-            $table->string('po_number')->nullable();
-            $table->date('tanggal_pengiriman')->nullable();
-            $table->unsignedBigInteger('jenis_pengiriman')->nullable();
-            $table->string('fob_id')->nullable();
-            $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
-            $table->unsignedBigInteger('created_by')->nullable();
-            $table->unsignedBigInteger('updated_by')->nullable();
-            $table->unsignedBigInteger('pic_by')->nullable();
-            $table->datetime('pic_at')->nullable();
+{
+    Schema::create("sales_invoice_{$this->year}", function (Blueprint $table) {
+        $table->id();
+        $table->string('sales_invoice_code')->unique();
+        $table->date('sales_invoice_date');
 
-            $table->timestamps();
-        });
+        $table->unsignedBigInteger('sales_order_id')->nullable();
+        $table->unsignedBigInteger('payment_term_id')->nullable();
+        $table->unsignedBigInteger('salesman_id')->nullable();
+        $table->unsignedBigInteger('customer_id');
+        $table->unsignedBigInteger('customer_contact_id')->nullable();
+        $table->unsignedBigInteger('tax_id')->nullable();
 
-        Schema::create("sales_invoice_detail_{$this->year}", function (Blueprint $table) {
-            $table->id();
+        // ... kolom lainnya
 
-            $table->unsignedBigInteger('sales_invoice_id');
-            $table->integer('urutan')->default(0);
-            $table->unsignedBigInteger('sales_order_detail_id')->nullable();
-            $table->string('sales_order_code_id')->nullable();
-            $table->unsignedBigInteger('product_id');
-            $table->decimal('qty', 18, 4);
-            $table->unsignedBigInteger('unit_id');
+        $table->timestamps();
 
-            $table->decimal('unit_price', 15, 2);
-            $table->string('discount_percent')->nullable();
-            $table->decimal('discount', 15, 2)->default(0);
-            $table->decimal('amount', 15, 2);
-            $table->unsignedBigInteger('warehouse_id');
-            $table->decimal('so_qty', 18, 4)->default(0)->comment('Qty yang sudah sukses di-SO-kan');
-            $table->decimal('outstanding_qty', 18, 4)->default(0)
-                ->comment('Sisa qty yang belum di-SQ-kan: qty - sq_qty');
-            $table->enum('status', [
-                'open',
-                'partial',
-                'completed',
-                'cancelled',
-            ])->default('open');
-            $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
-            $table->unsignedBigInteger('created_by')->nullable();
-            $table->unsignedBigInteger('updated_by')->nullable();
+        // =========================
+        // INDEX
+        // =========================
+        $table->index('sales_invoice_date');
+        $table->index('customer_id');
+        $table->index('sales_order_id');
+        $table->index('salesman_id');
+        $table->index('payment_term_id');
+        $table->index('tax_id');
+        $table->index('status');
+        $table->index('active');
 
-            $table->timestamps();
-        });
-    }
+        // Composite Index
+        $table->index(['customer_id', 'status']);
+        $table->index(['sales_invoice_date', 'status']);
+        $table->index(['active', 'status']);
+    });
+
+    Schema::create("sales_invoice_detail_{$this->year}", function (Blueprint $table) {
+        $table->id();
+
+        $table->unsignedBigInteger('sales_invoice_id');
+        $table->unsignedBigInteger('sales_order_detail_id')->nullable();
+        $table->unsignedBigInteger('product_id');
+        $table->unsignedBigInteger('unit_id');
+        $table->unsignedBigInteger('warehouse_id');
+
+        // ... kolom lainnya
+
+        $table->timestamps();
+
+        // =========================
+        // INDEX
+        // =========================
+        $table->index('sales_invoice_id');
+        $table->index('sales_order_detail_id');
+        $table->index('product_id');
+        $table->index('unit_id');
+        $table->index('warehouse_id');
+
+        // Composite Index
+        $table->index(['sales_invoice_id', 'product_id']);
+        $table->index(['product_id', 'warehouse_id']);
+        $table->index(['sales_order_detail_id', 'status']);
+    });
+}
 
     /**
      * Reverse the migrations.

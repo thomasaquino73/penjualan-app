@@ -53,15 +53,8 @@
                             <div class="input-group input-group-merge">
                                 <span class="input-group-text"> <i class="ti ti-user"></i>
                                 </span>
-                                <select name="" id="" class="form-select select2"
-                                    data-placeholder="Select Customer">
-                                    <option></option>
-                                    @foreach ($customer as $cust)
-                                        <option value="{{ $cust->id }}">{{ $cust->nama_customer }}</option>
-                                    @endforeach
-                                </select>
-                                <span class="input-group-text"> <button class="btn btn-sm btn-info"> <i
-                                            class="ti ti-plus"></i></button></span>
+                                <input type="text" value="Pelanggan Umum" id="customer_name" name="customer_name"
+                                    class="form-control" readonly>
                             </div>
                             <span class="error text-danger" id="id_barangError"></span>
                         </div>
@@ -108,56 +101,88 @@
                     <!-- Subtotal -->
                     <div class="d-flex justify-content-between mb-2">
                         <div class="col-6 text-muted">Sub Total</div>
+
                         <div class="col-6">
                             <div class="input-group input-group-merge">
-                                <span class="input-group-text border-0">{{ $mataUangDefault->symbol }}</span>
-                                <input type="number" id="sub_total" name="sub_total" class="form-control border-0"
-                                    placeholder="0" min="0" readonly>
+                                <span class="input-group-text border-0">
+                                    {{ $mataUangDefault->symbol }}
+                                </span>
+
+                                <input type="hidden" id="sub_total" name="sub_total">
+
+                                <input type="text" id="sub_total_display" class="form-control border-0 text-end"
+                                    placeholder="0" readonly>
                             </div>
                         </div>
                     </div>
 
+
                     <!-- Discount -->
                     <div class="d-flex justify-content-between mb-2">
                         <div class="col-6 text-muted">Discount</div>
+
                         <div class="col-6">
                             <div class="input-group input-group-merge">
-                                <span class="input-group-text">{{ $mataUangDefault->symbol }}</span>
+                                <span class="input-group-text">
+                                    {{ $mataUangDefault->symbol }}
+                                </span>
+
                                 <input type="number" id="discount_all" name="discount_all" class="form-control"
                                     placeholder="0" min="0">
                             </div>
                         </div>
                     </div>
 
+
                     <!-- Tax -->
                     <div class="d-flex justify-content-between mb-3">
-                        <div class="col-6 text-muted" id="taxes">Tax (11%)</div>
+                        <div class="col-6 text-muted">
+                            <span id="taxes">Tax (11%)</span>
+                        </div>
+
                         <div class="col-6">
                             <div class="input-group input-group-merge">
-                                <span class="input-group-text border-0">{{ $mataUangDefault->symbol }}</span>
-                                <input type="text" name="tax_amount" id="tax_amount" class="form-control border-0"
+                                <span class="input-group-text border-0">
+                                    {{ $mataUangDefault->symbol }}
+                                </span>
+
+                                <input type="hidden" name="tax_amount" id="tax_amount">
+
+                                <input type="text" id="tax_amount_display" class="form-control border-0 text-end"
                                     readonly>
                             </div>
                         </div>
                     </div>
 
+
                     <hr>
+
 
                     <!-- Total -->
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="col-6 fw-bold">Total</div>
+
+                        <div class="col-6 fw-bold">
+                            Total
+                        </div>
 
                         <div class="col-6">
+
                             <div class="input-group input-group-merge">
+
                                 <span class="input-group-text border-0 bg-transparent fw-bold text-primary fs-5">
                                     {{ $mataUangDefault->symbol }}
                                 </span>
 
-                                <input type="number" id="total_order" name="total_order"
+                                <input type="hidden" id="total_order" name="total_order">
+
+                                <input type="text" id="total_order_display"
                                     class="form-control border-0 bg-transparent shadow-none text-end fw-bold text-primary fs-5"
                                     placeholder="0" readonly>
+
                             </div>
+
                         </div>
+
                     </div>
 
                     <!-- Payment Method -->
@@ -173,7 +198,6 @@
                     </div>
 
                     <div id="cash_section" style="display:none;">
-
                         <!-- Cash Received -->
                         <div class="mb-3">
                             <label class="form-label">Amount Received</label>
@@ -193,7 +217,22 @@
                                     readonly>
                             </div>
                         </div>
-
+                    </div>
+                    <div id="transfer_section" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label">Bank</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text"><i class="ti ti-building"></i></span>
+                                <select name="" id="" class="form-select select2"
+                                    data-placeholder="Select Bank">
+                                    <option value=""></option>
+                                    @foreach ($bank as $banks)
+                                        <option value="{{ $banks->id }}">{{ $banks->bank_name }} -
+                                            {{ $banks->account_number }} [{{ $banks->account_name }}]</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -239,22 +278,45 @@
             });
         });
 
-        function toggleCashSection() {
+        $(document).ready(function() {
 
-            let paymentMethod = $("#payment_method").val();
+            function togglePaymentSection() {
+                let paymentMethod = $('#payment_method').val();
 
-            if (paymentMethod === "Cash") {
+                // Sembunyikan semua section
+                $('#cash_section').hide();
+                $('#transfer_section').hide();
 
-                $("#cash_section").slideDown();
-
-            } else {
-
-                $("#cash_section").slideUp();
-
-                $("#amount_receive").val("");
-                $("#change_amount").val("");
+                if (paymentMethod === 'Cash') {
+                    $('#cash_section').slideDown(200);
+                } else if (paymentMethod === 'Transfer') {
+                    $('#transfer_section').slideDown(200);
+                }
+                // Qris -> tidak menampilkan apa pun
             }
-        }
+
+            // Event ketika payment method berubah
+            $('#payment_method').on('change', function() {
+                togglePaymentSection();
+            });
+
+            // Jalankan saat halaman pertama kali dibuka
+            togglePaymentSection();
+
+            function calculateChange() {
+                let total = parseFloat($('#total_order').val()) || 0;
+                let receive = parseFloat($('#amount_receive').val()) || 0;
+
+                let change = receive - total;
+
+                $('#change_amount').val(
+                    change >= 0 ? change.toLocaleString('id-ID') : '0'
+                );
+            }
+
+            $('#amount_receive').on('input', calculateChange);
+
+        });
 
         $("#showModalpr").on("click", function(e) {
             e.preventDefault();
@@ -411,44 +473,96 @@
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
                                 action: function(e, dt, node, config) {
-                                    let data = dt.row({
+
+                                    const row = dt.row({
                                         selected: true
-                                    }).data();
-                                    let rowIndex = dt.row({
-                                        selected: true
-                                    }).index();
+                                    });
+
+                                    if (!row.any()) {
+                                        Swal.fire({
+                                            icon: "warning",
+                                            title: "Warning",
+                                            text: "Please select one data first."
+                                        });
+                                        return;
+                                    }
+
+                                    const data = row.data();
+                                    const rowIndex = row.index();
 
                                     window.isEditingMode = true;
 
-                                    // Menyimpan index baris array untuk penanda update
-                                    $("#detail_id").val(rowIndex);
+                                    // Reset error
+                                    $("#formPrDetail .error").html("");
 
-                                    // --- AMANKAN DATA ID RELASI DI SINI ---
-                                    $("#modal_purchase_requisition_detail_id").val(data.detail_id ||
-                                        data.purchase_requisition_detail_id || "");
-                                    $("#modal_requisition_code").val(data.requisition_code || "");
-
-                                    // Simpan nilai sisa_pr ke attribute input modal quantity agar bisa divalidasi
-                                    if (data.sisa_pr !== undefined && data.sisa_pr !== null) {
-                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
-                                    } else {
-                                        $("#quantity").removeAttr(
-                                            "data-sisa-pr"); // Jika PO bebas, hapus batasannya
-                                    }
-                                    // --------------------------------------
-
-                                    $("#quantity").val(data.quantity);
-                                    $("#unit_id").data("pending-val", data.unit_id);
-                                    $("#unit_price").val(data.unit_price);
-                                    $("#discount").val(data.discount || 0);
-                                    $("#discount_percent").val(data.discount_percent || 0);
-                                    $("#tax").val(data.tax || 0);
-                                    $("#total_price").val(data.amount || 0);
+                                    // ==========================
+                                    // HEADER
+                                    // ==========================
 
                                     $("#modalTitle").text("Edit entry");
                                     $("#btnSubmitModal").text("Update");
-                                    $("#modals").modal("show");
-                                },
+
+                                    // ==========================
+                                    // HIDDEN
+                                    // ==========================
+
+                                    $("#detail_id").val(rowIndex);
+
+                                    $("#modal_sales_quotation_detail_id").val(
+                                        data.detail_id ??
+                                        data.sales_quotation_detail_id ??
+                                        ""
+                                    );
+
+                                    $("#modal_requisition_code").val(
+                                        data.requisition_code ?? ""
+                                    );
+
+                                    // ==========================
+                                    // TEXTBOX
+                                    // ==========================
+
+                                    $("#quantity").val(data.quantity ?? "");
+
+                                    $("#unit_price").val(data.unit_price ?? 0);
+
+                                    $("#discount").val(data.discount ?? 0);
+
+                                    $("#discount_percent").val(data.discount_percent ?? 0);
+
+                                    $("#tax").val(data.tax ?? 0);
+
+                                    $("#total_price").val(data.amount ?? 0);
+
+                                    $("#available_stok").val(data.available_stok ?? "");
+
+                                    // ==========================
+                                    // ATTRIBUTE
+                                    // ==========================
+
+                                    if (data.sisa_pr != null) {
+                                        $("#quantity").attr("data-sisa-pr", data.sisa_pr);
+                                    } else {
+                                        $("#quantity").removeAttr("data-sisa-pr");
+                                    }
+
+                                    // ==========================
+                                    // SELECT
+                                    // ==========================
+                                    // simpan unit yg dipilih
+                                    $("#unit_id").data("pending-val", data.unit_id);
+
+                                    // simpan harga lama
+                                    $("#unit_price").data("pending-price", data.unit_price);
+
+                                    // buka modal dulu
+                                    $("#modalPrDetail").modal("show");
+
+                                    // terakhir trigger product
+                                    $("#product_id")
+                                        .val(data.product_id)
+                                        .trigger("change");
+                                }
                             },
                             {
                                 text: '<i class="ti ti-trash me-1"></i> Delete',
@@ -544,20 +658,10 @@
                 let priceInput = $("#unit_price");
                 let dropdownBtn = $("#btn-history-po");
                 let dropdownMenu = $("#po-price-dropdown-menu");
-
-                // Pastikan ID selector ini sesuai dengan ID Select Customer di form utama kamu
-                if (!productId) {
-                    unitSelect.empty().append("<option></option>").trigger("change");
-                    priceInput.val("");
-                    dropdownBtn.prop("disabled", true);
-                    dropdownMenu.empty();
-                    return;
-                }
-
-                // Tambahan Validasi: Ingatkan user jika customer belum dipilih
-
-
-
+                let helperText = $("#po-history-helper");
+                // ==========================================
+                // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
+                // ==========================================
                 $.ajax({
                     url: window.routes.getUnits.replace(':id', productId),
                     type: "GET",
@@ -610,7 +714,6 @@
                     },
                 });
 
-
             });
 
 
@@ -645,6 +748,7 @@
 
                 // JIKA PO BEBAS (maxPrLimit tidak ada), AKAN LOLOS TANPA VALIDASI MAKSIMAL
             });
+
 
             $("#formPrDetail").on("submit", function(e) {
                 e.preventDefault();
@@ -896,32 +1000,52 @@
         }
         const TAXES = @json($taxes);
 
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(number);
+        }
+
+
         function calculateTotalOrder() {
 
-            // Sub Total dari semua item
             let subTotal = getGrandSubTotal();
 
-            // Discount
             let discount = parseFloat($("#discount_all").val()) || 0;
 
-            // Nilai setelah diskon
+
             let taxableAmount = subTotal - discount;
 
             if (taxableAmount < 0) {
                 taxableAmount = 0;
             }
 
-            // Pajak tetap 11%
+
             let tax = taxableAmount * 0.11;
 
-            // Total
             let totalOrder = taxableAmount + tax;
 
-            // Tampilkan
-            $("#sub_total").val(Math.round(subTotal));
-            $("#tax_amount").val(Math.round(tax));
-            $("#total_order").val(Math.round(totalOrder));
+
+            subTotal = Math.round(subTotal);
+            tax = Math.round(tax);
+            totalOrder = Math.round(totalOrder);
+
+
+            // value database
+            $("#sub_total").val(subTotal);
+            $("#tax_amount").val(tax);
+            $("#total_order").val(totalOrder);
+
+
+            // display Rupiah
+            $("#sub_total_display").val(formatRupiah(subTotal));
+            $("#tax_amount_display").val(formatRupiah(tax));
+            $("#total_order_display").val(formatRupiah(totalOrder));
         }
+
+
+        $("#discount_all").on("input", calculateTotalOrder);
         $("#discount_all").on("input", calculateTotalOrder);
         $("#tax_id").on("change", calculateTotalOrder);
     </script>

@@ -12,6 +12,7 @@ use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
 use App\Models\Setting\Tax;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class KasirController extends Controller
 {
@@ -72,21 +73,25 @@ class KasirController extends Controller
         $bulan = date('n');
         $bulanRomawi = $this->bulanRomawi($bulan);
 
-        // Prefix yang akan dicari
         $prefix = "TRX/{$tahun}/{$bulanRomawi}/";
 
-        // Ambil nomor terakhir pada bulan & tahun yang sama
         $last = StoreSales::where('store_sales_code', 'like', $prefix.'%')
-            ->lockForUpdate()
-            ->orderByDesc('id')
+            ->orderByRaw("
+            CAST(
+                REGEXP_REPLACE(
+                    SUBSTRING_INDEX(store_sales_code,'/',-1),
+                    '[^0-9]',
+                    ''
+                ) AS UNSIGNED
+            ) DESC
+        ")
             ->first();
 
         if ($last) {
-            // Ambil 4 digit terakhir
-            $lastNumber = (int) substr($last->store_sales_code, -4);
+            preg_match('/(\d+)/', substr($last->store_sales_code, strrpos($last->store_sales_code, '/') + 1), $match);
+            $lastNumber = isset($match[1]) ? (int) $match[1] : 0;
             $nextNumber = $lastNumber + 1;
         } else {
-            // Jika belum ada pada bulan ini mulai dari 0001
             $nextNumber = 1;
         }
 
@@ -109,6 +114,7 @@ class KasirController extends Controller
             'customer' => Customer::where('status', '<>', 0)->get(),
             'product' => Barang::where('status', '<>', 0)->get(),
             'warehouse' => Warehouse::where('status', '<>', 0)->get(),
+            'bank' => DB::table('bank_list')->get(),
             'taxes' => $taxes,
         ]);
     }
