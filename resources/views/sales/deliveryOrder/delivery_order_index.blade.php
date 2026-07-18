@@ -54,7 +54,7 @@
                             <option value="draft">Draft</option>
                             <option value="processing">Processing</option>
                             <option value="partial">Partial</option>
-                            <option value="closed">Closed</option>
+                            <option value="confirmed">Confirmed</option>
                         </select>
                     </div>
                 </div>
@@ -92,6 +92,9 @@
                     'checked',
                     $('.checkItem:checked').length === $('.checkItem').length
                 );
+            });
+            $('#selectStatus').on('change', function() {
+                table.ajax.reload();
             });
             var table = new DataTable('#table', {
                 processing: true,
