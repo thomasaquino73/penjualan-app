@@ -41,8 +41,8 @@ class StoreSalesRequest extends FormRequest
 
         ];
 
-       if ($this->isMethod('POST')) {
-        
+        if ($this->isMethod('POST')) {
+
         }
 
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {

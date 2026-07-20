@@ -282,10 +282,9 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('penjualan-toko')->name('penjualan-toko.')->group(function () {
-        // Route::get('/print/{id}', [ReceiveItemController::class, 'print'])->name('print');
-        // Route::post('/get-order-detail', [ReceiveItemController::class, 'getOrderDetail'])->name('get-order-detail');
-        // Route::get('/get-processing-po', [ReceiveItemController::class, 'getProcessingData'])->name('po.processing');
-        // Route::get('/trash', [ReceiveItemController::class, 'trash'])->name('trash');
+        Route::get('/print/{id}', [KasirController::class, 'print'])->name('print');
+        Route::put('restore/{id}', [KasirController::class, 'restore'])->name('restore');
+        Route::get('/trash', [KasirController::class, 'trash'])->name('trash');
         Route::resource('', KasirController::class)->parameters(['' => 'penjualan_toko']);
     });
 

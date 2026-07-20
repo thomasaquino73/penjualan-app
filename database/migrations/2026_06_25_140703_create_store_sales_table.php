@@ -31,11 +31,12 @@ return new class extends Migration
             $table->unsignedBigInteger('bank_list_id')->nullable();
             $table->enum('payment_method', ['Cash', 'Transfer', 'Qris'])->default('Cash');
             $table->enum('shipping_method', ['Pick Up', 'Delivery'])->default('Pick Up');
-            $table->string('notes');
+            $table->string('notes')->nullable();
             $table->enum('status', [
                 'draft',
                 'paid',
             ])->default('draft');
+            $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();

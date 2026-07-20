@@ -22,7 +22,7 @@
                 <div class="section-title">Kepada</div>
                 <div class="recipient-box">
                     <strong>{{ $model->customerID->nama_customer }}</strong><br>
-                      {!! nl2br(e($model->address)) !!}
+                    {!! nl2br(e($model->address)) !!}
                 </div>
             </td>
             <td style="width: 50%; vertical-align: top; padding-left: 20px;">
@@ -38,7 +38,7 @@
                         <td width="10">:</td>
                         <td>{{ date('d M Y', strtotime($model->sales_invoice_date)) }}</td>
                     </tr>
-                       <tr>
+                    <tr>
                         <td width="70">PO Nomor</td>
                         <td width="10">:</td>
                         <td>{{ $model->po_number }}</td>
@@ -154,24 +154,27 @@
                     @endphp
                     @if ($model->status == 'processing')
                         <div class="approval-title">
-                            Disetujui Oleh
+                            Hormat Kami,
                         </div>
-                        <div style="height: 65px;">
-                            <img src="{{ public_path('image/logo/STEMPEL.png') }}" style="height: 80px;">
+                        <div style="height: 85px;">
                         </div>
-                        <div style="font-weight: bold; text-decoration: underline;">
+                        <div
+                            style="width: 50%; margin: 0 auto; border-top:1px solid #000; font-weight:bold; text-align:center; padding-top:5px;">
                             {{ $company->approval_name }}
                         </div>
                     @else
                         <div class="approval-title">
                             Dibuat oleh,
                         </div>
-                        <div style="height: 65px;">
-                            <img src="{{ public_path('image/logo/69fd6d6ab719c1778216298.png') }}"
-                                style="height: 80px;">
-                        </div>
-                        <div style="font-weight: bold; text-decoration: underline;">
-                            {{ $model->creator->fullname }}
+                        <div style="height:85px;"></div>
+
+                        <div
+                            style="
+        width:80%;
+        margin:0 auto;
+        border-bottom:1px solid #000;
+        height:10px;
+    ">
                         </div>
                     @endif
                 </td>

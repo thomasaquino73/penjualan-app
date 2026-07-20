@@ -1289,9 +1289,10 @@ class DeliveryOrderController extends Controller
         ]);
 
         $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $deliveryOrder->delivery_order_code);
+        $namaPT = preg_replace('/[\/\\\\:*?"<>|]/', '-', trim($deliveryOrder->customerID->nama_customer));
 
         return $pdf->setPaper('a5', 'landscape')
-            ->stream($filename.'.pdf');
+            ->stream($filename.'['.$namaPT.'].pdf');
     }
 
     private function hitungTotalQty($deliveryOrder)
