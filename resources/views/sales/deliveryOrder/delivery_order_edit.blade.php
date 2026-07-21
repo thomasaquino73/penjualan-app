@@ -870,7 +870,7 @@
                     Swal.fire({
                         icon: "warning",
                         title: "Peringatan",
-                        text: "Silakan pilih minimal satu data po!",
+                        text: "Silakan pilih minimal satu data order!",
                         customClass: {
                             confirmButton: "btn btn-danger",
                         },

@@ -597,9 +597,10 @@ class PurchaseOrderController extends Controller
             ->select(
                 'd.id',
                 'd.purchase_requisition_id',
-                'q.code',
+                'q.code as purchase_requisition_code',
                 'd.product_id',
                 'b.nama_barang',
+                'd.qty',
                 'd.outstanding_qty',
                 'u.detail as unit_name',
                 'd.unit_id'
@@ -1234,15 +1235,15 @@ class PurchaseOrderController extends Controller
                         );
                     }
 
-                    $sisaPR =
-                        floatval($prDetail->qty)
-                        - floatval($prDetail->po_qty);
+                    // $sisaPR =
+                    //     floatval($prDetail->qty)
+                    //     - floatval($prDetail->po_qty);
 
-                    if ($qty > $sisaPR) {
-                        throw new \Exception(
-                            "Qty {$item['data_produk']} melebihi sisa PR. Maksimal {$sisaPR}"
-                        );
-                    }
+                    // if ($qty > $sisaPR) {
+                    //     throw new \Exception(
+                    //         "Qty {$item['data_produk']} melebihi sisa PR. Maksimal {$sisaPR}"
+                    //     );
+                    // }
 
                     DB::table("purchase_requisition_detail_{$currentYear}")
                         ->where('id', $prDetailId)

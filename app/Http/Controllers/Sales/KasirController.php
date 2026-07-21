@@ -750,7 +750,7 @@ class KasirController extends Controller
             ->stream($filename.'['.$namaPT.'].pdf');
     }
 
-       private function hitungTotalQty($storeSales)
+    private function hitungTotalQty($storeSales)
     {
         return $storeSales->details->sum('qty');
     }

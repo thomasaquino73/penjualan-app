@@ -32,11 +32,11 @@ class StoreSales extends Model
     {
         return $this->belongsTo(Customer::class, 'customer_id');
     }
+
     public function bankID()
     {
         return $this->belongsTo(BankList::class, 'bank_list_id');
     }
-   
 
     public function updater()
     {

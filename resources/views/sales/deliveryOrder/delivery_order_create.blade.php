@@ -848,7 +848,7 @@
                     Swal.fire({
                         icon: "warning",
                         title: "Warning",
-                        text: "Silakan pilih minimal satu item quotation.",
+                        text: "Silakan pilih minimal satu item order.",
                         customClass: {
                             confirmButton: "btn btn-danger",
                         },

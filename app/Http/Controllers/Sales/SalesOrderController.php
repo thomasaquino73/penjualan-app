@@ -1442,7 +1442,7 @@ class SalesOrderController extends Controller
             ->select(
                 'd.id',
                 'd.sales_quotation_id',
-                'q.sales_quotation_code',   // <-- tambahkan ini
+                'q.sales_quotation_code',
                 'd.product_id',
                 'b.nama_barang',
                 'd.outstanding_qty',
