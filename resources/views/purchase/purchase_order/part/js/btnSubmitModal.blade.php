@@ -80,8 +80,8 @@
                                     data-unit_id="${item.unit_id}"
                                     data-unit_name="${item.unit_name}"
 
-                                    data-purchase_requisition_id="${item.purchase_requisition_id}"
-                                    data-purchase_requisition_code="${item.purchase_requisition_code}"
+                                    data-sales_quotation_id="${item.sales_quotation_id}"
+                                    data-sales_quotation_code="${item.sales_quotation_code}"
                                 >
                             </div>
                         </td>

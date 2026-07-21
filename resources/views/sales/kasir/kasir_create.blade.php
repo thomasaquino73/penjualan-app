@@ -2,33 +2,47 @@
 @section('konten')
     <!-- HEADER -->
     <div class="card mb-3">
-        <div class="card-body d-flex justify-content-between align-items-center">
+        <div class="card-body">
             <form action="{{ route('penjualan-toko.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
                 @csrf
-                <!-- Kiri -->
-                <h4 class="fw-bold mb-0"><i class="ti ti-shopping-cart me-1"></i> Store Sales (POS)</h4>
 
-                <!-- Kanan -->
-                <div class="d-flex gap-2">
-                    <div class="mb-3">
-                        <label class="form-label">Cashier</label>
-                        <div class="input-group input-group-merge">
-                            <span class="input-group-text"><i class="ti ti-user"></i></span>
-                            <input type="text" value="{{ Auth()->user()->fullname }}" class="form-control" readonly>
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <!-- Kiri -->
+                    <h4 class="fw-bold mb-0">
+                        <i class="ti ti-shopping-cart me-1"></i>
+                        Store Sales (POS)
+                    </h4>
+
+                    <!-- Kanan -->
+                    <div class="d-flex gap-3 align-items-end">
+                        <div class="mb-0">
+                            <label class="form-label">Cashier</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text">
+                                    <i class="ti ti-user"></i>
+                                </span>
+                                <input type="text" value="{{ Auth()->user()->fullname }}" class="form-control" readonly>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Date</label>
-                        <div class="input-group input-group-merge">
-                            <span class="input-group-text"><i class="ti ti-calendar"></i></span>
-                            <input type="text" value="" id="store_sales_date" name="store_sales_date"
-                                class="form-control" readonly>
+                        <div class="mb-0">
+                            <label class="form-label">Date</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text">
+                                    <i class="ti ti-calendar"></i>
+                                </span>
+                                <input type="text" id="store_sales_date" name="store_sales_date" class="form-control"
+                                    readonly>
+                            </div>
                         </div>
                     </div>
 
                 </div>
 
+                <!-- isi form lainnya -->
+
+            </form>
         </div>
     </div>
     <div class="row">
