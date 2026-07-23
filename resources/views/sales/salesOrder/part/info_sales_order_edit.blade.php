@@ -113,8 +113,7 @@
                         <i class="ti ti-truck"></i>
                     </span>
                     <select name="jenis_pengiriman" id="jenis_pengiriman" class="form-select select2"
-                        data-placeholder="Select Payment Term">
-                        <option value="">Select Shipping</option>
+                        data-placeholder="Select Shipping">
                         @foreach ($shipping as $item)
                             <option value="{{ $item->id }}"
                                 {{ $model->jenis_pengiriman == $item->id ? 'selected' : '' }}>

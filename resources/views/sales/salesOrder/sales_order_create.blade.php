@@ -208,7 +208,7 @@
 @endsection
 @include('partials.tabel.css')
 @include('partials.tabel.js')
-@include('partials.button.btn_addshipping')
+{{-- @include('partials.button.btn_addshipping') --}}
 @include('partials.button.btn_addpayment')
 @include('partials.button.btn_submitform')
 @include('partials.button.select2_modal')
@@ -227,110 +227,77 @@
             });
         });
 
-        // $("#showModalpr").on("click", function(e) {
-        //     e.preventDefault();
+        $("#btnAddShipping").click(function() {
+            Swal.fire({
+                title: "Add New Shipping",
+                input: "text",
+                inputLabel: "Shipping Name",
+                inputPlaceholder: "Input shipping name...",
 
-        //     var customerId = $("#customer_id").val();
-        //     $("#sq_number")
-        //         .empty()
-        //         .append('<option value="">Select Quotation</option>')
-        //         .val(null)
-        //         .trigger("change");
-        //     if (!customerId) {
-        //         Swal.fire({
-        //             icon: "warning",
-        //             title: "Warning!",
-        //             text: "Please select Customer first before adding new data.",
-        //             confirmButtonColor: "#3085d6",
-        //             confirmButtonText: "OK",
-        //             customClass: {
-        //                 confirmButton: "btn btn-danger",
-        //             },
-        //             buttonsStyling: false,
-        //         });
-        //         return;
-        //     }
+                showCancelButton: true,
 
-        //     $.ajax({
-        //         url: "/sales-order/get-quotation/" + customerId,
-        //         type: "GET",
-        //         success: function(response) {
+                // confirmButtonColor: "#3085d6",
+                // cancelButtonColor: "#d33",
 
-        //             let option = '<option value="">Select Quotation</option>';
+                confirmButtonText: "Save",
+                cancelButtonText: "Cancel",
+                customClass: {
+                    confirmButton: "btn btn-primary me-2",
+                    cancelButton: "btn btn-danger",
+                },
+                buttonsStyling: false,
+                inputValidator: (value) => {
+                    if (!value) {
+                        return "Shipping wajib diisi";
+                    }
+                },
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{{ route('shipping.store') }}",
+                        type: "POST",
 
-        //             $.each(response, function(i, item) {
-        //                 option += `<option value="${item.id}">
-    //                         ${item.sales_quotation_code}
-    //                    </option>`;
-        //             });
+                        data: {
+                            nama: result.value,
+                            _token: "{{ csrf_token() }}",
+                        },
 
-        //             $("#sq_number").html(option);
+                        success: function(response) {
+                            let option = new Option(
+                                response.nama,
+                                response.id,
+                                true,
+                                true,
+                            );
 
-        //             $("#modalQuotationDetail").modal("show");
-        //         }
-        //     });
-        // });
+                            $("#jenis_pengiriman").append(option).trigger("change");
 
-        // $('#sq_number').on('change', function() {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Success",
+                                text: response.message,
+                                customClass: {
+                                    confirmButton: "btn btn-primary me-2",
+                                },
+                                buttonsStyling: false,
+                            });
+                        },
 
-        //     let quotationIds = $(this).val();
-
-        //     if (!quotationIds || quotationIds.length === 0) {
-        //         $('#quotationTableBody').html('');
-        //         return;
-        //     }
-
-        //     $.ajax({
-        //         url: "{{ route('sales-order.getQuotationDetail') }}",
-        //         type: "POST",
-        //         data: {
-        //             quotation_ids: quotationIds,
-        //             _token: "{{ csrf_token() }}"
-        //         },
-        //         success: function(response) {
-        //             let html = '';
-        //             $.each(response, function(index, item) {
-        //                 let safeProductName = item.nama_barang.replace(/"/g,
-        //                     '&quot;');
-        //                 html += `
-    //             <tr>
-    //                 <td>
-    //                     <div class="form-check form-check-primary">
-    //                         <input
-    //                             class="form-check-input checkItem"
-    //                             type="checkbox"
-
-    //                             data-id="${item.id}"
-    //                             data-product_id="${item.product_id}"
-    //                             data-product_name="${safeProductName}"
-    //                             data-outstanding_qty="${item.outstanding_qty}"
-    //                             data-unit_id="${item.unit_id}"
-    //                             data-unit_name="${item.unit_name}"
-    //                             data-unit_price="${item.unit_price}"
-    //                             data-discount="${item.discount}"
-    //                             data-amount="${item.amount}"
-    //                             data-quotation_id="${item.sales_quotation_id}"
-    //                             data-quotation_code="${item.sales_quotation_code}"
-    //                         >
-    //                     </div>
-    //                 </td>
-
-    //                 <td>${item.nama_barang}</td>
-    //                 <td class="text-end">${parseFloat(item.outstanding_qty)}</td>
-    //                 <td>${item.unit_name}</td>
-    //                 <td class="text-end">${parseFloat(item.unit_price).toLocaleString()}</td>
-    //                 <td class="text-end">${parseFloat(item.discount).toLocaleString()}</td>
-    //                 <td class="text-end">${parseFloat(item.amount).toLocaleString()}</td>
-    //             </tr>`;
-        //             });
-
-        //             $("#checkAll").prop("checked", false);
-        //             $("#quotationTableBody").html(html);
-
-        //         }
-        //     });
-
-        // });
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "Failed save shipping",
+                                customClass: {
+                                    confirmButton: "btn btn-info",
+                                },
+                                buttonsStyling: false,
+                            });
+                        },
+                    });
+                }
+            });
+        });
 
         //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
         $("#checkAll").on("change", function() {

@@ -108,8 +108,9 @@
                     <span class="input-group-text">
                         <i class="ti ti-truck"></i>
                     </span>
-                    <select name="jenis_pengiriman" id="jenis_pengiriman" class="form-select select2">
-                        <option value="">Select Shipping</option>
+                    <select name="jenis_pengiriman" id="jenis_pengiriman" class="form-select select2"
+                        data-placeholder="Select Shipping">
+                        <option></option>
                         @foreach ($shipping as $item)
                             <option value="{{ $item->id }}">
                                 {{ $item->nama }}
