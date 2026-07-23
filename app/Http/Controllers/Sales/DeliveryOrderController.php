@@ -364,11 +364,6 @@ class DeliveryOrderController extends Controller
             'warehouse' => Warehouse::where('status', '<>', 0)->get(),
             'shipping' => Shipping::where('status', 1)->get(),
             'fob' => BasicCodeDetail::where('master_id', 7)->get(),
-            // 'sqNumber' => SalesOrder::whereIn('status', $status)
-            //     ->where('active', 1)
-            //     ->where('customer_id', $r->customer_id)
-            //     ->get(),
-
         ];
 
         return view('sales.deliveryOrder.delivery_order_create', $x);
@@ -1263,12 +1258,14 @@ class DeliveryOrderController extends Controller
         $ids = $request->order_ids;
 
         $details = DB::table("sales_order_detail_$year as d")
+            ->join("sales_order_$year as q", 'q.id', '=', 'd.sales_order_id')
             ->join('warehouse as w', 'w.id', '=', 'd.warehouse_id')
             ->join('data_barang as b', 'b.id', '=', 'd.product_id')
             ->join('basic_code_detail as u', 'u.id', '=', 'd.unit_id')
             ->select(
                 'd.id',
                 'd.sales_order_id',
+                'q.sales_order_code',
                 'd.product_id',
                 'b.nama_barang',
                 'd.outstanding_qty',

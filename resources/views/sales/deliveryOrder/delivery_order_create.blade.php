@@ -807,6 +807,7 @@
                                     data-warehouse_id="${item.warehouse_id}"
                                     data-warehouse_name="${item.warehouse_name}"
                                     data-order_id="${item.sales_order_id}"
+                                    data-order_code="${item.sales_order_code}"
                                 >
                             </div>
                         </td>
