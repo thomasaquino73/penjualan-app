@@ -114,9 +114,9 @@ class SalesOrderController extends Controller
                             $text = 'Processing';
                             break;
 
-                        case 'approved':
+                        case 'fully_delivered':
                             $badge = 'bg-label-success';
-                            $text = 'Approved';
+                            $text = 'Fully Delivered';
                             break;
 
                         case 'sent':

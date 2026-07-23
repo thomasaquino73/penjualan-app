@@ -29,15 +29,7 @@ return new class extends Migration
             $table->boolean('kena_pajak')->default(1)->comment('kena pajak atau tidak')->nullable();
             $table->boolean('total_termasuk_pajak')->default(1)->comment('harga total termasuk pajak')->nullable();
             $table->enum('status', [
-                'draft',               // Baru dibuat
-                'pending',             // Menunggu approval
-                'processing',          // Sedang diproses
-                'approved',            // Sudah approve
-                'rejected',            // Ditolak
-                'sent',                // Sudah dikirim ke supplier
-                'partial',  // Barang diterima sebagian
-                'completed',           // Semua barang diterima
-                'closed',           // Dibatalkan
+                'draft','pending','processing','fully_delivered','partial','completed','closed',           // Dibatalkan
             ])->default('draft');
             $table->decimal('sub_total', 18, 2)->default(0)->nullable();
             $table->decimal('disc_percent', 5, 2)->default(0)->nullable();

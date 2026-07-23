@@ -38,15 +38,7 @@ return new class extends Migration
             $table->decimal('tax_percent', 5, 2)->default(0)->nullable();
             $table->decimal('tax_amount', 15, 2)->default(0)->nullable();
             $table->enum('status', [
-                'draft',               // Baru dibuat
-                'pending',             // Menunggu approval
-                'processing',          // Sedang diproses
-                'approved',            // Sudah approve
-                'rejected',            // Ditolak
-                'sent',                // Sudah dikirim ke supplier
-                'partially_received',  // Barang diterima sebagian
-                'completed',           // Semua barang diterima
-                'closed',           // Dibatalkan
+                'draft','pending','processing','fully_received','partially_received','completed', 'closed', 
             ])->default('draft');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();

@@ -135,9 +135,9 @@ class DeliveryOrderController extends Controller
                             $badge = 'bg-danger';
                             $text = 'Cancelled';
                             break;
-                        case 'confirmed':
+                        case 'fully_delivered':
                             $badge = 'bg-info';
-                            $text = 'Confirmed';
+                            $text = 'Fully elivered';
                             break;
 
                         default:
@@ -549,9 +549,8 @@ class DeliveryOrderController extends Controller
                         $totalRequested = $allDetails->sum('qty');
                         $totalDelivered = $allDetails->sum('so_qty');
 
-                        // Mengikuti enum di skema Anda: open, partial, completed, cancelled
                         if ($totalDelivered >= $totalRequested) {
-                            $newStatus = 'completed';
+                            $newStatus = 'fully_delivered';
                         } elseif ($totalDelivered > 0) {
                             $newStatus = 'partial';
                         } else {
@@ -856,6 +855,30 @@ class DeliveryOrderController extends Controller
                     }
                 }
             }
+            $currentYear = date('Y');
+
+                $involvedSoIds = [];
+
+                // Ambil semua Sales Order yang terlibat
+                $details = DeliveryOrderDetail::where('delivery_order_id', $deliveryOrder->id)->get();
+
+                foreach ($details as $detail) {
+
+                    if (!$detail->sales_order_detail_id) {
+                        continue;
+                    }
+
+                    $soDetail = DB::table("sales_order_detail_{$currentYear}")
+                        ->where('id', $detail->sales_order_detail_id)
+                        ->first();
+
+                    if ($soDetail) {
+                        $involvedSoIds[] = $soDetail->sales_order_id;
+                    }
+                }
+
+                $involvedSoIds = array_unique($involvedSoIds);
+
 
             DB::commit();
 

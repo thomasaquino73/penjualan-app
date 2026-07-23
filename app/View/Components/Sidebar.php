@@ -81,6 +81,7 @@ class Sidebar extends Component
                         'badge' => fn () => MenuBadge::count('purchase_order', 'datePO'),
                         'badge_color' => 'danger',
                     ],
+
                     [
                         'name' => 'Receive Item',
                         'route' => 'receive-item.index',
@@ -188,14 +189,7 @@ class Sidebar extends Component
                         'badge_color' => 'danger',
 
                     ],
-
-                    // [
-                    //     'name' => 'Customer Receipt',
-                    //     'route' => 'customer.index',
-                    //     'pattern' => 'customer.*',
-                    //     'roles' => ['Super Admin'],
-                    //     'permissions' => ['barang-browse'],
-                    // ],
+                    
                     // [
                     //     'name' => 'Sales Return',
                     //     'route' => 'customer.index',
@@ -225,6 +219,14 @@ class Sidebar extends Component
                         'permissions' => ['proforma_invoice-browse'],
                         'badge' => fn () => MenuBadge::count('proforma_invoice', 'proforma_invoice_date'),
                         'badge_color' => 'danger',
+                    ],
+                    [
+                        'name' => 'Sales Down Payment',
+                        'route' => 'receive-item.index',
+                        'pattern' => 'receive-item.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['receive_item-browse'],
+
                     ],
                     [
                         'name' => 'Sales Invoice',
