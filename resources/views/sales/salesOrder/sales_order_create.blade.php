@@ -508,9 +508,9 @@
                                         ""
                                     );
 
-                                    $("#modal_requisition_code").val(
-                                        data.requisition_code ?? ""
-                                    );
+                                    // $("#modal_requisition_code").val(
+                                    //     data.requisition_code ?? ""
+                                    // );
 
                                     // ==========================
                                     // TEXTBOX
@@ -643,8 +643,6 @@
 
                 // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
                 table.rows().invalidate();
-
-                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
 
             $("#btnSubmitSelected").on("click", function() {

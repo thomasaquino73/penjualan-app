@@ -7,15 +7,8 @@
                 let warehouseId = $('#warehouse_id').val();
                 let unitId = $('#unit_id').val();
 
-                console.log({
-                    productId,
-                    warehouseId,
-                    unitId
-                });
-
                 if (!productId || !warehouseId || !unitId) {
                     $('#available_stok').val('');
-                    $('#modalTitle').text('Create new entry');
                     return;
                 }
 
@@ -28,17 +21,9 @@
                         unit_id: unitId
                     },
                     success: function(res) {
-
-                        console.log('RESPONSE STOCK:', res);
-
                         $('#available_stok').val(res.stock);
-
-                        $('#modalTitle').text(
-                            `Create new entry `
-                        );
                     },
                     error: function(xhr) {
-                        console.log(xhr.responseText);
                         $('#available_stok').val(0);
                     }
                 });
