@@ -222,10 +222,10 @@ class Sidebar extends Component
                     ],
                     [
                         'name' => 'Sales Down Payment',
-                        'route' => 'receive-item.index',
-                        'pattern' => 'receive-item.*',
+                        'route' => 'sales-down-payment.index',
+                        'pattern' => 'sales-down-payment.*',
                         'roles' => ['Super Admin'],
-                        'permissions' => ['receive_item-browse'],
+                        'permissions' => ['sales_down_payment-browse'],
 
                     ],
                     [

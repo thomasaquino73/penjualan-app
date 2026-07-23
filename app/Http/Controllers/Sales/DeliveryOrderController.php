@@ -442,6 +442,7 @@ class DeliveryOrderController extends Controller
                         DeliveryOrderDetail::create([
                             'delivery_order_id' => $deliveryOrder->id,
                             'sales_order_detail_id' => $soDetailId,
+                            'sales_order_id' => $item['sales_order_id'],
                             'urutan' => $index,
                             'data_barang_id' => $item['product_id'],
                             'qty' => $qty,
@@ -794,7 +795,6 @@ class DeliveryOrderController extends Controller
             $involvedSqIds = [];
 
             if (is_array($items) && count($items) > 0) {
-                    // dd($ite
 
                 foreach ($items as $index => $item) {
                     // $soDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
@@ -1255,25 +1255,31 @@ class DeliveryOrderController extends Controller
                 return null;
             }
 
-            return [
+          return [
                 'id' => $item->id,
+                'detail_id' => $item->id,
+
+                'sales_order_id' => $item->sales_order_id, // TAMBAHKAN INI
+
                 'product_id' => $item->product_id,
                 'product_name' => $item->produkID->nama_barang ?? '-',
 
-                // Gunakan hasil perhitungan sisa yang benar
                 'quantity' => $sisaQty,
                 'qty' => $sisaQty,
 
                 'received_qty' => $receivedQty,
+
                 'unit_id' => $item->unit_id,
                 'unit_name' => $item->unitID->detail ?? '-',
+
                 'order_code' => $item->salesOrder->sales_order_code ?? '',
+
                 'pr_status' => $item->salesOrder->status ?? '',
+
                 'warehouse_id' => $item->warehouse_id,
                 'warehouse' => $item->warehouseID?->nama_gudang ?? '-',
             ];
         })->filter()->values();
-        //    dd($details);
 
         return response()->json([
             'success' => true,

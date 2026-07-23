@@ -111,7 +111,7 @@
                         <td class="text-right">0</td>
                     </tr> --}}
                     <tr class="total-row">
-                        <td>Total</td>
+                        <td>Grand Total</td>
                         <td class="text-right">
                             {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1)) : '' }}
                     </tr>
@@ -119,68 +119,117 @@
             </td>
         </tr>
     </table>
-    <table class="w-70 footer-table" style="margin-top: 10px;margin-bottom: 10px; width:60%">
-        <tr>
-            <td class="keterangan-box">
-                @php
-                    $currencyId = session('currency_id') ?? \App\Models\Setting\Company::first()->default_currency_id;
-                    $currencyCode = \App\Models\Setting\Currency::find($currencyId)?->code ?? 'IDR';
+    <table style="width:45%; margin-left:auto; border-collapse:collapse; font-size:12px;">
 
-                    // Gunakan nilai asli (jangan di-round agar sen tidak hilang)
-                    $grandTotalConvert = convert_currency($model->grand_total, $model->currency_id ?? 1);
-                @endphp
-                <div>Terbilang: {{ terbilang($grandTotalConvert, $currencyCode) }}</div>
-            </td>
-        </tr>
-    </table>
-    <div class="signature-section">
-        <table class="signature-table">
+        @php
+            $totalDP = $downPayments->sum('paid_amount');
+            $remainingInvoice = $model->grand_total - $totalDP;
+        @endphp
+
+        <table style="width:45%;margin-left:auto;border-collapse:collapse;">
             <tr>
-                <td style="width: 60%;">
-                    <div class="dots-line"></div>
+                <td>Total Faktur</td>
+                <td>Rp</td>
+                <td class="text-right">{{ number_format($model->grand_total, 0, ',', '.') }}</td>
+            </tr>
+
+            <tr>
+                <td>PPN</td>
+                <td>Rp</td>
+                <td class="text-right">{{ number_format($model->tax_amount, 0, ',', '.') }}</td>
+            </tr>
+
+            <tr style="font-weight:bold;background:#eee">
+                <td>Grand Total</td>
+                <td>Rp</td>
+                <td class="text-right">{{ number_format($model->grand_total, 0, ',', '.') }}</td>
+            </tr>
+
+            @foreach ($downPayments as $dp)
+                <tr>
+                    <td>
+                        DP {{ rtrim(rtrim(number_format($dp->down_payment_percent, 2), '0'), '.') }}%
+                    </td>
+                    <td>Rp</td>
+                    <td class="text-right">
+                        {{ number_format($dp->paid_amount, 0, ',', '.') }}
+                    </td>
+                </tr>
+            @endforeach
+
+            <tr>
+                <td><b>Sisa</b></td>
+                <td><b>Rp</b></td>
+                <td class="text-right">
+                    <b>{{ number_format($remainingInvoice, 0, ',', '.') }}</b>
                 </td>
-                <td class="text-center" style="width: 40%;">
+            </tr>
+        </table>
+        <table class="w-70 footer-table" style="margin-top: 10px;margin-bottom: 10px; width:60%">
+            <tr>
+                <td class="keterangan-box">
                     @php
-                        $title = '';
-                        $user = '';
+                        $currencyId =
+                            session('currency_id') ?? \App\Models\Setting\Company::first()->default_currency_id;
+                        $currencyCode = \App\Models\Setting\Currency::find($currencyId)?->code ?? 'IDR';
 
-                        if ($model->status == 'rejected') {
-                            $title = 'Ditolak Oleh,';
-                            $user = $model->rejectedBy?->fullname;
-                        } elseif (in_array($model->status, ['approved', 'sent', 'partially_received', 'completed'])) {
-                            $title = 'Disetujui Oleh,';
-                            $user = $model->approvedBy?->fullname;
-                        }
+                        // Gunakan nilai asli (jangan di-round agar sen tidak hilang)
+                        $grandTotalConvert = convert_currency($model->grand_total, $model->currency_id ?? 1);
                     @endphp
-                    @if ($model->status == 'processing')
-                        <div class="approval-title">
-                            Hormat Kami,
-                        </div>
-                        <div style="height: 85px;">
-                        </div>
-                        <div
-                            style="width: 50%; margin: 0 auto; border-top:1px solid #000; font-weight:bold; text-align:center; padding-top:5px;">
-                            {{ $company->approval_name }}
-                        </div>
-                    @else
-                        <div class="approval-title">
-                            Dibuat oleh,
-                        </div>
-                        <div style="height:85px;"></div>
+                    <div>Terbilang: {{ terbilang($grandTotalConvert, $currencyCode) }}</div>
+                </td>
+            </tr>
+        </table>
+        <div class="signature-section">
+            <table class="signature-table">
+                <tr>
+                    <td style="width: 60%;">
+                        <div class="dots-line"></div>
+                    </td>
+                    <td class="text-center" style="width: 40%;">
+                        @php
+                            $title = '';
+                            $user = '';
 
-                        <div
-                            style="
+                            if ($model->status == 'rejected') {
+                                $title = 'Ditolak Oleh,';
+                                $user = $model->rejectedBy?->fullname;
+                            } elseif (
+                                in_array($model->status, ['approved', 'sent', 'partially_received', 'completed'])
+                            ) {
+                                $title = 'Disetujui Oleh,';
+                                $user = $model->approvedBy?->fullname;
+                            }
+                        @endphp
+                        @if ($model->status == 'processing')
+                            <div class="approval-title">
+                                Hormat Kami,
+                            </div>
+                            <div style="height: 85px;">
+                            </div>
+                            <div
+                                style="width: 50%; margin: 0 auto; border-top:1px solid #000; font-weight:bold; text-align:center; padding-top:5px;">
+                                {{ $company->approval_name }}
+                            </div>
+                        @else
+                            <div class="approval-title">
+                                Dibuat oleh,
+                            </div>
+                            <div style="height:85px;"></div>
+
+                            <div
+                                style="
         width:80%;
         margin:0 auto;
         border-bottom:1px solid #000;
         height:10px;
     ">
-                        </div>
-                    @endif
-                </td>
-            </tr>
-        </table>
-    </div>
+                            </div>
+                        @endif
+                    </td>
+                </tr>
+            </table>
+        </div>
 
 
 </body>

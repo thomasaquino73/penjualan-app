@@ -47,6 +47,7 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Sales\SalesDownPaymentController;
 
 Route::get('/', function () {
     return auth()->check()
@@ -384,6 +385,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/arsip-sales-quotation', [PenjualanArsipController::class, 'indexSalesQuotation'])->name('archive.sales-quotation');
         Route::get('arsip-sales-quotation/datatable', [PenjualanArsipController::class, 'tabelSalesQuotation'])->name('archive.sales-quotation.datatable');
         Route::get('/arsip-sales-quotation/{year}/print/{id}', [PenjualanArsipController::class, 'printSalesQuotation'])->name('archive.sales-quotation.print');
+    });
+
+       Route::prefix('sales-down-payment')->name('sales-down-payment.')->group(function () {
+
+        Route::resource('', SalesDownPaymentController::class)->parameters(['' => 'sales-down-payment']);
     });
 });
 

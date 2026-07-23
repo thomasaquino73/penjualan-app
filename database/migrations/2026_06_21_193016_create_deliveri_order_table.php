@@ -43,6 +43,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('delivery_order_id');
             $table->integer('urutan')->default(0);
+             $table->unsignedBigInteger('sales_order_id')->nullable();
             $table->unsignedBigInteger('sales_order_detail_id')->nullable();
             $table->unsignedBigInteger('data_barang_id');
             $table->unsignedBigInteger('unit_id');

@@ -323,6 +323,7 @@
                                             data-amount="${amount}"
                                             data-delivery_order_id="${item.delivery_order_id}"
                                             data-delivery_order_code="${item.order_code}"
+                                            data-sales_order_id="${item.sales_order_id}"
                                         >
                                     </td>
                                     <td>${item.product_name}</td>
@@ -1013,7 +1014,7 @@
                 let tax = parseFloat($("#tax").val()) || 0;
 
                 let requiredDate = $("#required_date").val() || "";
-
+                let salesOrderId = $("#sales_order_id").val() || null;
                 // 1. Validasi Input Wajib
                 if (!productId || quantity <= 0 || !unitId) {
                     Swal.fire({
@@ -1081,6 +1082,7 @@
                     tax: tax,
                     amount: amount,
                     required_date: requiredDate,
+                    sales_order_id: salesOrderId,
                 };
 
                 // 5. Logika Penyimpanan Berdasarkan 2 Cara Pengisian PO
@@ -1186,16 +1188,21 @@
 
                     let item = {
                         detail_id: $(this).data("id"),
+
                         delivery_order_id: $(this).data("delivery_order_id"),
+
+                        sales_order_id: $(this).data("sales_order_id"),
+
                         order_code: $(this).data("delivery_order_code"),
+
                         product_id: $(this).data("product_id"),
                         data_produk: $(this).data("product_name"),
                         quantity: parseFloat($(this).data("outstanding_qty")) || 0,
                         sisa_pr: parseFloat($(this).data("qty")) || 0,
                         unit_id: $(this).data("unit_id"),
-                        unit: $(this).data("unit_name") || "-",
+                        unit: $(this).data("unit_name"),
                         warehouse_id: $(this).data("warehouse_id"),
-                        warehouse: $(this).data("warehouse_name") || "-",
+                        warehouse: $(this).data("warehouse_name"),
                         unit_price: parseFloat($(this).data("unit_price")) || 0,
                         discount: parseFloat($(this).data("discount")) || 0,
                         amount: parseFloat($(this).data("amount")) || 0,

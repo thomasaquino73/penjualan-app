@@ -525,6 +525,8 @@
                     tax: tax,
                     amount: amount,
                     required_date: requiredDate,
+                    sales_order_id: item.sales_order_id,
+                    sales_order_detail_id: item.sales_order_detail_id,
                 };
 
                 // 5. Logika Penyimpanan Berdasarkan 2 Cara Pengisian PO
@@ -890,7 +892,8 @@
                                     data-unit_name="${item.unit_name}"
                                     data-warehouse_id="${item.warehouse_id}"
                                     data-warehouse_name="${item.warehouse_name}"
-                                    data-order_id="${item.sales_order_id}"
+                                    data-sales_order_id="${item.sales_order_id}"
+                                    data-sales_order_detail_id="${item.id}"
                                     data-order_code="${item.sales_order_code}"
                                 >
                             </div>
@@ -959,6 +962,8 @@
                         warehouse_id: $(this).data("warehouse_id"),
                         warehouse: $(this).data("warehouse_name"),
                         order_code: $(this).data("order_code"),
+                        sales_order_id: $(this).data("sales_order_id"),
+                        sales_order_detail_id: $(this).data("sales_order_detail_id"),
                     };
 
                     // Hindari data ganda

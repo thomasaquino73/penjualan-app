@@ -12,6 +12,7 @@ use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
 use App\Models\Sales\DeliveryOrder;
 use App\Models\Sales\DeliveryOrderDetail;
+use App\Models\Sales\SalesDownPayment;
 use App\Models\Sales\SalesInvoice;
 use App\Models\Sales\SalesInvoiceDetail;
 use App\Models\Sales\SalesQuotation;
@@ -352,37 +353,6 @@ class SalesInvoiceController extends Controller
         return $romawi[$bulan] ?? 'I';
     }
 
-    // private function generateNumberId()
-    // {
-    //     $tahun = date('Y');
-    //     $bulan = date('n');
-    //     $bulanRomawi = $this->bulanRomawi($bulan);
-
-    //     // Prefix yang akan dicari
-    //     $prefix = "SI/{$tahun}/{$bulanRomawi}/";
-
-    //     // Ambil nomor terakhir pada bulan & tahun yang sama
-    //     // $last = SalesInvoice::where('sales_invoice_code', 'like', $prefix.'%')
-    //     //     ->lockForUpdate()
-    //     //     ->orderByDesc('id')
-    //     //     ->first();
-
-    //     $last = SalesInvoice::where('sales_invoice_code', 'like', $prefix.'%')
-    //         ->latest('id')
-    //         ->first();
-
-    //     if ($last) {
-    //         // Ambil 4 digit terakhir
-    //         $lastNumber = (int) substr($last->sales_invoice_code, -4);
-    //         $nextNumber = $lastNumber + 1;
-    //     } else {
-    //         // Jika belum ada pada bulan ini mulai dari 0001
-    //         $nextNumber = 1;
-    //     }
-
-    //     return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-    // }
-
     private function generateNumberId()
     {
         $tahun = date('Y');
@@ -451,190 +421,7 @@ class SalesInvoiceController extends Controller
         return view('sales.salesInvoice.sales_invoice_create', $x);
     }
 
-    // public function store(SalesInvoiceRequest $request)
-    // {
-    //     DB::beginTransaction();
-
-    //     try {
-    //         $currentYear = date('Y');
-    //         $data = $request->validated();
-    //         $itemsDetailRaw = $request->input('items_detail');
-    //         unset($data['items_detail']);
-
-    //         // Persiapan data header Sales Invoice
-    //         $data['created_by'] = Auth::id();
-    //         $data['sales_invoice_date'] = Carbon::parse($request->sales_invoice_date)->format('Y-m-d');
-    //         $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
-    //         $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
-    //         $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
-    //         $data['sub_total'] = $request->sub_total;
-    //         $data['disc_percent'] = $request->percent;
-    //         $data['disc_nominal'] = $request->discount_all;
-    //         $data['po_number'] = $request->po_number;
-    //         $data['grand_total'] = $request->total_order;
-    //         $data['taxpayer_data'] = $request->taxpayer_data;
-    //         $data['tax_id'] = $request->tax_id;
-    //         $data['tax_amount'] = $request->tax_amount;
-    //         // Generate kode SO
-    //         do {
-    //             $generatedCode = $this->generateNumberId();
-    //             $exists = SalesInvoice::where('sales_invoice_code', $generatedCode)->exists();
-    //         } while ($exists);
-
-    //         $data['sales_invoice_code'] = $generatedCode;
-    //         $salesInvoice = SalesInvoice::create($data);
-
-    //         if ($itemsDetailRaw) {
-
-    //             $items = json_decode($itemsDetailRaw, true);
-    //             $involvedDoIds = [];
-
-    //             if (is_array($items) && count($items) > 0) {
-
-    //                 foreach ($items as $item) {
-
-    //                     $doDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
-    //                     $doId = $item['sales_order_code_id'] ?? $item['order_code'] ?? null;
-
-    //                     $qty = (float) ($item['quantity'] ?? $item['qty'] ?? 0);
-    //                     $unitPrice = (float) ($item['unit_price'] ?? 0);
-    //                     $discount = (float) ($item['discount'] ?? 0);
-    //                     $discountPercent = $item['discount_percent'] ?? 0;
-    //                     $amount = $item['amount'] ?? (($qty * $unitPrice) - $discount);
-
-    //                     // ============================
-    //                     // Simpan Sales Invoice Detail
-    //                     // ============================
-    //                     $salesInvoiceDetail = SalesInvoiceDetail::create([
-    //                         'sales_invoice_id' => $salesInvoice->id,
-    //                         'sales_order_detail_id' => $doDetailId,
-    //                         'sales_order_code_id' => $doId,
-    //                         'product_id' => $item['product_id'],
-    //                         'qty' => $qty,
-    //                         'unit_id' => $item['unit_id'],
-    //                         'warehouse_id' => $item['warehouse_id'],
-    //                         'unit_price' => $unitPrice,
-    //                         'discount_percent' => $discountPercent,
-    //                         'discount' => $discount,
-    //                         'amount' => $amount,
-    //                         'so_qty' => $qty,
-    //                         'outstanding_qty' => 0,
-    //                         // 'status'                => 'confirmed',
-    //                         'active' => 1,
-    //                         'created_by' => Auth::id(),
-    //                     ]);
-
-    //                     // ============================
-    //                     // History
-    //                     // ============================
-    //                     DocumentTransactionHistory::create([
-    //                         'module' => 'sales',
-    //                         'from_type' => 'DeliveryOrder',
-    //                         'from_id' => $doDetailId,
-    //                         'from_detail_id' => $doDetailId,
-    //                         'to_type' => 'SalesInvoice',
-    //                         'to_id' => $salesInvoice->id,
-    //                         'to_detail_id' => $salesInvoiceDetail->id,
-    //                         'transaction_type' => 'invoice',
-    //                         'qty' => $salesInvoiceDetail->qty,
-    //                         'unit_price' => $salesInvoiceDetail->unit_price,
-    //                         'discount' => $salesInvoiceDetail->discount,
-    //                         'amount' => $salesInvoiceDetail->amount,
-    //                         'transaction_date' => $salesInvoice->sales_invoice_date,
-    //                         'metadata' => json_encode([
-    //                             'warehouse_id' => $salesInvoiceDetail->warehouse_id,
-    //                             'product_id' => $salesInvoiceDetail->product_id,
-    //                             'unit_id' => $salesInvoiceDetail->unit_id,
-    //                         ]),
-    //                     ]);
-
-    //                     // ============================
-    //                     // Update Delivery Order Detail
-    //                     // ============================
-    //                     if ($doDetailId) {
-
-    //                         $doDetail = DB::table("delivery_order_detail_{$currentYear}")
-    //                             ->where('id', $doDetailId)
-    //                             ->first();
-
-    //                         if ($doDetail) {
-
-    //                             // Total qty yang sudah dibuat Invoice
-    //                             $totalInvoiceQty = SalesInvoiceDetail::where('sales_order_detail_id', $doDetailId)
-    //                                 ->sum('qty');
-
-    //                             $outstanding = max(0, $doDetail->qty - $totalInvoiceQty);
-
-    //                             DB::table("delivery_order_detail_{$currentYear}")
-    //                                 ->where('id', $doDetailId)
-    //                                 ->update([
-    //                                     'do_qty' => $totalInvoiceQty,
-    //                                     'outstanding_qty' => $outstanding,
-    //                                     // 'status'          => $outstanding == 0 ? 'confirmed' : 'partial',
-    //                                 ]);
-    //                             DB::table("delivery_order_{$currentYear}")
-    //                                 ->where('id', $doDetailId)
-    //                                 ->update([
-    //                                     // 'do_qty'          => $totalInvoiceQty,
-    //                                     // 'outstanding_qty' => $outstanding,
-    //                                     'status' => $outstanding == 0 ? 'confirmed' : 'partial',
-    //                                 ]);
-
-    //                             $involvedDoIds[] = $doDetail->delivery_order_id;
-    //                         }
-    //                     }
-    //                 }
-
-    //                 // ============================
-    //                 // Update Header Delivery Order
-    //                 // ============================
-    //                 foreach (array_unique($involvedDoIds) as $doId) {
-
-    //                     $details = DB::table("delivery_order_detail_{$currentYear}")
-    //                         ->where('delivery_order_id', $doId)
-    //                         ->get();
-
-    //                     $totalQty = $details->sum('qty');
-    //                     $totalInvoice = $details->sum('do_qty');
-
-    //                     if ($totalInvoice == 0) {
-    //                         $status = 'processing';
-    //                     } elseif ($totalInvoice < $totalQty) {
-    //                         $status = 'partial';
-    //                     } else {
-    //                         $status = 'confirmed';
-    //                     }
-
-    //                     DB::table("delivery_order_{$currentYear}")
-    //                         ->where('id', $doId)
-    //                         ->update([
-    //                             'status' => $status,
-    //                         ]);
-    //                 }
-    //             }
-    //         }
-
-    //         DB::commit();
-
-    //         $redirectUrl = $request->save_and_new == 1
-    //             ? route('sales-invoice.create') // Kembali kosongkan form untuk input data PR baru lagi
-    //             : route('sales-invoice.index');  // Selesai dan kembali ke tabel index utama
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Sales Invoice saved successfully!',
-    //             'redirect' => $redirectUrl,
-    //         ], 200);
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => 'Gagal menyimpan data: '.$e->getMessage(),
-    //         ], 500);
-    //     }
-    // }
+    
 
     public function store(SalesInvoiceRequest $request)
     {
@@ -648,9 +435,15 @@ class SalesInvoiceController extends Controller
             $itemsDetailRaw = $request->input('items_detail');
 
             unset($data['items_detail']);
+            $items = [];
 
+            if (!empty($itemsDetailRaw)) {
+                $items = json_decode($itemsDetailRaw, true);
+
+            }
             $data['created_by'] = Auth::id();
             $data['sales_invoice_date'] = Carbon::parse($request->sales_invoice_date)->format('Y-m-d');
+            $data['sales_order_id'] = $items[0]['sales_order_id'] ?? null;
             $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
             $data['kena_pajak'] = $request->has('kena_pajak');
             $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak');
@@ -1656,42 +1449,75 @@ class SalesInvoiceController extends Controller
         }
     }
 
+    // public function print($id)
+    // {
+    //     $salesInvoice = SalesInvoice::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+    //     $company = Company::first();
+    //     // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+    //     $logoBase64 = null;
+    //     if ($company && $company->logo) {
+    //         $path = public_path($company->logo);
+    //         if (file_exists($path)) {
+    //             $type = pathinfo($path, PATHINFO_EXTENSION);
+    //             $data = file_get_contents($path);
+    //             $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+    //         }
+    //     }
+    //     $data = [
+    //         'model' => $salesInvoice,
+    //         'company' => $company,
+    //         'modelDetail' => $salesInvoice->details,
+    //         'logoBase64' => $logoBase64,
+    //     ];
+
+    //     $pdf = Pdf::loadView('pdf.sales_invoice_pdf', $data)
+    //         ->setPaper('a4', 'portrait');
+
+    //     // preview di browser
+    //     $filename = $salesInvoice->sales_invoice_code.'-'.$salesInvoice->customerID->nama_customer;
+
+    //     // replace forbidden filename chars
+    //     $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
+
+    //     return $pdf->stream($filename.'.pdf');
+
+    //     // kalau mau download:
+    //     // return $pdf->download('sales-invoice.pdf');
+    // }
+
     public function print($id)
-    {
-        $salesInvoice = SalesInvoice::with(['details.produkID', 'details.unitID'])->findOrFail($id);
-        $company = Company::first();
-        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
-        $logoBase64 = null;
-        if ($company && $company->logo) {
-            $path = public_path($company->logo);
-            if (file_exists($path)) {
-                $type = pathinfo($path, PATHINFO_EXTENSION);
-                $data = file_get_contents($path);
-                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
-            }
-        }
-        $data = [
-            'model' => $salesInvoice,
-            'company' => $company,
-            'modelDetail' => $salesInvoice->details,
-            'logoBase64' => $logoBase64,
-        ];
+{
+    $salesInvoice = SalesInvoice::with([
+        'salesOrder',
+        'details.produkID',
+        'details.unitID'
+    ])->findOrFail($id);
 
-        $pdf = Pdf::loadView('pdf.sales_invoice_pdf', $data)
-            ->setPaper('a4', 'portrait');
+    $company = Company::first();
 
-        // preview di browser
-        $filename = $salesInvoice->sales_invoice_code.'-'.$salesInvoice->customerID->nama_customer;
+    // Ambil histori DP berdasarkan Sales Order
+    $downPayments = SalesDownPayment::where('sales_order_id', $salesInvoice->sales_order_id)
+        ->where('active', 1)
+        ->orderBy('sales_downpayment_date')
+        ->get();
 
-        // replace forbidden filename chars
-        $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
+    $totalDP = $downPayments->sum('paid_amount');
 
-        return $pdf->stream($filename.'.pdf');
+    $remainingInvoice = max(0, $salesInvoice->grand_total - $totalDP);
 
-        // kalau mau download:
-        // return $pdf->download('sales-invoice.pdf');
-    }
+    $data = [
+        'model' => $salesInvoice,
+        'company' => $company,
+        'modelDetail' => $salesInvoice->details,
+        'downPayments' => $downPayments,
+        'totalDP' => $totalDP,
+        'remainingInvoice' => $remainingInvoice,
+    ];
 
+    return Pdf::loadView('pdf.sales_invoice_pdf', $data)
+        ->setPaper('a4', 'portrait')
+        ->stream();
+}
     public function getPriceHistory(Request $request)
     {
         $productId = $request->get('product_id');
@@ -1858,7 +1684,6 @@ class SalesInvoiceController extends Controller
         ])
             ->whereIn('delivery_order_id', $ids)
             ->get();
-
         $formattedData = $details->map(function ($item) {
             $sisaQty = ($item->outstanding_qty !== null && $item->outstanding_qty > 0)
                         ? (float) $item->outstanding_qty
@@ -1868,24 +1693,28 @@ class SalesInvoiceController extends Controller
             $discount = (float) ($item->salesOrderDetail->discount ?? 0);
 
             return [
-                'id' => $item->id,
-                'product_id' => $item->data_barang_id, // Sesuaikan dengan field di DB
-                'product_name' => $item->produkID->nama_barang ?? '-',
+                     'id' => $item->id,
+                    'delivery_order_id' => $item->delivery_order_id,
 
-                'qty' => $sisaQty,
-                'outstanding_qty' => $item->outstanding_qty ?? $sisaQty,
+                    'sales_order_id' => $item->deliveryOrder->sales_order_id,
 
-                'unit_id' => $item->unit_id,
-                'unit_name' => $item->unitID->detail ?? '-',
+                    'product_id' => $item->data_barang_id,
+                    'product_name' => $item->produkID->nama_barang ?? '-',
 
-                'warehouse_id' => $item->warehouse_id,
-                'warehouse_name' => $item->warehouseID->nama_gudang ?? '-', // Sesuaikan nama field gudang
+                    'qty' => $sisaQty,
 
-                'unit_price' => $price,
-                'discount' => $discount,
-                'amount' => (float) (($price * $sisaQty) - $discount),
-                'order_code' => $item->deliveryOrder->delivery_order_code ?? '-',
-            ];
+                    'unit_id' => $item->unit_id,
+                    'unit_name' => $item->unitID->detail ?? '-',
+
+                    'warehouse_id' => $item->warehouse_id,
+                    'warehouse_name' => $item->warehouseID->nama_gudang ?? '-',
+
+                    'unit_price' => $price,
+                    'discount' => $discount,
+                    'amount' => (($price * $sisaQty) - $discount),
+
+                    'order_code' => $item->deliveryOrder->delivery_order_code ?? '-',
+                ];
         });
 
         return response()->json(['success' => true, 'data' => $formattedData]);

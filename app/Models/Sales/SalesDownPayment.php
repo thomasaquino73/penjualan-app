@@ -6,13 +6,21 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Customer extends Model
+class SalesDownPayment extends Model
 {
     use HasFactory;
 
-    protected $table = 'customer';
+    protected $table = 'sales_down_payments';
 
     protected $guarded = [];
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+
+        $year = date('Y');
+        $this->table = "sales_down_payments_{$year}";
+    }
 
     public function creator()
     {
@@ -23,5 +31,8 @@ class Customer extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
-    
+    public function customerID()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
 }

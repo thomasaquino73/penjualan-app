@@ -41,6 +41,7 @@ class PermissionSeeder extends Seeder
             'sales_invoice' => ['alias' => 'Sales Invoice', 'group' => 'Sales'],
             'proforma_invoice' => ['alias' => 'Proforma Invoice', 'group' => 'Sales'],
             'penjualan_toko' => ['alias' => 'Store Sales', 'group' => 'Sales'],
+            'sales_down_payment' => ['alias' => 'Sales Down Payment', 'group' => 'Sales'],
 
             'warehouse' => ['alias' => 'Warehouse', 'group' => 'Inventory'],
             'barang' => ['alias' => 'Product', 'group' => 'Inventory'],

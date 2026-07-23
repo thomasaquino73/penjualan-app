@@ -17,8 +17,12 @@ return new class extends Migration
     {
         Schema::create("sales_down_payments_{$this->year}", function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('customer_id');
             $table->string('sales_downpayment_code')->unique();
             $table->date('sales_downpayment_date');
+            $table->unsignedBigInteger('sales_order_id');
+            $table->unsignedBigInteger('payment_term_id');
+            $table->string('address');
 
             // Nilai
             $table->decimal('sales_order_amount', 15, 4);
