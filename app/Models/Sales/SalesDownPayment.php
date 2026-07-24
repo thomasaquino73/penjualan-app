@@ -31,6 +31,7 @@ class SalesDownPayment extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
     public function customerID()
     {
         return $this->belongsTo(Customer::class, 'customer_id');

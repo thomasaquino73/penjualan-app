@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-      protected string $year;
+    protected string $year;
 
     public function __construct()
     {
@@ -40,7 +40,7 @@ return new class extends Migration
             $table->enum('status', [
                 'unpaid',
                 'paid',
-                'cancelled'
+                'cancelled',
             ])->default('unpaid');
 
             $table->tinyInteger('active')

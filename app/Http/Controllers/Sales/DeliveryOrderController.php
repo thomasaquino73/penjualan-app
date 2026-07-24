@@ -678,264 +678,266 @@ class DeliveryOrderController extends Controller
         return view('sales.deliveryOrder.delivery_order_edit', $x);
     }
 
-   public function update(DeliveryOrderRequest $r, $id, StockService $stockService)
-{
-    DB::beginTransaction();
+    public function update(DeliveryOrderRequest $r, $id, StockService $stockService)
+    {
+        DB::beginTransaction();
 
-    try {
-        $currentYear = date('Y');
-        $deliveryOrder = DeliveryOrder::findOrFail($id);
+        try {
+            $currentYear = date('Y');
+            $deliveryOrder = DeliveryOrder::findOrFail($id);
 
-        /*
-        |--------------------------------------------------------------------------
-        | 1. KEMBALIKAN MUTASI & STOK LAMA (RESET KEADAAN SEBELUMNYA)
-        |--------------------------------------------------------------------------
-        */
-        $oldDetails = DeliveryOrderDetail::where('delivery_order_id', $id)->get();
-        $oldSoDetailIds = [];
+            /*
+            |--------------------------------------------------------------------------
+            | 1. KEMBALIKAN MUTASI & STOK LAMA (RESET KEADAAN SEBELUMNYA)
+            |--------------------------------------------------------------------------
+            */
+            $oldDetails = DeliveryOrderDetail::where('delivery_order_id', $id)->get();
+            $oldSoDetailIds = [];
 
-        foreach ($oldDetails as $old) {
-            if ($old->sales_order_detail_id) {
-                $oldSoDetailIds[] = $old->sales_order_detail_id;
-            }
-
-            StockMutation::where([
-                'document_id' => $deliveryOrder->id,
-                'document_type' => 'delivery_order',
-                'data_barang_id' => $old->data_barang_id,
-            ])->delete();
-        }
-
-        DeliveryOrderDetail::where('delivery_order_id', $id)->delete();
-
-        $oldSoDetailIds = array_unique($oldSoDetailIds);
-        foreach ($oldSoDetailIds as $soDetailId) {
-            $soDetail = DB::table("sales_order_detail_{$currentYear}")->where('id', $soDetailId)->first();
-            if ($soDetail) {
-                $totalSoForThisItem = DeliveryOrderDetail::where('sales_order_detail_id', $soDetailId)->sum('qty');
-                $newOutstanding = max(0, ($soDetail->qty - $totalSoForThisItem));
-
-                DB::table("sales_order_detail_{$currentYear}")
-                    ->where('id', $soDetailId)
-                    ->update([
-                        'so_qty' => $totalSoForThisItem,
-                        'outstanding_qty' => $newOutstanding,
-                    ]);
-            }
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | 2. UPDATE HEADER DENGAN RETRY CODE UNIQUE (MENGIKUTI POLA STORE)
-        |--------------------------------------------------------------------------
-        */
-        $data = $r->except('save_and_new', 'items_detail');
-        $itemsDetailRaw = $r->input('items_detail');
-        unset($data['items_detail']);
-        $data['delivery_order_date'] = Carbon::parse($r->delivery_order_date)->format('Y-m-d');
-        $data['updated_by'] = Auth::id();
-
-        $maxRetry = 10;
-        $currentCode = $r->delivery_order_code;
-        $updated = false;
-
-        for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
-            try {
-                $data['delivery_order_code'] = $currentCode;
-                
-                // Pastikan kode unik selain dari ID yang sedang diedit
-                $exists = DeliveryOrder::where('delivery_order_code', $currentCode)
-                    ->where('id', '!=', $deliveryOrder->id)
-                    ->exists();
-
-                if ($exists) {
-                    if (preg_match('/^(.*?)(\d+)$/', $currentCode, $matches)) {
-                        $prefix = $matches[1];
-                        $lastNumber = (int) $matches[2];
-                        $length = strlen($matches[2]);
-                        $currentCode = $prefix.str_pad($lastNumber + 1, $length, '0', STR_PAD_LEFT);
-                    } else {
-                        $currentCode .= '-1';
-                    }
-                    usleep(50000);
-                    continue;
+            foreach ($oldDetails as $old) {
+                if ($old->sales_order_detail_id) {
+                    $oldSoDetailIds[] = $old->sales_order_detail_id;
                 }
 
-                $deliveryOrder->update($data);
-                $updated = true;
-                break;
-            } catch (QueryException $e) {
-                if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
-                    if (preg_match('/^(.*?)(\d+)$/', $currentCode, $matches)) {
-                        $prefix = $matches[1];
-                        $lastNumber = (int) $matches[2];
-                        $length = strlen($matches[2]);
-                        $currentCode = $prefix.str_pad($lastNumber + 1, $length, '0', STR_PAD_LEFT);
-                    } else {
-                        $currentCode .= '-1';
-                    }
-                    usleep(50000);
-                    continue;
-                }
-                throw $e;
+                StockMutation::where([
+                    'document_id' => $deliveryOrder->id,
+                    'document_type' => 'delivery_order',
+                    'data_barang_id' => $old->data_barang_id,
+                ])->delete();
             }
-        }
 
-        if (! $updated) {
-            throw new \Exception('Gagal memperbarui Delivery Order: Kode DO sudah digunakan.');
-        }
+            DeliveryOrderDetail::where('delivery_order_id', $id)->delete();
 
-        /*
-        |--------------------------------------------------------------------------
-        | 3. INSERT DATA BARU & VALIDASI STOK (MENGIKUTI POLA STORE)
-        |--------------------------------------------------------------------------
-        */
-        if ($itemsDetailRaw) {
-            $items = json_decode($itemsDetailRaw, true);
-            $involvedSqIds = [];
+            $oldSoDetailIds = array_unique($oldSoDetailIds);
+            foreach ($oldSoDetailIds as $soDetailId) {
+                $soDetail = DB::table("sales_order_detail_{$currentYear}")->where('id', $soDetailId)->first();
+                if ($soDetail) {
+                    $totalSoForThisItem = DeliveryOrderDetail::where('sales_order_detail_id', $soDetailId)->sum('qty');
+                    $newOutstanding = max(0, ($soDetail->qty - $totalSoForThisItem));
 
-            if (is_array($items) && count($items) > 0) {
+                    DB::table("sales_order_detail_{$currentYear}")
+                        ->where('id', $soDetailId)
+                        ->update([
+                            'so_qty' => $totalSoForThisItem,
+                            'outstanding_qty' => $newOutstanding,
+                        ]);
+                }
+            }
 
-                foreach ($items as $index => $item) {
-                    // $soDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
-                          $soDetailId = (! empty($item['sales_order_detail_id']) && $item['sales_order_detail_id'] != 'null')
-                            ? $item['sales_order_detail_id'] : null;
-                    $qty = $item['quantity'] ?? $item['qty'];
+            /*
+            |--------------------------------------------------------------------------
+            | 2. UPDATE HEADER DENGAN RETRY CODE UNIQUE (MENGIKUTI POLA STORE)
+            |--------------------------------------------------------------------------
+            */
+            $data = $r->except('save_and_new', 'items_detail');
+            $itemsDetailRaw = $r->input('items_detail');
+            unset($data['items_detail']);
+            $data['delivery_order_date'] = Carbon::parse($r->delivery_order_date)->format('Y-m-d');
+            $data['updated_by'] = Auth::id();
 
-                    // Lock stock untuk validasi
-                    DB::table('stock_mutations')
-                        ->where('data_barang_id', $item['product_id'])
-                        ->where('warehouse_id', $item['warehouse_id'])
-                        ->where('unit_id', $item['unit_id'])
-                        ->lockForUpdate()
-                        ->get();
+            $maxRetry = 10;
+            $currentCode = $r->delivery_order_code;
+            $updated = false;
 
-                    $realStock = $stockService->realStock($item['product_id'], $item['warehouse_id'], $item['unit_id']);
+            for ($attempt = 1; $attempt <= $maxRetry; $attempt++) {
+                try {
+                    $data['delivery_order_code'] = $currentCode;
 
-                    if ($realStock < $qty) {
-                        throw new \Exception(
-                            "Stok barang {$item['data_produk']} tidak mencukupi. Tersedia: {$realStock}, Permintaan: {$qty}"
-                        );
+                    // Pastikan kode unik selain dari ID yang sedang diedit
+                    $exists = DeliveryOrder::where('delivery_order_code', $currentCode)
+                        ->where('id', '!=', $deliveryOrder->id)
+                        ->exists();
+
+                    if ($exists) {
+                        if (preg_match('/^(.*?)(\d+)$/', $currentCode, $matches)) {
+                            $prefix = $matches[1];
+                            $lastNumber = (int) $matches[2];
+                            $length = strlen($matches[2]);
+                            $currentCode = $prefix.str_pad($lastNumber + 1, $length, '0', STR_PAD_LEFT);
+                        } else {
+                            $currentCode .= '-1';
+                        }
+                        usleep(50000);
+
+                        continue;
                     }
 
-                    // Simpan ke DeliveryOrderDetail
-                    DeliveryOrderDetail::create([
-                        'delivery_order_id' => $deliveryOrder->id,
-                        'sales_order_detail_id' => $soDetailId,
-                        'urutan' => $index,
-                        'data_barang_id' => $item['product_id'],
-                        'qty' => $qty,
-                        'do_qty' => 0,
-                        'outstanding_qty' => $qty,
-                        'unit_id' => $item['unit_id'],
-                        'warehouse_id' => $item['warehouse_id'],
-                    ]);
+                    $deliveryOrder->update($data);
+                    $updated = true;
+                    break;
+                } catch (QueryException $e) {
+                    if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
+                        if (preg_match('/^(.*?)(\d+)$/', $currentCode, $matches)) {
+                            $prefix = $matches[1];
+                            $lastNumber = (int) $matches[2];
+                            $length = strlen($matches[2]);
+                            $currentCode = $prefix.str_pad($lastNumber + 1, $length, '0', STR_PAD_LEFT);
+                        } else {
+                            $currentCode .= '-1';
+                        }
+                        usleep(50000);
 
-                    // Konversi Satuan & Mutasi Stok
-                    $product = Barang::findOrFail($item['product_id']);
-                    $baseUnitId = $product->unit_id;
-                    $qtyInput = (float) $qty;
-                    $unitInput = $item['unit_id'];
-                    $totalBaseQty = $qtyInput;
+                        continue;
+                    }
+                    throw $e;
+                }
+            }
 
-                    if ($unitInput != $baseUnitId) {
-                        $conversion = DataBarangConversion::where('data_barang_id', $item['product_id'])
-                            ->where('from_unit_id', $unitInput)
-                            ->where('to_unit_id', $baseUnitId)
-                            ->first();
+            if (! $updated) {
+                throw new \Exception('Gagal memperbarui Delivery Order: Kode DO sudah digunakan.');
+            }
 
-                        if (! $conversion) {
+            /*
+            |--------------------------------------------------------------------------
+            | 3. INSERT DATA BARU & VALIDASI STOK (MENGIKUTI POLA STORE)
+            |--------------------------------------------------------------------------
+            */
+            if ($itemsDetailRaw) {
+                $items = json_decode($itemsDetailRaw, true);
+                $involvedSqIds = [];
+
+                if (is_array($items) && count($items) > 0) {
+
+                    foreach ($items as $index => $item) {
+                        // $soDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
+                        $soDetailId = (! empty($item['sales_order_detail_id']) && $item['sales_order_detail_id'] != 'null')
+                          ? $item['sales_order_detail_id'] : null;
+                        $qty = $item['quantity'] ?? $item['qty'];
+
+                        // Lock stock untuk validasi
+                        DB::table('stock_mutations')
+                            ->where('data_barang_id', $item['product_id'])
+                            ->where('warehouse_id', $item['warehouse_id'])
+                            ->where('unit_id', $item['unit_id'])
+                            ->lockForUpdate()
+                            ->get();
+
+                        $realStock = $stockService->realStock($item['product_id'], $item['warehouse_id'], $item['unit_id']);
+
+                        if ($realStock < $qty) {
                             throw new \Exception(
-                                "Konversi satuan tidak ditemukan untuk produk {$product->nama_barang}"
+                                "Stok barang {$item['data_produk']} tidak mencukupi. Tersedia: {$realStock}, Permintaan: {$qty}"
                             );
                         }
 
-                        $totalBaseQty = $qtyInput * $conversion->qty;
-                    }
+                        // Simpan ke DeliveryOrderDetail
+                        DeliveryOrderDetail::create([
+                            'delivery_order_id' => $deliveryOrder->id,
+                            'sales_order_detail_id' => $soDetailId,
+                            'urutan' => $index,
+                            'data_barang_id' => $item['product_id'],
+                            'qty' => $qty,
+                            'do_qty' => 0,
+                            'outstanding_qty' => $qty,
+                            'unit_id' => $item['unit_id'],
+                            'warehouse_id' => $item['warehouse_id'],
+                        ]);
 
-                    $customer = Customer::find($r->customer_id);
+                        // Konversi Satuan & Mutasi Stok
+                        $product = Barang::findOrFail($item['product_id']);
+                        $baseUnitId = $product->unit_id;
+                        $qtyInput = (float) $qty;
+                        $unitInput = $item['unit_id'];
+                        $totalBaseQty = $qtyInput;
 
-                    StockMutation::create([
-                        'data_barang_id' => $item['product_id'],
-                        'unit_id' => $unitInput,
-                        'warehouse_id' => $item['warehouse_id'],
-                        'date_stock' => $data['delivery_order_date'],
-                        'qty_transaksi' => $qtyInput,
-                        'total_base_qty' => $totalBaseQty,
-                        'type' => 'out',
-                        'document_id' => $deliveryOrder->id,
-                        'document_number' => $deliveryOrder->delivery_order_code,
-                        'document_type' => 'delivery_order',
-                        'keterangan' => 'Pengiriman ke '.($customer->nama_customer ?? 'Customer').
-                            ' via DO '.$deliveryOrder->delivery_order_code,
-                        'created_by' => Auth::id(),
-                    ]);
+                        if ($unitInput != $baseUnitId) {
+                            $conversion = DataBarangConversion::where('data_barang_id', $item['product_id'])
+                                ->where('from_unit_id', $unitInput)
+                                ->where('to_unit_id', $baseUnitId)
+                                ->first();
 
-                    // Update Sales Order Detail & kumpulkan ID SO yang terlibat
-                    if ($soDetailId) {
-                        $soDetail = DB::table("sales_order_detail_{$currentYear}")->where('id', $soDetailId)->first();
+                            if (! $conversion) {
+                                throw new \Exception(
+                                    "Konversi satuan tidak ditemukan untuk produk {$product->nama_barang}"
+                                );
+                            }
 
-                        if ($soDetail) {
-                            $totalSoForThisItem = DeliveryOrderDetail::where('sales_order_detail_id', $soDetailId)
-                                ->sum('qty');
+                            $totalBaseQty = $qtyInput * $conversion->qty;
+                        }
 
-                            $newOutstanding = max(0, ($soDetail->qty - $totalSoForThisItem));
+                        $customer = Customer::find($r->customer_id);
 
-                            DB::table("sales_order_detail_{$currentYear}")
-                                ->where('id', $soDetailId)
-                                ->update([
-                                    'so_qty' => $totalSoForThisItem,
-                                    'outstanding_qty' => $newOutstanding,
-                                ]);
+                        StockMutation::create([
+                            'data_barang_id' => $item['product_id'],
+                            'unit_id' => $unitInput,
+                            'warehouse_id' => $item['warehouse_id'],
+                            'date_stock' => $data['delivery_order_date'],
+                            'qty_transaksi' => $qtyInput,
+                            'total_base_qty' => $totalBaseQty,
+                            'type' => 'out',
+                            'document_id' => $deliveryOrder->id,
+                            'document_number' => $deliveryOrder->delivery_order_code,
+                            'document_type' => 'delivery_order',
+                            'keterangan' => 'Pengiriman ke '.($customer->nama_customer ?? 'Customer').
+                                ' via DO '.$deliveryOrder->delivery_order_code,
+                            'created_by' => Auth::id(),
+                        ]);
 
-                            if (! in_array($soDetail->sales_order_id, $involvedSqIds)) {
-                                $involvedSqIds[] = $soDetail->sales_order_id;
+                        // Update Sales Order Detail & kumpulkan ID SO yang terlibat
+                        if ($soDetailId) {
+                            $soDetail = DB::table("sales_order_detail_{$currentYear}")->where('id', $soDetailId)->first();
+
+                            if ($soDetail) {
+                                $totalSoForThisItem = DeliveryOrderDetail::where('sales_order_detail_id', $soDetailId)
+                                    ->sum('qty');
+
+                                $newOutstanding = max(0, ($soDetail->qty - $totalSoForThisItem));
+
+                                DB::table("sales_order_detail_{$currentYear}")
+                                    ->where('id', $soDetailId)
+                                    ->update([
+                                        'so_qty' => $totalSoForThisItem,
+                                        'outstanding_qty' => $newOutstanding,
+                                    ]);
+
+                                if (! in_array($soDetail->sales_order_id, $involvedSqIds)) {
+                                    $involvedSqIds[] = $soDetail->sales_order_id;
+                                }
                             }
                         }
                     }
-                }
 
-                // Update Status SO Header
-                foreach ($involvedSqIds as $sqId) {
-                    $allDetails = DB::table("sales_order_detail_{$currentYear}")
-                        ->where('sales_order_id', $sqId)
-                        ->get();
+                    // Update Status SO Header
+                    foreach ($involvedSqIds as $sqId) {
+                        $allDetails = DB::table("sales_order_detail_{$currentYear}")
+                            ->where('sales_order_id', $sqId)
+                            ->get();
 
-                    $totalRequested = $allDetails->sum('qty');
-                    $totalDelivered = $allDetails->sum('so_qty');
+                        $totalRequested = $allDetails->sum('qty');
+                        $totalDelivered = $allDetails->sum('so_qty');
 
-                    if ($totalDelivered >= $totalRequested) {
-                        $newStatus = 'fully_delivered';
-                    } elseif ($totalDelivered > 0) {
-                        $newStatus = 'partial';
-                    } else {
-                        $newStatus = 'processing';
+                        if ($totalDelivered >= $totalRequested) {
+                            $newStatus = 'fully_delivered';
+                        } elseif ($totalDelivered > 0) {
+                            $newStatus = 'partial';
+                        } else {
+                            $newStatus = 'processing';
+                        }
+
+                        DB::table("sales_order_{$currentYear}")
+                            ->where('id', $sqId)
+                            ->update(['status' => $newStatus]);
                     }
-
-                    DB::table("sales_order_{$currentYear}")
-                        ->where('id', $sqId)
-                        ->update(['status' => $newStatus]);
                 }
             }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data berhasil diperbarui',
+                'redirect' => route('delivery-order.index'),
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memperbarui data: '.$e->getMessage(),
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Data berhasil diperbarui',
-            'redirect' => route('delivery-order.index'),
-        ], 200);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Gagal memperbarui data: '.$e->getMessage(),
-        ], 500);
     }
-}
 
     public function destroy(Request $request, $id)
     {
@@ -1255,7 +1257,7 @@ class DeliveryOrderController extends Controller
                 return null;
             }
 
-          return [
+            return [
                 'id' => $item->id,
                 'detail_id' => $item->id,
 

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
-use App\Models\Sales\Customer;
 use App\Models\Sales\SalesDownPayment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -13,7 +12,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class SalesDownPaymentController extends Controller
 {
-     public function __construct()
+    public function __construct()
     {
         $this->middleware(function ($request, $next) {
             $routeName = $request->route()->getName();
@@ -72,9 +71,9 @@ class SalesDownPaymentController extends Controller
 
                     return 'N/A';
                 })
-                 ->addColumn('customer', function ($row) {
+                ->addColumn('customer', function ($row) {
                     if ($row->customer_id) {
-                       return $row->customerID->nama_customer;
+                        return $row->customerID->nama_customer;
                     }
 
                     return 'N/A';
@@ -84,7 +83,7 @@ class SalesDownPaymentController extends Controller
                         ->where('customer_id', $row->customer_id)
                         ->value('tipe_id_pajak') ?? 'N/A';
                 })
-                  ->addColumn('total', function ($row) {
+                ->addColumn('total', function ($row) {
                     return format_uang(convert_currency($row->total, $row->currency_id ?? 1));
                 })
                 ->addColumn('age', function ($row) {
@@ -169,7 +168,7 @@ class SalesDownPaymentController extends Controller
 
                     return $html;
                 })
-             
+
                 ->addColumn('action', function ($row) {
 
                     $currentUserId = Auth::user()->id;
@@ -295,7 +294,7 @@ class SalesDownPaymentController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status','taxpayer_id_type','customer','total','age'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'taxpayer_id_type', 'customer', 'total', 'age'])
                 ->make(true);
         }
 

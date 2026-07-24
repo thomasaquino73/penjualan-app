@@ -421,8 +421,6 @@ class SalesInvoiceController extends Controller
         return view('sales.salesInvoice.sales_invoice_create', $x);
     }
 
-    
-
     public function store(SalesInvoiceRequest $request)
     {
         DB::beginTransaction();
@@ -435,15 +433,9 @@ class SalesInvoiceController extends Controller
             $itemsDetailRaw = $request->input('items_detail');
 
             unset($data['items_detail']);
-            $items = [];
 
-            if (!empty($itemsDetailRaw)) {
-                $items = json_decode($itemsDetailRaw, true);
-
-            }
             $data['created_by'] = Auth::id();
             $data['sales_invoice_date'] = Carbon::parse($request->sales_invoice_date)->format('Y-m-d');
-            $data['sales_order_id'] = $items[0]['sales_order_id'] ?? null;
             $data['tanggal_pengiriman'] = Carbon::parse($request->shipping_date)->format('Y-m-d');
             $data['kena_pajak'] = $request->has('kena_pajak');
             $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak');
@@ -455,6 +447,7 @@ class SalesInvoiceController extends Controller
             $data['taxpayer_data'] = $request->taxpayer_data;
             $data['tax_id'] = $request->tax_id;
             $data['tax_amount'] = $request->tax_amount;
+            $data['sales_order_id'] = $request->sales_order_id;
 
             // do {
             //     $generatedCode = $this->generateNumberId();
@@ -775,7 +768,7 @@ class SalesInvoiceController extends Controller
             // ==========================
             $salesInvoice->update([
                 'customer_id' => $request->customer_id,
-                'sales_order_id' => $request->sales_order_id,
+                // 'sales_order_id' => $request->sales_order_id,
                 'sales_invoice_code' => $request->sales_invoice_code,
                 'salesman_id' => $request->salesman_id,
                 'payment_term_id' => $request->payment_term_id,
@@ -1486,38 +1479,39 @@ class SalesInvoiceController extends Controller
     // }
 
     public function print($id)
-{
-    $salesInvoice = SalesInvoice::with([
-        'salesOrder',
-        'details.produkID',
-        'details.unitID'
-    ])->findOrFail($id);
+    {
+        $salesInvoice = SalesInvoice::with([
+            'salesOrder',
+            'details.produkID',
+            'details.unitID',
+        ])->findOrFail($id);
 
-    $company = Company::first();
+        $company = Company::first();
 
-    // Ambil histori DP berdasarkan Sales Order
-    $downPayments = SalesDownPayment::where('sales_order_id', $salesInvoice->sales_order_id)
-        ->where('active', 1)
-        ->orderBy('sales_downpayment_date')
-        ->get();
+        // Ambil histori DP berdasarkan Sales Order
+        $downPayments = SalesDownPayment::where('sales_order_id', $salesInvoice->sales_order_id)
+            ->where('active', 1)
+            ->orderBy('sales_downpayment_date')
+            ->get();
 
-    $totalDP = $downPayments->sum('paid_amount');
+        $totalDP = $downPayments->sum('paid_amount');
 
-    $remainingInvoice = max(0, $salesInvoice->grand_total - $totalDP);
+        $remainingInvoice = max(0, $salesInvoice->grand_total - $totalDP);
 
-    $data = [
-        'model' => $salesInvoice,
-        'company' => $company,
-        'modelDetail' => $salesInvoice->details,
-        'downPayments' => $downPayments,
-        'totalDP' => $totalDP,
-        'remainingInvoice' => $remainingInvoice,
-    ];
+        $data = [
+            'model' => $salesInvoice,
+            'company' => $company,
+            'modelDetail' => $salesInvoice->details,
+            'downPayments' => $downPayments,
+            'totalDP' => $totalDP,
+            'remainingInvoice' => $remainingInvoice,
+        ];
 
-    return Pdf::loadView('pdf.sales_invoice_pdf', $data)
-        ->setPaper('a4', 'portrait')
-        ->stream();
-}
+        return Pdf::loadView('pdf.sales_invoice_pdf', $data)
+            ->setPaper('a4', 'portrait')
+            ->stream();
+    }
+
     public function getPriceHistory(Request $request)
     {
         $productId = $request->get('product_id');
@@ -1693,28 +1687,28 @@ class SalesInvoiceController extends Controller
             $discount = (float) ($item->salesOrderDetail->discount ?? 0);
 
             return [
-                     'id' => $item->id,
-                    'delivery_order_id' => $item->delivery_order_id,
+                'id' => $item->id,
+                'delivery_order_id' => $item->delivery_order_id,
 
-                    'sales_order_id' => $item->deliveryOrder->sales_order_id,
+                'sales_order_id' => $item->salesOrderDetail->sales_order_id ?? null,
 
-                    'product_id' => $item->data_barang_id,
-                    'product_name' => $item->produkID->nama_barang ?? '-',
+                'product_id' => $item->data_barang_id,
+                'product_name' => $item->produkID->nama_barang ?? '-',
 
-                    'qty' => $sisaQty,
+                'qty' => $sisaQty,
 
-                    'unit_id' => $item->unit_id,
-                    'unit_name' => $item->unitID->detail ?? '-',
+                'unit_id' => $item->unit_id,
+                'unit_name' => $item->unitID->detail ?? '-',
 
-                    'warehouse_id' => $item->warehouse_id,
-                    'warehouse_name' => $item->warehouseID->nama_gudang ?? '-',
+                'warehouse_id' => $item->warehouse_id,
+                'warehouse_name' => $item->warehouseID->nama_gudang ?? '-',
 
-                    'unit_price' => $price,
-                    'discount' => $discount,
-                    'amount' => (($price * $sisaQty) - $discount),
+                'unit_price' => $price,
+                'discount' => $discount,
+                'amount' => (($price * $sisaQty) - $discount),
 
-                    'order_code' => $item->deliveryOrder->delivery_order_code ?? '-',
-                ];
+                'order_code' => $item->deliveryOrder->delivery_order_code ?? '-',
+            ];
         });
 
         return response()->json(['success' => true, 'data' => $formattedData]);

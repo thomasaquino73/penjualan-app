@@ -189,7 +189,7 @@ class Sidebar extends Component
                         'badge_color' => 'danger',
 
                     ],
-                    
+
                     // [
                     //     'name' => 'Sales Return',
                     //     'route' => 'customer.index',

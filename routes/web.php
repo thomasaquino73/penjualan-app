@@ -25,6 +25,7 @@ use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
 use App\Http\Controllers\Sales\DeliveryOrderController;
 use App\Http\Controllers\Sales\KasirController;
 use App\Http\Controllers\Sales\ProformaInvoiceController;
+use App\Http\Controllers\Sales\SalesDownPaymentController;
 use App\Http\Controllers\Sales\SalesInvoiceController;
 use App\Http\Controllers\Sales\SalesOrderController;
 use App\Http\Controllers\Sales\SalesQuotationController;
@@ -47,7 +48,6 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Sales\SalesDownPaymentController;
 
 Route::get('/', function () {
     return auth()->check()
@@ -387,7 +387,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/arsip-sales-quotation/{year}/print/{id}', [PenjualanArsipController::class, 'printSalesQuotation'])->name('archive.sales-quotation.print');
     });
 
-       Route::prefix('sales-down-payment')->name('sales-down-payment.')->group(function () {
+    Route::prefix('sales-down-payment')->name('sales-down-payment.')->group(function () {
 
         Route::resource('', SalesDownPaymentController::class)->parameters(['' => 'sales-down-payment']);
     });
