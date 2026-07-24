@@ -255,15 +255,15 @@
                                 <label class="form-label" for="sub_total">Sub Total</label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
-                                    <input type="number" id="sub_total" name="sub_total" class="form-control"
+                                    <input type="text" id="sub_total" name="sub_total" class="form-control"
                                         placeholder="0" readonly>
                                 </div>
                             </div>
                             <div class="col-6 mb-3 ">
-                                <label class="form-label" for="total">Total</label>
+                                <label class="form-label" for="grand_total">Total</label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
-                                    <input type="number" id="total" name="total" class="form-control"
+                                    <input type="text" id="grand_total" name="grand_total" class="form-control"
                                         placeholder="0" readonly>
                                 </div>
                             </div>
@@ -398,12 +398,9 @@
         $('#down_payment_amount').on('input', function() {
 
             let amount = $(this).val()
-                .replace(/\./g, '')
-                .replace(/,/g, '.');
-
+                .replace(/[^\d]/g, '');
 
             amount = parseFloat(amount) || 0;
-
 
             let total = parseFloat(
                 $('#total_order').attr('data-value')
@@ -414,17 +411,27 @@
 
                 let percent = (amount / total) * 100;
 
-
                 $('#down_payment_percent').val(
                     percent.toFixed(2)
+                );
+
+                // Grand Total = Down Payment Amount
+                $('#grand_total').val(
+                    formatRupiah(amount)
+                );
+
+                // Sub Total = Total Order
+                $('#sub_total').val(
+                    formatRupiah(total)
                 );
 
             } else {
 
                 $('#down_payment_percent').val(0);
+                $('#grand_total').val('');
+                $('#sub_total').val('');
 
             }
-
         });
 
         $('#down_payment_amount').on('blur', function() {
@@ -455,6 +462,7 @@
             $('#down_payment_amount').val(
                 formatRupiah(amount)
             );
+
 
         });
     </script>
