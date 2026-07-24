@@ -551,9 +551,10 @@ class SalesOrderController extends Controller
                         $discount = floatval($item['discount'] ?? 0);
                         $discountPercent = $item['discount_percent'] ?? 0;
                         $amount = ($qtyInputForm * $unitPrice) - $discount;
+                        $doDetailId = $item['sales_quotation_detail_id'] ?? $item['detail_id'] ?? null;
 
                         // 1. Simpan ke Sales Order Detail
-                        $soDetail = SalesOrderDetail::create([
+                        $detail = SalesOrderDetail::create([
                             'sales_order_id' => $salesOrder->id,
                             'sales_quotation_detail_id' => $sqDetailId,
                             'product_id' => $item['product_id'],
@@ -571,6 +572,8 @@ class SalesOrderController extends Controller
                             'active' => 1,
                             'created_by' => Auth::id(),
                         ]);
+
+                      
 
                         // 2. Sinkronisasi ke Sales Quotation Detail (PR)
                         if ($sqDetailId) {

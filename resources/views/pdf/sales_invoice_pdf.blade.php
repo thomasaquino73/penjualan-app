@@ -79,10 +79,6 @@
             @endforeach
         </tbody>
     </table>
-    @php
-        $totalDP = $downPayments->sum('paid_amount');
-        $remainingInvoice = $model->grand_total - $totalDP;
-    @endphp
     <table class="w-100 footer-table">
         <tr>
             <td class="keterangan-box" width="60%">
@@ -115,26 +111,41 @@
                             {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1), 2) : '' }}
                         </td>
                     </tr>
-                    @if ($downPayments->isNotEmpty())
-                        @foreach ($downPayments as $dp)
-                            <tr>
-                                <td>
-                                    DP {{ rtrim(rtrim(number_format($dp->down_payment_percent, 2), '0'), '.') }}%
-                                </td>
-                                <td class="text-right">
-                                    {{ isset($model) ? format_uang(convert_currency($dp->paid_amount, $detail->currency_id ?? 1), 2) : '' }}
-                                </td>
-                            </tr>
-                        @endforeach
-                    @endif
-                    @if ($remainingInvoice > 0)
+                    @foreach ($paymentHistories as $history)
                         <tr>
-                            <td>Sisa</td>
+                            <td>
+                                {{ $history->payment_name }}
+
+                                @if ($history->payment_percent)
+                                    {{ rtrim(rtrim(number_format($history->payment_percent, 2), '0'), '.') }}%
+                                @endif
+
+                                <br>
+
+                                <small>
+                                    {{ \Carbon\Carbon::parse($history->transaction_date)->format('d/m/Y') }}
+                                </small>
+                            </td>
+
                             <td class="text-right">
-                                {{ isset($model) ? format_uang(convert_currency($remainingInvoice, $detail->currency_id ?? 1), 2) : '' }}
+                                {{ format_uang($history->amount, 2) }}
                             </td>
                         </tr>
-                    @endif
+                    @endforeach
+
+                    <tr>
+                        <td><strong>Total Pembayaran</strong></td>
+                        <td class="text-right">
+                            <strong>{{ format_uang($totalPaid, 2) }}</strong>
+                        </td>
+                    </tr>
+
+                    <tr class="total-row">
+                        <td><strong>Sisa Pembayaran</strong></td>
+                        <td class="text-right">
+                            <strong>{{ format_uang($remainingInvoice, 2) }}</strong>
+                        </td>
+                    </tr>
                 </table>
             </td>
         </tr>
@@ -147,7 +158,7 @@
                     $currencyCode = \App\Models\Setting\Currency::find($currencyId)?->code ?? 'IDR';
 
                     // Gunakan nilai asli (jangan di-round agar sen tidak hilang)
-                    $grandTotalConvert = convert_currency($model->grand_total, $model->currency_id ?? 1);
+                    $grandTotalConvert = convert_currency($remainingInvoice, $model->currency_id ?? 1);
                 @endphp
                 <div>Terbilang: {{ terbilang($grandTotalConvert, $currencyCode) }}</div>
             </td>
@@ -190,11 +201,11 @@
 
                         <div
                             style="
-        width:80%;
-        margin:0 auto;
-        border-bottom:1px solid #000;
-        height:10px;
-    ">
+                                    width:80%;
+                                    margin:0 auto;
+                                    border-bottom:1px solid #000;
+                                    height:10px;
+                                ">
                         </div>
                     @endif
                 </td>

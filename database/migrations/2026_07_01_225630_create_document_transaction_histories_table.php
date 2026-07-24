@@ -12,24 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('document_transaction_histories', function (Blueprint $table) {
-
             $table->id();
-
             $table->string('module'); // sales,purchase,finance
-
             // Header asal
             $table->string('from_type')->nullable();
             $table->unsignedBigInteger('from_id')->nullable();
             $table->unsignedBigInteger('from_detail_id')->nullable();
-
             // Header tujuan
             $table->string('to_type');
             $table->unsignedBigInteger('to_id');
-
             // Detail tujuan
             $table->unsignedBigInteger('to_detail_id')->nullable();
-
             $table->enum('transaction_type', [
+                'sales_order',
                 'invoice',
                 'payment',
                 'receipt',
@@ -39,21 +34,13 @@ return new class extends Migration
                 'debit_note',
                 'write_off',
             ]);
-
             $table->decimal('qty', 18, 4)->default(0);
-
             $table->decimal('unit_price', 18, 2)->default(0);
-
             $table->decimal('discount', 18, 2)->default(0);
-
             $table->decimal('amount', 18, 2)->default(0);
-
             $table->date('transaction_date');
-
             $table->json('metadata')->nullable();
-
             $table->timestamps();
-
             $table->index(['from_type', 'from_id']);
             $table->index(['to_type', 'to_id']);
         });

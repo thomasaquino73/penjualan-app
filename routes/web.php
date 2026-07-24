@@ -388,7 +388,8 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('sales-down-payment')->name('sales-down-payment.')->group(function () {
-
+        Route::get('/ajax/customer-sales-order/{customer}', [SalesDownPaymentController::class, 'getSalesOrder'])->name('ajax.customer.sales-order');
+        Route::get('/trash', [SalesDownPaymentController::class, 'trash'])->name('trash');
         Route::resource('', SalesDownPaymentController::class)->parameters(['' => 'sales-down-payment']);
     });
 });

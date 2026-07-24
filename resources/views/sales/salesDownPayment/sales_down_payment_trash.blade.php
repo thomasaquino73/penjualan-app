@@ -19,26 +19,15 @@
         <div
             class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
 
-            <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
+            <h5 class="card-title mb-3 mb-lg-0"><i class="ti ti-trash me-1"></i>{{ $title }}</h5>
 
             <div class="col-12 col-lg-5">
                 <div
-                    class="d-flex flex-column flex-md-row gap-2
-                    justify-content-start justify-content-lg-end">
-
-                    @canany(['sales_down_payment-create'])
-                        <a href="{{ route('sales-down-payment.create') }}" class="btn btn-sm btn-primary">
-                            <i class="ti ti-plus me-1"></i> Add Data
-                        </a>
-                    @endcanany
-                    @canany(['sales_down_payment-trash'])
-                        <a href="{{ route('sales-down-payment.trash') }}" class="btn btn-sm btn-secondary">
-                            <i class="ti ti-trash me-1"></i> Trash Bin
-                        </a>
-                    @endcanany
-
-
-
+                    class="d-flex flex-column flex-md-row gap-2 
+                        justify-content-start justify-content-lg-end">
+                    <a href="{{ route('sales-down-payment.index') }}" class="btn btn-secondary btn-sm ">
+                        <i class="ti ti-chevron-left me-1"></i> Back
+                    </a>
                 </div>
             </div>
 
@@ -62,7 +51,7 @@
             </div>
 
             <table class="table table-binvoiceed" id="table">
-                <thead class="binvoice-top" style="background-color: #AEDEFC; ">
+                <thead class="border-top" style="background-color: #FFEF9F; ">
                     <tr>
 
                         <th>#</th>
@@ -106,7 +95,7 @@
                     [10, 25, 50, 'All']
                 ],
                 ajax: {
-                    url: '{{ route('sales-down-payment.index') }}',
+                    url: '{{ route('sales-down-payment.trash') }}',
                     data: function(d) {
                         d.status = $('#selectStatus').val();
                     }
@@ -157,108 +146,46 @@
                 ]
             });
 
-            $('#deleteSelected').on('click', function() {
-
-                let ids = [];
-
-                $('.checkItem:checked').each(function() {
-                    ids.push($(this).val());
-                });
-
-                if (ids.length === 0) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'An error occurred. Please try again later.',
-                        text: 'Please select data first!',
-                        timer: 5000,
-                        customClass: {
-                            confirmButton: 'btn btn-primary waves-effect waves-light'
-                        },
-                        buttonsStyling: false
-                    });
-                    return;
-                }
-
+            $('body').on('click', '.restore', function() {
+                let id = $(this).data('id');
+                let token = $("meta[name='csrf-token']").attr("content");
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: "Data will be deleted!",
-                    icon: 'warning',
+                    title: 'Restore this sales order?',
+                    icon: 'question',
                     showCancelButton: true,
-                    confirmButtonText: 'Yes, delete it!',
+                    confirmButtonText: 'Yes, restore!',
                     cancelButtonText: 'Cancel',
                     customClass: {
-                        confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
-                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                        confirmButton: 'btn btn-success me-3 waves-effect waves-light',
+                        cancelButton: 'btn btn-secondary waves-effect waves-light'
                     },
                     buttonsStyling: false
                 }).then((result) => {
-
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: '/proforma-invoice/delete-multiple',
-                            type: 'POST',
-                            data: {
-                                ids: ids,
-                                _token: '{{ csrf_token() }}'
-                            },
-                            success: function(res) {
-                                toastr.success('Deleted Data Successfully', '', {
-                                    timeOut: 1500,
-                                    progressBar: true,
-                                    closeButton: false,
-                                    positionClass: 'toast-top-right',
-                                });
-                                $('#table').DataTable().ajax.reload();
-                            },
-                            error: function() {
-                                Swal.fire('Error!', 'Failed to delete data.', 'error');
-                            }
-                        });
-                    }
-
-                });
-
-            });
-            $('body').on('click', '#delete', function() {
-                let id = $(this).data('id');
-                let name = $(this).data('name');
-                let token = $("meta[name='csrf-token']").attr("content");
-
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "Want to delete data: " + name,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, delete it!',
-                    cancelButtonText: 'Cancel',
-                    customClass: {
-                        confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
-                        cancelButton: 'btn btn-label-secondary waves-effect waves-light'
-                    },
-                    buttonsStyling: false
-                }).then(function(result) {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: `/proforma-invoice/${id}`,
-                            type: "DELETE",
-                            cache: false,
+                            url: `/sales-invoice/restore/${id}`,
+                            type: 'PUT',
                             data: {
                                 _token: token
                             },
                             success: function(response) {
                                 table.draw();
-                                toastr.success('Deleted Data Successfully', '', {
-                                    timeOut: 1500,
+                                toastr.success(response.message, '', {
+                                    timeOut: 2000,
                                     progressBar: true,
-                                    closeButton: false,
-                                    positionClass: 'toast-top-right',
+                                    positionClass: 'toast-top-right'
                                 });
+
                             },
-                            error: function(jqXHR, textStatus, errorThrown) {
+                            error: function(xhr) {
+                                let errMsg = 'Error restoring salesman';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errMsg = xhr.responseJSON.message;
+                                }
                                 Swal.fire({
                                     icon: 'error',
-                                    title: 'Failed to delete',
-                                    text: 'An error occurred. Please try again later.',
+                                    title: 'Failed',
+                                    text: errMsg,
                                     timer: 5000,
                                     customClass: {
                                         confirmButton: 'btn btn-info waves-effect waves-light'
@@ -266,25 +193,9 @@
                                 });
                             }
                         });
-                    } else if (result.dismiss === Swal.DismissReason.cancel) {
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'Cancelled',
-                            text: 'Your data is safe.',
-                            customClass: {
-                                confirmButton: 'btn btn-info waves-effect waves-light'
-                            }
-                        });
                     }
                 });
             });
-
-
-            // filter
-            $('#selectStatus').on('change', function() {
-                table.ajax.reload();
-            });
-
 
         });
     </script>

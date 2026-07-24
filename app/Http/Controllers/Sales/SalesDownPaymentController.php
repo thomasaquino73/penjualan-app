@@ -3,7 +3,12 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sales\Customer;
 use App\Models\Sales\SalesDownPayment;
+use App\Models\Sales\SalesOrder;
+use App\Models\Setting\Company;
+use App\Models\Setting\SyaratPembayaran;
+use App\Models\Setting\Tax;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -84,7 +89,7 @@ class SalesDownPaymentController extends Controller
                         ->value('tipe_id_pajak') ?? 'N/A';
                 })
                 ->addColumn('total', function ($row) {
-                    return format_uang(convert_currency($row->total, $row->currency_id ?? 1));
+                    return format_uang(convert_currency($row->paid_amount, $row->currency_id ?? 1));
                 })
                 ->addColumn('age', function ($row) {
                     $date = Carbon::parse($row->sales_downpayment_date);
@@ -104,42 +109,17 @@ class SalesDownPaymentController extends Controller
 
                     switch ($row->status) {
 
-                        case 'draft':
+                        case 'unpaid':
                             $badge = 'bg-label-secondary';
-                            $text = 'Draft';
+                            $text = 'Unpaid';
                             break;
 
-                        case 'processing':
-                            $badge = 'bg-label-warning';
+                        case 'Paid':
+                            $badge = 'bg-label-success';
                             $text = 'Processing';
                             break;
-
-                        case 'partially_received':
-                            $badge = 'bg-label-info';
-                            $text = 'Partially Received';
-                            break;
-
-                        case 'completed':
-                            $badge = 'bg-success';
-                            $text = 'Completed';
-                            break;
-
-                        case 'rejected':
-                            $badge = 'bg-label-danger';
-                            $text = 'Rejected';
-                            break;
-
-                        case 'cancelled':
-                            $badge = 'bg-danger';
-                            $text = 'Cancelled';
-                            break;
-                        case 'closed':
-                            $badge = 'bg-dark';
-                            $text = 'Closed';
-                            break;
-
                         default:
-                            $badge = 'bg-label-secondary';
+                            $badge = 'bg-label-danger';
                             $text = ucfirst(str_replace('_', ' ', $row->status));
                             break;
                     }
@@ -309,12 +289,67 @@ class SalesDownPaymentController extends Controller
         return view('sales.salesDownPayment.sales_down_payment_index', $x);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    public function bulanRomawi($bulan)
+    {
+        $romawi = [
+            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',
+            5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII',
+            9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII',
+        ];
+
+        return $romawi[$bulan] ?? 'I';
+    }
+
+    private function generateNumberId()
+    {
+        $tahun = date('Y');
+        $bulan = date('n');
+        $bulanRomawi = $this->bulanRomawi($bulan);
+
+        $prefix = "SDP/{$tahun}/{$bulanRomawi}/";
+
+        $last = SalesDownPayment::where('sales_downpayment_code', 'like', $prefix.'%')
+            ->orderByRaw("
+            CAST(
+                REGEXP_REPLACE(
+                    SUBSTRING_INDEX(sales_downpayment_code,'/',-1),
+                    '[^0-9]',
+                    ''
+                ) AS UNSIGNED
+            ) DESC
+        ")
+            ->first();
+
+        if ($last) {
+            preg_match('/(\d+)/', substr($last->sales_downpayment_code, strrpos($last->sales_downpayment_code, '/') + 1), $match);
+            $lastNumber = isset($match[1]) ? (int) $match[1] : 0;
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+    }
+
     public function create()
     {
-        //
+      
+        $company = Company::with('defaultCurrency')->first();
+
+        $x = [
+            'title' => 'Sales Down Payment New',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Sales Down Payment', 'url' => ''],
+            ],
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'idNumber' => $this->generateNumberId(),
+            'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
+            'company' => $company->defaultCurrency,
+
+        ];
+
+        return view('sales.salesDownPayment.sales_down_payment_create', $x);
     }
 
     /**
@@ -356,4 +391,47 @@ class SalesDownPaymentController extends Controller
     {
         //
     }
+
+
+    public function getSalesOrder($customerId)
+    {
+        $salesOrders = SalesOrder::where('customer_id', $customerId)
+            ->where('active', 1)
+            ->whereIn('status', [
+                'processing',
+                'partial',
+                'fully_delivered'
+            ])
+            ->orderByDesc('sales_order_date')
+            ->get([
+                'id',
+                'sales_order_code',
+                'sales_order_date',
+                'grand_total'
+            ]);
+
+        return response()->json($salesOrders);
+    }
+
+    public function getSalesOrderTotal($id)
+{
+    $year = date('Y');
+
+    $salesOrder = DB::table("sales_order_{$year}")
+        ->where('id', $id)
+        ->first();
+
+
+    if (!$salesOrder) {
+        return response()->json([
+            'success' => false
+        ]);
+    }
+
+
+    return response()->json([
+        'success' => true,
+        'grand_total' => $salesOrder->grand_total
+    ]);
+}
 }
