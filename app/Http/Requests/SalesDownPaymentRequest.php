@@ -33,7 +33,7 @@ class SalesDownPaymentRequest extends FormRequest
 
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
 
-            $id = $this->route('sales-down-payment');
+            $id = $this->route('sales_down_payment');
 
             $rules['sales_downpayment_code'] = [
                 'required',

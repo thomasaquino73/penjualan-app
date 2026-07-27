@@ -195,7 +195,7 @@
 
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: '/proforma-invoice/delete-multiple',
+                            url: '/sales-down-payment/delete-multiple',
                             type: 'POST',
                             data: {
                                 ids: ids,
@@ -239,7 +239,7 @@
                 }).then(function(result) {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/proforma-invoice/${id}`,
+                            url: `/sales-down-payment/${id}`,
                             type: "DELETE",
                             cache: false,
                             data: {

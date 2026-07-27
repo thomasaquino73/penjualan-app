@@ -670,70 +670,70 @@ class SalesInvoiceController extends Controller
 
         // 2. Cek status PO global: Apakah mengandung minimal satu item hasil serapan PR?
         $isFromPR = $purchaseOrder->details->whereNotNull('sales_order_detail_id')->count() > 0;
-$salesOrderId = $purchaseOrder->sales_order_id;
+        $salesOrderId = $purchaseOrder->sales_order_id;
         // 3. Mapping data detail
-$detailDataMapped = $purchaseOrder->details->map(function ($detail) use ($purchaseOrder, $year) {
+        $detailDataMapped = $purchaseOrder->details->map(function ($detail) use ($purchaseOrder, $year) {
 
-    $orderCode = null;
-    $sisaPr = null;
-    $kuotaAsliPr = null;
-    $totalDiambilLainnya = 0;
-    $salesOrderId = null; // Tambahkan variabel penampung sales_order_id
+            $orderCode = null;
+            $sisaPr = null;
+            $kuotaAsliPr = null;
+            $totalDiambilLainnya = 0;
+            $salesOrderId = null; // Tambahkan variabel penampung sales_order_id
 
-    // Cek apakah item detail ini memiliki keterikatan dengan PR/SO
-    if ($detail->sales_order_detail_id) {
-        // Ambil data referensi dari relasi salesOrderDetail jika ada
-        if ($detail->salesOrderDetail) {
-            $salesOrderId = $detail->salesOrderDetail->sales_order_id;
-        }
+            // Cek apakah item detail ini memiliki keterikatan dengan PR/SO
+            if ($detail->sales_order_detail_id) {
+                // Ambil data referensi dari relasi salesOrderDetail jika ada
+                if ($detail->salesOrderDetail) {
+                    $salesOrderId = $detail->salesOrderDetail->sales_order_id;
+                }
 
-        $prDetail = $detail->purchaseRequisitionDetail;
+                $prDetail = $detail->purchaseRequisitionDetail;
 
-        if ($prDetail) {
-            $sisaPr = (float) $prDetail->outstanding_qty;
-            $kuotaAsliPr = (float) $prDetail->qty;
+                if ($prDetail) {
+                    $sisaPr = (float) $prDetail->outstanding_qty;
+                    $kuotaAsliPr = (float) $prDetail->qty;
 
-            // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
-            $totalDiambilLainnya = DB::table("purchase_order_detail_{$year}")
-                ->where('sales_order_detail_id', $detail->sales_order_detail_id)
-                ->where('sales_order_id', '<>', $purchaseOrder->id)
-                ->where('active', 1)
-                ->sum('qty');
+                    // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
+                    $totalDiambilLainnya = DB::table("purchase_order_detail_{$year}")
+                        ->where('sales_order_detail_id', $detail->sales_order_detail_id)
+                        ->where('sales_order_id', '<>', $purchaseOrder->id)
+                        ->where('active', 1)
+                        ->sum('qty');
 
-            if ($prDetail->purchaseRequisition) {
-                $orderCode = $prDetail->purchaseRequisition->code;
+                    if ($prDetail->purchaseRequisition) {
+                        $orderCode = $prDetail->purchaseRequisition->code;
+                    }
+                }
             }
-        }
-    }
 
-    return [
-    'id' => $detail->id,
-    'sales_invoice_id' => $detail->sales_invoice_id,
+            return [
+                'id' => $detail->id,
+                'sales_invoice_id' => $detail->sales_invoice_id,
 
-    // HEADER SALES ORDER
-    'sales_order_id' => $salesOrderId,
+                // HEADER SALES ORDER
+                'sales_order_id' => $salesOrderId,
 
-    // DETAIL SALES ORDER
-    'sales_order_detail_id' => $detail->sales_order_detail_id,
+                // DETAIL SALES ORDER
+                'sales_order_detail_id' => $detail->sales_order_detail_id,
 
-    'order_code' => $orderCode,
-    'product_id' => $detail->product_id,
-    'data_produk' => $detail->produkID->nama_barang ?? 'Product Not Found',
-    'quantity' => (float) $detail->qty,
-    'unit_id' => $detail->unit_id,
-    'unit' => $detail->unitID->detail ?? '-',
-    'warehouse_id' => $detail->warehouse_id,
-    'warehouse' => $detail->warehouseID->nama_gudang ?? '-',
-    'unit_price' => (float) $detail->unit_price,
-    'discount' => (float) $detail->discount,
-    'discount_percent' => $detail->discount_percent,
-    'amount' => (float) $detail->amount,
-    'tax' => (float) ($detail->tax ?? 0),
-    'sisa_pr' => $sisaPr,
-    'kuota_asli' => $kuotaAsliPr,
-    'total_diambil_lainnya' => (float) $totalDiambilLainnya,
-];
-});
+                'order_code' => $orderCode,
+                'product_id' => $detail->product_id,
+                'data_produk' => $detail->produkID->nama_barang ?? 'Product Not Found',
+                'quantity' => (float) $detail->qty,
+                'unit_id' => $detail->unit_id,
+                'unit' => $detail->unitID->detail ?? '-',
+                'warehouse_id' => $detail->warehouse_id,
+                'warehouse' => $detail->warehouseID->nama_gudang ?? '-',
+                'unit_price' => (float) $detail->unit_price,
+                'discount' => (float) $detail->discount,
+                'discount_percent' => $detail->discount_percent,
+                'amount' => (float) $detail->amount,
+                'tax' => (float) ($detail->tax ?? 0),
+                'sisa_pr' => $sisaPr,
+                'kuota_asli' => $kuotaAsliPr,
+                'total_diambil_lainnya' => (float) $totalDiambilLainnya,
+            ];
+        });
 
         // 🔥 Ambil semua pajak aktif (khusus pembelian & general)
         $taxes = Tax::where('is_active', true)
@@ -747,35 +747,35 @@ $detailDataMapped = $purchaseOrder->details->map(function ($detail) use ($purcha
             ->first();
 
         // 4. Susun semua variabel ke dalam array compact
-       $x = [
-    'title' => 'Edit Sales Invoice',
+        $x = [
+            'title' => 'Edit Sales Invoice',
 
-    'breadcrumb' => [
-        ['label' => 'Sales Invoice', 'url' => route('sales-invoice.index')],
-        ['label' => 'Edit Sales Invoice', 'url' => ''],
-    ],
+            'breadcrumb' => [
+                ['label' => 'Sales Invoice', 'url' => route('sales-invoice.index')],
+                ['label' => 'Edit Sales Invoice', 'url' => ''],
+            ],
 
-    'customer' => Customer::where('status', '<>', 0)->get(),
-    'idNumber' => $this->generateNumberId(),
-    'product' => Barang::where('status', '<>', 0)->get(),
-    'warehouse' => Warehouse::where('status', 1)->get(),
-    'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
-    'salesman' => User::where('status', '<>', 0)->get(),
-    'shipping' => Shipping::where('status', 1)->get(),
-    'fob' => BasicCodeDetail::where('master_id', 7)->get(),
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'idNumber' => $this->generateNumberId(),
+            'product' => Barang::where('status', '<>', 0)->get(),
+            'warehouse' => Warehouse::where('status', 1)->get(),
+            'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
+            'salesman' => User::where('status', '<>', 0)->get(),
+            'shipping' => Shipping::where('status', 1)->get(),
+            'fob' => BasicCodeDetail::where('master_id', 7)->get(),
 
-    'model' => $purchaseOrder,
+            'model' => $purchaseOrder,
 
-    'isFromPR' => $isFromPR,
+            'isFromPR' => $isFromPR,
 
-    // TAMBAHKAN
-    'salesOrderId' => $salesOrderId,
+            // TAMBAHKAN
+            'salesOrderId' => $salesOrderId,
 
-    'jsonDetails' => $detailDataMapped,
+            'jsonDetails' => $detailDataMapped,
 
-    'taxes' => $taxes,
-    'defaultTax' => $defaultTax,
-];
+            'taxes' => $taxes,
+            'defaultTax' => $defaultTax,
+        ];
 
         return view('sales.salesInvoice.sales_invoice_edit', $x);
     }

@@ -20,14 +20,15 @@
             class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
 
             <h5 class="card-title mb-3 mb-lg-0"><i class="ti ti-trash me-1"></i>{{ $title }}</h5>
-
             <div class="col-12 col-lg-5">
                 <div
                     class="d-flex flex-column flex-md-row gap-2 
                         justify-content-start justify-content-lg-end">
+
                     <a href="{{ route('sales-down-payment.index') }}" class="btn btn-secondary btn-sm ">
                         <i class="ti ti-chevron-left me-1"></i> Back
                     </a>
+
                 </div>
             </div>
 
@@ -145,7 +146,6 @@
                     },
                 ]
             });
-
             $('body').on('click', '.restore', function() {
                 let id = $(this).data('id');
                 let token = $("meta[name='csrf-token']").attr("content");
@@ -163,7 +163,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/sales-invoice/restore/${id}`,
+                            url: `/sales-down-payment/restore/${id}`,
                             type: 'PUT',
                             data: {
                                 _token: token
@@ -196,6 +196,14 @@
                     }
                 });
             });
+
+
+
+            // filter
+            $('#selectStatus').on('change', function() {
+                table.ajax.reload();
+            });
+
 
         });
     </script>

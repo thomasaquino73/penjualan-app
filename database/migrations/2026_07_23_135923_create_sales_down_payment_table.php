@@ -23,6 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('sales_order_id');
             $table->unsignedBigInteger('payment_term_id');
             $table->string('address');
+            $table->string('po_number');
 
             // Nilai
             $table->decimal('sales_order_amount', 15, 4);
@@ -41,6 +42,7 @@ return new class extends Migration
                 'unpaid',
                 'paid',
                 'cancelled',
+                'closed',
             ])->default('unpaid');
 
             $table->tinyInteger('active')

@@ -158,9 +158,7 @@
                     @endif
 
 
-                    {{-- ============================================================
-    TOTAL PEMBAYARAN
-============================================================= --}}
+                    {{-- TOTAL PEMBAYARAN --}}
                     <tr>
                         <td>
                             <strong>
@@ -171,16 +169,14 @@
                         <td class="text-right">
                             <strong>
 
-                                {{ isset($payment) ? format_uang(convert_currency($totalInvoicePaid, $payment->currency_id ?? 1)) : '' }}
+                                {{ isset($payment) ? format_uang(convert_currency($totalInvoicePaid, $payment->currency_id ?? 1)) : format_uang(0, 2) }}
 
                             </strong>
                         </td>
                     </tr>
 
 
-                    {{-- ============================================================
-    SISA PEMBAYARAN
-============================================================= --}}
+                    {{-- SISA PEMBAYARAN --}}
                     <tr class="total-row">
 
                         <td>
@@ -192,7 +188,7 @@
                         <td class="text-right">
                             <strong>
 
-                                {{ isset($payment) ? format_uang(convert_currency($remainingInvoice, $payment->currency_id ?? 1)) : '' }}
+                                {{ isset($payment) ? format_uang(convert_currency($remainingInvoice, $payment->currency_id ?? 1)) : format_uang(0, 2) }}
 
                             </strong>
                         </td>

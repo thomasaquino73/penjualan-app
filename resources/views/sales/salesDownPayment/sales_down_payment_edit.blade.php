@@ -28,8 +28,10 @@
 
         </div>
         <div class="card-body table-responsive p-3">
-            <form action="{{ route('sales-down-payment.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
+            <form action="{{ route('sales-down-payment.update', $model->id) }}" method="POST" id="postForm"
+                enctype="multipart/form-data">
                 @csrf
+                @method('put')
                 <div class="row mb-5">
 
                     <div class="col-md-6 mb-3">
@@ -43,7 +45,8 @@
                                             data-placeholder="Select Customer">
                                             <option></option>
                                             @foreach ($customer as $cust)
-                                                <option value="{{ $cust->id }}" data-alamat="{{ $cust->alamat }}">
+                                                <option value="{{ $cust->id }}" data-alamat="{{ $cust->alamat }}"
+                                                    {{ $cust->id == $model->customer_id ? 'selected' : '' }}>
                                                     [{{ $cust->id_customer }}] {{ $cust->nama_customer }}
                                                 </option>
                                             @endforeach
@@ -58,7 +61,7 @@
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
                                     <input type="text" name="sales_downpayment_code" id="sales_downpayment_code"
-                                        class="form-control" value="{{ $idNumber }}">
+                                        class="form-control" value="{{ $model->sales_downpayment_code }}">
                                 </div>
                                 <span class="error text-danger" id="sales_invoice_codeError"></span>
 
@@ -73,7 +76,8 @@
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
                                     <input type="text" name="sales_downpayment_date" id="sales_downpayment_date"
-                                        class="form-control" value="">
+                                        class="form-control"
+                                        value="{{ Carbon\Carbon::parse($model->sales_downpayment_date)->format('d-m-Y') }}">
                                 </div>
                                 <span class="error text-danger" id="sales_invoice_dateError"></span>
                             </div>
@@ -82,7 +86,7 @@
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
                                     <input type="text" name="due_date" id="due_date" class="form-control"
-                                        value="">
+                                        value="{{ Carbon\Carbon::parse($model->due_date)->format('d-m-Y') }}">
                                 </div>
                                 <span class="error text-danger" id="due_dateError"></span>
                             </div>
@@ -133,7 +137,7 @@
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                         <input type="text" name="total_order" id="total_order" class="form-control"
-                                            readonly>
+                                            value="{{ format_rupiah($model->sales_order_amount, 2) }}" readonly>
                                     </div>
                                     <span class="error text-danger" id="total_orderError"></span>
                                 </div>
@@ -151,7 +155,8 @@
                                                 </span>
                                                 <input type="number" name="down_payment_percent"
                                                     id="down_payment_percent" class="form-control" step="0.01"
-                                                    placeholder="0">
+                                                    max="100" placeholder="0"
+                                                    value="{{ $model->down_payment_percent }}">
                                             </div>
                                         </div>
 
@@ -163,7 +168,8 @@
                                                 </span>
 
                                                 <input type="text" name="down_payment_amount" id="down_payment_amount"
-                                                    class="form-control">
+                                                    class="form-control"
+                                                    value="{{ format_rupiah($model->down_payment_amount, 2) }}">
                                             </div>
                                             <span class="error text-danger" id="down_payment_amountError"></span>
                                         </div>
@@ -176,7 +182,8 @@
                                     </label>
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text"><i class="ti ti-file"></i></span>
-                                        <input type="text" class="form-control" name="po_number" id="po_number">
+                                        <input type="text" class="form-control" name="po_number" id="po_number"
+                                            value="{{ $model->po_number }}">
                                     </div>
                                     <span class="error text-danger" id="po_numberError"></span>
                                 </div>
@@ -194,7 +201,9 @@
                                                         class="form-select select2" data-placeholder="Select Payment">
                                                         <option></option>
                                                         @foreach ($paymentTerm as $pay)
-                                                            <option value="{{ $pay->id }}">{{ $pay->nama }}
+                                                            <option value="{{ $pay->id }}"
+                                                                {{ $pay->id == $model->payment_term_id ? 'selected' : '' }}>
+                                                                {{ $pay->nama }}
                                                             </option>
                                                         @endforeach
                                                         <option></option>
@@ -209,9 +218,9 @@
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-map"></i>
                                                     </span>
-                                                    <textarea name="address" id="address" class="form-control"></textarea>
+                                                    <textarea name="address" id="address" class="form-control">{{ $model->address }}</textarea>
                                                 </div>
-                                                <span class="error text-danger" id="addressError"></span>
+                                                <span class="error text-danger" id="payment_term_idError"></span>
                                             </div>
                                         </div>
                                         <div class="mb-3 row">
@@ -220,7 +229,7 @@
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-file"></i>
                                                     </span>
-                                                    <textarea name="description" id="description" class="form-control" cols="30" rows="10"></textarea>
+                                                    <textarea name="description" id="description" class="form-control" cols="30" rows="10">{{ $model->description }}</textarea>
                                                 </div>
                                                 <span class="error text-danger" id="descriptionError"></span>
                                             </div>
@@ -235,12 +244,9 @@
 
 
                 <div class="card-footer d-flex justify-content-end gap-2">
-                    <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
-                        <i class="fa fa-upload me-1"></i> Save and Close
-                    </button>
 
-                    <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
-                        <i class="fa fa-plus-circle me-1"></i> Save and Create New
+                    <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
+                        <i class="fa fa-save me-1"></i> update
                     </button>
                     <a href="{{ route('sales-down-payment.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
@@ -250,16 +256,18 @@
 @endsection
 @push('scripts')
     <script>
+        const existingCustomerId = @json($model->customer_id);
+        const existingSalesOrderId = @json($model->sales_order_id);
+    </script>
+    <script>
         $(function() {
             const downPaymentDate = flatpickr("#sales_downpayment_date", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
             });
             const dueDate = flatpickr("#due_date", {
                 enableTime: false,
                 dateFormat: "d-m-Y",
-                defaultDate: "{{ \Carbon\Carbon::now()->format('d-m-Y') }}",
             });
         });
 
@@ -289,66 +297,150 @@
             return isNaN(number) ? 0 : number;
         }
         $(document).ready(function() {
-            $('#customer_id').on('change', function() {
-                let customerId = $(this).val();
-                let contactDropdown = $('#customer_contact_id');
-                contactDropdown.empty().append('<option>Loading...</option>');
-                // kosongkan data pajak
-                $('#taxpayer_data').val('');
+
+            // ==========================================
+            // LOAD SALES ORDER BERDASARKAN CUSTOMER
+            // ==========================================
+
+            function loadSalesOrders(customerId, selectedSalesOrderId = null) {
+
+                const salesOrderDropdown = $('#sales_order_id');
+
                 if (!customerId) {
-                    contactDropdown.empty().append('<option value="">Pilih Kontak</option>');
+
+                    salesOrderDropdown
+                        .prop('disabled', true)
+                        .empty()
+                        .append('<option value="">Select Sales Order</option>')
+                        .trigger('change');
+
                     return;
                 }
 
                 $.ajax({
-                    url: '/sales-invoice/' + customerId + '/data',
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(data) {
-                        $('#address').val(data.address ?? '');
 
-                    }
-                });
-
-                $.ajax({
                     url: "{{ url('sales-down-payment/ajax/customer-sales-order') }}/" + customerId,
                     type: "GET",
+                    dataType: "json",
+
                     beforeSend: function() {
-                        $('#sales_order_id')
+
+                        salesOrderDropdown
                             .prop('disabled', true)
                             .empty()
                             .append('<option value="">Loading...</option>')
                             .trigger('change');
+
                     },
+
                     success: function(data) {
-                        let html = '<option value="">Select Sales Order</option>';
+
+                        let html =
+                            '<option value="">Select Sales Order</option>';
+
                         $.each(data, function(i, item) {
 
+                            let selected =
+                                String(item.id) === String(selectedSalesOrderId) ?
+                                'selected' :
+                                '';
+
                             html += `
-                                <option value="${item.id}" data-total="${item.grand_total}">
-                                    ${item.sales_order_code}
-                                </option>
-                            `;
+                        <option
+                            value="${item.id}"
+                            data-total="${item.grand_total}"
+                            ${selected}>
+                            ${item.sales_order_code}
+                        </option>
+                    `;
                         });
 
-                        $('#sales_order_id')
+                        salesOrderDropdown
                             .prop('disabled', false)
                             .html(html)
                             .trigger('change');
+
+                    },
+
+                    error: function(xhr) {
+
+                        console.error(xhr);
+
+                        salesOrderDropdown
+                            .prop('disabled', false)
+                            .empty()
+                            .append(
+                                '<option value="">Select Sales Order</option>'
+                            )
+                            .trigger('change');
                     }
                 });
+            }
+
+
+            // ==========================================
+            // CUSTOMER CHANGE
+            // ==========================================
+
+            $('#customer_id').on('change', function() {
+
+                let customerId = $(this).val();
+
+                $('#taxpayer_data').val('');
+
+                if (!customerId) {
+
+                    $('#address').val('');
+
+                    $('#sales_order_id')
+                        .prop('disabled', true)
+                        .empty()
+                        .append(
+                            '<option value="">Select Sales Order</option>'
+                        )
+                        .trigger('change');
+
+                    return;
+                }
+
+
+                // Load customer address
+                $.ajax({
+
+                    url: '/sales-invoice/' + customerId + '/data',
+
+                    type: 'GET',
+
+                    dataType: 'json',
+
+                    success: function(data) {
+
+                        $('#address').val(data.address ?? '');
+
+                    }
+
+                });
+
+
+                // Load Sales Order
+                loadSalesOrders(customerId);
 
             });
+
+
+            // ==========================================
+            // SALES ORDER CHANGE
+            // ==========================================
 
             $('#sales_order_id').on('change', function() {
 
                 let salesOrderId = $(this).val();
 
-                // Reset
                 $('#down_payment_percent').val('');
                 $('#down_payment_amount').val('');
 
                 if (!salesOrderId) {
+
                     $('#total_order')
                         .val('')
                         .attr('data-value', 0);
@@ -356,25 +448,28 @@
                     return;
                 }
 
+
                 $.ajax({
+
                     url: "{{ url('sales-down-payment/ajax/sales-order') }}/" +
                         salesOrderId +
                         "/down-payment",
 
                     type: "GET",
+
                     dataType: "json",
 
                     beforeSend: function() {
-                        $('#down_payment_amount').val('Loading...');
+
+                        $('#down_payment_amount')
+                            .val('Loading...');
+
                     },
 
                     success: function(data) {
 
                         let salesOrderAmount =
                             parseFloat(data.sales_order_amount) || 0;
-
-                        let totalDP =
-                            parseFloat(data.total_down_payment) || 0;
 
                         let remainingAmount =
                             parseFloat(data.remaining_amount) || 0;
@@ -386,32 +481,52 @@
                             .attr('data-value', salesOrderAmount);
 
 
-                        // Sisa DP
+                        // Remaining DP
                         $('#down_payment_amount')
                             .val(formatRupiah(remainingAmount))
                             .attr('data-value', remainingAmount);
 
 
-                        // Persentase sisa DP
+                        // Percentage
                         let percent = 0;
 
                         if (salesOrderAmount > 0) {
+
                             percent =
                                 (remainingAmount / salesOrderAmount) * 100;
+
                         }
 
                         $('#down_payment_percent')
                             .val(percent.toFixed(2));
+
                     },
 
                     error: function(xhr) {
 
+                        console.error(xhr);
+
                         $('#down_payment_amount').val('');
 
                     }
+
                 });
 
             });
+
+
+            // ==========================================
+            // EDIT MODE
+            // ==========================================
+
+            if (existingCustomerId) {
+
+                loadSalesOrders(
+                    existingCustomerId,
+                    existingSalesOrderId
+                );
+
+            }
 
             // SIMPAN DATA SEMUA
             let saveAndNew = false;
@@ -514,6 +629,7 @@
                     },
                 });
             });
+
         });
 
         $('#down_payment_amount').on('input', function() {
