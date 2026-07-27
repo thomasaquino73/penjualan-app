@@ -402,7 +402,8 @@
                             unit_price: "{{ $detail['unit_price'] }}",
                             discount_percent: "{{ $detail['discount_percent'] }}",
                             discount: "{{ $detail['discount'] }}",
-                            amount: "{{ $detail['amount'] }}"
+                            amount: "{{ $detail['amount'] }}",
+                            sales_order_id: "{{ $detail['sales_order_id'] }}"
                         }
                         {{ !$loop->last ? ',' : '' }}
                     @endforeach
@@ -569,6 +570,7 @@
                             data: "warehouse",
                             className: "text-center"
                         },
+
                     ],
                     layout: {
                         topStart: {

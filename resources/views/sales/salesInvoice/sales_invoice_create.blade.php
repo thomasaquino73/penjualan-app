@@ -491,6 +491,7 @@
                         data: "warehouse",
                         className: "text-center"
                     },
+                 
                 ],
                 layout: {
                     topStart: {

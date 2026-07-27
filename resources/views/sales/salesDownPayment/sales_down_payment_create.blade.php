@@ -23,27 +23,12 @@
             <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
 
             <div class="col-12 col-lg-5">
-                <div
-                    class="d-flex flex-column flex-md-row gap-2
-                    justify-content-start justify-content-lg-end">
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            Get Form
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><button class="dropdown-item btn-info btn-sm " id="showModalpr">
-                                    <i class="ti ti-clipboard me-1"></i>DELIVERY
-                                </button></li>
-                        </ul>
-                    </div>
-                </div>
+
             </div>
 
         </div>
         <div class="card-body table-responsive p-3">
-            <form action="{{ route('sales-down-payment.store') }}" method="POST" id="postForm"
-                enctype="multipart/form-data">
+            <form action="{{ route('sales-down-payment.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
                 @csrf
                 <div class="row mb-5">
 

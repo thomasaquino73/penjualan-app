@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SalesDownPaymentRequest;
-use App\Models\DocumentTransactionHistory;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesDownPayment;
 use App\Models\Sales\SalesOrder;
@@ -356,52 +355,52 @@ class SalesDownPaymentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-   public function store(SalesDownPaymentRequest $request)
-{
-    DB::beginTransaction();
+    public function store(SalesDownPaymentRequest $request)
+    {
+        DB::beginTransaction();
 
-    try {
+        try {
 
-        $data = $request->except(['total_order']);
+            $data = $request->except(['total_order']);
 
-        // Ambil total_order dari request
-        $data['sales_order_amount'] = $this->parseNominal(
-            $request->input('total_order', 0)
-        );
+            // Ambil total_order dari request
+            $data['sales_order_amount'] = $this->parseNominal(
+                $request->input('total_order', 0)
+            );
 
-        // Bersihkan nominal DP
-        $data['down_payment_amount'] = $this->parseNominal(
-            $request->input('down_payment_amount', 0)
-        );
+            // Bersihkan nominal DP
+            $data['down_payment_amount'] = $this->parseNominal(
+                $request->input('down_payment_amount', 0)
+            );
 
-        $data['sales_downpayment_date'] = Carbon::parse(
-            $request->sales_downpayment_date
-        )->format('Y-m-d');
+            $data['sales_downpayment_date'] = Carbon::parse(
+                $request->sales_downpayment_date
+            )->format('Y-m-d');
 
-        $data['due_date'] = $request->due_date
-            ? Carbon::parse($request->due_date)->format('Y-m-d')
-            : null;
+            $data['due_date'] = $request->due_date
+                ? Carbon::parse($request->due_date)->format('Y-m-d')
+                : null;
 
-        SalesDownPayment::create($data);
+            SalesDownPayment::create($data);
 
-        DB::commit();
+            DB::commit();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Sales Down Payment berhasil disimpan.',
-            'redirect' => route('sales-down-payment.index'),
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Sales Down Payment berhasil disimpan.',
+                'redirect' => route('sales-down-payment.index'),
+            ]);
 
-    } catch (\Exception $e) {
+        } catch (\Exception $e) {
 
-        DB::rollBack();
+            DB::rollBack();
 
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Gagal menyimpan data: ' . $e->getMessage(),
-        ], 500);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan data: '.$e->getMessage(),
+            ], 500);
+        }
     }
-}
 
     private function parseNominal($value)
     {

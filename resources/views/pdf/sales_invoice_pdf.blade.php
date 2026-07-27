@@ -111,40 +111,92 @@
                             {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1), 2) : '' }}
                         </td>
                     </tr>
-                    @foreach ($paymentHistories as $history)
+                    {{-- ============================================================
+    RIWAYAT DOWN PAYMENT
+============================================================= --}}
+                    @if ($downPayments->count() > 0)
+
+                        @foreach ($downPayments as $payment)
+                            <tr>
+                                <td>
+
+                                    {{ $payment->sales_downpayment_code ?? 'Down Payment' }}
+
+                                    @if ((float) ($payment->down_payment_percent ?? 0) > 0)
+                                        {{ rtrim(rtrim(number_format((float) $payment->down_payment_percent, 2, ',', '.'), '0'), ',') }}%
+                                    @endif
+
+                                    <br>
+
+                                    <small>
+                                        @if (!empty($payment->sales_downpayment_date))
+                                            {{ \Carbon\Carbon::parse($payment->sales_downpayment_date)->format('d/m/Y') }}
+                                        @else
+                                            -
+                                        @endif
+                                    </small>
+
+                                </td>
+
+                                <td class="text-right">
+                                    {{ isset($payment) ? format_uang(convert_currency($payment->down_payment_amount, $payment->currency_id ?? 1)) : '' }}
+
+                                </td>
+                            </tr>
+                        @endforeach
+                    @else
                         <tr>
                             <td>
-                                {{ $history->payment_name }}
-
-                                @if ($history->payment_percent)
-                                    {{ rtrim(rtrim(number_format($history->payment_percent, 2), '0'), '.') }}%
-                                @endif
-
-                                <br>
-
-                                <small>
-                                    {{ \Carbon\Carbon::parse($history->transaction_date)->format('d/m/Y') }}
-                                </small>
+                                Pembayaran
                             </td>
 
                             <td class="text-right">
-                                {{ format_uang($history->amount, 2) }}
+                                {{ format_uang(0, 2) }}
                             </td>
                         </tr>
-                    @endforeach
 
+                    @endif
+
+
+                    {{-- ============================================================
+    TOTAL PEMBAYARAN
+============================================================= --}}
                     <tr>
-                        <td><strong>Total Pembayaran</strong></td>
+                        <td>
+                            <strong>
+                                Total Pembayaran
+                            </strong>
+                        </td>
+
                         <td class="text-right">
-                            <strong>{{ format_uang($totalPaid, 2) }}</strong>
+                            <strong>
+
+                                {{ isset($payment) ? format_uang(convert_currency($totalInvoicePaid, $payment->currency_id ?? 1)) : '' }}
+
+                            </strong>
                         </td>
                     </tr>
 
+
+                    {{-- ============================================================
+    SISA PEMBAYARAN
+============================================================= --}}
                     <tr class="total-row">
-                        <td><strong>Sisa Pembayaran</strong></td>
-                        <td class="text-right">
-                            <strong>{{ format_uang($remainingInvoice, 2) }}</strong>
+
+                        <td>
+                            <strong>
+                                Sisa Pembayaran
+                            </strong>
                         </td>
+
+                        <td class="text-right">
+                            <strong>
+
+                                {{ isset($payment) ? format_uang(convert_currency($remainingInvoice, $payment->currency_id ?? 1)) : '' }}
+
+                            </strong>
+                        </td>
+
                     </tr>
                 </table>
             </td>
