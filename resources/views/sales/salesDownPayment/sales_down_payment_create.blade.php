@@ -72,7 +72,7 @@
                                 <label class="form-label">Number <small class="text-danger">*</small> </label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
-                                    <input type="text" name="sales_invoice_code" id="sales_invoice_code"
+                                    <input type="text" name="sales_downpayment_code" id="sales_downpayment_code"
                                         class="form-control" value="{{ $idNumber }}">
                                 </div>
                                 <span class="error text-danger" id="sales_invoice_codeError"></span>
@@ -99,7 +99,7 @@
                                     <input type="text" name="due_date" id="due_date" class="form-control"
                                         value="">
                                 </div>
-                                <span class="error text-danger" id="sales_invoice_dateError"></span>
+                                <span class="error text-danger" id="due_dateError"></span>
                             </div>
 
                         </div>
@@ -142,7 +142,7 @@
                                         <span class="error text-danger" id="sales_order_idError"></span>
                                     </div>
                                 </div>
-                                <div class="col-6 mb-3">
+                                <div class="col-lg-6 col-sm-12 mb-3">
                                     <label class="form-label">Total Order<small class="text-danger">*</small>
                                     </label>
                                     <div class="input-group input-group-merge">
@@ -150,9 +150,9 @@
                                         <input type="text" name="total_order" id="total_order" class="form-control"
                                             readonly>
                                     </div>
-                                    <span class="error text-danger" id="sales_invoice_dateError"></span>
+                                    <span class="error text-danger" id="total_orderError"></span>
                                 </div>
-                                <div class="col-6 mb-3">
+                                <div class="col-lg-6 col-sm-12 mb-3">
                                     <label class="form-label">
                                         Down Payment<small class="text-danger">*</small>
                                     </label>
@@ -180,12 +180,13 @@
                                                 <input type="text" name="down_payment_amount" id="down_payment_amount"
                                                     class="form-control">
                                             </div>
+                                            <span class="error text-danger" id="down_payment_amountError"></span>
                                         </div>
 
                                     </div>
 
                                 </div>
-                                <div class="col-6 mb-3">
+                                <div class="col-lg-6 col-sm-12 mb-3">
                                     <label class="form-label">PO Number<small class="text-danger">*</small>
                                     </label>
                                     <div class="input-group input-group-merge">
@@ -247,29 +248,7 @@
                     </div>
                 </div>
 
-                <div class="row mb-5">
-                    <div class="col-md-8"></div>
-                    <div class="col-md-4">
-                        <div class="row">
-                            <div class="col-6 mb-3 ">
-                                <label class="form-label" for="sub_total">Sub Total</label>
-                                <div class="input-group input-group-merge">
-                                    <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
-                                    <input type="text" id="sub_total" name="sub_total" class="form-control"
-                                        placeholder="0" readonly>
-                                </div>
-                            </div>
-                            <div class="col-6 mb-3 ">
-                                <label class="form-label" for="grand_total">Total</label>
-                                <div class="input-group input-group-merge">
-                                    <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
-                                    <input type="text" id="grand_total" name="grand_total" class="form-control"
-                                        placeholder="0" readonly>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
                 <div class="card-footer d-flex justify-content-end gap-2">
                     <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
                         <i class="fa fa-upload me-1"></i> Save and Close
@@ -307,17 +286,26 @@
             }).format(number);
 
         }
+
+        function parseRupiah(value) {
+            if (!value) {
+                return 0;
+            }
+
+            return parseFloat(
+                value
+                .toString()
+                .replace(/\./g, '')
+                .replace(',', '.')
+            ) || 0;
+        }
         $(document).ready(function() {
             $('#customer_id').on('change', function() {
-
                 let customerId = $(this).val();
                 let contactDropdown = $('#customer_contact_id');
-
                 contactDropdown.empty().append('<option>Loading...</option>');
-
                 // kosongkan data pajak
                 $('#taxpayer_data').val('');
-
                 if (!customerId) {
                     contactDropdown.empty().append('<option value="">Pilih Kontak</option>');
                     return;
@@ -328,9 +316,7 @@
                     type: 'GET',
                     dataType: 'json',
                     success: function(data) {
-
                         $('#address').val(data.address ?? '');
-
 
                     }
                 });
@@ -339,7 +325,6 @@
                     url: "{{ url('sales-down-payment/ajax/customer-sales-order') }}/" + customerId,
                     type: "GET",
                     beforeSend: function() {
-
                         $('#sales_order_id')
                             .prop('disabled', true)
                             .empty()
@@ -347,9 +332,7 @@
                             .trigger('change');
                     },
                     success: function(data) {
-
                         let html = '<option value="">Select Sales Order</option>';
-
                         $.each(data, function(i, item) {
 
                             html += `
@@ -357,7 +340,6 @@
                                     ${item.sales_order_code}
                                 </option>
                             `;
-
                         });
 
                         $('#sales_order_id')
@@ -371,27 +353,177 @@
 
             $('#sales_order_id').on('change', function() {
 
-                let total = $(this)
-                    .find(':selected')
-                    .data('total');
+                let salesOrderId = $(this).val();
 
+                // Reset
+                $('#down_payment_percent').val('');
+                $('#down_payment_amount').val('');
 
-                if (total) {
-
-                    // tampilkan format rupiah
-                    $('#total_order')
-                        .val(formatRupiah(total))
-                        .attr('data-value', total);
-
-
-                } else {
-
+                if (!salesOrderId) {
                     $('#total_order')
                         .val('')
                         .attr('data-value', 0);
 
+                    return;
                 }
 
+                $.ajax({
+                    url: "{{ url('sales-down-payment/ajax/sales-order') }}/" +
+                        salesOrderId +
+                        "/down-payment",
+
+                    type: "GET",
+                    dataType: "json",
+
+                    beforeSend: function() {
+                        $('#down_payment_amount').val('Loading...');
+                    },
+
+                    success: function(data) {
+
+                        let salesOrderAmount =
+                            parseFloat(data.sales_order_amount) || 0;
+
+                        let totalDP =
+                            parseFloat(data.total_down_payment) || 0;
+
+                        let remainingAmount =
+                            parseFloat(data.remaining_amount) || 0;
+
+
+                        // Total Sales Order
+                        $('#total_order')
+                            .val(formatRupiah(salesOrderAmount))
+                            .attr('data-value', salesOrderAmount);
+
+
+                        // Sisa DP
+                        $('#down_payment_amount')
+                            .val(formatRupiah(remainingAmount))
+                            .attr('data-value', remainingAmount);
+
+
+                        // Persentase sisa DP
+                        let percent = 0;
+
+                        if (salesOrderAmount > 0) {
+                            percent =
+                                (remainingAmount / salesOrderAmount) * 100;
+                        }
+
+                        $('#down_payment_percent')
+                            .val(percent.toFixed(2));
+                    },
+
+                    error: function(xhr) {
+
+                        $('#down_payment_amount').val('');
+
+                    }
+                });
+
+            });
+
+            // SIMPAN DATA SEMUA
+            let saveAndNew = false;
+            let activeBtn = null;
+
+            $(document).on("click", '.card-footer button[type="submit"]', function() {
+                saveAndNew = $(this).data("save-and-new");
+                activeBtn = $(this);
+            });
+
+
+            $("#postForm").on("submit", function(e) {
+                e.preventDefault();
+                let form = this;
+                $('#sales_order_amount').val(
+                    parseRupiah($('#sales_order_amount').val())
+                );
+
+                $('#down_payment_amount').val(
+                    parseRupiah($('#down_payment_amount').val())
+                );
+
+                $('#paid_amount').val(
+                    parseRupiah($('#paid_amount').val())
+                );
+
+                $('#remaining_amount').val(
+                    parseRupiah($('#remaining_amount').val())
+                );
+                let formData = new FormData(form);
+                if (!activeBtn) {
+                    activeBtn = $("#postForm").find(
+                        'button[data-save-and-new="false"]',
+                    );
+                    saveAndNew = false;
+                }
+                // START LOADING
+                activeBtn.html(
+                    '<i class="fa fa-spin fa-spinner me-1"></i> Checking...',
+                );
+                $(".card-footer button").prop("disabled", true);
+
+                $.ajax({
+                    url: $(form).attr("action"),
+                    method: $(form).attr("method"),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    beforeSend: function() {
+                        activeBtn.html(
+                            '<i class="fa fa-spin fa-spinner me-1"></i> Sending...',
+                        );
+                        $(".card-footer button").prop("disabled", true);
+                    },
+                    complete: function() {
+                        let closeBtn = $("#postForm").find(
+                            'button[data-save-and-new="false"]',
+                        );
+                        let newBtn = $("#postForm").find(
+                            'button[data-save-and-new="true"]',
+                        );
+                        closeBtn.html(
+                            '<i class="fa fa-upload me-1"></i> Save and Close',
+                        );
+                        newBtn.html(
+                            '<i class="fa fa-plus-circle me-1"></i> Save and Create New',
+                        );
+                        $(".card-footer button").prop("disabled", false);
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Data Created Successfully",
+                            text: response.message,
+                            customClass: {
+                                confirmButton: "btn btn-primary waves-effect waves-light",
+                            },
+                            buttonsStyling: false,
+                        }).then(() => {
+                            window.location.href = response.redirect;
+                        });
+                    },
+                    error: function(xhr) {
+                        resetValidation();
+                        let errors = xhr.responseJSON?.errors;
+                        $.each(errors, function(key, value) {
+                            displayFieldError(key, value[0]);
+                        });
+                        Swal.fire({
+                            icon: "error",
+                            title: "Failed to Create Data",
+                            text: xhr.responseJSON.message ||
+                                "Please check your data again.",
+                            customClass: {
+                                confirmButton: "btn btn-primary waves-effect waves-light",
+                            },
+                            buttonsStyling: false,
+                        });
+                    },
+                });
             });
         });
 

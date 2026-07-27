@@ -573,8 +573,6 @@ class SalesOrderController extends Controller
                             'created_by' => Auth::id(),
                         ]);
 
-                      
-
                         // 2. Sinkronisasi ke Sales Quotation Detail (PR)
                         if ($sqDetailId) {
                             $sqDetail = DB::table("sales_quotation_detail_{$currentYear}")->where('id', $sqDetailId)->first();
