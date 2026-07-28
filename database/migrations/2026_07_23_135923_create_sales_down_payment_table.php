@@ -20,10 +20,10 @@ return new class extends Migration
             $table->unsignedBigInteger('customer_id');
             $table->string('sales_downpayment_code')->unique();
             $table->date('sales_downpayment_date');
-            $table->unsignedBigInteger('sales_order_id');
+            $table->unsignedBigInteger('sales_order_id')->nullable();
             $table->unsignedBigInteger('payment_term_id');
             $table->string('address');
-            $table->string('po_number');
+            $table->string('po_number')->nullable();
 
             // Nilai
             $table->decimal('sales_order_amount', 15, 4);

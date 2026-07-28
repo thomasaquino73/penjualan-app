@@ -392,8 +392,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/restore/{id}', [SalesDownPaymentController::class, 'restore'])->name('restore');
         Route::get('/print/{id}', [SalesDownPaymentController::class, 'print'])->name('print');
         Route::get('/ajax/customer-sales-order/{customer}', [SalesDownPaymentController::class, 'getSalesOrder'])->name('ajax.customer.sales-order');
+        Route::get('/ajax/edit-customer-sales-order/{customer}', [SalesDownPaymentController::class, 'getSalesOrderEdit'])->name('ajax.customer.edit-sales-order');
         Route::get('/ajax/sales-order/{sales_order}/down-payment', [SalesDownPaymentController::class, 'getSalesOrderDownPayment'])->name('ajax.sales-order.down-payment');
-        Route::get('/ajax/data/{id}', [PurchaseDownPaymentController::class, 'getPurchaseDownPaymentData'])->name('ajax.data');
         Route::get('/trash', [SalesDownPaymentController::class, 'trash'])->name('trash');
         Route::resource('', SalesDownPaymentController::class)->parameters(['' => 'sales-down-payment']);
     });

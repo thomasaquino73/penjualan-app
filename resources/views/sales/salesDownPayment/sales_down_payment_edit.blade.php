@@ -280,6 +280,20 @@
 
         }
 
+        function loadSalesOrderData(salesOrderId, isEdit = false) {
+            if (!salesOrderId) return;
+
+            const selectedOption = $('#sales_order_id').find('option:selected');
+            let totalOrder = selectedOption.data('total');
+
+            if (totalOrder) {
+                $('#total_order').val(formatRupiah(totalOrder)).attr('data-value', totalOrder);
+            } else {
+                let modelTotal = @json($model->sales_order_amount ?? 0);
+                $('#total_order').val(formatRupiah(modelTotal)).attr('data-value', modelTotal);
+            }
+        }
+
         function parseRupiah(value) {
             if (value === null || value === undefined || value === '') {
                 return 0;
@@ -296,134 +310,75 @@
 
             return isNaN(number) ? 0 : number;
         }
+
+
         $(document).ready(function() {
-
-            // ==========================================
-            // LOAD SALES ORDER BERDASARKAN CUSTOMER
-            // ==========================================
-
             function loadSalesOrders(customerId, selectedSalesOrderId = null) {
-
-                const salesOrderDropdown = $('#sales_order_id');
+                const dropdown = $('#sales_order_id');
 
                 if (!customerId) {
-
-                    salesOrderDropdown
-                        .prop('disabled', true)
+                    dropdown.prop('disabled', true)
                         .empty()
                         .append('<option value="">Select Sales Order</option>')
                         .trigger('change');
-
                     return;
                 }
 
                 $.ajax({
-
-                    url: "{{ url('sales-down-payment/ajax/customer-sales-order') }}/" + customerId,
+                    url: "{{ url('sales-down-payment/ajax/edit-customer-sales-order') }}/" +
+                        customerId,
                     type: "GET",
                     dataType: "json",
-
                     beforeSend: function() {
-
-                        salesOrderDropdown
-                            .prop('disabled', true)
+                        dropdown.prop('disabled', true)
                             .empty()
                             .append('<option value="">Loading...</option>')
                             .trigger('change');
-
                     },
-
                     success: function(data) {
-
-                        let html =
-                            '<option value="">Select Sales Order</option>';
+                        let html = '<option value="">Select Sales Order</option>';
 
                         $.each(data, function(i, item) {
-
-                            let selected =
-                                String(item.id) === String(selectedSalesOrderId) ?
-                                'selected' :
-                                '';
-
+                            const selected = String(item.id) === String(
+                                selectedSalesOrderId) ? 'selected' : '';
                             html += `
-                        <option
-                            value="${item.id}"
-                            data-total="${item.grand_total}"
-                            ${selected}>
-                            ${item.sales_order_code}
-                        </option>
-                    `;
+                                <option value="${item.id}" data-total="${item.grand_total}" ${selected}>
+                                    ${item.sales_order_code}
+                                </option>
+                            `;
                         });
 
-                        salesOrderDropdown
-                            .prop('disabled', false)
+                        dropdown.prop('disabled', false)
                             .html(html)
                             .trigger('change');
 
+                        if (selectedSalesOrderId) {
+                            loadSalesOrderData(selectedSalesOrderId, true);
+                        }
                     },
-
                     error: function(xhr) {
-
                         console.error(xhr);
-
-                        salesOrderDropdown
-                            .prop('disabled', false)
+                        dropdown.prop('disabled', false)
                             .empty()
-                            .append(
-                                '<option value="">Select Sales Order</option>'
-                            )
+                            .append('<option value="">Select Sales Order</option>')
                             .trigger('change');
                     }
                 });
             }
-
-
-            // ==========================================
-            // CUSTOMER CHANGE
-            // ==========================================
-
             $('#customer_id').on('change', function() {
-
-                let customerId = $(this).val();
-
-                $('#taxpayer_data').val('');
+                const customerId = $(this).val();
 
                 if (!customerId) {
-
+                    $('#sales_order_id').prop('disabled', true).empty().append(
+                        '<option value="">Select Sales Order</option>').trigger('change');
+                    $('#bank_id').empty().append('<option value="">Select Bank Account</option>').trigger(
+                        'change');
                     $('#address').val('');
-
-                    $('#sales_order_id')
-                        .prop('disabled', true)
-                        .empty()
-                        .append(
-                            '<option value="">Select Sales Order</option>'
-                        )
-                        .trigger('change');
-
                     return;
                 }
 
-
-                // Load customer address
-                $.ajax({
-
-                    url: '/sales-invoice/' + customerId + '/data',
-
-                    type: 'GET',
-
-                    dataType: 'json',
-
-                    success: function(data) {
-
-                        $('#address').val(data.address ?? '');
-
-                    }
-
-                });
-
-
-                // Load Sales Order
                 loadSalesOrders(customerId);
+
 
             });
 
@@ -436,11 +391,7 @@
 
                 let salesOrderId = $(this).val();
 
-                $('#down_payment_percent').val('');
-                $('#down_payment_amount').val('');
-
                 if (!salesOrderId) {
-
                     $('#total_order')
                         .val('')
                         .attr('data-value', 0);
@@ -448,22 +399,31 @@
                     return;
                 }
 
+                // Jika sedang edit dan Sales Order adalah data existing
+                if (
+                    typeof existingSalesOrderId !== 'undefined' &&
+                    String(salesOrderId) === String(existingSalesOrderId)
+                ) {
+                    let modelTotal = @json($model->sales_order_amount ?? 0);
 
+                    $('#total_order')
+                        .val(formatRupiah(modelTotal))
+                        .attr('data-value', modelTotal);
+
+                    // Jangan overwrite DP existing
+                    return;
+                }
+
+                // Jika memilih Sales Order baru
                 $.ajax({
-
                     url: "{{ url('sales-down-payment/ajax/sales-order') }}/" +
                         salesOrderId +
                         "/down-payment",
-
                     type: "GET",
-
                     dataType: "json",
 
                     beforeSend: function() {
-
-                        $('#down_payment_amount')
-                            .val('Loading...');
-
+                        $('#down_payment_amount').val('Loading...');
                     },
 
                     success: function(data) {
@@ -474,44 +434,30 @@
                         let remainingAmount =
                             parseFloat(data.remaining_amount) || 0;
 
-
-                        // Total Sales Order
                         $('#total_order')
                             .val(formatRupiah(salesOrderAmount))
                             .attr('data-value', salesOrderAmount);
 
-
-                        // Remaining DP
                         $('#down_payment_amount')
                             .val(formatRupiah(remainingAmount))
                             .attr('data-value', remainingAmount);
 
-
-                        // Percentage
                         let percent = 0;
 
                         if (salesOrderAmount > 0) {
-
                             percent =
                                 (remainingAmount / salesOrderAmount) * 100;
-
                         }
 
                         $('#down_payment_percent')
                             .val(percent.toFixed(2));
-
                     },
 
                     error: function(xhr) {
-
                         console.error(xhr);
-
                         $('#down_payment_amount').val('');
-
                     }
-
                 });
-
             });
 
 

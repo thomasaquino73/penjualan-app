@@ -464,7 +464,7 @@ class PurchaseDownPaymentController extends Controller
         }
     }
 
-      public function restore(string $id)
+    public function restore(string $id)
     {
 
         try {
@@ -479,7 +479,7 @@ class PurchaseDownPaymentController extends Controller
         }
     }
 
-     public function trash(Request $r)
+    public function trash(Request $r)
     {
         if ($r->ajax()) {
             // Ambil ID user yang sedang login
@@ -598,7 +598,7 @@ class PurchaseDownPaymentController extends Controller
         }
 
         $x = [
-             'title' => 'Deleted Purchase Down Payment List',
+            'title' => 'Deleted Purchase Down Payment List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
                 ['label' => 'Deleted Purchase Down Payment', 'url' => ''],
@@ -627,51 +627,6 @@ class PurchaseDownPaymentController extends Controller
 
         return response()->json($purchaseOrders);
     }
-    // public function getPurchaseOrderDownPayment($purchaseOrderId)
-    // {
-    //     $year = date('Y');
-    //     $table = "purchase_down_payments_{$year}";
-
-    //     $purchaseOrder = PurchaseOrder::findOrFail($purchaseOrderId);
-
-    //     // Ambil semua DP aktif untuk Purchase Order ini
-    //     $downPayments = DB::table($table)
-    //         ->where('purchase_order_id', $purchaseOrderId)
-    //         ->where('active', 1)
-    //         ->where('status', '!=', 'closed')
-    //         ->get();
-
-    //     // Total nominal DP yang sudah dibuat (hanya dijumlahkan, tanpa kalkulasi sisa)
-    //     $totalDownPayment = $downPayments->sum(function ($dp) {
-    //         return (float) $dp->down_payment_amount;
-    //     });
-
-    //     return response()->json([
-    //         'purchase_order_id' => $purchaseOrder->id,
-    //         'code' => $purchaseOrder->code,
-    //         'purchase_order_amount' => (float) $purchaseOrder->grand_total,
-    //         'total_down_payment' => $totalDownPayment,
-    //     ]);
-    // }
-    // public function getPurchaseOrderTotal($id)
-    // {
-    //     $year = date('Y');
-
-    //     $purchaseOrder = DB::table("purchase_order_{$year}")
-    //         ->where('id', $id)
-    //         ->first();
-
-    //     if (! $purchaseOrder) {
-    //         return response()->json([
-    //             'success' => false,
-    //         ]);
-    //     }
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'grand_total' => $purchaseOrder->grand_total,
-    //     ]);
-    // }
 
     public function getPurchaseDownPaymentData($id)
     {
@@ -757,6 +712,110 @@ class PurchaseDownPaymentController extends Controller
         return response()->json($purchaseOrders);
     }
 
+    public function getPurchaseOrderTotal($id)
+    {
+        $year = date('Y');
+
+        $purchaseOrder = DB::table("purchase_order_{$year}")
+            ->where('id', $id)
+            ->first();
+
+        if (! $purchaseOrder) {
+            return response()->json([
+                'success' => false,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'grand_total' => $purchaseOrder->grand_total,
+        ]);
+    }
+
+    public function getPurchaseOrderDownPayment($purchaseOrderId)
+    {
+        $year = date('Y');
+
+        $table = "purchase_down_payments_{$year}";
+
+        $purchaseOrder = PurchaseOrder::findOrFail($purchaseOrderId);
+
+        // Semua DP aktif untuk Purchase Order ini
+        $downPayments = DB::table($table)
+            ->where('purchase_order_id', $purchaseOrderId)
+            ->where('active', 1)
+            ->where('status', '!=', 'closed')
+            ->get();
+
+        // Total nominal DP yang sudah dibuat
+        $totalDownPayment = $downPayments->sum(function ($dp) {
+            return (float) $dp->down_payment_amount;
+        });
+
+        // Sisa yang masih bisa dibuat sebagai DP
+        $remainingAmount = max(
+            0,
+            (float) $purchaseOrder->grand_total - $totalDownPayment
+        );
+
+        return response()->json([
+            'purchase_order_id' => $purchaseOrder->id,
+            'code' => $purchaseOrder->code,
+
+            'purchase_order_amount' => (float) $purchaseOrder->grand_total,
+
+            'total_down_payment' => $totalDownPayment,
+
+            'remaining_amount' => $remainingAmount,
+        ]);
+    }
+
+    // public function getPurchaseOrderDownPayment($purchaseOrderId)
+    // {
+    //     $year = date('Y');
+    //     $table = "purchase_down_payments_{$year}";
+
+    //     $purchaseOrder = PurchaseOrder::findOrFail($purchaseOrderId);
+
+    //     // Ambil semua DP aktif untuk Purchase Order ini
+    //     $downPayments = DB::table($table)
+    //         ->where('purchase_order_id', $purchaseOrderId)
+    //         ->where('active', 1)
+    //         ->where('status', '!=', 'closed')
+    //         ->get();
+
+    //     // Total nominal DP yang sudah dibuat (hanya dijumlahkan, tanpa kalkulasi sisa)
+    //     $totalDownPayment = $downPayments->sum(function ($dp) {
+    //         return (float) $dp->down_payment_amount;
+    //     });
+
+    //     return response()->json([
+    //         'purchase_order_id' => $purchaseOrder->id,
+    //         'code' => $purchaseOrder->code,
+    //         'purchase_order_amount' => (float) $purchaseOrder->grand_total,
+    //         'total_down_payment' => $totalDownPayment,
+    //     ]);
+    // }
+    // public function getPurchaseOrderTotal($id)
+    // {
+    //     $year = date('Y');
+
+    //     $purchaseOrder = DB::table("purchase_order_{$year}")
+    //         ->where('id', $id)
+    //         ->first();
+
+    //     if (! $purchaseOrder) {
+    //         return response()->json([
+    //             'success' => false,
+    //         ]);
+    //     }
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'grand_total' => $purchaseOrder->grand_total,
+    //     ]);
+    // }
+
     //     public function getPurchaseOrder($supplierId, Request $request = null)
     // {
     //     // Ambil parameter jika dikirim via query string (misal: ?current_dp_id=5)
@@ -822,64 +881,6 @@ class PurchaseDownPaymentController extends Controller
 
     //     return response()->json($purchaseOrders);
     // }
-
-    public function getPurchaseOrderTotal($id)
-    {
-        $year = date('Y');
-
-        $purchaseOrder = DB::table("purchase_order_{$year}")
-            ->where('id', $id)
-            ->first();
-
-        if (! $purchaseOrder) {
-            return response()->json([
-                'success' => false,
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'grand_total' => $purchaseOrder->grand_total,
-        ]);
-    }
-
-    public function getPurchaseOrderDownPayment($purchaseOrderId)
-    {
-        $year = date('Y');
-
-        $table = "purchase_down_payments_{$year}";
-
-        $purchaseOrder = PurchaseOrder::findOrFail($purchaseOrderId);
-
-        // Semua DP aktif untuk Purchase Order ini
-        $downPayments = DB::table($table)
-            ->where('purchase_order_id', $purchaseOrderId)
-            ->where('active', 1)
-            ->where('status', '!=', 'closed')
-            ->get();
-
-        // Total nominal DP yang sudah dibuat
-        $totalDownPayment = $downPayments->sum(function ($dp) {
-            return (float) $dp->down_payment_amount;
-        });
-
-        // Sisa yang masih bisa dibuat sebagai DP
-        $remainingAmount = max(
-            0,
-            (float) $purchaseOrder->grand_total - $totalDownPayment
-        );
-
-        return response()->json([
-            'purchase_order_id' => $purchaseOrder->id,
-            'code' => $purchaseOrder->code,
-
-            'purchase_order_amount' => (float) $purchaseOrder->grand_total,
-
-            'total_down_payment' => $totalDownPayment,
-
-            'remaining_amount' => $remainingAmount,
-        ]);
-    }
 
     //     public function getPurchaseDownPaymentData($id)
     // {

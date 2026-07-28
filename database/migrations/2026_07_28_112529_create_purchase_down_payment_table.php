@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('supplier_id');
             $table->string('purchase_downpayment_code')->unique();
             $table->date('purchase_downpayment_date');
-            $table->unsignedBigInteger('purchase_order_id');
+            $table->unsignedBigInteger('purchase_order_id')->nullable();
             $table->unsignedBigInteger('bank_id')->nullable();
             $table->string('address');
             $table->string('invoice_number')->nullable();

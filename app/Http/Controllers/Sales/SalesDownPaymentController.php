@@ -135,7 +135,7 @@ class SalesDownPaymentController extends Controller
 
                     // OUTSTANDING INFO
                     if (
-                        in_array($row->status, ['partially_received']) &&
+                        in_array($row->status, ['partial']) &&
                         $row->total_outstanding_qty > 0
                     ) {
 
@@ -344,7 +344,7 @@ class SalesDownPaymentController extends Controller
 
         try {
 
-            $data = $request->except(['total_order']);
+            $data = $request->except(['total_order', 'save_and_new']);
 
             // Ambil total_order dari request
             $data['sales_order_amount'] = $this->parseNominal(
@@ -368,11 +368,14 @@ class SalesDownPaymentController extends Controller
             SalesDownPayment::create($data);
 
             DB::commit();
+            $redirectUrl = $request->save_and_new == 1
+                            ? route('sales-down-payment.create')
+                            : route('sales-down-payment.index');
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Sales Down Payment berhasil disimpan.',
-                'redirect' => route('sales-down-payment.index'),
+                'redirect' => $redirectUrl,
             ]);
 
         } catch (\Exception $e) {
@@ -615,7 +618,7 @@ class SalesDownPaymentController extends Controller
 
                     // OUTSTANDING INFO
                     if (
-                        in_array($row->status, ['partially_received']) &&
+                        in_array($row->status, ['partial']) &&
                         $row->total_outstanding_qty > 0
                     ) {
 
@@ -659,6 +662,188 @@ class SalesDownPaymentController extends Controller
 
         return view('sales.salesDownPayment.sales_down_payment_trash', $x);
     }
+    // public function getSalesOrderEdit($customerId)
+    // {
+    //     $year = date('Y');
+
+    //     $salesOrders = SalesOrder::where('customer_id', $customerId)
+    //         ->where('active', 1)
+    //         ->whereIn('status', [
+    //             'processing',
+    //             'partial',
+    //             'fully_delivered',
+    //         ])
+    //         ->orderByDesc('sales_order_date')
+    //         ->get([
+    //             'id',
+    //             'sales_order_code',
+    //             'sales_order_date',
+    //             'grand_total',
+    //         ]);
+
+    //     return response()->json($salesOrders);
+    // }
+    // public function getSalesOrder($customerId)
+    // {
+    //     $year = date('Y');
+
+    //     $salesOrders = SalesOrder::where('customer_id', $customerId)
+    //         ->where('active', 1)
+    //         ->whereIn('status', [
+    //             'processing',
+    //             'partial',
+    //             'fully_delivered',
+    //         ])
+    //         ->orderByDesc('sales_order_date')
+    //         ->get([
+    //             'id',
+    //             'sales_order_code',
+    //             'sales_order_date',
+    //             'grand_total',
+    //         ]);
+
+    //     $table = "sales_down_payments_{$year}";
+
+    //     // Ambil total DP per Sales Order
+    //     $downPayments = DB::table($table)
+    //         ->select(
+    //             'sales_order_id',
+    //             DB::raw('SUM(down_payment_amount) as total_down_payment')
+    //         )
+    //         ->where('active', 1)
+    //         ->where('status', '!=', 'cancelled')
+    //         ->groupBy('sales_order_id')
+    //         ->pluck('total_down_payment', 'sales_order_id');
+
+    //     // Hanya tampilkan SO yang masih memiliki sisa DP
+    //     $salesOrders = $salesOrders
+    //         ->filter(function ($salesOrder) use ($downPayments) {
+
+    //             $totalDP = (float) ($downPayments[$salesOrder->id] ?? 0);
+
+    //             $remaining = (float) $salesOrder->grand_total - $totalDP;
+
+    //             return $remaining > 0;
+    //         })
+    //         ->values();
+
+    //     return response()->json($salesOrders);
+    // }
+
+    // public function getSalesOrderTotal($id)
+    // {
+    //     $year = date('Y');
+
+    //     $salesOrder = DB::table("sales_order_{$year}")
+    //         ->where('id', $id)
+    //         ->first();
+
+    //     if (! $salesOrder) {
+    //         return response()->json([
+    //             'success' => false,
+    //         ]);
+    //     }
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'grand_total' => $salesOrder->grand_total,
+    //     ]);
+    // }
+
+    // public function getSalesOrderDownPayment($salesOrderId)
+    // {
+    //     $year = date('Y');
+
+    //     $table = "sales_down_payments_{$year}";
+
+    //     $salesOrder = SalesOrder::findOrFail($salesOrderId);
+
+    //     // Semua DP aktif untuk Sales Order ini
+    //     $downPayments = DB::table($table)
+    //         ->where('sales_order_id', $salesOrderId)
+    //         ->where('active', 1)
+    //         ->where('status', '!=', 'closed')
+    //         ->get();
+
+    //     // Total nominal DP yang sudah dibuat
+    //     $totalDownPayment = $downPayments->sum(function ($dp) {
+    //         return (float) $dp->down_payment_amount;
+    //     });
+
+    //     // Sisa yang masih bisa dibuat sebagai DP
+    //     $remainingAmount = max(
+    //         0,
+    //         (float) $salesOrder->grand_total - $totalDownPayment
+    //     );
+
+    //     return response()->json([
+    //         'sales_order_id' => $salesOrder->id,
+    //         'code' => $salesOrder->code,
+
+    //         'sales_order_amount' => (float) $salesOrder->grand_total,
+
+    //         'total_down_payment' => $totalDownPayment,
+
+    //         'remaining_amount' => $remainingAmount,
+    //     ]);
+    // }
+
+    public function getSalesOrderEdit($customerId)
+    {
+        $salesOrders = SalesOrder::where('customer_id', $customerId)
+            ->where('active', 1)
+            ->whereIn('status', [
+                'processing',
+                'partial',
+                'fully_delivered',
+            ])
+            ->orderByDesc('sales_order_date')
+            ->get([
+                'id',
+                'sales_order_code',
+                'sales_order_date',
+                'grand_total',
+            ]);
+
+        return response()->json($salesOrders);
+    }
+
+    public function getSalesDownPaymentData($id)
+    {
+        $year = date('Y');
+
+        $downPayment = DB::table("sales_down_payments_{$year}")
+            ->where('id', $id)
+            ->where('active', 1)
+            ->first();
+
+        if (! $downPayment) {
+            return response()->json([
+                'message' => 'Sales Down Payment tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'id' => $downPayment->id,
+            'customer_id' => $downPayment->customer_id,
+            'sales_downpayment_code' => $downPayment->sales_downpayment_code,
+            'sales_downpayment_date' => $downPayment->sales_downpayment_date,
+            'sales_order_id' => $downPayment->sales_order_id,
+            'bank_id' => $downPayment->bank_id,
+            'address' => $downPayment->address,
+            'invoice_number' => $downPayment->invoice_number,
+
+            'sales_order_amount' => $downPayment->sales_order_amount,
+            'down_payment_percent' => $downPayment->down_payment_percent,
+            'down_payment_amount' => $downPayment->down_payment_amount,
+            'paid_amount' => $downPayment->paid_amount,
+            'remaining_amount' => $downPayment->remaining_amount,
+
+            'due_date' => $downPayment->due_date,
+            'description' => $downPayment->description,
+            'status' => $downPayment->status,
+        ]);
+    }
 
     public function getSalesOrder($customerId)
     {
@@ -688,7 +873,7 @@ class SalesDownPaymentController extends Controller
                 DB::raw('SUM(down_payment_amount) as total_down_payment')
             )
             ->where('active', 1)
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', 'closed')
             ->groupBy('sales_order_id')
             ->pluck('total_down_payment', 'sales_order_id');
 
@@ -727,27 +912,61 @@ class SalesDownPaymentController extends Controller
         ]);
     }
 
+    // public function getSalesOrderDownPayment($salesOrderId)
+    // {
+    //     $year = date('Y');
+
+    //     $table = "sales_down_payments_{$year}";
+
+    //     $salesOrder = SalesOrder::findOrFail($salesOrderId);
+
+    //     // Semua DP aktif untuk Sales Order ini
+    //     $downPayments = DB::table($table)
+    //         ->where('sales_order_id', $salesOrderId)
+    //         ->where('active', 1)
+    //         ->where('status', '!=', 'closed')
+    //         ->get();
+
+    //     // Total nominal DP yang sudah dibuat
+    //     $totalDownPayment = $downPayments->sum(function ($dp) {
+    //         return (float) $dp->down_payment_amount;
+    //     });
+
+    //     // Sisa yang masih bisa dibuat sebagai DP
+    //     $remainingAmount = max(
+    //         0,
+    //         (float) $salesOrder->grand_total - $totalDownPayment
+    //     );
+
+    //     return response()->json([
+    //         'sales_order_id' => $salesOrder->id,
+    //         'sales_order_code' => $salesOrder->sales_order_code,
+
+    //         'sales_order_amount' => (float) $salesOrder->grand_total,
+
+    //         'total_down_payment' => $totalDownPayment,
+
+    //         'remaining_amount' => $remainingAmount,
+    //     ]);
+    // }
+
     public function getSalesOrderDownPayment($salesOrderId)
     {
         $year = date('Y');
-
         $table = "sales_down_payments_{$year}";
 
         $salesOrder = SalesOrder::findOrFail($salesOrderId);
 
-        // Semua DP aktif untuk Sales Order ini
         $downPayments = DB::table($table)
             ->where('sales_order_id', $salesOrderId)
             ->where('active', 1)
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', 'closed')
             ->get();
 
-        // Total nominal DP yang sudah dibuat
         $totalDownPayment = $downPayments->sum(function ($dp) {
             return (float) $dp->down_payment_amount;
         });
 
-        // Sisa yang masih bisa dibuat sebagai DP
         $remainingAmount = max(
             0,
             (float) $salesOrder->grand_total - $totalDownPayment
@@ -756,11 +975,8 @@ class SalesDownPaymentController extends Controller
         return response()->json([
             'sales_order_id' => $salesOrder->id,
             'sales_order_code' => $salesOrder->sales_order_code,
-
             'sales_order_amount' => (float) $salesOrder->grand_total,
-
             'total_down_payment' => $totalDownPayment,
-
             'remaining_amount' => $remainingAmount,
         ]);
     }

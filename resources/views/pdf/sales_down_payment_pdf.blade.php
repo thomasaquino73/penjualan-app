@@ -224,42 +224,25 @@
     {{-- TOTAL --}}
     <table class="summary-table" style="width:100%;">
         <tr>
-            <td width="65%"></td>
-            <td width="20%">
-                Sales Order Amount
-            </td>
-            <td width="15%" class="text-right">
-
+            <td width="45%"></td>
+            <td width="30%"></td>
+            <td width="35%" class="text-right" style="text-align: right;">
+                Sales Order Amount<br>
                 {{ $currency }}
-
                 {{ number_format($salesDownPayment->sales_order_amount, 2, ',', '.') }}
-
             </td>
-
         </tr>
-
-        <tr>
-
+        {{-- <tr>
             <td></td>
-
-            <td>
-                Down Payment
-            </td>
-
-            <td class="text-right">
-
+            <td></td>
+            <td class="text-right" style="text-align: right;">
+                Down Payment<br>
                 <strong>
-
                     {{ $currency }}
-
                     {{ number_format($salesDownPayment->down_payment_amount, 2, ',', '.') }}
-
                 </strong>
-
             </td>
-
-        </tr>
-
+        </tr> --}}
     </table>
 
 

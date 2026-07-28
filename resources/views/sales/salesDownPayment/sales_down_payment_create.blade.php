@@ -453,6 +453,7 @@
                     '<i class="fa fa-spin fa-spinner me-1"></i> Checking...',
                 );
                 $(".card-footer button").prop("disabled", true);
+                formData.append("save_and_new", saveAndNew ? 1 : 0);
 
                 $.ajax({
                     url: $(form).attr("action"),
