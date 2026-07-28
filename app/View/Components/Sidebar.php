@@ -107,32 +107,38 @@ class Sidebar extends Component
                     // ],
                 ],
             ],
-            // [
-            //     'type' => 'dropdown',
-            //     'name' => 'PEMBAYARAN',
-            //     'icon' => 'ti ti-file-invoice',
-            //     'roles' => ['Super Admin'],
-            //     'permissions' => [
-            //         'purchase_invoice-browse',
-            //     ],
-            //     'children' => [
-            //         [
-            //             'name' => 'Purchase Invoice',
-            //             'route' => 'purchase-invoice.index',
-            //             'pattern' => 'purchase-invoice.*',
-            //             'roles' => ['Super Admin'],
-            //             'permissions' => ['purchase_invoice-browse'],
-            //         ],
-            //         [
-            //             'name' => 'Purchase Payment',
-            //             'route' => 'purchase-invoice.index',
-            //             'pattern' => 'purchase-invoice.*',
-            //             'roles' => ['Super Admin'],
-            //             'permissions' => ['purchase_invoice-browse'],
-            //         ],
+            [
+                'type' => 'dropdown',
+                'name' => 'INVOICE',
+                'icon' => 'ti ti-file-invoice',
+                'roles' => ['Super Admin'],
+                'permissions' => [
+                    'permintaan_pembelian-browse',
+                    'purchase_order-browse',
+                    'receive_item-browse',
+                    'purchase_invoice-browse',
+                ],
+                'children' => [
+                    [
+                        'name' => 'Uang Muka Pembelian',
+                        'route' => 'purchase-down-payment.index',
+                        'pattern' => 'purchase-down-payment.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['purchase_down_payment-browse'],
 
-            //     ],
-            // ],
+                    ],
+                    // [
+                    //     'name' => 'Sales Invoice',
+                    //     'route' => 'sales-invoice.index',
+                    //     'pattern' => 'sales-invoice.*',
+                    //     'roles' => ['Super Admin'],
+                    //     'permissions' => ['sales_invoice-browse'],
+                    //     'badge' => fn () => MenuBadge::count('sales_invoice', 'sales_invoice_date'),
+                    //     'badge_color' => 'danger',
+                    // ],
+
+                ],
+            ],
             [
                 'type' => 'section',
                 'label' => 'PENJUALAN',
@@ -221,7 +227,7 @@ class Sidebar extends Component
                         'badge_color' => 'danger',
                     ],
                     [
-                        'name' => 'Sales Down Payment',
+                        'name' => 'Uang Muka Penjualan',
                         'route' => 'sales-down-payment.index',
                         'pattern' => 'sales-down-payment.*',
                         'roles' => ['Super Admin'],

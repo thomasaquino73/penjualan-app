@@ -37,15 +37,17 @@ class SalesDownPayment extends Model
     {
         return $this->belongsTo(Customer::class, 'customer_id');
     }
+
     public function salesOrder()
     {
         return $this->belongsTo(SalesOrder::class, 'sales_order_id');
     }
+
     public function paymentTermID()
-{
-    return $this->belongsTo(
-        SyaratPembayaran::class,
-        'payment_term_id'
-    );
-}
+    {
+        return $this->belongsTo(
+            SyaratPembayaran::class,
+            'payment_term_id'
+        );
+    }
 }

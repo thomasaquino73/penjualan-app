@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Sales;
+namespace App\Http\Controllers\Purchase;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\SalesDownPaymentRequest;
-use App\Models\Sales\Customer;
-use App\Models\Sales\SalesDownPayment;
-use App\Models\Sales\SalesOrder;
+use App\Http\Requests\PurchaseDownPaymentRequest;
+use App\Models\Purchase\PurchaseDownPayment;
+use App\Models\Purchase\PurchaseOrder;
+use App\Models\Purchase\Supplier;
 use App\Models\Setting\Company;
-use App\Models\Setting\SyaratPembayaran;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Dotenv\Exception\ValidationException;
@@ -17,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
-class SalesDownPaymentController extends Controller
+class PurchaseDownPaymentController extends Controller
 {
     public function __construct()
     {
@@ -25,15 +24,15 @@ class SalesDownPaymentController extends Controller
             $routeName = $request->route()->getName();
 
             $permissionMap = [
-                'sales-down-payment.index' => 'sales_down_payment-browse',
-                'sales-down-payment.show' => 'sales_down_payment-read',
-                'sales-down-payment.create' => 'sales_down_payment-create',
-                'sales-down-payment.store' => 'sales_down_payment-create',
-                'sales-down-payment.edit' => 'sales_down_payment-edit',
-                'sales-down-payment.update' => 'sales_down_payment-edit',
-                'sales-down-payment.destroy' => 'sales_down_payment-delete',
-                'sales-down-payment.trash' => 'sales_down_payment-trash',
-                'sales-down-payment.restore' => 'sales_down_payment-restore',
+                'purchase-down-payment.index' => 'purchase_down_payment-browse',
+                'purchase-down-payment.show' => 'purchase_down_payment-read',
+                'purchase-down-payment.create' => 'purchase_down_payment-create',
+                'purchase-down-payment.store' => 'purchase_down_payment-create',
+                'purchase-down-payment.edit' => 'purchase_down_payment-edit',
+                'purchase-down-payment.update' => 'purchase_down_payment-edit',
+                'purchase-down-payment.destroy' => 'purchase_down_payment-delete',
+                'purchase-down-payment.trash' => 'purchase_down_payment-trash',
+                'purchase-down-payment.restore' => 'purchase_down_payment-restore',
             ];
 
             if (isset($permissionMap[$routeName])) {
@@ -53,8 +52,8 @@ class SalesDownPaymentController extends Controller
             $userId = Auth::user()->id;
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
-            $query = SalesDownPayment::where('active', '<>', 0)
-                ->orderBy('sales_downpayment_code', 'desc');
+            $query = PurchaseDownPayment::where('active', '<>', 0)
+                ->orderBy('purchase_downpayment_code', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);
             }
@@ -78,23 +77,18 @@ class SalesDownPaymentController extends Controller
 
                     return 'N/A';
                 })
-                ->addColumn('customer', function ($row) {
-                    if ($row->customer_id) {
-                        return $row->customerID->nama_customer;
+                ->addColumn('supplier', function ($row) {
+                    if ($row->supplier_id) {
+                        return $row->supplierID->nama_supplier;
                     }
 
                     return 'N/A';
-                })
-                ->addColumn('taxpayer_id_type', function ($row) {
-                    return DB::table('customer_pajak')
-                        ->where('customer_id', $row->customer_id)
-                        ->value('tipe_id_pajak') ?? 'N/A';
                 })
                 ->addColumn('total', function ($row) {
                     return format_uang(convert_currency($row->down_payment_amount, $row->currency_id ?? 1));
                 })
                 ->addColumn('age', function ($row) {
-                    $date = Carbon::parse($row->sales_downpayment_date);
+                    $date = Carbon::parse($row->purchase_downpayment_date);
                     $diff = $date->diff(now());
 
                     if ($diff->y > 0) {
@@ -178,13 +172,13 @@ class SalesDownPaymentController extends Controller
 
                         // EDIT
                         if (
-                            $user->can('sales_down_payment-edit') &&
+                            $user->can('purchase_down_payment-edit') &&
                               in_array($row->status, ['unpaid'])
                         ) {
 
                             $btn .= '
                                 <a class="dropdown-item"
-                                    href="'.route('sales-down-payment.edit', $row->id).'">
+                                    href="'.route('purchase-down-payment.edit', $row->id).'">
                                     <i class="far fa-edit me-1"></i>
                                     Edit
                                 </a>
@@ -193,7 +187,7 @@ class SalesDownPaymentController extends Controller
 
                         // DELETE
                         if (
-                            $user->can('sales_down_payment-delete') &&
+                            $user->can('purchase_down_payment-delete') &&
                               in_array($row->status, ['unpaid'])
                         ) {
 
@@ -202,7 +196,7 @@ class SalesDownPaymentController extends Controller
                                     href="javascript:void(0)"
                                     id="delete"
                                     data-id="'.$row->id.'"
-                                    data-name="'.$row->sales_downpayment_code.'">
+                                    data-name="'.$row->purchase_downpayment_code.'">
 
                                     <i class="ti ti-trash me-1"></i>
                                     Delete
@@ -211,42 +205,10 @@ class SalesDownPaymentController extends Controller
                         }
                     }
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | 5. CANCEL SO
-                    |--------------------------------------------------------------------------
-                    */
-
-                    // if (
-                    //     ! in_array($row->status, ['processing', 'draft'])
-                    // ) {
-
-                    //     $btn .= '
-                    //         <a class="dropdown-item text-danger btn-cancel-po"
-                    //             href="javascript:void(0)"
-                    //             data-id="'.$row->id.'">
-
-                    //             <i class="ti ti-circle-x me-1"></i>
-                    //             Cancel
-                    //         </a>
-                    //     ';
-                    // }
-                    // if ($row->status != 'closed') {
-                    //     $btn .= '<a class="dropdown-item"
-                    //         href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->proforma_invoice_code.'">
-                    //         <i class="ti ti-lock"></i> Close
-                    //     </a>';
-                    // }
-                    /*
-                    |--------------------------------------------------------------------------
-                    | 7. PRINT
-                    |--------------------------------------------------------------------------
-                    */
-
                     $btn .= '
                     <a class="dropdown-item"
                         target="_blank"
-                        href="'.route('sales-down-payment.print', $row->id).'">
+                        href="'.route('purchase-down-payment.print', $row->id).'">
 
                         <i class="ti ti-printer me-1"></i>
                         Print / PDF
@@ -260,19 +222,19 @@ class SalesDownPaymentController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'taxpayer_id_type', 'customer', 'total', 'age'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'supplier', 'total', 'age'])
                 ->make(true);
         }
 
         $x = [
-            'title' => 'Sales Down Payment List',
+            'title' => 'Purchase Down Payment List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Sales Down Payment', 'url' => ''],
+                ['label' => 'Purchase Down Payment', 'url' => ''],
             ],
         ];
 
-        return view('sales.salesDownPayment.sales_down_payment_index', $x);
+        return view('purchase.purchaseDownPayment.purchase_down_payment_index', $x);
     }
 
     public function bulanRomawi($bulan)
@@ -292,13 +254,13 @@ class SalesDownPaymentController extends Controller
         $bulan = date('n');
         $bulanRomawi = $this->bulanRomawi($bulan);
 
-        $prefix = "SDP/{$tahun}/{$bulanRomawi}/";
+        $prefix = "PDP/{$tahun}/{$bulanRomawi}/";
 
-        $last = SalesDownPayment::where('sales_downpayment_code', 'like', $prefix.'%')
+        $last = PurchaseDownPayment::where('purchase_downpayment_code', 'like', $prefix.'%')
             ->orderByRaw("
             CAST(
                 REGEXP_REPLACE(
-                    SUBSTRING_INDEX(sales_downpayment_code,'/',-1),
+                    SUBSTRING_INDEX(purchase_downpayment_code,'/',-1),
                     '[^0-9]',
                     ''
                 ) AS UNSIGNED
@@ -307,7 +269,7 @@ class SalesDownPaymentController extends Controller
             ->first();
 
         if ($last) {
-            preg_match('/(\d+)/', substr($last->sales_downpayment_code, strrpos($last->sales_downpayment_code, '/') + 1), $match);
+            preg_match('/(\d+)/', substr($last->purchase_downpayment_code, strrpos($last->purchase_downpayment_code, '/') + 1), $match);
             $lastNumber = isset($match[1]) ? (int) $match[1] : 0;
             $nextNumber = $lastNumber + 1;
         } else {
@@ -323,31 +285,31 @@ class SalesDownPaymentController extends Controller
         $company = Company::with('defaultCurrency')->first();
 
         $x = [
-            'title' => 'Sales Down Payment New',
+            'title' => 'Purchase Down Payment New',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Sales Down Payment', 'url' => ''],
+                ['label' => 'Purchase Down Payment', 'url' => ''],
             ],
-            'customer' => Customer::where('status', '<>', 0)->get(),
+            'supplier' => Supplier::where('status', '<>', 0)->get(),
             'idNumber' => $this->generateNumberId(),
-            'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
+            'suppBank' => DB::table('supplier_rekening')->get(),
             'company' => $company->defaultCurrency,
 
         ];
 
-        return view('sales.salesDownPayment.sales_down_payment_create', $x);
+        return view('purchase.purchaseDownPayment.purchase_down_payment_create', $x);
     }
 
-    public function store(SalesDownPaymentRequest $request)
+    public function store(PurchaseDownPaymentRequest $request)
     {
         DB::beginTransaction();
 
         try {
 
-            $data = $request->except(['total_order']);
+            $data = $request->except(['total_order', 'save_and_new']);
 
             // Ambil total_order dari request
-            $data['sales_order_amount'] = $this->parseNominal(
+            $data['purchase_order_amount'] = $this->parseNominal(
                 $request->input('total_order', 0)
             );
 
@@ -356,8 +318,8 @@ class SalesDownPaymentController extends Controller
                 $request->input('down_payment_amount', 0)
             );
 
-            $data['sales_downpayment_date'] = Carbon::parse(
-                $request->sales_downpayment_date
+            $data['purchase_downpayment_date'] = Carbon::parse(
+                $request->purchase_downpayment_date
             )->format('Y-m-d');
 
             $data['due_date'] = $request->due_date
@@ -365,14 +327,17 @@ class SalesDownPaymentController extends Controller
                 : null;
             $data['created_by'] = Auth::user()->id;
 
-            SalesDownPayment::create($data);
+            PurchaseDownPayment::create($data);
 
             DB::commit();
+            $redirectUrl = $request->save_and_new == 1
+                            ? route('purchase-down-payment.create')
+                            : route('purchase-down-payment.index');
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Sales Down Payment berhasil disimpan.',
-                'redirect' => route('sales-down-payment.index'),
+                'message' => 'Purchase Down Payment berhasil disimpan.',
+                'redirect' => $redirectUrl,
             ]);
 
         } catch (\Exception $e) {
@@ -382,6 +347,84 @@ class SalesDownPaymentController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Gagal menyimpan data: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function edit($id)
+    {
+
+        $company = Company::with('defaultCurrency')->first();
+        $sdp = PurchaseDownPayment::findorfail($id);
+
+        $x = [
+            'title' => 'Edit Purchase Down Payment ',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Edit Purchase Down Payment', 'url' => ''],
+            ],
+            'supplier' => Supplier::where('status', '<>', 0)->get(),
+            'idNumber' => $this->generateNumberId(),
+            'suppBank' => DB::table('supplier_rekening')->get(),
+            'poNumber' => PurchaseOrder::where('active', '<>', 0)->get(),
+            'company' => $company->defaultCurrency,
+            'model' => $sdp,
+
+        ];
+
+        return view('purchase.purchaseDownPayment.purchase_down_payment_edit', $x);
+    }
+
+    public function update(PurchaseDownPaymentRequest $request, $id)
+    {
+        DB::beginTransaction();
+
+        try {
+
+            $purchaseDownPayment = PurchaseDownPayment::findOrFail($id);
+
+            $data = $request->except(['total_order']);
+
+            // Ambil total Purchase Order dari request
+            $data['purchase_order_amount'] = $this->parseNominal(
+                $request->input('total_order', 0)
+            );
+
+            // Bersihkan nominal DP
+            $data['down_payment_amount'] = $this->parseNominal(
+                $request->input('down_payment_amount', 0)
+            );
+
+            // Format tanggal DP
+            $data['purchase_downpayment_date'] = Carbon::parse(
+                $request->purchase_downpayment_date
+            )->format('Y-m-d');
+
+            // Format due date
+            $data['due_date'] = $request->due_date
+                ? Carbon::parse($request->due_date)->format('Y-m-d')
+                : null;
+
+            // User yang melakukan update
+            $data['updated_by'] = Auth::id();
+
+            $purchaseDownPayment->update($data);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Purchase Down Payment berhasil diperbarui.',
+                'redirect' => route('purchase-down-payment.index'),
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memperbarui data: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -406,101 +449,11 @@ class SalesDownPaymentController extends Controller
         return (float) $value;
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    public function edit($id)
-    {
-
-        $company = Company::with('defaultCurrency')->first();
-        $sdp = SalesDownPayment::findorfail($id);
-
-        $x = [
-            'title' => 'Edit Sales Down Payment ',
-            'breadcrumb' => [
-                ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Edit Sales Down Payment', 'url' => ''],
-            ],
-            'customer' => Customer::where('status', '<>', 0)->get(),
-            'idNumber' => $this->generateNumberId(),
-            'paymentTerm' => SyaratPembayaran::where('status', '<>', 0)->get(),
-            'company' => $company->defaultCurrency,
-            'model' => $sdp,
-
-        ];
-
-        return view('sales.salesDownPayment.sales_down_payment_edit', $x);
-    }
-
-    public function update(SalesDownPaymentRequest $request, $id)
-    {
-        DB::beginTransaction();
-
-        try {
-
-            $salesDownPayment = SalesDownPayment::findOrFail($id);
-
-            // Ambil semua data kecuali total_order
-            $data = $request->except(['total_order']);
-
-            // Ambil Total Sales Order
-            $data['sales_order_amount'] = $this->parseNominal(
-                $request->input('total_order', 0)
-            );
-
-            // Bersihkan nominal Down Payment
-            $data['down_payment_amount'] = $this->parseNominal(
-                $request->input('down_payment_amount', 0)
-            );
-
-            // Format tanggal Sales Down Payment
-            $data['sales_downpayment_date'] = Carbon::parse(
-                $request->sales_downpayment_date
-            )->format('Y-m-d');
-
-            // Format Due Date
-            $data['due_date'] = $request->due_date
-                ? Carbon::parse($request->due_date)->format('Y-m-d')
-                : null;
-
-            // User yang melakukan update
-            $data['updated_by'] = Auth::user()->id;
-
-            // Update data
-            $salesDownPayment->update($data);
-
-            DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Sales Down Payment berhasil diperbarui.',
-                'redirect' => route('sales-down-payment.index'),
-            ]);
-
-        } catch (\Exception $e) {
-
-            DB::rollBack();
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Gagal memperbarui data: '.$e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
 
         try {
-            $table = SalesDownPayment::findOrFail($id);
+            $table = PurchaseDownPayment::findOrFail($id);
             $table->active = '0';
             $table->updated_by = Auth::user()->id;
             $table->save();
@@ -511,11 +464,11 @@ class SalesDownPaymentController extends Controller
         }
     }
 
-    public function restore(string $id)
+      public function restore(string $id)
     {
 
         try {
-            $table = SalesDownPayment::findOrFail($id);
+            $table = PurchaseDownPayment::findOrFail($id);
             $table->active = '1';
             $table->updated_by = Auth::user()->id;
             $table->save();
@@ -526,15 +479,15 @@ class SalesDownPaymentController extends Controller
         }
     }
 
-    public function trash(Request $r)
+     public function trash(Request $r)
     {
         if ($r->ajax()) {
             // Ambil ID user yang sedang login
             $userId = Auth::user()->id;
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
-            $query = SalesDownPayment::where('active', 0)
-                ->orderBy('sales_downpayment_code', 'desc');
+            $query = PurchaseDownPayment::where('active', 0)
+                ->orderBy('purchase_downpayment_code', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);
             }
@@ -558,23 +511,18 @@ class SalesDownPaymentController extends Controller
 
                     return 'N/A';
                 })
-                ->addColumn('customer', function ($row) {
-                    if ($row->customer_id) {
-                        return $row->customerID->nama_customer;
+                ->addColumn('supplier', function ($row) {
+                    if ($row->supplier_id) {
+                        return $row->supplierID->nama_supplier;
                     }
 
                     return 'N/A';
-                })
-                ->addColumn('taxpayer_id_type', function ($row) {
-                    return DB::table('customer_pajak')
-                        ->where('customer_id', $row->customer_id)
-                        ->value('tipe_id_pajak') ?? 'N/A';
                 })
                 ->addColumn('total', function ($row) {
                     return format_uang(convert_currency($row->down_payment_amount, $row->currency_id ?? 1));
                 })
                 ->addColumn('age', function ($row) {
-                    $date = Carbon::parse($row->sales_downpayment_date);
+                    $date = Carbon::parse($row->purchase_downpayment_date);
                     $diff = $date->diff(now());
 
                     if ($diff->y > 0) {
@@ -630,6 +578,7 @@ class SalesDownPaymentController extends Controller
 
                     return $html;
                 })
+
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -637,85 +586,252 @@ class SalesDownPaymentController extends Controller
                       </button>
                       <ul class="dropdown-menu" style="">';
 
-                    if (auth()->user()->can('sales_down_payment-restore')) {
+                    if (auth()->user()->can('purchase_down_payment-restore')) {
                         $btn .= '<a class="dropdown-item restore" href="javascript:void(0)"
                             data-id="'.$row->id.'"> <i class="ti ti-trash-off me-1"></i> Restore</a>';
                     }
 
                     return $btn;
                 })
-
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'taxpayer_id_type', 'customer', 'total', 'age'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'supplier', 'total', 'age'])
                 ->make(true);
         }
 
         $x = [
-            'title' => 'Deleted Sales Down Payment List',
+             'title' => 'Deleted Purchase Down Payment List',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Deleted Sales Down Payment', 'url' => ''],
+                ['label' => 'Deleted Purchase Down Payment', 'url' => ''],
             ],
         ];
 
-        return view('sales.salesDownPayment.sales_down_payment_trash', $x);
+        return view('purchase.purchaseDownPayment.purchase_down_payment_trash', $x);
     }
 
-    public function getSalesOrder($customerId)
+    public function getPurchaseOrderEdit($supplierId)
     {
-        $year = date('Y');
-
-        $salesOrders = SalesOrder::where('customer_id', $customerId)
+        $purchaseOrders = PurchaseOrder::where('supplier_id', $supplierId)
             ->where('active', 1)
             ->whereIn('status', [
                 'processing',
-                'partial',
-                'fully_delivered',
+                'partially_received',
+                'fully_received',
             ])
-            ->orderByDesc('sales_order_date')
+            ->orderByDesc('datePO')
             ->get([
                 'id',
-                'sales_order_code',
-                'sales_order_date',
+                'code',
+                'datePO',
                 'grand_total',
             ]);
 
-        $table = "sales_down_payments_{$year}";
+        return response()->json($purchaseOrders);
+    }
+    // public function getPurchaseOrderDownPayment($purchaseOrderId)
+    // {
+    //     $year = date('Y');
+    //     $table = "purchase_down_payments_{$year}";
 
-        // Ambil total DP per Sales Order
+    //     $purchaseOrder = PurchaseOrder::findOrFail($purchaseOrderId);
+
+    //     // Ambil semua DP aktif untuk Purchase Order ini
+    //     $downPayments = DB::table($table)
+    //         ->where('purchase_order_id', $purchaseOrderId)
+    //         ->where('active', 1)
+    //         ->where('status', '!=', 'closed')
+    //         ->get();
+
+    //     // Total nominal DP yang sudah dibuat (hanya dijumlahkan, tanpa kalkulasi sisa)
+    //     $totalDownPayment = $downPayments->sum(function ($dp) {
+    //         return (float) $dp->down_payment_amount;
+    //     });
+
+    //     return response()->json([
+    //         'purchase_order_id' => $purchaseOrder->id,
+    //         'code' => $purchaseOrder->code,
+    //         'purchase_order_amount' => (float) $purchaseOrder->grand_total,
+    //         'total_down_payment' => $totalDownPayment,
+    //     ]);
+    // }
+    // public function getPurchaseOrderTotal($id)
+    // {
+    //     $year = date('Y');
+
+    //     $purchaseOrder = DB::table("purchase_order_{$year}")
+    //         ->where('id', $id)
+    //         ->first();
+
+    //     if (! $purchaseOrder) {
+    //         return response()->json([
+    //             'success' => false,
+    //         ]);
+    //     }
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'grand_total' => $purchaseOrder->grand_total,
+    //     ]);
+    // }
+
+    public function getPurchaseDownPaymentData($id)
+    {
+        $year = date('Y');
+
+        $downPayment = DB::table("purchase_down_payments_{$year}")
+            ->where('id', $id)
+            ->where('active', 1)
+            ->first();
+
+        if (! $downPayment) {
+            return response()->json([
+                'message' => 'Purchase Down Payment tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'id' => $downPayment->id,
+            'supplier_id' => $downPayment->supplier_id,
+            'purchase_downpayment_code' => $downPayment->purchase_downpayment_code,
+            'purchase_downpayment_date' => $downPayment->purchase_downpayment_date,
+            'purchase_order_id' => $downPayment->purchase_order_id,
+            'bank_id' => $downPayment->bank_id,
+            'address' => $downPayment->address,
+            'invoice_number' => $downPayment->invoice_number,
+
+            'purchase_order_amount' => $downPayment->purchase_order_amount,
+            'down_payment_percent' => $downPayment->down_payment_percent,
+            'down_payment_amount' => $downPayment->down_payment_amount,
+            'paid_amount' => $downPayment->paid_amount,
+            'remaining_amount' => $downPayment->remaining_amount,
+
+            'due_date' => $downPayment->due_date,
+            'description' => $downPayment->description,
+            'status' => $downPayment->status,
+        ]);
+    }
+
+    public function getPurchaseOrder($supplierId)
+    {
+        $year = date('Y');
+
+        $purchaseOrders = PurchaseOrder::where('supplier_id', $supplierId)
+            ->where('active', 1)
+            ->whereIn('status', [
+                'processing',
+                'partially_received',
+                'fully_received',
+            ])
+            ->orderByDesc('datePO')
+            ->get([
+                'id',
+                'code',
+                'datePO',
+                'grand_total',
+            ]);
+
+        $table = "purchase_down_payments_{$year}";
+
+        // Ambil total DP per Purchase Order
         $downPayments = DB::table($table)
             ->select(
-                'sales_order_id',
+                'purchase_order_id',
                 DB::raw('SUM(down_payment_amount) as total_down_payment')
             )
             ->where('active', 1)
-            ->where('status', '!=', 'cancelled')
-            ->groupBy('sales_order_id')
-            ->pluck('total_down_payment', 'sales_order_id');
+            ->where('status', '!=', 'closed')
+            ->groupBy('purchase_order_id')
+            ->pluck('total_down_payment', 'purchase_order_id');
 
         // Hanya tampilkan SO yang masih memiliki sisa DP
-        $salesOrders = $salesOrders
-            ->filter(function ($salesOrder) use ($downPayments) {
+        $purchaseOrders = $purchaseOrders
+            ->filter(function ($purchaseOrder) use ($downPayments) {
 
-                $totalDP = (float) ($downPayments[$salesOrder->id] ?? 0);
+                $totalDP = (float) ($downPayments[$purchaseOrder->id] ?? 0);
 
-                $remaining = (float) $salesOrder->grand_total - $totalDP;
+                $remaining = (float) $purchaseOrder->grand_total - $totalDP;
 
                 return $remaining > 0;
             })
             ->values();
 
-        return response()->json($salesOrders);
+        return response()->json($purchaseOrders);
     }
 
-    public function getSalesOrderTotal($id)
+    //     public function getPurchaseOrder($supplierId, Request $request = null)
+    // {
+    //     // Ambil parameter jika dikirim via query string (misal: ?current_dp_id=5)
+    //     $currentDpId = request('current_dp_id');
+    //     $year = date('Y');
+
+    //     $purchaseOrders = PurchaseOrder::where('supplier_id', $supplierId)
+    //         ->where('active', 1)
+    //         ->whereIn('status', [
+    //             'processing',
+    //             'partially_received',
+    //             'fully_received',
+    //         ])
+    //         ->orderByDesc('datePO')
+    //         ->get([
+    //             'id',
+    //             'code',
+    //             'datePO',
+    //             'grand_total',
+    //         ]);
+
+    //     $table = "purchase_down_payments_{$year}";
+
+    //     // Ambil total DP per Purchase Order
+    //     $downPaymentsQuery = DB::table($table)
+    //         ->select(
+    //             'purchase_order_id',
+    //             DB::raw('SUM(down_payment_amount) as total_down_payment')
+    //         )
+    //         ->where('active', 1)
+    //         ->where('status', '!=', 'closed');
+
+    //     // Jika sedang mode edit, abaikan/kecualikan nominal DP dari transaksi yang sedang diedit ini sendiri
+    //     if ($currentDpId) {
+    //         $downPaymentsQuery->where('id', '!=', $currentDpId);
+    //     }
+
+    //     $downPayments = $downPaymentsQuery->groupBy('purchase_order_id')
+    //         ->pluck('total_down_payment', 'purchase_order_id');
+
+    //     // Filter PO: tampilkan jika sisa DP > 0 ATAU jika PO tersebut adalah PO yang sedang digunakan oleh DP yang sedang diedit
+    //     $purchaseOrders = $purchaseOrders
+    //         ->filter(function ($purchaseOrder) use ($downPayments, $currentDpId, $table, $year) {
+
+    //             // Jika dalam mode edit, cek apakah PO ini dipakai oleh DP yang sedang diedit
+    //             if ($currentDpId) {
+    //                 $isUsedByCurrentEdit = DB::table($table)
+    //                     ->where('id', $currentDpId)
+    //                     ->where('purchase_order_id', $purchaseOrder->id)
+    //                     ->exists();
+
+    //                 if ($isUsedByCurrentEdit) {
+    //                     return true; // Pastikan PO yang sedang dipilih/diedit tetap muncul
+    //                 }
+    //             }
+
+    //             $totalDP = (float) ($downPayments[$purchaseOrder->id] ?? 0);
+    //             $remaining = (float) $purchaseOrder->grand_total - $totalDP;
+
+    //             return $remaining > 0;
+    //         })
+    //         ->values();
+
+    //     return response()->json($purchaseOrders);
+    // }
+
+    public function getPurchaseOrderTotal($id)
     {
         $year = date('Y');
 
-        $salesOrder = DB::table("sales_order_{$year}")
+        $purchaseOrder = DB::table("purchase_order_{$year}")
             ->where('id', $id)
             ->first();
 
-        if (! $salesOrder) {
+        if (! $purchaseOrder) {
             return response()->json([
                 'success' => false,
             ]);
@@ -723,23 +839,23 @@ class SalesDownPaymentController extends Controller
 
         return response()->json([
             'success' => true,
-            'grand_total' => $salesOrder->grand_total,
+            'grand_total' => $purchaseOrder->grand_total,
         ]);
     }
 
-    public function getSalesOrderDownPayment($salesOrderId)
+    public function getPurchaseOrderDownPayment($purchaseOrderId)
     {
         $year = date('Y');
 
-        $table = "sales_down_payments_{$year}";
+        $table = "purchase_down_payments_{$year}";
 
-        $salesOrder = SalesOrder::findOrFail($salesOrderId);
+        $purchaseOrder = PurchaseOrder::findOrFail($purchaseOrderId);
 
-        // Semua DP aktif untuk Sales Order ini
+        // Semua DP aktif untuk Purchase Order ini
         $downPayments = DB::table($table)
-            ->where('sales_order_id', $salesOrderId)
+            ->where('purchase_order_id', $purchaseOrderId)
             ->where('active', 1)
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', 'closed')
             ->get();
 
         // Total nominal DP yang sudah dibuat
@@ -750,14 +866,14 @@ class SalesDownPaymentController extends Controller
         // Sisa yang masih bisa dibuat sebagai DP
         $remainingAmount = max(
             0,
-            (float) $salesOrder->grand_total - $totalDownPayment
+            (float) $purchaseOrder->grand_total - $totalDownPayment
         );
 
         return response()->json([
-            'sales_order_id' => $salesOrder->id,
-            'sales_order_code' => $salesOrder->sales_order_code,
+            'purchase_order_id' => $purchaseOrder->id,
+            'code' => $purchaseOrder->code,
 
-            'sales_order_amount' => (float) $salesOrder->grand_total,
+            'purchase_order_amount' => (float) $purchaseOrder->grand_total,
 
             'total_down_payment' => $totalDownPayment,
 
@@ -765,16 +881,73 @@ class SalesDownPaymentController extends Controller
         ]);
     }
 
+    //     public function getPurchaseDownPaymentData($id)
+    // {
+    //     $year = date('Y');
+
+    //     $downPayment = DB::table("purchase_down_payments_{$year}")
+    //         ->where('id', $id)
+    //         ->where('active', 1)
+    //         ->first();
+
+    //     if (!$downPayment) {
+    //         return response()->json([
+    //             'message' => 'Purchase Down Payment tidak ditemukan.'
+    //         ], 404);
+    //     }
+
+    //     return response()->json([
+    //         'id' => $downPayment->id,
+    //         'supplier_id' => $downPayment->supplier_id,
+    //         'purchase_downpayment_code' => $downPayment->purchase_downpayment_code,
+    //         'purchase_downpayment_date' => $downPayment->purchase_downpayment_date,
+    //         'purchase_order_id' => $downPayment->purchase_order_id,
+    //         'bank_id' => $downPayment->bank_id,
+    //         'address' => $downPayment->address,
+    //         'invoice_number' => $downPayment->invoice_number,
+
+    //         'purchase_order_amount' => $downPayment->purchase_order_amount,
+    //         'down_payment_percent' => $downPayment->down_payment_percent,
+    //         'down_payment_amount' => $downPayment->down_payment_amount,
+    //         'paid_amount' => $downPayment->paid_amount,
+    //         'remaining_amount' => $downPayment->remaining_amount,
+
+    //         'due_date' => $downPayment->due_date,
+    //         'description' => $downPayment->description,
+    //         'status' => $downPayment->status,
+    //     ]);
+    // }
+
     public function print($id)
     {
         $currentYear = date('Y');
 
-        $salesDownPayment = SalesDownPayment::with([
-            'customerID',
-            'paymentTermID',
-            'salesOrder',
+        $purchaseDownPayment = PurchaseDownPayment::with([
+            'supplierID',
+            'purchaseOrder',
         ])->findOrFail($id);
-
+        $bank = DB::table("purchase_down_payments_{$currentYear} as pdp")
+            ->leftJoin(
+                'supplier_rekening as sr',
+                'pdp.bank_id',
+                '=',
+                'sr.id'
+            )
+            ->leftJoin(
+                'basic_code_detail as bcd',
+                'sr.nama_bank',
+                '=',
+                'bcd.id'
+            )
+            ->where('pdp.id', $id)
+            ->select(
+                'sr.id as bank_account_id',
+                'sr.nomor_rekening',
+                'sr.nama_rekening',
+                'bcd.id as bank_id',
+                'bcd.detail as bank_name'
+            )
+            ->first();
         $company = Company::with('defaultCurrency')->first();
 
         /*
@@ -803,7 +976,7 @@ class SalesDownPaymentController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $salesOrder = $salesDownPayment->salesOrder;
+        $purchaseOrder = $purchaseDownPayment->purchaseOrder;
 
         /*
         |--------------------------------------------------------------------------
@@ -822,20 +995,21 @@ class SalesDownPaymentController extends Controller
         $filename = str_replace(
             ['/', '\\'],
             '-',
-            $salesDownPayment->sales_downpayment_code
+            $purchaseDownPayment->purchase_downpayment_code
         );
         $pdf = Pdf::loadView(
-            'pdf.sales_down_payment_pdf',
+            'pdf.purchase_down_payment_pdf',
             [
-                'salesDownPayment' => $salesDownPayment,
-                'salesOrder' => $salesOrder,
+                'purchaseDownPayment' => $purchaseDownPayment,
+                'purchaseOrder' => $purchaseOrder,
                 'company' => $company,
                 'currency' => $currency,
+                'bank' => $bank,
                 'logoBase64' => $logoBase64,
             ]
         );
 
-        $pdf->setPaper('A4', 'portrait');
+        $pdf->setPaper('A5', 'landscape');
 
         return $pdf->stream($filename.'.pdf');
     }

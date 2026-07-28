@@ -14,6 +14,7 @@ use App\Http\Controllers\Inventory\ItemTransferController;
 use App\Http\Controllers\Inventory\WarehouseController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Purchase\PurchaseDownPaymentController;
 use App\Http\Controllers\Purchase\PurchaseInvoiceController;
 use App\Http\Controllers\Purchase\PurchaseOrderController;
 use App\Http\Controllers\Purchase\PurchaseRequisitionController;
@@ -388,12 +389,23 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('sales-down-payment')->name('sales-down-payment.')->group(function () {
-    Route::put('/restore/{id}', [SalesDownPaymentController::class, 'restore'])->name('restore');
+        Route::put('/restore/{id}', [SalesDownPaymentController::class, 'restore'])->name('restore');
         Route::get('/print/{id}', [SalesDownPaymentController::class, 'print'])->name('print');
         Route::get('/ajax/customer-sales-order/{customer}', [SalesDownPaymentController::class, 'getSalesOrder'])->name('ajax.customer.sales-order');
         Route::get('/ajax/sales-order/{sales_order}/down-payment', [SalesDownPaymentController::class, 'getSalesOrderDownPayment'])->name('ajax.sales-order.down-payment');
+        Route::get('/ajax/data/{id}', [PurchaseDownPaymentController::class, 'getPurchaseDownPaymentData'])->name('ajax.data');
         Route::get('/trash', [SalesDownPaymentController::class, 'trash'])->name('trash');
         Route::resource('', SalesDownPaymentController::class)->parameters(['' => 'sales-down-payment']);
+    });
+
+    Route::prefix('purchase-down-payment')->name('purchase-down-payment.')->group(function () {
+        Route::put('/restore/{id}', [PurchaseDownPaymentController::class, 'restore'])->name('restore');
+        Route::get('/print/{id}', [PurchaseDownPaymentController::class, 'print'])->name('print');
+        Route::get('/ajax/supplier-purchase-order/{supplier}', [PurchaseDownPaymentController::class, 'getPurchaseOrder'])->name('ajax.supplier.purchase-order');
+        Route::get('/ajax/edit-supplier-purchase-order/{supplier}', [PurchaseDownPaymentController::class, 'getPurchaseOrderEdit'])->name('ajax.supplier.edit-purchase-order');
+        Route::get('/ajax/purchase-order/{purchase_order}/down-payment', [PurchaseDownPaymentController::class, 'getPurchaseOrderDownPayment'])->name('ajax.purchase-order.down-payment');
+        Route::get('/trash', [PurchaseDownPaymentController::class, 'trash'])->name('trash');
+        Route::resource('', PurchaseDownPaymentController::class)->parameters(['' => 'purchase-down-payment']);
     });
 });
 

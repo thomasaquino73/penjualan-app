@@ -177,7 +177,7 @@ class DashboardController extends Controller
         $table = "sales_order_{$year}";
 
         return DB::table($table)
-            ->whereIn('status', ['processing', 'completed', 'closed','fully_delivered'])
+            ->whereIn('status', ['processing', 'completed', 'closed', 'fully_delivered'])
             ->whereMonth('sales_order_date', now()->month)
             ->whereYear('sales_order_date', now()->year)
             ->where('active', 1)
@@ -231,7 +231,7 @@ class DashboardController extends Controller
         $rows = DB::table($table)
             ->selectRaw('MONTH(sales_order_date) as month, SUM(grand_total) as total')
             ->where('active', 1)
-             ->whereIn('status', ['processing', 'completed', 'closed','fully_delivered'])
+            ->whereIn('status', ['processing', 'completed', 'closed', 'fully_delivered'])
             ->groupBy(DB::raw('MONTH(sales_order_date)'))
             ->get();
 
@@ -258,7 +258,7 @@ class DashboardController extends Controller
                 'processing',
                 'partial',
                 'completed',
-                'fully_delivered'
+                'fully_delivered',
             ])
             ->sum('grand_total');
     }
@@ -278,7 +278,7 @@ class DashboardController extends Controller
                 'processing',
                 'partial',
                 'completed',
-                'fully_delivered'
+                'fully_delivered',
             ])
             ->sum('grand_total');
     }
@@ -297,7 +297,7 @@ class DashboardController extends Controller
         $rows = DB::table($table)
             ->selectRaw('MONTH(sales_order_date) as month, SUM(grand_total) as total')
             ->where('active', 1)
-            ->whereIn('status', ['approved', 'processing', 'partial', 'completed','fully_delivered'])
+            ->whereIn('status', ['approved', 'processing', 'partial', 'completed', 'fully_delivered'])
             ->groupBy(DB::raw('MONTH(sales_order_date)'))
             ->get();
 
