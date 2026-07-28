@@ -9,6 +9,7 @@ use App\Models\Sales\SalesDownPayment;
 use App\Models\Sales\SalesOrder;
 use App\Models\Setting\Company;
 use App\Models\Setting\SyaratPembayaran;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Dotenv\Exception\ValidationException;
 use Illuminate\Http\Request;
@@ -216,26 +217,26 @@ class SalesDownPaymentController extends Controller
                     |--------------------------------------------------------------------------
                     */
 
-                    if (
-                        ! in_array($row->status, ['processing', 'draft'])
-                    ) {
+                    // if (
+                    //     ! in_array($row->status, ['processing', 'draft'])
+                    // ) {
 
-                        $btn .= '
-                            <a class="dropdown-item text-danger btn-cancel-po"
-                                href="javascript:void(0)"
-                                data-id="'.$row->id.'">
+                    //     $btn .= '
+                    //         <a class="dropdown-item text-danger btn-cancel-po"
+                    //             href="javascript:void(0)"
+                    //             data-id="'.$row->id.'">
 
-                                <i class="ti ti-circle-x me-1"></i>
-                                Cancel
-                            </a>
-                        ';
-                    }
-                    if ($row->status != 'closed') {
-                        $btn .= '<a class="dropdown-item"
-                            href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->proforma_invoice_code.'">
-                            <i class="ti ti-lock"></i> Close
-                        </a>';
-                    }
+                    //             <i class="ti ti-circle-x me-1"></i>
+                    //             Cancel
+                    //         </a>
+                    //     ';
+                    // }
+                    // if ($row->status != 'closed') {
+                    //     $btn .= '<a class="dropdown-item"
+                    //         href="javascript:void(0)" id="close"   data-id="'.$row->id.'" data-name="'.$row->proforma_invoice_code.'">
+                    //         <i class="ti ti-lock"></i> Close
+                    //     </a>';
+                    // }
                     /*
                     |--------------------------------------------------------------------------
                     | 7. PRINT
@@ -763,4 +764,79 @@ class SalesDownPaymentController extends Controller
             'remaining_amount' => $remainingAmount,
         ]);
     }
+
+    public function print($id)
+{
+    $currentYear = date('Y');
+
+    $salesDownPayment = SalesDownPayment::with([
+        'customerID',
+        'paymentTermID',
+        'salesOrder',
+    ])->findOrFail($id);
+
+    $company = Company::with('defaultCurrency')->first();
+
+    /*
+    |--------------------------------------------------------------------------
+    | Logo Company
+    |--------------------------------------------------------------------------
+    */
+    $logoBase64 = null;
+
+    if ($company && $company->logo) {
+
+        $logoPath = public_path( $company->logo);
+
+        if (file_exists($logoPath)) {
+
+            $type = pathinfo($logoPath, PATHINFO_EXTENSION);
+
+            $logoBase64 = 'data:image/' . $type . ';base64,' .
+                base64_encode(file_get_contents($logoPath));
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Data Sales Down Payment
+    |--------------------------------------------------------------------------
+    */
+
+    $salesOrder = $salesDownPayment->salesOrder;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Currency
+    |--------------------------------------------------------------------------
+    */
+
+    $currency = $company->defaultCurrency->currency_code ?? 'IDR';
+
+    /*
+    |--------------------------------------------------------------------------
+    | PDF
+    |--------------------------------------------------------------------------
+    */
+
+     $filename = str_replace(
+            ['/', '\\'],
+            '-',
+             $salesDownPayment->sales_downpayment_code
+        );
+    $pdf = Pdf::loadView(
+        'pdf.sales_down_payment_pdf',
+        [
+            'salesDownPayment' => $salesDownPayment,
+            'salesOrder' => $salesOrder,
+            'company' => $company,
+            'currency' => $currency,
+            'logoBase64' => $logoBase64,
+        ]
+    );
+
+    $pdf->setPaper('A4', 'portrait');
+
+    return $pdf->stream($filename.'.pdf');
+}
 }
