@@ -52,4 +52,5 @@ class ReceiveItemDetail extends Model
     {
         return $this->belongsTo(PurchaseOrderDetail::class, 'purchase_order_detail_id', 'id');
     }
+    
 }

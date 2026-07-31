@@ -877,15 +877,20 @@
                                     // ==========================
                                     // HEADER
                                     // ==========================
-
                                     $("#modalTitle").text("Edit entry");
                                     $("#btnSubmitModal").text("Update");
 
                                     // ==========================
-                                    // HIDDEN
+                                    // HIDDEN FIELDS (PERBAIKAN DI SINI)
                                     // ==========================
 
+                                    // Simpan indeks baris untuk kebutuhan update array nantinya (jika diperlukan untuk referensi posisi)
                                     $("#detail_id").val(rowIndex);
+
+                                    // Pastikan product_id dan field penting lainnya ikut dimasukkan ke input form/hidden yang sesuai!
+                                    $("#product_id").val(data
+                                        .product_id
+                                        ); // <-- Pastikan ini ada agar product_id ikut naik/terbawa
 
                                     $("#modal_purchase_requisition_detail_id").val(
                                         data.detail_id ??
@@ -900,25 +905,17 @@
                                     // ==========================
                                     // TEXTBOX
                                     // ==========================
-
                                     $("#quantity").val(data.quantity ?? "");
-
                                     $("#unit_price").val(data.unit_price ?? 0);
-
                                     $("#discount").val(data.discount ?? 0);
-
                                     $("#discount_percent").val(data.discount_percent ?? 0);
-
                                     $("#tax").val(data.tax ?? 0);
-
-                                    $("#total_price").val(data.amount ?? 0);
-
+                                    $("#amount").val(data.amount ?? 0);
                                     $("#available_stok").val(data.available_stok ?? "");
 
                                     // ==========================
                                     // ATTRIBUTE
                                     // ==========================
-
                                     if (data.sisa_pr != null) {
                                         $("#quantity").attr("data-sisa-pr", data.sisa_pr);
                                     } else {
@@ -928,7 +925,6 @@
                                     // ==========================
                                     // SELECT
                                     // ==========================
-
                                     $("#warehouse_id")
                                         .val(data.warehouse_id)
                                         .trigger("change.select2");
@@ -942,10 +938,12 @@
                                     // buka modal dulu
                                     $("#modalPrDetail").modal("show");
 
-                                    // terakhir trigger product
-                                    $("#product_id")
-                                        .val(data.product_id)
-                                        .trigger("change");
+                                    // terakhir trigger product agar Select2 membaca value product_id yang baru
+                                    setTimeout(function() {
+                                        $("#product_id")
+                                            .val(data.product_id)
+                                            .trigger("change");
+                                    }, 150);
                                 }
                             },
                             // =======================
@@ -1433,6 +1431,8 @@
                     console.log($(this).data());
                     let item = {
                         detail_id: $(this).data("id"),
+                        receive_item_detail_id: $(this).data("receive_item_detail_id"),
+                        receive_item_code: $(this).data("receive_item_code"),
                         product_id: $(this).data("product_id"),
                         data_produk: $(this).data("product_name"),
                         quantity: parseFloat($(this).data("qty")) || 0,

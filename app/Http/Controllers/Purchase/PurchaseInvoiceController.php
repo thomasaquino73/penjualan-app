@@ -530,7 +530,7 @@ class PurchaseInvoiceController extends Controller
                 : null;
 
             // ================== GENERATE CODE ==================
-            $purchaseOrder = null;
+            $purchaseInvoice = null;
             $maxRetry = 10;
             $currentCode = $request->code;
 
@@ -689,123 +689,307 @@ class PurchaseInvoiceController extends Controller
 
     public function edit(string $id)
     {
-        // Mengambil tahun berjalan untuk tabel dinamis
         $year = date('Y');
 
-        // 1. Load data PO beserta relasinya
-        // Pastikan model PurchaseOrder dan Detail sudah mendukung table name dinamis jika diperlukan
-        $purchaseOrder = PurchaseOrder::with([
-            'purchaseRequisition',
+        $purchaseInvoice = PurchaseInvoice::with([
             'details.produkID',
             'details.unitID',
             'details.warehouseID',
-            'details.purchaseRequisitionDetail.requisition',
+            'details.receiveItemDetail.receiveItem',
         ])->findOrFail($id);
 
-        // 2. Cek status PO global: Apakah mengandung minimal satu item hasil serapan PR?
-        $isFromPR = $purchaseOrder->details->whereNotNull('purchase_requisition_detail_id')->count() > 0;
+        // Invoice berasal dari Receive Item?
+        $isFromReceiveItem = $purchaseInvoice->details
+            ->whereNotNull('receive_item_detail_id')
+            ->count() > 0;
 
-        // 3. Mapping data detail
-        $detailDataMapped = $purchaseOrder->details->map(function ($detail) use ($purchaseOrder, $year) {
+        $detailDataMapped = $purchaseInvoice->details->map(function ($detail) use ($purchaseInvoice, $year) {
 
-            $requisitionCode = null;
-            $sisaPr = null;
-            $kuotaAsliPr = null;
-            $totalDiambilLainnya = 0;
+            $receiveItemCode = null;
+            $receivedQty = null;
+            $outstandingQty = null;
+            $totalInvoiceLainnya = 0;
 
-            // Cek apakah item detail ini memiliki keterikatan dengan PR
-            if ($detail->purchase_requisition_detail_id) {
-                // Ambil data referensi dari relasi
-                $prDetail = $detail->purchaseRequisitionDetail;
+            if ($detail->receive_item_detail_id) {
 
-                if ($prDetail) {
-                    $sisaPr = (float) $prDetail->outstanding_qty;
-                    $kuotaAsliPr = (float) $prDetail->qty;
+                $riDetail = $detail->receiveItemDetail;
 
-                    // HITUNG TOTAL YANG SUDAH DIAMBIL DI PO LAIN
-                    // Menggunakan DB::table karena tabel bersifat dinamis per tahun
-                    $totalDiambilLainnya = DB::table("purchase_invoice_detail_{$year}")
-                        ->where('purchase_requisition_detail_id', $detail->purchase_requisition_detail_id)
-                        ->where('purchase_invoice_id', '<>', $purchaseOrder->id) // Kecuali PO ini sendiri
+                if ($riDetail) {
+
+                    $receivedQty = (float) $riDetail->qty;
+                    $outstandingQty = (float) $riDetail->outstanding_qty;
+
+                    // Qty invoice lain (selain invoice yang sedang diedit)
+                    $totalInvoiceLainnya = DB::table("purchase_invoice_detail_{$year}")
+                        ->where('receive_item_detail_id', $detail->receive_item_detail_id)
+                        ->where('purchase_invoice_id', '<>', $purchaseInvoice->id)
                         ->where('active', 1)
                         ->sum('qty');
 
-                    if ($prDetail->purchaseRequisition) {
-                        $requisitionCode = $prDetail->purchaseRequisition->code;
+                    if ($riDetail->receiveItem) {
+                        $receiveItemCode = $riDetail->receiveItem->receive_item_code;
                     }
                 }
             }
 
             return [
+
                 'id' => $detail->id,
+
                 'purchase_invoice_id' => $detail->purchase_invoice_id,
-                'purchase_requisition_detail_id' => $detail->purchase_requisition_detail_id,
-                'requisition_code' => $requisitionCode,
+
+                'receive_item_detail_id' => $detail->receive_item_detail_id,
+
+                'receive_item_code' => $receiveItemCode,
+
                 'product_id' => $detail->product_id,
-                'data_produk' => $detail->produkID->nama_barang ?? 'Product Not Found',
+
+                'data_produk' => optional($detail->produkID)->nama_barang,
+
                 'quantity' => (float) $detail->qty,
+
                 'unit_id' => $detail->unit_id,
-                'unit' => $detail->unitID->detail ?? '-',
+
+                'unit' => optional($detail->unitID)->detail,
+
                 'warehouse_id' => $detail->warehouse_id,
-                'warehouse' => $detail->warehouseID->nama_gudang ?? '-',
+
+                'warehouse' => optional($detail->warehouseID)->nama_gudang,
+
                 'unit_price' => (float) $detail->unit_price,
+
                 'discount' => (float) $detail->discount,
+
                 'discount_percent' => $detail->discount_percent,
+
                 'amount' => (float) $detail->amount,
-                'tax' => (float) ($detail->tax ?? 0),
-                'sisa_pr' => $sisaPr,
-                'kuota_asli' => $kuotaAsliPr,
-                'total_diambil_lainnya' => (float) $totalDiambilLainnya,
+
+                'received_qty' => $receivedQty,
+
+                'outstanding_qty' => $outstandingQty,
+
+                'total_invoice_lainnya' => (float) $totalInvoiceLainnya,
 
             ];
         });
 
-        // 🔥 Ambil semua pajak aktif (khusus pembelian & general)
         $taxes = Tax::where('is_active', true)
             ->whereIn('usage', ['purchase', 'both'])
             ->get();
 
-        // 🔥 Ambil default tax (misalnya PPN)
         $defaultTax = Tax::where('is_active', true)
             ->where('is_default', true)
             ->whereIn('usage', ['purchase', 'both'])
             ->first();
-        $status = ['processing', 'partial'];
 
-        // 4. Susun semua variabel ke dalam array compact
-        $x = [
-            'title' => 'Edit Purchase Order',
-            'breadcrumb' => [
-                ['label' => 'Purchase Order', 'url' => route('purchase-invoice.index')],
-                ['label' => 'Edit Purchase Order', 'url' => ''],
-            ],
-            'supplier' => Supplier::where('status', 1)->get(),
-            'company' => Company::first(),
-            'idNumber' => $this->generateNumberId(),
-            'shipping' => Shipping::where('status', 1)->get(),
-            'warehouse' => Warehouse::where('status', 1)->get(),
-            'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
-            'product' => Barang::where('status', '<>', 0)->get(),
-            'fob' => BasicCodeDetail::where('master_id', 7)->get(),
-            'model' => $purchaseOrder,
-            'isFromPR' => $isFromPR,
-            'jsonDetails' => $detailDataMapped,
-            'taxes' => $taxes,
-            'defaultTax' => $defaultTax,
-            'number' => PurchaseRequisition::whereIn('status', $status)
-                ->where('active', 1)
-                ->get(),
+        $status = [
+            'processing',
+            'partial',
         ];
 
-        return view('purchase.purchase_invoice.purchase_invoice_edit', $x);
+        return view('purchase.purchase_invoice.purchase_invoice_edit', [
+
+            'title' => 'Edit Purchase Invoice',
+
+            'breadcrumb' => [
+                [
+                    'label' => 'Purchase Invoice',
+                    'url' => route('purchase-invoice.index'),
+                ],
+                [
+                    'label' => 'Edit Purchase Invoice',
+                    'url' => '',
+                ],
+            ],
+
+            'supplier' => Supplier::where('status', 1)->get(),
+
+            'company' => Company::first(),
+
+            'idNumber' => $purchaseInvoice->code,
+
+            'shipping' => Shipping::where('status', 1)->get(),
+
+            'warehouse' => Warehouse::where('status', 1)->get(),
+
+            'paymentTerm' => SyaratPembayaran::where('status', 1)->get(),
+
+            'product' => Barang::where('status', '<>', 0)->get(),
+
+            'fob' => BasicCodeDetail::where('master_id', 7)->get(),
+
+            'model' => $purchaseInvoice,
+
+            'isFromReceiveItem' => $isFromReceiveItem,
+
+            'jsonDetails' => $detailDataMapped,
+
+            'taxes' => $taxes,
+
+            'defaultTax' => $defaultTax,
+
+            'number' => ReceiveItem::whereIn('status', $status)
+                ->where('active', 1)
+                ->get(),
+
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+   public function update(PurchaseInvoiceRequest $request, string $id)
     {
-        //
+        DB::beginTransaction();
+
+        try {
+            $currentYear = date('Y');
+            $purchaseInvoice = PurchaseInvoice::findOrFail($id);
+
+            $data = $request->validated();
+            $itemsDetailRaw = $request->input('items_detail');
+            unset($data['items_detail']);
+
+            // ================== HEADER ==================
+            $data['updated_by'] = Auth::id();
+            $data['vehicle_id'] = $request->vehicle_id;
+            $data['no_faktur'] = $request->no_faktur;
+            $data['sub_total'] = $request->sub_total;
+            $data['disc_percent'] = $request->percent;
+            $data['disc_nominal'] = $request->discount_all;
+            $data['grand_total'] = $request->total_order;
+            $data['payment_term'] = $request->payment_term;
+            $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
+            $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak') ? 1 : 0;
+            $data['shipping_address'] = $request->shipping_address;
+            $data['description'] = $request->description;
+            $data['taxpayer_data'] = $request->taxpayer_data;
+            $data['tax_id'] = $request->tax_id;
+            $data['tax_amount'] = $request->tax_amount;
+
+            $data['datePO'] = Carbon::parse($request->datePO)->format('Y-m-d');
+            $data['tanggal_kirim'] = $request->tanggal_kirim
+                ? Carbon::parse($request->tanggal_kirim)->format('Y-m-d')
+                : null;
+
+            // Update Header Purchase Invoice (Kode biasanya tidak diubah saat edit, gunakan kode lama)
+            $purchaseInvoice->update($data);
+
+            // ================== KUMPULKAN PR ID LAMA (UNTUK RESET SYNC) ==================
+            $oldDetails = PurchaseInvoiceDetail::where('purchase_invoice_id', $purchaseInvoice->id)->get();
+            $affectedPrDetailIds = $oldDetails->pluck('receive_item_detail_id')->filter()->unique()->toArray();
+
+            // Hapus detail lama
+            PurchaseInvoiceDetail::where('purchase_invoice_id', $purchaseInvoice->id)->delete();
+
+            // ================== DETAIL BARU ==================
+            if ($itemsDetailRaw) {
+                $items = json_decode($itemsDetailRaw, true);
+                $involvedPrIds = [];
+
+                if (is_array($items) && count($items) > 0) {
+                    foreach ($items as $index => $item) {
+
+                        $prDetailId = $item['receive_item_detail_id']
+                            ?? $item['pr_detail_id']
+                            ?? $item['detail_id']
+                            ?? null;
+
+                        $qtyInputForm = floatval($item['quantity'] ?? $item['qty'] ?? 0);
+                        $unitPrice = floatval($item['unit_price'] ?? 0);
+                        $discount = floatval($item['discount'] ?? 0);
+
+                        $amount = ($qtyInputForm * $unitPrice) - $discount;
+
+                        // ✅ SIMPAN URUTAN BARU DARI DRAG TABLE
+                        PurchaseInvoiceDetail::create([
+                            'purchase_invoice_id' => $purchaseInvoice->id,
+                            'receive_item_detail_id' => $prDetailId,
+                            'product_id' => $item['product_id'],
+                            'qty' => $qtyInputForm,
+                            'outstanding_qty' => $qtyInputForm,
+                            'unit_id' => $item['unit_id'],
+                            'unit_price' => $unitPrice,
+                            'warehouse_id' => $item['warehouse_id'],
+                            'discount' => $discount,
+                            'discount_percent' => $item['discount_percent'] ?? 0,
+                            'amount' => $item['amount'] ?? $amount,
+                            'urutan' => $index, // 🔥 URUTAN ITEM TERBARU
+                            'active' => 1,
+                            'created_by' => Auth::id(),
+                        ]);
+
+                        if ($prDetailId && !in_array($prDetailId, $affectedPrDetailIds)) {
+                            $affectedPrDetailIds[] = $prDetailId;
+                        }
+                    }
+
+                    // ================== SYNC ULANG SEMUA PR TERDAMPAK ==================
+                    foreach ($affectedPrDetailIds as $prDetailId) {
+                        $tableName = "receive_item_detail_{$currentYear}";
+                        $prDetail = DB::table($tableName)->where('id', $prDetailId)->first();
+
+                        if ($prDetail) {
+                            $totalPoForThisItem = PurchaseInvoiceDetail::where('receive_item_detail_id', $prDetailId)
+                                ->where('active', 1)
+                                ->sum('qty');
+
+                            $outstandingQty = max(0, $prDetail->qty - $totalPoForThisItem);
+
+                            DB::table($tableName)
+                                ->where('id', $prDetailId)
+                                ->update([
+                                    'ri_qty' => $totalPoForThisItem,
+                                    'outstanding_qty' => $outstandingQty,
+                                    'updated_at' => now(),
+                                ]);
+
+                            if (!in_array($prDetail->receive_item_id, $involvedPrIds)) {
+                                $involvedPrIds[] = $prDetail->receive_item_id;
+                            }
+                        }
+                    }
+
+                    // ================== UPDATE STATUS PR / RECEIVE ITEM ==================
+                    foreach ($involvedPrIds as $prId) {
+                        $allDetails = DB::table("receive_item_detail_{$currentYear}")
+                            ->where('receive_item_id', $prId)
+                            ->get();
+
+                        $totalRequested = $allDetails->sum('qty');
+                        $totalOrdered = $allDetails->sum('ri_qty');
+
+                        if ($totalOrdered >= $totalRequested) {
+                            $newStatus = 'closed';
+                        } elseif ($totalOrdered > 0) {
+                            $newStatus = 'partial';
+                        } else {
+                            $newStatus = 'processing';
+                        }
+
+                        DB::table("receive_item_{$currentYear}")
+                            ->where('id', $prId)
+                            ->update([
+                                'status' => $newStatus,
+                                'updated_at' => now(),
+                            ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Purchase Invoice updated successfully!',
+                'redirect' => route('purchase-invoice.index'),
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memperbarui data: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     public function destroy(Request $request, $id)

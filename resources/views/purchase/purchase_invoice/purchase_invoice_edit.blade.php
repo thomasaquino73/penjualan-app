@@ -615,8 +615,8 @@
 
         //             $.each(response, function(i, item) {
         //                 option += `<option value="${item.id}">
-        //                         ${item.code}
-        //                    </option>`;
+    //                         ${item.code}
+    //                    </option>`;
         //             });
 
         //             $("#sq_number").html(option);
@@ -648,30 +648,30 @@
         //                 let safeProductName = item.nama_barang.replace(/"/g,
         //                     '&quot;');
         //                 html += `
-        //             <tr>
-        //                 <td>
-        //                     <div class="form-check form-check-primary">
-        //                         <input
-        //                             class="form-check-input checkItem"
-        //                             type="checkbox"
+    //             <tr>
+    //                 <td>
+    //                     <div class="form-check form-check-primary">
+    //                         <input
+    //                             class="form-check-input checkItem"
+    //                             type="checkbox"
 
-        //                             data-id="${item.id}"
-        //                             data-product_id="${item.product_id}"
-        //                             data-product_name="${safeProductName}"
-        //                             data-outstanding_qty="${item.outstanding_qty}"
-        //                             data-unit_id="${item.unit_id}"
-        //                             data-unit_name="${item.unit_name}"
+    //                             data-id="${item.id}"
+    //                             data-product_id="${item.product_id}"
+    //                             data-product_name="${safeProductName}"
+    //                             data-outstanding_qty="${item.outstanding_qty}"
+    //                             data-unit_id="${item.unit_id}"
+    //                             data-unit_name="${item.unit_name}"
 
-        //                             data-quotation_id="${item.purchase_requisition_id}"
-        //                         >
-        //                     </div>
-        //                 </td>
+    //                             data-quotation_id="${item.purchase_requisition_id}"
+    //                         >
+    //                     </div>
+    //                 </td>
 
-        //                 <td>${item.nama_barang}</td>
-        //                 <td class="text-end">${parseFloat(item.outstanding_qty)}</td>
-        //                 <td>${item.unit_name}</td>
+    //                 <td>${item.nama_barang}</td>
+    //                 <td class="text-end">${parseFloat(item.outstanding_qty)}</td>
+    //                 <td>${item.unit_name}</td>
 
-        //             </tr>`;
+    //             </tr>`;
         //             });
 
         //             $("#checkAll").prop("checked", false);
@@ -840,24 +840,24 @@
             @if (isset($jsonDetails))
                 @foreach ($jsonDetails as $detail)
                     {
-                        'id': '{{ $detail['id'] }}',
-                        'purchase_order_id': '{{ $detail['purchase_order_id'] }}',
-                        'purchase_requisition_detail_id': '{{ $detail['purchase_requisition_detail_id'] }}',
-                        'requisition_code': '{{ $detail['requisition_code'] ?? '' }}', // Ini yang Anda cari
-                        'product_id': '{{ $detail['product_id'] }}',
-                        'data_produk': '{{ $detail['data_produk'] }}',
-                        'quantity': '{{ $detail['quantity'] }}',
-                        'unit_id': '{{ $detail['unit_id'] }}',
-                        'unit': '{{ $detail['unit'] }}',
-                        'warehouse_id': '{{ $detail['warehouse_id'] }}',
-                        'warehouse': '{{ $detail['warehouse'] }}',
-                        'unit_price': '{{ $detail['unit_price'] }}',
-                        'discount': '{{ $detail['discount'] }}',
-                        'discount_percent': '{{ $detail['discount_percent'] }}',
-                        'amount': '{{ $detail['amount'] }}',
-                        'sisa_pr': '{{ $detail['sisa_pr'] }}',
-                        'kuota_asli': '{{ $detail['kuota_asli'] }}',
-                        'total_diambil_lainnya': '{{ $detail['total_diambil_lainnya'] }}'
+                        id: @json($detail['id']),
+                        purchase_invoice_id: @json($detail['purchase_invoice_id']),
+                        receive_item_detail_id: @json($detail['receive_item_detail_id']),
+                        receive_item_code: @json($detail['receive_item_code']),
+                        product_id: @json($detail['product_id']),
+                        data_produk: @json($detail['data_produk']),
+                        quantity: @json($detail['quantity']),
+                        unit_id: @json($detail['unit_id']),
+                        unit: @json($detail['unit']),
+                        warehouse_id: @json($detail['warehouse_id']),
+                        warehouse: @json($detail['warehouse']),
+                        unit_price: @json($detail['unit_price']),
+                        discount: @json($detail['discount']),
+                        discount_percent: @json($detail['discount_percent']),
+                        amount: @json($detail['amount']),
+                        received_qty: @json($detail['received_qty']),
+                        outstanding_qty: @json($detail['outstanding_qty']),
+                        total_invoice_lainnya: @json($detail['total_invoice_lainnya'])
                     }
                     {{ !$loop->last ? ',' : '' }}
                 @endforeach
@@ -865,8 +865,8 @@
         ];
 
         // Cek status PO global (Optional jika ingin mematikan tombol "Requisition" di pojok kanan atas saat edit)
-        let poIsFromPR = {{ $isFromPR ? 'true' : 'false' }};
-        if (poIsFromPR) {
+        let isFromReceiveItem = {{ $isFromReceiveItem ? 'true' : 'false' }};
+        if (isFromReceiveItem) {
             // Jika PO ini dari PR, mungkin kamu mau mendisable tombol "REQUISITION" di atas agar user tidak tambah PR lain
             $(".btn-success").html('<i class="ti ti-link"></i> Linked to PR').prop('disabled', true);
         }
@@ -931,9 +931,17 @@
                     {
                         data: "data_produk",
                         render: function(data, type, row) {
-                            if (row.requisition_code) {
-                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.requisition_code}</small>`;
+
+                            if (row.receive_item_code) {
+                                return `
+                                        <strong>${data}</strong>
+                                        <br>
+                                        <small class="text-primary">
+                                            RI : ${row.receive_item_code}
+                                        </small>
+                                    `;
                             }
+
                             return `<strong>${data}</strong>`;
                         }
                     },
@@ -1011,8 +1019,8 @@
                                     $("#formPrDetail")[0].reset();
 
                                     $("#detail_id").val("");
-                                    $("#modal_purchase_requisition_detail_id").val("");
-                                    $("#modal_requisition_code").val("");
+                                    $("#modal_receive_item_detail_id").val("");
+                                    $("#modal_receive_item_code").val("");
 
                                     $("#warehouse_id").val("").trigger("change");
 
@@ -1021,7 +1029,7 @@
                                         $("#unit_id").val("").trigger("change");
                                     }
 
-                                    $("#quantity").removeAttr("data-sisa-pr");
+                                    $("#quantity").removeAttr("data-outstanding");
 
                                     $("#modalTitle").text("Create new entry");
                                     $("#btnSubmitModal").text("Create");
@@ -1037,44 +1045,100 @@
                                 text: '<i class="ti ti-edit me-1"></i> Edit',
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
-                                action: function(e, dt) {
-                                    let data = dt.row({
+                                action: function(e, dt, node, config) {
+
+                                    const row = dt.row({
                                         selected: true
-                                    }).data();
-                                    if (!data) return;
+                                    });
+
+                                    if (!row.any()) {
+                                        Swal.fire({
+                                            icon: "warning",
+                                            title: "Warning",
+                                            text: "Please select one data first."
+                                        });
+                                        return;
+                                    }
+
+                                    const data = row.data();
+                                    const rowIndex = row.index();
 
                                     window.isEditingMode = true;
 
-                                    $("#detail_id").val(data.detail_id);
+                                    // Reset error
+                                    $("#formPrDetail .error").html("");
 
-                                    $("#modal_purchase_requisition_detail_id")
-                                        .val(data.detail_id || data
-                                            .purchase_requisition_detail_id || "");
+                                    // ==========================
+                                    // HEADER
+                                    // ==========================
+                                    $("#modalTitle").text("Edit entry");
+                                    $("#btnSubmitModal").text("Update");
 
-                                    $("#modal_requisition_code").val(data.requisition_code || "");
+                                    // ==========================
+                                    // HIDDEN FIELDS (PERBAIKAN DI SINI)
+                                    // ==========================
 
+                                    // Simpan indeks baris untuk kebutuhan update array nantinya (jika diperlukan untuk referensi posisi)
+                                    $("#detail_id").val(rowIndex);
+
+                                    // Pastikan product_id dan field penting lainnya ikut dimasukkan ke input form/hidden yang sesuai!
+                                    $("#product_id").val(data
+                                        .product_id
+                                    ); // <-- Pastikan ini ada agar product_id ikut naik/terbawa
+
+                                    $("#modal_purchase_requisition_detail_id").val(
+                                        data.detail_id ??
+                                        data.purchase_requisition_detail_id ??
+                                        ""
+                                    );
+
+                                    $("#modal_requisition_code").val(
+                                        data.requisition_code ?? ""
+                                    );
+
+                                    // ==========================
+                                    // TEXTBOX
+                                    // ==========================
+                                    $("#quantity").val(data.quantity ?? "");
+                                    $("#unit_price").val(data.unit_price ?? 0);
+                                    $("#discount").val(data.discount ?? 0);
+                                    $("#discount_percent").val(data.discount_percent ?? 0);
+                                    $("#tax").val(data.tax ?? 0);
+                                    $("#amount").val(data.amount ?? 0);
+                                    $("#available_stok").val(data.available_stok ?? "");
+
+                                    // ==========================
+                                    // ATTRIBUTE
+                                    // ==========================
                                     if (data.sisa_pr != null) {
                                         $("#quantity").attr("data-sisa-pr", data.sisa_pr);
                                     } else {
                                         $("#quantity").removeAttr("data-sisa-pr");
                                     }
 
-                                    $("#quantity").val(data.quantity ?? 0);
+                                    // ==========================
+                                    // SELECT
+                                    // ==========================
+                                    $("#warehouse_id")
+                                        .val(data.warehouse_id)
+                                        .trigger("change.select2");
+
+                                    // simpan unit yg dipilih
                                     $("#unit_id").data("pending-val", data.unit_id);
-                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
-                                    $("#product_id").val(data.product_id).trigger("change");
 
-                                    $("#unit_price").val(data.unit_price ?? 0);
-                                    $("#discount").val(data.discount ?? 0);
-                                    $("#discount_percent").val(data.discount_percent ?? 0);
-                                    $("#tax").val(data.tax ?? 0);
-                                    $("#amount").val(data.amount ?? 0);
+                                    // simpan harga lama
+                                    $("#unit_price").data("pending-price", data.unit_price);
 
-                                    $("#modalTitle").text("Edit entry");
-                                    $("#btnSubmitModal").text("Update");
-
+                                    // buka modal dulu
                                     $("#modalPrDetail").modal("show");
-                                },
+
+                                    // terakhir trigger product agar Select2 membaca value product_id yang baru
+                                    setTimeout(function() {
+                                        $("#product_id")
+                                            .val(data.product_id)
+                                            .trigger("change");
+                                    }, 150);
+                                }
                             },
 
                             // =======================
@@ -1107,8 +1171,7 @@
                                     }).then(function(result) {
                                         if (result.isConfirmed) {
                                             prDetailsData = prDetailsData.filter(item =>
-                                                item.detail_id !== data.detail_id ||
-                                                item.data_produk !== data.data_produk
+                                                item.id !== data.id
                                             );
 
                                             dt.clear().rows.add(prDetailsData).draw();
@@ -1228,7 +1291,7 @@
                     discount_percent: discountPercent,
                     tax: tax,
                     amount: (qtyInput * unitPrice) - discount,
-                    purchase_requisition_detail_id: prDetailId // Ini yang akan dikirim ke controller
+                    receive_item_detail_id: prDetailId // Ini yang akan dikirim ke controller
                 };
 
                 // 6. Update ke array global prDetailsData

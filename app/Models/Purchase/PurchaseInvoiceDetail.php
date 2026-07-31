@@ -4,6 +4,7 @@ namespace App\Models\Purchase;
 
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
+use App\Models\Inventory\Warehouse;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -54,4 +55,21 @@ class PurchaseInvoiceDetail extends Model
     {
         return $this->belongsTo(PurchaseInvoice::class, 'purchase_invoice_id');
     }
+
+    public function receiveItemDetail()
+    {
+        return $this->belongsTo(
+            ReceiveItemDetail::class,
+            'receive_item_detail_id'
+        );
+    }
+    public function warehouseID()
+    {
+        return $this->belongsTo(
+            Warehouse::class,
+            'warehouse_id',
+            'id'
+        );
+    }
+
 }
