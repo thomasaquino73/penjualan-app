@@ -113,10 +113,7 @@ class Sidebar extends Component
                 'icon' => 'ti ti-file-invoice',
                 'roles' => ['Super Admin'],
                 'permissions' => [
-                    'permintaan_pembelian-browse',
-                    'purchase_order-browse',
-                    'receive_item-browse',
-                    'purchase_invoice-browse',
+                    'purchase_down_payment-browse',
                 ],
                 'children' => [
                     [
@@ -127,15 +124,15 @@ class Sidebar extends Component
                         'permissions' => ['purchase_down_payment-browse'],
 
                     ],
-                    // [
-                    //     'name' => 'Sales Invoice',
-                    //     'route' => 'sales-invoice.index',
-                    //     'pattern' => 'sales-invoice.*',
-                    //     'roles' => ['Super Admin'],
-                    //     'permissions' => ['sales_invoice-browse'],
-                    //     'badge' => fn () => MenuBadge::count('sales_invoice', 'sales_invoice_date'),
-                    //     'badge_color' => 'danger',
-                    // ],
+                    [
+                        'name' => 'Purchase Invoice',
+                        'route' => 'purchase-invoice.index',
+                        'pattern' => 'purchase-invoice.*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['purchase_invoice-browse'],
+                        'badge' => fn () => MenuBadge::count('purchase_invoice', 'datePO'),
+                        'badge_color' => 'danger',
+                    ],
 
                 ],
             ],
@@ -211,10 +208,9 @@ class Sidebar extends Component
                 'icon' => 'ti ti-file-invoice',
                 'roles' => ['Super Admin'],
                 'permissions' => [
-                    'permintaan_pembelian-browse',
-                    'purchase_order-browse',
-                    'receive_item-browse',
-                    'purchase_invoice-browse',
+                    'proforma_invoice-browse',
+                    'sales_down_payment-browse',
+                    'sales_invoice-browse',
                 ],
                 'children' => [
                     [
@@ -405,13 +401,13 @@ class Sidebar extends Component
                         'roles' => ['Super Admin'],
                         'permissions' => ['archive_sales_order-browse'],
                     ],
-                    // [
-                    //     'name' => 'Arsip Proforma Invoice',
-                    //     'route' => 'sales-invoice.index',
-                    //     'pattern' => 'sales-invoice.*',
-                    //     'roles' => ['Super Admin'],
-                    //     'permissions' => ['sales_invoice-browse'],
-                    // ],
+                    [
+                        'name' => 'Arsip Proforma Invoice',
+                        'route' => 'archive.proforma-invoice',
+                        'pattern' => 'archive.proforma-invoice*',
+                        'roles' => ['Super Admin'],
+                        'permissions' => ['archive_proforma_invoice-browse'],
+                    ],
                     // [
                     //     'name' => 'Arsip Sales Invoice',
                     //     'route' => 'sales-invoice.index',

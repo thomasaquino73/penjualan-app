@@ -45,8 +45,13 @@ class PurchaseInvoiceDetail extends Model
         return $this->belongsTo(BasicCodeDetail::class, 'unit_id', 'id');
     }
 
-    public function purchaseOrder()
+    public function purchaseOrderDetail()
     {
-        return $this->belongsTo(PurchaseOrder::class, 'purchase_invoice_id');
+        return $this->belongsTo(PurchaseOrderDetail::class, 'purchase_order_detail_id', 'id');
+    }
+
+    public function purchaseInvoice()
+    {
+        return $this->belongsTo(PurchaseInvoice::class, 'purchase_invoice_id');
     }
 }

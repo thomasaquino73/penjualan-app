@@ -9,6 +9,7 @@
                  <th>Unit Price</th>
                  <th>Disc</th>
                  <th>Amount</th>
+                 <th>Warehouse</th>
              </tr>
          </thead>
      </table>

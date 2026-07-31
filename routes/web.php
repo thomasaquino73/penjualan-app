@@ -291,8 +291,26 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('purchase-invoice')->name('purchase-invoice.')->group(function () {
-        Route::post('/{id}/submit', [PurchaseInvoiceController::class, 'submitToPending'])->name('submit');
+        Route::get('/{id}/data', [PurchaseInvoiceController::class, 'getSupplierData'])->name('getSupplierData');
+        Route::patch('/{id}/close', [PurchaseInvoiceController::class, 'CloseDocument'])->name('close');
         Route::get('/trash', [PurchaseInvoiceController::class, 'trash'])->name('trash');
+        Route::post('/delete-multiple', [PurchaseInvoiceController::class, 'deleteMultiple']);
+        Route::post('/restore-multiple', [PurchaseInvoiceController::class, 'restoreMultiple']);
+        Route::put('/restore/{id}', [PurchaseInvoiceController::class, 'restore'])->name('restore');
+        Route::get('/get-product-price/{id}', [PurchaseInvoiceController::class, 'getPrice']);
+        Route::get('/table-pr', [PurchaseInvoiceController::class, 'table_pr'])->name('table_pr');
+        Route::get('/trash', [PurchaseInvoiceController::class, 'trash'])->name('trash');
+        Route::get('/get-processing-receive', [PurchaseInvoiceController::class, 'getProcessingData'])->name('receive.processing');
+        Route::post('/get-receive-detail', [PurchaseInvoiceController::class, 'getReceiveDetail'])->name('getReceiveDetail');
+        Route::post('/{id}/submit', [PurchaseInvoiceController::class, 'submitToPending'])->name('submit');
+        Route::post('/{id}/process', [PurchaseInvoiceController::class, 'processData'])->name('process');
+        Route::post('/change-status/{id}', [PurchaseInvoiceController::class, 'changeStatus']);
+        Route::get('/print/{id}', [PurchaseInvoiceController::class, 'print'])->name('print');
+        Route::get('/po/price-history', [PurchaseInvoiceController::class, 'getPriceHistory']);
+        Route::get('/get-supplier-address/{supplier}', [PurchaseInvoiceController::class, 'getSupplierAddress']);
+        // Route::get('/get-company-addresses/{companyId}', [PurchaseInvoiceController::class, 'getCompanyAddresses']);
+        // Route::post('/send-supplier/{id}', [PurchaseInvoiceController::class, 'sendSupplier'])->name('send-supplier');
+        Route::post('/get-requisition-detail', [PurchaseInvoiceController::class, 'getRequisitionDetail'])->name('get-requisition-detail');
         Route::resource('', PurchaseInvoiceController::class)->parameters(['' => 'purchase_invoice']);
     });
 
@@ -386,6 +404,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/arsip-sales-quotation', [PenjualanArsipController::class, 'indexSalesQuotation'])->name('archive.sales-quotation');
         Route::get('arsip-sales-quotation/datatable', [PenjualanArsipController::class, 'tabelSalesQuotation'])->name('archive.sales-quotation.datatable');
         Route::get('/arsip-sales-quotation/{year}/print/{id}', [PenjualanArsipController::class, 'printSalesQuotation'])->name('archive.sales-quotation.print');
+
+        Route::get('/arsip-proforma-invoice', [PenjualanArsipController::class, 'indexProformaInvoice'])->name('archive.proforma-invoice');
+        Route::get('arsip-proforma-invoice/datatable', [PenjualanArsipController::class, 'tabelProformaInvoice'])->name('archive.proforma-invoice.datatable');
+        Route::get('/arsip-proforma-invoice/{year}/print/{id}', [PenjualanArsipController::class, 'printProformaInvoice'])->name('archive.proforma-invoice.print');
     });
 
     Route::prefix('sales-down-payment')->name('sales-down-payment.')->group(function () {

@@ -335,6 +335,7 @@ class ReceiveItemController extends Controller
                             'product_id' => $item['product_id'],
                             'qty' => $qtyInputForm,
                             'unit_id' => $item['unit_id'],
+                            'outstanding_qty' => $qtyInputForm,
                             'warehouse_id' => $item['warehouse_id'],
                             'active' => 1,
                         ]);
@@ -694,6 +695,7 @@ class ReceiveItemController extends Controller
                         'purchase_order_detail_id' => $prDetailId,
                         'product_id' => $item['product_id'],
                         'qty' => $qtyInput,
+                        'outstanding_qty' => $qtyInput,
                         'unit_id' => $item['unit_id'],
                         'warehouse_id' => $item['warehouse_id'],
                         'active' => 1,

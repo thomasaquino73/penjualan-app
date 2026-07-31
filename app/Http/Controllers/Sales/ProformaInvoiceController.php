@@ -345,7 +345,7 @@ class ProformaInvoiceController extends Controller
         $bulan = date('n');
         $bulanRomawi = $this->bulanRomawi($bulan);
 
-        $prefix = "PI/{$tahun}/{$bulanRomawi}/";
+        $prefix = "PRO/{$tahun}/{$bulanRomawi}/";
 
         $last = ProformaInvoice::where('proforma_invoice_code', 'like', $prefix.'%')
             ->orderByRaw("

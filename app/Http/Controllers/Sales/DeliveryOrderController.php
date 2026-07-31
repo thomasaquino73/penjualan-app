@@ -442,7 +442,9 @@ class DeliveryOrderController extends Controller
                         DeliveryOrderDetail::create([
                             'delivery_order_id' => $deliveryOrder->id,
                             'sales_order_detail_id' => $soDetailId,
-                            'sales_order_id' => $item['sales_order_id'],
+                            'sales_order_id' => ! empty($item['sales_order_id'])
+                            ? $item['sales_order_id']
+                            : null,
                             'urutan' => $index,
                             'data_barang_id' => $item['product_id'],
                             'qty' => $qty,

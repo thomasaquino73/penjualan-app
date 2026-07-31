@@ -105,6 +105,11 @@ class PermissionSeeder extends Seeder
                 'group' => 'Archive',
                 'actions' => ['browse'],
             ],
+            'archive_proforma_invoice' => [
+                'alias' => 'Archive Proforma Invoice',
+                'group' => 'Archive',
+                'actions' => ['browse'],
+            ],
         ];
 
         $role = Roles::firstOrCreate([

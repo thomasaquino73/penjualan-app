@@ -34,9 +34,10 @@
 
         </div>
         <div class="card-body table-responsive p-3">
-            <form action="{{ route('purchase-invoice.store') }}" method="POST" id="postForm"
+            <form action="{{ route('purchase-invoice.update', $model->id) }}" method="POST" id="postForm"
                 enctype="multipart/form-data">
                 @csrf
+                @method('PUT')
                 <div class="row mb-5">
 
                     <div class="col-md-6 mb-3">
@@ -50,15 +51,15 @@
                                             data-placeholder="Select Supplier">
                                             <option></option>
                                             @foreach ($supplier as $supp)
-                                                <option value="{{ $supp->id }}" data-alamat="{{ $supp->alamat }}">
+                                                <option value="{{ $supp->id }}" data-alamat="{{ $supp->alamat }}"
+                                                    {{ $supp->id == $model->supplier_id ? 'selected' : '' }}>
                                                     [{{ $supp->id_supplier }}] {{ $supp->nama_supplier }}
                                                 </option>
                                             @endforeach
                                         </select>
+                                        <span class="error text-danger" id="supplier_idError"></span>
                                     </div>
-                                    <span class="error text-danger" id="supplier_idError"></span>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -70,19 +71,19 @@
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
                                     <input type="text" name="code" id="code" class="form-control"
-                                        value="{{ $idNumber }}">
+                                        value="{{ $model->code }}" readonly>
+                                    <span class="error text-danger" id="codeError"></span>
                                 </div>
-                                <span class="error text-danger" id="codeError"></span>
 
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="form-label">PO Date<small class="text-danger">*</small> </label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-calendar"></i></span>
-                                    <input type="text" name="datePO" id="datePO" class="form-control" value="">
+                                    <input type="text" name="datePO" id="datePO" class="form-control"
+                                        value="{{ Carbon\Carbon::parse($model->datePO)->format('d-m-Y') }}">
+                                    <span class="error text-danger" id="datePOError"></span>
                                 </div>
-                                <span class="error text-danger" id="datePOError"></span>
-
                             </div>
                         </div>
                     </div>
@@ -109,10 +110,26 @@
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane fade active show" id="navs-pills-left-home" role="tabpanel">
-                                @include('purchase.purchase_invoice.part.isi_tab.tabel_pesanan')
+                                <div class="row mt-3">
+                                    <table class="table display responsive nowrap" id="table">
+                                        <thead class="border-top" style="background-color: #AEDEFC; ">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Item</th>
+                                                <th>Qty</th>
+                                                <th>Unit</th>
+                                                <th>Unit Price</th>
+                                                {{-- <th>DiscPercent</th> --}}
+                                                <th>Disc</th>
+                                                <th>Amount</th>
+                                                <th>Warehouse</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
                             </div>
                             <div class="tab-pane fade" id="navs-pills-left-profile" role="tabpanel">
-                                @include('purchase.purchase_invoice.part.isi_tab.info_pesanan')
+                                @include('purchase.purchase_invoice.part.isi_tab.info_pesanan_edit')
 
                             </div>
 
@@ -126,10 +143,11 @@
                         <div class="col-12 mb-3 ">
                             <label class="form-label" for="sub_total">Sub Total</label>
                             <div class="input-group input-group-merge">
-                                <span class="input-group-text">{{ $company->symbol ?? 'Rp' }}</span>
+                                <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                 <input type="number" id="sub_total" name="sub_total" class="form-control"
-                                    placeholder="0" readonly>
+                                    value="{{ $model->sub_total }}" placeholder="0" readonly>
                             </div>
+
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -140,14 +158,15 @@
                                     <div class="input-group input-group-merge">
                                         <span class="input-group-text">%</span>
                                         <input type="number" id="percent" name="percent" min="0"
-                                            step="any" class="form-control" placeholder="0">
+                                            value="{{ $model->disc_percent }}" step="any" class="form-control"
+                                            placeholder="0">
                                     </div>
                                 </div>
                                 <div class="col-8">
                                     <div class="input-group input-group-merge">
-                                        <span class="input-group-text">{{ $company->symbol ?? 'Rp' }}</span>
+                                        <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                         <input type="number" id="discount_all" name="discount_all" class="form-control"
-                                            placeholder="0" min='0'>
+                                            placeholder="0" min='0' value="{{ $model->disc_percent }}">
                                     </div>
                                 </div>
                             </div>
@@ -157,7 +176,8 @@
                         <div class="col-12 mb-3 ">
                             <label class="form-label" for="sub_total" id="taxes">Tax</label>
                             <div class="input-group input-group-merge">
-                                <input type="text" name="tax_amount" id="tax_amount" class="form-control" readonly>
+                                <input type="text" name="tax_amount" id="tax_amount" class="form-control"
+                                    value="{{ $model->tax_amount }}" readonly>
                             </div>
                         </div>
                     </div>
@@ -165,9 +185,9 @@
                         <div class="col-12 mb-3">
                             <label class="form-label" for="total_order"> <strong>Total Order</strong></label>
                             <div class="input-group input-group-merge">
-                                <span class="input-group-text">{{ $company->symbol ?? 'Rp' }}</span>
+                                <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
                                 <input type="number" id="total_order" name="total_order" class="form-control"
-                                    placeholder="0" readonly>
+                                    value="{{ $model->grand_total }}" placeholder="0" readonly>
                             </div>
 
                         </div>
@@ -175,14 +195,10 @@
 
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">
-                    <button type="submit" id="savedata" class="btn btn-primary" data-save-and-new="false">
-                        <i class="fa fa-upload me-1"></i> Save and Close
+                    <button type="submit" id="savedata" class="btn btn-primary">
+                        <i class="fa fa-save me-1"></i> Update
                     </button>
-
-                    <button type="submit" id="savedatamore" class="btn btn-success" data-save-and-new="true">
-                        <i class="fa fa-plus-circle me-1"></i> Save and Create New
-                    </button>
-                    <a href="{{ route('purchase-order.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{{ route('purchase-invoice.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>
@@ -196,7 +212,9 @@
 @include('partials.button.btn_addpayment')
 @include('partials.button.btn_submitform')
 @include('partials.button.select2_modal')
+{{-- @include('partials.js.calculate_total') --}}
 @include('purchase.purchase_invoice.part.js.btnSubmitModal')
+
 
 @push('scripts')
     <script>
@@ -479,10 +497,33 @@
 
         });
     </script>
-
     <script>
-        let prDetailsData = [];
+        $(document).ready(function() {
 
+            // 🔥 SET STATE AWAL checkbox
+            if ($("#kena_pajak").is(":checked")) {
+                $("#tax_container").show();
+                $("#ppn_container").show();
+            } else {
+                $("#tax_container").hide();
+                $("#ppn_container").hide();
+            }
+
+            // 🔥 kalau sudah ada tax_id dari DB, jangan override default
+            let existingTaxId = $("#tax_id").val();
+
+            if ($("#kena_pajak").is(":checked")) {
+                if (!existingTaxId && DEFAULT_TAX_ID) {
+                    $("#tax_id").val(numeral(DEFAULT_TAX_ID).format('0,0.00'));
+                }
+            }
+
+            // 🔥 WAJIB: hitung ulang saat pertama load
+            calculateTotalOrder();
+            calculateGrandTotal();
+        });
+    </script>
+    <script>
         $("#vehicle_id").on("select2:select", function(e) {
             let data = e.params.data;
 
@@ -541,14 +582,111 @@
             }
         });
 
+        // $("#showModalpr").on("click", function(e) {
+        //     e.preventDefault();
 
+        //     var supplierID = $("#supplier_id").val();
+        //     $("#sq_number")
+        //         .empty()
+        //         .append('<option value="">Select Requisition</option>')
+        //         .val(null)
+        //         .trigger("change");
+        //     if (!supplierID) {
+        //         Swal.fire({
+        //             icon: "warning",
+        //             title: "Warning!",
+        //             text: "Please select Supplier first before adding new data.",
+        //             confirmButtonColor: "#3085d6",
+        //             confirmButtonText: "OK",
+        //             customClass: {
+        //                 confirmButton: "btn btn-danger",
+        //             },
+        //             buttonsStyling: false,
+        //         });
+        //         return;
+        //     }
+
+        //     $.ajax({
+        //         url: "{{ route('purchase-order.requisitions.processing') }}",
+        //         type: "GET",
+        //         success: function(response) {
+
+        //             let option = '<option value="">Select Quotation</option>';
+
+        //             $.each(response, function(i, item) {
+        //                 option += `<option value="${item.id}">
+        //                         ${item.code}
+        //                    </option>`;
+        //             });
+
+        //             $("#sq_number").html(option);
+
+        //             $("#modalRequisitionDetail").modal("show");
+        //         }
+        //     });
+        // });
+
+        // $('#sq_number').on('change', function() {
+
+        //     let quotationIds = $(this).val();
+
+        //     if (!quotationIds || quotationIds.length === 0) {
+        //         $('#quotationTableBody').html('');
+        //         return;
+        //     }
+
+        //     $.ajax({
+        //         url: "{{ route('purchase-order.getQuotationDetail') }}",
+        //         type: "POST",
+        //         data: {
+        //             quotation_ids: quotationIds,
+        //             _token: "{{ csrf_token() }}"
+        //         },
+        //         success: function(response) {
+        //             let html = '';
+        //             $.each(response, function(index, item) {
+        //                 let safeProductName = item.nama_barang.replace(/"/g,
+        //                     '&quot;');
+        //                 html += `
+        //             <tr>
+        //                 <td>
+        //                     <div class="form-check form-check-primary">
+        //                         <input
+        //                             class="form-check-input checkItem"
+        //                             type="checkbox"
+
+        //                             data-id="${item.id}"
+        //                             data-product_id="${item.product_id}"
+        //                             data-product_name="${safeProductName}"
+        //                             data-outstanding_qty="${item.outstanding_qty}"
+        //                             data-unit_id="${item.unit_id}"
+        //                             data-unit_name="${item.unit_name}"
+
+        //                             data-quotation_id="${item.purchase_requisition_id}"
+        //                         >
+        //                     </div>
+        //                 </td>
+
+        //                 <td>${item.nama_barang}</td>
+        //                 <td class="text-end">${parseFloat(item.outstanding_qty)}</td>
+        //                 <td>${item.unit_name}</td>
+
+        //             </tr>`;
+        //             });
+
+        //             $("#checkAll").prop("checked", false);
+        //             $("#quotationTableBody").html(html);
+
+        //         }
+        //     });
+
+        // });
         //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
         $("#checkAll").on("change", function() {
             // Jika checkAll dicentang, semua .checkItem ikut dicentang, begitu sebaliknya
             $(".checkItem").prop("checked", $(this).prop("checked"));
         });
 
-        // Jika salah satu item diuncheck secara manual, matikan checkAll di atas head tabel
         $(document).on("change", ".checkItem", function() {
             if ($(".checkItem:checked").length === $(".checkItem").length) {
                 $("#checkAll").prop("checked", true);
@@ -556,9 +694,6 @@
                 $("#checkAll").prop("checked", false);
             }
         });
-
-        // TOMBOL UNTUK MASUKKAN KE TABEL DARI REQUISITION YANG DIPULIH
-
 
         $(function() {
             const datePicker = flatpickr("#datePO", {
@@ -653,41 +788,92 @@
             }
         });
 
-        $(document).ready(function() {
+        // Ketika tombol map/history alamat diklik
+        $(document).on("click", "#btn-history-address", function() {
+            let supplierId = $("#supplier_id").val();
+            loadSupplierAddress(supplierId);
+        });
+        $(document).on("click", ".select-address", function() {
+            $("#shipping_address").val($(this).data("address"));
+        });
 
-
-            $("#btnSubmitModal").on("click", function(e) {
-                let qtyInput = $("#quantity");
-                let currentQty = parseFloat(qtyInput.val()) || 0;
-
-                // Ambil batas sisa PR dari atribut input modal
-                // let maxPrLimit = qtyInput.attr("data-sisa-pr");
-
-                // JIKA BERDASARKAN PR (maxPrLimit terdefinisi dan tidak kosong)
-                // if (maxPrLimit !== undefined && maxPrLimit !== null && maxPrLimit !== '') {
-                //     maxPrLimit = parseFloat(maxPrLimit);
-
-                //     if (currentQty > maxPrLimit) {
-                //         e.preventDefault(); // Hentikan proses simpan/update ke array
-
-                //         Swal.fire({
-                //             icon: "warning",
-                //             title: "Melebihi Sisa PR",
-                //             text: `Kuantitas item ini tidak boleh melebihi sisa PR (Maksimal sisa: ${maxPrLimit}).`,
-                //             customClass: {
-                //                 confirmButton: "btn btn-warning"
-                //             },
-                //             buttonsStyling: false
-                //         });
-
-                //         qtyInput.val(maxPrLimit); // Otomatis reset input ke angka maksimal
-                //         return false;
-                //     }
-                // }
-
-                // JIKA PO BEBAS (maxPrLimit tidak ada), AKAN LOLOS TANPA VALIDASI MAKSIMAL
+        function loadSupplierAddress(supplierId) {
+            if (!supplierId) return;
+            $.ajax({
+                url: `/purchase-order/get-supplier-address/${supplierId}`,
+                type: "GET",
+                dataType: "json",
+                success: function(response) {
+                    let dropdownMenu = $("#address-dropdown-menu");
+                    dropdownMenu.empty();
+                    if (response.success) {
+                        let item = response.data;
+                        dropdownMenu.append(`
+                    <li class="w-100">
+                        <a class="dropdown-item select-address p-2 d-block text-dark"
+                           href="javascript:void(0);"
+                           data-address="${item.address.replace(/\n/g,'&#10;')}"
+                           style="white-space: normal;">
+                            <strong class="d-block">${item.address_name}</strong>
+                            <span class="text-muted small" style="white-space: pre-line;">
+                                ${item.address}
+                            </span>
+                        </a>
+                    </li>
+                `);
+                    } else {
+                        dropdownMenu.append(`
+                    <li>
+                        <span class="dropdown-item text-muted">
+                            Tidak ada alamat.
+                        </span>
+                    </li>
+                `);
+                    }
+                }
             });
 
+        }
+    </script>
+    <script>
+        let prDetailsData = [
+            @if (isset($jsonDetails))
+                @foreach ($jsonDetails as $detail)
+                    {
+                        'id': '{{ $detail['id'] }}',
+                        'purchase_order_id': '{{ $detail['purchase_order_id'] }}',
+                        'purchase_requisition_detail_id': '{{ $detail['purchase_requisition_detail_id'] }}',
+                        'requisition_code': '{{ $detail['requisition_code'] ?? '' }}', // Ini yang Anda cari
+                        'product_id': '{{ $detail['product_id'] }}',
+                        'data_produk': '{{ $detail['data_produk'] }}',
+                        'quantity': '{{ $detail['quantity'] }}',
+                        'unit_id': '{{ $detail['unit_id'] }}',
+                        'unit': '{{ $detail['unit'] }}',
+                        'warehouse_id': '{{ $detail['warehouse_id'] }}',
+                        'warehouse': '{{ $detail['warehouse'] }}',
+                        'unit_price': '{{ $detail['unit_price'] }}',
+                        'discount': '{{ $detail['discount'] }}',
+                        'discount_percent': '{{ $detail['discount_percent'] }}',
+                        'amount': '{{ $detail['amount'] }}',
+                        'sisa_pr': '{{ $detail['sisa_pr'] }}',
+                        'kuota_asli': '{{ $detail['kuota_asli'] }}',
+                        'total_diambil_lainnya': '{{ $detail['total_diambil_lainnya'] }}'
+                    }
+                    {{ !$loop->last ? ',' : '' }}
+                @endforeach
+            @endif
+        ];
+
+        // Cek status PO global (Optional jika ingin mematikan tombol "Requisition" di pojok kanan atas saat edit)
+        let poIsFromPR = {{ $isFromPR ? 'true' : 'false' }};
+        if (poIsFromPR) {
+            // Jika PO ini dari PR, mungkin kamu mau mendisable tombol "REQUISITION" di atas agar user tidak tambah PR lain
+            $(".btn-success").html('<i class="ti ti-link"></i> Linked to PR').prop('disabled', true);
+        }
+
+
+        $(document).ready(function() {
+            // MENAMPILKAN TABEL BARANG
             // ========================================================
             // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
             // ========================================================
@@ -745,8 +931,8 @@
                     {
                         data: "data_produk",
                         render: function(data, type, row) {
-                            if (row.order_code) {
-                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.order_code}</small>`;
+                            if (row.requisition_code) {
+                                return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.requisition_code}</small>`;
                             }
                             return `<strong>${data}</strong>`;
                         }
@@ -851,73 +1037,21 @@
                                 text: '<i class="ti ti-edit me-1"></i> Edit',
                                 className: "btn btn-warning btn-sm me-2",
                                 extend: "selectedSingle",
-                                action: function(e, dt, node, config) {
-
-                                    const row = dt.row({
+                                action: function(e, dt) {
+                                    let data = dt.row({
                                         selected: true
-                                    });
-
-                                    if (!row.any()) {
-                                        Swal.fire({
-                                            icon: "warning",
-                                            title: "Warning",
-                                            text: "Please select one data first."
-                                        });
-                                        return;
-                                    }
-
-                                    const data = row.data();
-                                    const rowIndex = row.index();
+                                    }).data();
+                                    if (!data) return;
 
                                     window.isEditingMode = true;
 
-                                    // Reset error
-                                    $("#formPrDetail .error").html("");
+                                    $("#detail_id").val(data.detail_id);
 
-                                    // ==========================
-                                    // HEADER
-                                    // ==========================
+                                    $("#modal_purchase_requisition_detail_id")
+                                        .val(data.detail_id || data
+                                            .purchase_requisition_detail_id || "");
 
-                                    $("#modalTitle").text("Edit entry");
-                                    $("#btnSubmitModal").text("Update");
-
-                                    // ==========================
-                                    // HIDDEN
-                                    // ==========================
-
-                                    $("#detail_id").val(rowIndex);
-
-                                    $("#modal_purchase_requisition_detail_id").val(
-                                        data.detail_id ??
-                                        data.purchase_requisition_detail_id ??
-                                        ""
-                                    );
-
-                                    $("#modal_requisition_code").val(
-                                        data.requisition_code ?? ""
-                                    );
-
-                                    // ==========================
-                                    // TEXTBOX
-                                    // ==========================
-
-                                    $("#quantity").val(data.quantity ?? "");
-
-                                    $("#unit_price").val(data.unit_price ?? 0);
-
-                                    $("#discount").val(data.discount ?? 0);
-
-                                    $("#discount_percent").val(data.discount_percent ?? 0);
-
-                                    $("#tax").val(data.tax ?? 0);
-
-                                    $("#total_price").val(data.amount ?? 0);
-
-                                    $("#available_stok").val(data.available_stok ?? "");
-
-                                    // ==========================
-                                    // ATTRIBUTE
-                                    // ==========================
+                                    $("#modal_requisition_code").val(data.requisition_code || "");
 
                                     if (data.sisa_pr != null) {
                                         $("#quantity").attr("data-sisa-pr", data.sisa_pr);
@@ -925,29 +1059,24 @@
                                         $("#quantity").removeAttr("data-sisa-pr");
                                     }
 
-                                    // ==========================
-                                    // SELECT
-                                    // ==========================
-
-                                    $("#warehouse_id")
-                                        .val(data.warehouse_id)
-                                        .trigger("change.select2");
-
-                                    // simpan unit yg dipilih
+                                    $("#quantity").val(data.quantity ?? 0);
                                     $("#unit_id").data("pending-val", data.unit_id);
+                                    $("#warehouse_id").val(data.warehouse_id).trigger("change");
+                                    $("#product_id").val(data.product_id).trigger("change");
 
-                                    // simpan harga lama
-                                    $("#unit_price").data("pending-price", data.unit_price);
+                                    $("#unit_price").val(data.unit_price ?? 0);
+                                    $("#discount").val(data.discount ?? 0);
+                                    $("#discount_percent").val(data.discount_percent ?? 0);
+                                    $("#tax").val(data.tax ?? 0);
+                                    $("#amount").val(data.amount ?? 0);
 
-                                    // buka modal dulu
+                                    $("#modalTitle").text("Edit entry");
+                                    $("#btnSubmitModal").text("Update");
+
                                     $("#modalPrDetail").modal("show");
-
-                                    // terakhir trigger product
-                                    $("#product_id")
-                                        .val(data.product_id)
-                                        .trigger("change");
-                                }
+                                },
                             },
+
                             // =======================
                             // 🗑 DELETE
                             // =======================
@@ -1041,127 +1170,105 @@
                 // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
                 table.rows().invalidate();
 
+                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
-            //==============================+++++++++++
 
-            // 5. Event Handler: Submit Form Modal Detail (Sekarang baris prDetailsData PASTI terbaca)
-            $("#formPrDetail").on("submit", function(e) {
+            $("#btnSubmitModal").on("click", function(e) {
                 e.preventDefault();
 
+                // 1. Ambil data dari input form
                 let productId = $("#product_id").val();
                 let productName = $("#product_id option:selected").text();
-                let quantity = parseFloat($("#quantity").val()) || 0;
+                let qtyInput = parseFloat($("#quantity").val() || 0);
                 let unitId = $("#unit_id").val();
                 let unitName = $("#unit_id option:selected").text();
                 let warehouseId = $("#warehouse_id").val();
                 let warehouseName = $("#warehouse_id option:selected").text();
-                let detailId = $("#detail_id")
-                    .val(); // Ini adalah index row array (kosong jika barang baru)
+                let unitPrice = parseFloat($("#unit_price").val() || 0);
+                let discount = parseFloat($("#discount").val() || 0);
+                let discountPercent = $("#discount_percent").val();
+                let tax = parseFloat($("#tax").val() || 0);
 
-                let unitPrice = parseFloat($("#unit_price").val()) || 0;
-                let discountPercent = $("#discount_percent").val() || 0;
-                let discount = parseFloat($("#discount").val()) || 0;
-                let tax = parseFloat($("#tax").val()) || 0;
+                // 2. Ambil ID dan PR Detail ID
+                let rowIndex = $("#detail_id").val();
+                let prDetailId = $("#modal_purchase_requisition_detail_id").val();
 
-                let requiredDate = $("#required_date").val() || "";
+                // Validasi dasar
+                if (!productId || qtyInput <= 0 || !unitId) {
+                    Swal.fire("Error", "Mohon lengkapi produk, quantity, dan unit.", "error");
+                    return;
+                }
 
-                // 1. Validasi Input Wajib
-                if (!productId || quantity <= 0 || !unitId) {
+                // 3. Normalisasi PR Detail ID agar benar-benar null jika tidak ada
+                prDetailId = (prDetailId && prDetailId !== "null" && prDetailId !== "") ? parseInt(
+                    prDetailId) : null;
+
+                // 4. Validasi Kuota PR (jika ini adalah item dari PR)
+                let batasMaksimal = parseFloat($("#quantity").attr("data-max-allowed") || 0);
+                if (prDetailId !== null && batasMaksimal > 0 && qtyInput > batasMaksimal) {
                     Swal.fire({
-                        icon: "error",
-                        title: "Oops...",
-                        text: "Please fill all required fields! (Product, Valid Quantity, and Unit)",
-                        customClass: {
-                            confirmButton: "btn btn-danger",
-                        },
-                        buttonsStyling: false,
+                        title: "Melebihi Kuota PR",
+                        text: `Kuantitas tidak boleh melebihi kuota PR. (Maksimal: ${batasMaksimal})`,
+                        icon: "error"
                     });
-                    return false;
+                    return;
                 }
 
-                // 2. Validasi Duplikasi Produk
-                let isDuplicate = false;
-                if (prDetailsData && prDetailsData.length > 0) {
-                    for (let i = 0; i < prDetailsData.length; i++) {
-                        if (prDetailsData[i].product_id == productId) {
-                            if (detailId === "") {
-                                // Jika tambah baru dan produk sudah ada di tabel
-                                isDuplicate = true;
-                                break;
-                            } else if (detailId !== "" && i != detailId) {
-                                // Jika sedang edit, tapi produk diubah ke produk lain yang sudah ada di tabel
-                                isDuplicate = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (isDuplicate) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Product Already Exists!",
-                        html: `The product <b>"${productName}"</b> is already registered.<br>Please edit the item if you want to change it.`,
-                        customClass: {
-                            confirmButton: "btn btn-danger",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return false;
-                }
-
-                // 3. Matematika Kalkulasi Amount (Tax dalam persen)
-                let subTotal = quantity * unitPrice;
-                let totalDiscount = discount; // Diskon nominal tetap
-                let setelahDiskon = subTotal - totalDiscount;
-                let totalTax = setelahDiskon * (tax / 100);
-                let amount = setelahDiskon + totalTax;
-
-                // 4. Menyusun Object Data Baru / Hasil Editan Form
-                let itemData = {
+                // 5. Buat objek data
+                let rowData = {
                     product_id: productId,
                     data_produk: productName,
-                    quantity: quantity,
+                    quantity: qtyInput,
                     unit_id: unitId,
                     unit: unitName,
                     warehouse_id: warehouseId,
                     warehouse: warehouseName,
                     unit_price: unitPrice,
-                    discount_percent: discountPercent,
                     discount: discount,
+                    discount_percent: discountPercent,
                     tax: tax,
-                    amount: amount,
-                    required_date: requiredDate,
+                    amount: (qtyInput * unitPrice) - discount,
+                    purchase_requisition_detail_id: prDetailId // Ini yang akan dikirim ke controller
                 };
 
-                // 5. Logika Penyimpanan Berdasarkan 2 Cara Pengisian PO
-                if (detailId === "") {
-                    // --- CARA A: PO ISI SENDIRI (TAMBAH BARU MANUAL) ---
-                    prDetailsData.push(itemData);
-                } else {
-                    // --- CARA B: AMBIL DARI PR & EDIT DATA ---
-                    // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
-                    // Properti bawaan PR seperti 'quotation_code' & 'purchase_quotation_detail_id'
-                    // akan otomatis aman dan dipertahankan.
-                    prDetailsData[detailId] = {
-                        ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)
-                        ...itemData // Update dengan data baru dari form modal
+                // 6. Update ke array global prDetailsData
+                if (rowIndex !== "" && rowIndex !== null && rowIndex !== undefined && prDetailsData[
+                        rowIndex]) {
+                    // Mode Edit: Update data pada index yang ada
+                    prDetailsData[rowIndex] = {
+                        ...prDetailsData[rowIndex],
+                        ...rowData
                     };
+                } else {
+                    // Mode Create: Push data baru
+                    prDetailsData.push(rowData);
                 }
 
-                // 6. Refresh Tampilan & Hitung Total Akhir PO
+                // 7. Refresh DataTable
                 table.clear().rows.add(prDetailsData).draw();
 
-                // Panggil fungsi hitung total keseluruhan halaman PO kamu
-                if (typeof calculateGrandTotal === "function") calculateGrandTotal();
-                if (typeof calculateTotalOrder === "function") calculateTotalOrder();
-
-                // Tutup Modal Form Detail
+                // 8. Bersihkan Modal
                 $("#modalPrDetail").modal("hide");
+                $("#formPrDetail")[0].reset();
+                $("#detail_id").val("");
+                $("#modal_purchase_requisition_detail_id").val(
+                    ""); // PENTING: Reset agar tidak terbawa ke item berikutnya
+
+                // Reset select2 jika digunakan
+                if ($.fn.select2) {
+                    $("#product_id, #unit_id").val("").trigger("change.select2");
+                }
+
+                // Update total perhitungan
+                if (typeof calculateGrandTotal === "function") {
+                    calculateGrandTotal();
+                }
+                if (typeof calculateTotalOrder === "function") {
+                    calculateTotalOrder();
+                }
             });
 
 
-            // A. Jika User Mengetik di Kolom PERSEN (%)
             $("#percent").on("input", function() {
                 let subTotal = parseFloat($("#sub_total").val()) || 0;
                 let percent = parseFloat($(this).val()) || 0;
@@ -1214,8 +1321,6 @@
                 calculateTotalOrder();
             });
 
-
-
             $(document).on("change", "#product_id", function() {
                 let productId = $(this).val();
                 let unitSelect = $("#unit_id");
@@ -1224,7 +1329,7 @@
                 let dropdownMenu = $("#po-price-dropdown-menu");
                 let helperText = $("#po-history-helper");
 
-                // Pastikan ID selector ini sesuai dengan ID Select Customer di form utama kamu
+                // Pastikan ID selector ini sesuai dengan ID Select Supplier di form utama kamu
                 let supplierId = $("#supplier_id").val();
 
                 if (!productId) {
@@ -1236,10 +1341,10 @@
                     return;
                 }
 
-                // Tambahan Validasi: Ingatkan user jika customer belum dipilih
+                // Tambahan Validasi: Ingatkan user jika supplier belum dipilih
                 if (!supplierId) {
                     alert(
-                        "Silahkan pilih Customer terlebih dahulu pada form utama SO!",
+                        "Silahkan pilih Supplier terlebih dahulu pada form utama PO!",
                     );
                     $(this).val("").trigger("change"); // Reset pilihan produk
                     return;
@@ -1249,7 +1354,7 @@
                 // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
                 // ==========================================
                 $.ajax({
-                    url: window.routes.getUnits.replace(':id', productId),
+                    url: `/get-units-by-product/${productId}`,
                     type: "GET",
                     dataType: "json",
                     beforeSend: function() {
@@ -1263,11 +1368,8 @@
                             .append("<option></option>")
                             .prop("disabled", false);
 
-                        // FIX: Akses properti 'units' dari objek response
-                        let units = response.units;
-
-                        if (units && units.length > 0) {
-                            $.each(units, function(key, item) {
+                        if (response && response.length > 0) {
+                            $.each(response, function(key, item) {
                                 unitSelect.append(
                                     `<option value="${item.id}">${item.name}</option>`,
                                 );
@@ -1280,11 +1382,6 @@
 
                         unitSelect.trigger("change");
 
-                        // Gunakan response.default_price
-                        // priceInput.val(response.default_price || 0);
-                        if (!window.isEditingMode) {
-                            priceInput.val(response.default_price || 0);
-                        }
                         let pendingUnitId = unitSelect.data("pending-val");
                         if (pendingUnitId) {
                             unitSelect.val(pendingUnitId).trigger("change");
@@ -1292,6 +1389,7 @@
                         }
                     },
                     error: function() {
+                        console.error("Gagal memuat list unit dari Controller.");
                         unitSelect
                             .empty()
                             .append("<option></option>")
@@ -1377,7 +1475,6 @@
                                 a.on("click", function(e) {
                                     e.preventDefault();
                                     priceInput.val(harga);
-                                    calculateTotal();
                                 });
 
                                 li.append(a);
@@ -1387,7 +1484,7 @@
                             helperText
                                 .attr("class", "form-text text-muted")
                                 .text(
-                                    "Belum ada riwayat harga dengan customer ini. Silahkan isi harga manual.",
+                                    "Belum ada riwayat harga dengan supplier ini. Silahkan isi harga manual.",
                                 );
                             dropdownBtn.prop("disabled", true);
                             if (priceInput.val() === "") {
@@ -1396,6 +1493,7 @@
                         }
                     },
                     error: function(xhr) {
+                        console.error("Gagal mengambil data riwayat harga:", xhr);
                         helperText
                             .attr("class", "form-text text-danger")
                             .text("Gagal memuat riwayat harga.");
@@ -1407,6 +1505,7 @@
                 placeholder: "Select Shipping",
                 width: "100%",
             });
+
 
 
             $("#btnSubmitSelected").on("click", function() {
@@ -1429,24 +1528,22 @@
                 }
 
                 checkedBoxes.each(function() {
-                    console.log(this);
-                    console.log($(this).data());
+
                     let item = {
                         detail_id: $(this).data("id"),
                         product_id: $(this).data("product_id"),
                         data_produk: $(this).data("product_name"),
-                        quantity: parseFloat($(this).data("qty")) || 0,
-                        sisa_pr: parseFloat($(this).data("qty")) || 0,
+                        quantity: parseFloat($(this).data("outstanding_qty")),
+                        sisa_pr: parseFloat($(this).data("qty")),
                         unit_id: $(this).data("unit_id"),
                         unit: $(this).data("unit_name"),
-                        warehouse_id: $(this).data("warehouse_id"),
-                        warehouse: $(this).data("warehouse_name"),
-                        unit_price: $(this).data("unit_price"),
-                        discount: $(this).data("discount"),
-                        amount: $(this).data("amount"),
-                        order_code: $(this).data("order_code"),
+                        warehouse_id: null,
+                        warehouse: null,
+                        unit_price: 0,
+                        discount: 0,
+                        amount: 0,
+                        order_code: $(this).data("code"),
                     };
-                    console.log(item);
 
                     // Hindari data ganda
                     let exists = prDetailsData.some(x => x.detail_id == item.detail_id);
@@ -1471,8 +1568,6 @@
                 });
 
             });
-
-
 
             $(document).on('input change', '.input-qty', function() {
                 let inputField = $(this);
@@ -1564,52 +1659,5 @@
 
             });
         });
-        $(document).on("click", "#btn-history-address", function() {
-            let supplierId = $("#supplier_id").val();
-            loadSupplierAddress(supplierId);
-        });
-        $(document).on("click", ".select-address", function() {
-            $("#shipping_address").val($(this).data("address"));
-        });
-
-        function loadSupplierAddress(supplierId) {
-            if (!supplierId) return;
-            $.ajax({
-                url: `/purchase-order/get-supplier-address/${supplierId}`,
-                type: "GET",
-                dataType: "json",
-                success: function(response) {
-                    let dropdownMenu = $("#address-dropdown-menu");
-                    dropdownMenu.empty();
-                    if (response.success) {
-                        let item = response.data;
-                        dropdownMenu.append(`
-                    <li class="w-100">
-                        <a class="dropdown-item select-address p-2 d-block text-dark"
-                           href="javascript:void(0);"
-                           data-address="${item.address.replace(/\n/g,'&#10;')}"
-                           style="white-space: normal;">
-                            <strong class="d-block">${item.address_name}</strong>
-                            <span class="text-muted small" style="white-space: pre-line;">
-                                ${item.address}
-                            </span>
-                        </a>
-                    </li>
-                `);
-                    } else {
-                        dropdownMenu.append(`
-                    <li>
-                        <span class="dropdown-item text-muted">
-                            Tidak ada alamat.
-                        </span>
-                    </li>
-                `);
-                    }
-                }
-            });
-
-
-
-        }
     </script>
 @endpush

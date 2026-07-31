@@ -120,7 +120,7 @@
                             <tr>
                                 <td>
 
-                                    {{ $payment->sales_downpayment_code ?? 'Down Payment' }}
+                                    {{ $payment->description }}
 
                                     @if ((float) ($payment->down_payment_percent ?? 0) > 0)
                                         {{ rtrim(rtrim(number_format((float) $payment->down_payment_percent, 2, ',', '.'), '0'), ',') }}%
@@ -147,7 +147,7 @@
                     @else
                         <tr>
                             <td>
-                                Pembayaran
+                                Pembayaran DP
                             </td>
 
                             <td class="text-right">
@@ -162,7 +162,7 @@
                     <tr>
                         <td>
                             <strong>
-                                Total Pembayaran
+                                Total Pembayaran DP
                             </strong>
                         </td>
 

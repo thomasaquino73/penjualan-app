@@ -525,8 +525,6 @@
                     tax: tax,
                     amount: amount,
                     required_date: requiredDate,
-                    sales_order_id: item.sales_order_id,
-                    sales_order_detail_id: item.sales_order_detail_id,
                 };
 
                 // 5. Logika Penyimpanan Berdasarkan 2 Cara Pengisian PO

@@ -203,7 +203,8 @@
                 </td>
 
                 <td>
-                    Down Payment {{ $salesOrder->sales_order_code ?? '-' }}
+                    {{ $salesDownPayment->description }}
+                    {{-- Down Payment {{ $salesOrder->sales_order_code ?? '-' }} --}}
                 </td>
 
                 <td class="text-right">
@@ -219,49 +220,48 @@
         </tbody>
 
     </table>
-
-
-    {{-- TOTAL --}}
-    <table class="summary-table" style="width:100%;">
+    <table class="w-70 footer-table" style="margin-top: 1px;margin-bottom: 10px; width:100%">
         <tr>
-            <td width="45%"></td>
-            <td width="30%"></td>
-            <td width="35%" class="text-right" style="text-align: right;">
-                Sales Order Amount<br>
-                {{ $currency }}
+            <td class="keterangan-box">
+                @php
+                    $currencyId = session('currency_id') ?? \App\Models\Setting\Company::first()->default_currency_id;
+                    $currencyCode = \App\Models\Setting\Currency::find($currencyId)?->code ?? 'IDR';
+
+                    // Gunakan nilai asli (jangan di-round agar sen tidak hilang)
+                    $grandTotalConvert = convert_currency(
+                        $salesDownPayment->down_payment_amount,
+                        $model->currency_id ?? 1,
+                    );
+                @endphp
+                <div>Terbilang: {{ terbilang($grandTotalConvert, $currencyCode) }}</div>
+            </td>
+            <td>
+                Sales Order Amount<br> {{ $currency }}
                 {{ number_format($salesDownPayment->sales_order_amount, 2, ',', '.') }}
             </td>
+
         </tr>
-        {{-- <tr>
+    </table>
+
+    {{-- TOTAL --}}
+    {{-- <table class="summary-table" style="width:100%;">
+        <tr>
+            <td width="45%"></td>
+            <td width="35%" class="text-right" style="text-align: right;">
+                Sales Order Amount<br>
+            </td>
+            <td width="30%">
+
+            </td>
+        </tr>
+        <tr>
             <td></td>
             <td></td>
             <td class="text-right" style="text-align: right;">
-                Down Payment<br>
-                <strong>
-                    {{ $currency }}
-                    {{ number_format($salesDownPayment->down_payment_amount, 2, ',', '.') }}
-                </strong>
+
             </td>
-        </tr> --}}
-    </table>
-
-
-    {{-- DESCRIPTION --}}
-    @if ($salesDownPayment->description)
-        <div style="margin-top: 20px;">
-
-            <strong>
-                Description:
-            </strong>
-
-            <br>
-
-            {{ $salesDownPayment->description }}
-
-        </div>
-    @endif
-
-
+        </tr>
+    </table> --}}
     {{-- SIGNATURE --}}
     <div class="signature-section " style="margin-top:14px">
         <table style="width:100%; table-layout:fixed;">

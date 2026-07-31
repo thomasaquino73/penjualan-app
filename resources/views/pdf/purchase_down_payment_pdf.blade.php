@@ -213,7 +213,7 @@
                 </td>
 
                 <td>
-                    Down Payment {{ $purchaseOrder->code ?? '-' }}
+                    {{ $purchaseDownPayment->description }}
                 </td>
 
                 <td class="text-right">
@@ -231,47 +231,28 @@
     </table>
 
 
-    {{-- TOTAL --}}
-    <table class="summary-table" style="width:100%;">
+    <table class="w-70 footer-table" style="margin-top: 1px;margin-bottom: 10px; width:100%">
         <tr>
-            <td width="45%"></td>
-            <td width="30%"></td>
-            <td width="35%" class="text-right" style="text-align: right;">
-                Purchase Order Amount<br>
-                {{ $currency }}
+            <td class="keterangan-box">
+                @php
+                    $currencyId = session('currency_id') ?? \App\Models\Setting\Company::first()->default_currency_id;
+                    $currencyCode = \App\Models\Setting\Currency::find($currencyId)?->code ?? 'IDR';
+
+                    // Gunakan nilai asli (jangan di-round agar sen tidak hilang)
+                    $grandTotalConvert = convert_currency(
+                        $purchaseDownPayment->down_payment_amount,
+                        $model->currency_id ?? 1,
+                    );
+                @endphp
+                <div>Terbilang: {{ terbilang($grandTotalConvert, $currencyCode) }}</div>
+            </td>
+            <td>
+                Sales Order Amount<br> {{ $currency }}
                 {{ number_format($purchaseDownPayment->purchase_order_amount, 2, ',', '.') }}
             </td>
+
         </tr>
-        {{-- <tr>
-            <td></td>
-            <td></td>
-            <td class="text-right" style="text-align: right;">
-                Down Payment<br>
-                <strong>
-                    {{ $currency }}
-                    {{ number_format($purchaseDownPayment->down_payment_amount, 2, ',', '.') }}
-                </strong>
-            </td>
-        </tr> --}}
     </table>
-
-
-    {{-- DESCRIPTION --}}
-    @if ($purchaseDownPayment->description)
-        <div style="margin-top: 20px;">
-
-            <strong>
-                Description:
-            </strong>
-
-            <br>
-
-            {{ $purchaseDownPayment->description }}
-
-        </div>
-    @endif
-
-
     {{-- SIGNATURE --}}
     <div class="signature-section " style="margin-top:14px">
         <table style="width:100%; table-layout:fixed;">

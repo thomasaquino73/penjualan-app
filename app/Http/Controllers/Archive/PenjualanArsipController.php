@@ -311,4 +311,128 @@ class PenjualanArsipController extends Controller
             ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'date', 'customer', 'tanggal_pengiriman', 'amount'])
             ->make(true);
     }
+
+    // proforma invoice
+    public function indexProformaInvoice()
+    {
+
+        $x = [
+            'title' => 'Arsip Proforma Invoice',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Arsip Proforma Invoice', 'url' => ''],
+            ],
+        ];
+
+        return view('archive.penjualan.proforma-invoice', $x);
+    }
+
+    public function tabelProformaInvoice(Request $request)
+    {
+        if (! $request->filled('year')) {
+            return DataTables::of([])->make(true);
+        }
+
+        $year = $request->year;
+        $table = "proforma_invoice_{$year}";
+
+        if (! Schema::hasTable($table)) {
+            return DataTables::of([])->make(true);
+        }
+
+        $query = DB::table($table.' as pr')
+            ->leftJoin('customer as c', 'c.id', '=', 'pr.customer_id')
+            ->leftJoin('users as creator', 'creator.id', '=', 'pr.created_by')
+            ->leftJoin('users as updater', 'updater.id', '=', 'pr.updated_by')
+            ->select([
+                'pr.*',
+                'c.nama_customer as customer_name',
+                'creator.fullname as creator_name',
+                'updater.fullname as updater_name',
+            ])
+            ->orderBy('pr.proforma_invoice_code', 'desc');
+
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('created_at', function ($row) {
+                if (! $row->created_at) {
+                    return 'N/A';
+                }
+
+                return ($row->creator_name ?? 'Unknown')
+                    .'<br><small class="text-muted">'
+                    .Carbon::parse($row->created_at)->diffForHumans()
+                    .'</small>';
+            })
+            ->addColumn('updated_at', function ($row) {
+                if (! $row->updated_at) {
+                    return 'N/A';
+                }
+
+                return ($row->updater_name ?? 'Unknown')
+                    .'<br><small class="text-muted">'
+                    .Carbon::parse($row->updated_at)->diffForHumans()
+                    .'</small>';
+            })
+            ->addColumn('date', function ($row) {
+                return $row->proforma_invoice_date ? Carbon::parse($row->proforma_invoice_date)->format('d M Y') : 'N/A';
+            })
+            ->addColumn('tanggal_pengiriman', function ($row) {
+                return $row->tanggal_pengiriman ? Carbon::parse($row->tanggal_pengiriman)->format('d M Y') : 'N/A';
+            })
+            ->addColumn('status', function ($row) {
+                switch ($row->status) {
+                    case 'draft':
+                        $badge = 'bg-label-secondary';
+                        $text = 'Draft';
+                        break;
+
+                    case 'processing':
+                        $badge = 'bg-label-info';
+                        $text = 'Processing';
+                        break;
+
+                        // ─── TAMBAHAN BADGE UNTUK STATUS PARTIAL ──────────────────
+                    case 'partial':
+                        $badge = 'bg-warning text-dark';
+                        $text = 'Partial PO';
+                        break;
+
+                    case 'closed':
+                        $badge = 'bg-dark';
+                        $text = 'Closed';
+                        break;
+
+                    case 'cancelled':
+                        $badge = 'bg-danger';
+                        $text = 'Cancelled';
+                        break;
+
+                    default:
+                        $badge = 'bg-label-secondary';
+                        $text = ucfirst($row->status);
+                        break;
+                }
+
+                return '<span class="badge '.$badge.' text-uppercase">'.$text.'</span>';
+            })
+            ->addColumn('amount', function ($row) {
+                return format_uang(convert_currency($row->grand_total, $row->currency_id ?? 1));
+            })
+            ->addColumn('customer', function ($row) {
+                return $row->customer_name ?? '-';
+            })
+            ->addColumn('action', function ($row) use ($year) {
+                return '
+                        <a href="'.route('proforma-invoice.print', [
+                    'year' => $year,
+                    'id' => $row->id,
+                ]).'" target="_blank" class="btn btn-sm btn-danger">
+                            <i class="fa fa-print"></i>
+                        </a>
+                    ';
+            })
+            ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'date', 'customer', 'tanggal_pengiriman', 'amount'])
+            ->make(true);
+    }
 }
