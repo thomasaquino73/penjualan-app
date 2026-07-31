@@ -137,7 +137,7 @@
                     success: function(response) {
                         Swal.fire({
                             icon: "success",
-                            title: "Data Created Successfully",
+                            title: response.title,
                             text: response.message,
                             customClass: {
                                 confirmButton: "btn btn-primary waves-effect waves-light",

@@ -17,6 +17,7 @@ use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
 use App\Models\Setting\Tax;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -664,6 +665,7 @@ class PurchaseInvoiceController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Purchase Invoice saved successfully!',
+                'title' => 'Data Created Successfully!',
                 'redirect' => $request->save_and_new == 1
                     ? route('purchase-invoice.create')
                     : route('purchase-invoice.index'),
@@ -979,6 +981,7 @@ class PurchaseInvoiceController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Purchase Invoice updated successfully!',
+                'title' => 'Data Updated Successfully!',
                 'redirect' => route('purchase-invoice.index'),
             ], 200);
 
@@ -1528,5 +1531,42 @@ class PurchaseInvoiceController extends Controller
         ]);
 
         return response()->json(['success' => true, 'message' => 'Purchase Invoice berhasil diajukan!']);
+    }
+
+      public function print($id)
+    {
+        $purchaseInvoice = PurchaseInvoice::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $company = Company::first();
+        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
+        $logoBase64 = null;
+        if ($company && $company->logo) {
+            $path = public_path($company->logo);
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
+            }
+        }
+        $data = [
+            'model' => $purchaseInvoice,
+            'company' => $company,
+            'modelDetail' => $purchaseInvoice->details,
+            'logoBase64' => $logoBase64,
+        ];
+
+        $pdf = Pdf::loadView('pdf.purchase_invoice_pdf', $data)
+            ->setPaper('a4', 'portrait');
+
+        // preview di browser
+        $filename = $purchaseInvoice->code.'-'.$purchaseInvoice->supplier->nama_supplier;
+
+        // replace forbidden filename chars
+        $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
+        $pdf->getDomPDF()->set_option('isPhpEnabled', true);
+
+        return $pdf->stream($filename.'.pdf');
+
+        // kalau mau download:
+        // return $pdf->download('purchase-order.pdf');
     }
 }
