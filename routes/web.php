@@ -21,6 +21,7 @@ use App\Http\Controllers\Purchase\PurchaseRequisitionController;
 use App\Http\Controllers\Purchase\ReceiveItemController;
 use App\Http\Controllers\Purchase\Supplier\KategoriSupplierController;
 use App\Http\Controllers\Purchase\Supplier\SupplierController;
+use App\Http\Controllers\Report\InventoryReportController;
 use App\Http\Controllers\Sales\Customer\CustomerController;
 use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
 use App\Http\Controllers\Sales\DeliveryOrderController;
@@ -429,6 +430,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/trash', [PurchaseDownPaymentController::class, 'trash'])->name('trash');
         Route::resource('', PurchaseDownPaymentController::class)->parameters(['' => 'purchase-down-payment']);
     });
+
+    Route::get('inventory-reports', [InventoryReportController::class, 'index'])->name('inventory-reports.index');
+    Route::get('inventory-reports/print-mutation', [InventoryReportController::class, 'printMutation'])->name('inventory-reports.print_mutation');
 });
 
 Route::fallback(function () {

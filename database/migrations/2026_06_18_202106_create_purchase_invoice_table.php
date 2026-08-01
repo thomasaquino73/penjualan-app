@@ -18,6 +18,7 @@ return new class extends Migration
         Schema::create("purchase_invoice_{$this->year}", function (Blueprint $table) {
             $table->id();
             $table->bigInteger('supplier_id');
+            $table->unsignedBigInteger('purchase_order_id')->nullable();
             $table->string('code')->unique();
             $table->string('no_faktur')->nullable();
             $table->date('datePO');

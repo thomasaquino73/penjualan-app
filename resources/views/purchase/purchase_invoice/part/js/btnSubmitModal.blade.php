@@ -64,7 +64,8 @@
                 success: function(response) {
 
                     console.log('Response:', response);
-
+                    console.log(response.data[0]);
+                    console.log(Object.keys(response.data[0]));
                     let html = '';
 
                     if (!response.success || !response.data || response.data.length === 0) {
@@ -93,8 +94,6 @@
 
                                     data-id="${item.id}"
                                     data-receive_item_id="${item.receive_item_id}"
-                                    data-purchase_order_id="${item.purchase_order_id ?? ''}"
-
                                     data-product_id="${item.product_id}"
                                     data-product_name="${safeProductName}"
 
@@ -109,6 +108,7 @@
                                     data-discount="${item.discount}"
                                     data-amount="${item.amount}"
                                      data-order_code="${item.order_code ?? ''}"
+                                    data-purchase_order_id="${item.purchase_order_id}"
                                 >
                             </div>
                         </td>
@@ -132,7 +132,6 @@
                                 parseFloat(item.unit_price || 0)
                             )}
                         </td>
-
                     </tr>
                 `;
                     });

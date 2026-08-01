@@ -432,6 +432,29 @@
                 });
 
             });
+
+            $("#formPrintStock").on("submit", function(e) {
+
+                if ($("#barang_id_stock").val() == "") {
+                    e.preventDefault();
+
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Peringatan",
+                        text: "Silahkan pilih barang terlebih dahulu.",
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+
+                    return false;
+                }
+
+                $(this).attr("target", "_blank");
+
+                $("#modalstok").modal("hide");
+            });
         });
     </script>
 @endpush

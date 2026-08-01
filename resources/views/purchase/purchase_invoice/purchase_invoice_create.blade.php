@@ -890,7 +890,7 @@
                                     // Pastikan product_id dan field penting lainnya ikut dimasukkan ke input form/hidden yang sesuai!
                                     $("#product_id").val(data
                                         .product_id
-                                        ); // <-- Pastikan ini ada agar product_id ikut naik/terbawa
+                                    ); // <-- Pastikan ini ada agar product_id ikut naik/terbawa
 
                                     $("#modal_purchase_requisition_detail_id").val(
                                         data.detail_id ??
@@ -1445,6 +1445,7 @@
                         discount: $(this).data("discount"),
                         amount: $(this).data("amount"),
                         order_code: $(this).data("order_code"),
+                        purchase_order_id: $(this).data("purchase_order_id"),
                     };
                     console.log(item);
 

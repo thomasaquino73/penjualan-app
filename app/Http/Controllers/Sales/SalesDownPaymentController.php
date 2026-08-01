@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SalesDownPaymentRequest;
+use App\Models\Sales\ArApHistory;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesDownPayment;
 use App\Models\Sales\SalesOrder;
@@ -365,8 +366,18 @@ class SalesDownPaymentController extends Controller
                 : null;
             $data['created_by'] = Auth::user()->id;
 
-            SalesDownPayment::create($data);
-
+            $sdp=SalesDownPayment::create($data);
+        ArApHistory::create([
+                'type'=>'receivable',
+                'party_id'=> $sdp->customer_id,
+                'transaction_type'=>'down_payment',
+                'reference_type'=>'sales_down_payment',
+                'reference_id'=> $sdp->id,
+                'document_no'=> $sdp->sales_downpayment_code,
+                'transaction_date'=> $sdp->sales_downpayment_date,
+                'debit'=>0,
+                'credit'=> $sdp->down_payment_amount,
+            ]);
             DB::commit();
             $redirectUrl = $request->save_and_new == 1
                             ? route('sales-down-payment.create')
@@ -476,7 +487,17 @@ class SalesDownPaymentController extends Controller
 
             // Update data
             $salesDownPayment->update($data);
-
+ ArApHistory::create([
+                'type'=>'receivable',
+                'party_id'=> $salesDownPayment->customer_id,
+                'transaction_type'=>'invoice',
+                'reference_type'=>'sales_down_payment',
+                'reference_id'=> $salesDownPayment->id,
+                'document_no'=> $salesDownPayment->sales_downpayment_code,
+                'transaction_date'=> $salesDownPayment->sales_downpayment_date,
+                'debit'=>0,
+                'credit'=> $salesDownPayment->down_payment_amount,
+            ]);
             DB::commit();
 
             return response()->json([

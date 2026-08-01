@@ -857,7 +857,8 @@
                         amount: @json($detail['amount']),
                         received_qty: @json($detail['received_qty']),
                         outstanding_qty: @json($detail['outstanding_qty']),
-                        total_invoice_lainnya: @json($detail['total_invoice_lainnya'])
+                        total_invoice_lainnya: @json($detail['total_invoice_lainnya']),
+                        purchase_order_id: @json($detail['purchase_order_id'])
                     }
                     {{ !$loop->last ? ',' : '' }}
                 @endforeach
@@ -983,6 +984,12 @@
                     },
                     {
                         data: 'warehouse',
+                        render: function(data) {
+                            return data ? data : '-';
+                        }
+                    },
+                    {
+                        data: 'purchase_order_id',
                         render: function(data) {
                             return data ? data : '-';
                         }

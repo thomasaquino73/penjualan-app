@@ -110,6 +110,72 @@ class BasicCodeDetailSeeder extends Seeder
                 'detail' => 'Umum',
                 'description' => 'Kategori Customer',
             ],
+            [
+                'id' => $i++,
+                'master_id' => '11',
+                'detail' => 'Cash',
+                'description' => 'Jenis Pembayaran',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '11',
+                'detail' => 'Cheque/Clearing',
+                'description' => 'Jenis Pembayaran',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '11',
+                'detail' => 'Bank Transfer',
+                'description' => 'Jenis Pembayaran',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '11',
+                'detail' => 'EDC',
+                'description' => 'Jenis Pembayaran',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '11',
+                'detail' => 'Debit Card',
+                'description' => 'Jenis Pembayaran',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '11',
+                'detail' => 'Credit Card',
+                'description' => 'Jenis Pembayaran',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '11',
+                'detail' => 'QRIS',
+                'description' => 'Jenis Pembayaran',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '11',
+                'detail' => 'Payment Link',
+                'description' => 'Jenis Pembayaran',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '11',
+                'detail' => 'Virtual Account',
+                'description' => 'Jenis Pembayaran',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '11',
+                'detail' => 'E-Wallet',
+                'description' => 'Jenis Pembayaran',
+            ],
+            [
+                'id' => $i++,
+                'master_id' => '11',
+                'detail' => 'Other Non Cash',
+                'description' => 'Jenis Pembayaran',
+            ],
 
         ]);
 

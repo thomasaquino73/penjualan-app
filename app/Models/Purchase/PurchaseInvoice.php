@@ -4,9 +4,7 @@ namespace App\Models\Purchase;
 
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
-use App\Models\Inventory\Warehouse;
-use App\Models\Purchase\PurchaseInvoiceDetail;
-use App\Models\Purchase\Supplier;
+use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -48,6 +46,7 @@ class PurchaseInvoice extends Model
     {
         return $this->hasMany(PurchaseInvoiceDetail::class, 'purchase_invoice_id');
     }
+
     public function PurchaseInvoiceDetail()
     {
         return $this->hasMany(PurchaseInvoiceDetail::class, 'purchase_invoice_id');
@@ -58,14 +57,19 @@ class PurchaseInvoice extends Model
         return $this->belongsTo(Barang::class, 'product_id');
     }
 
-       public function unitID()
+    public function unitID()
     {
         // Sesuaikan nama class Unit dengan model master unit Anda
         return $this->belongsTo(BasicCodeDetail::class, 'unit_id', 'id');
     }
 
-    public function warehouseID()
+    public function paymentTermID()
     {
-        return $this->belongsTo(Warehouse::class, 'warehouse_id');
+        return $this->belongsTo(SyaratPembayaran::class, 'payment_term');
+    }
+
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id', 'id');
     }
 }

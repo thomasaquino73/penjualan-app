@@ -64,7 +64,7 @@ class Sidebar extends Component
                 ],
                 'children' => [
                     [
-                        'name' => 'Purchase Requisition',
+                        'name' => 'Permintaan Barang',
                         'route' => 'permintaan-pembelian.index',
                         'pattern' => 'permintaan-pembelian.*',
                         'roles' => ['Super Admin'],
@@ -73,7 +73,7 @@ class Sidebar extends Component
                         'badge_color' => 'danger',
                     ],
                     [
-                        'name' => 'Purchase Order',
+                        'name' => 'Pesanan Pembelian',
                         'route' => 'purchase-order.index',
                         'pattern' => 'purchase-order.*',
                         'roles' => ['Super Admin'],
@@ -83,7 +83,7 @@ class Sidebar extends Component
                     ],
 
                     [
-                        'name' => 'Receive Item',
+                        'name' => 'Penerimaan Barang',
                         'route' => 'receive-item.index',
                         'pattern' => 'receive-item.*',
                         'roles' => ['Super Admin'],
@@ -109,7 +109,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'INVOICE',
+                'name' => 'FAKTUR',
                 'icon' => 'ti ti-file-invoice',
                 'roles' => ['Super Admin'],
                 'permissions' => [
@@ -125,7 +125,7 @@ class Sidebar extends Component
 
                     ],
                     [
-                        'name' => 'Purchase Invoice',
+                        'name' => 'Faktur Pembelian',
                         'route' => 'purchase-invoice.index',
                         'pattern' => 'purchase-invoice.*',
                         'roles' => ['Super Admin'],
@@ -204,7 +204,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'dropdown',
-                'name' => 'INVOICE',
+                'name' => 'FAKTUR',
                 'icon' => 'ti ti-file-invoice',
                 'roles' => ['Super Admin'],
                 'permissions' => [
@@ -231,7 +231,7 @@ class Sidebar extends Component
 
                     ],
                     [
-                        'name' => 'Sales Invoice',
+                        'name' => 'Faktur Penjualan',
                         'route' => 'sales-invoice.index',
                         'pattern' => 'sales-invoice.*',
                         'roles' => ['Super Admin'],
@@ -244,7 +244,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'single',
-                'name' => 'Delivery Order',
+                'name' => 'Pengiriman',
                 'route' => 'delivery-order.index',
                 'icon' => 'ti ti-truck-delivery',
                 'pattern' => 'delivery-order.*',
@@ -254,7 +254,7 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'single',
-                'name' => 'Store Sales',
+                'name' => 'Penjualan Toko',
                 'route' => 'penjualan-toko.index',
                 'icon' => 'ti ti-calculator',
                 'pattern' => 'penjualan-toko.*',
@@ -331,6 +331,17 @@ class Sidebar extends Component
                 'type' => 'section',
                 'label' => 'LAPORAN',
                 'roles' => ['Super Admin'],
+                'permissions' => ['inventory_reports-browse'],
+            ],
+            [
+                'type' => 'single',
+                'name' => 'INVENTORY',
+                'route' => 'inventory-reports.index',
+                'icon' => 'ti ti-file',
+                'pattern' => 'inventory-reports.*',
+                'active' => true,
+                'roles' => ['Super Admin'],
+                'permissions' => ['inventory_reports-browse'],
             ],
             [
                 'type' => 'section',

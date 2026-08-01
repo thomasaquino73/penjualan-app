@@ -637,9 +637,7 @@ class DataBarangController extends Controller
         $unitConversion = DataBarangConversion::where(
             'data_barang_id',
             $idDetail->id
-        )
-            ->where('qty', '>', 0)
-            ->get();
+        )->where('qty', '>', 0)->get();
 
         return view(
             'inventory.barang.data_barang.data_barang_detail',

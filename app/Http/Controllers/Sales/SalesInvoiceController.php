@@ -9,6 +9,7 @@ use App\Models\DocumentTransactionHistory;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\DataBarangConversion;
 use App\Models\Inventory\Warehouse;
+use App\Models\Sales\ArApHistory;
 use App\Models\Sales\Customer;
 use App\Models\Sales\DeliveryOrder;
 use App\Models\Sales\DeliveryOrderDetail;
@@ -624,6 +625,18 @@ class SalesInvoiceController extends Controller
                     }
                 }
             }
+
+            ArApHistory::create([
+                'type'=>'receivable',
+                'party_id'=>$salesInvoice->customer_id,
+                'transaction_type'=>'invoice',
+                'reference_type'=>'sales_invoice',
+                'reference_id'=>$salesInvoice->id,
+                'document_no'=>$salesInvoice->sales_invoice_code,
+                'transaction_date'=>$salesInvoice->sales_invoice_date,
+                'debit'=>$salesInvoice->grand_total,
+                'credit'=>0
+            ]);
 
             DB::commit();
 
@@ -1269,6 +1282,18 @@ class SalesInvoiceController extends Controller
                         'sales_order_detail_id' => $salesOrderDetailId,
                         'delivery_order_id' => $deliveryOrderId,
                     ]),
+                ]);
+
+                 ArApHistory::create([
+                    'type'=>'receivable',
+                    'party_id'=>$salesInvoice->customer_id,
+                    'transaction_type'=>'invoice',
+                    'reference_type'=>'sales_invoice',
+                    'reference_id'=>$salesInvoice->id,
+                    'document_no'=>$salesInvoice->sales_invoice_code,
+                    'transaction_date'=>$salesInvoice->sales_invoice_date,
+                    'debit'=>$salesInvoice->grand_total,
+                    'credit'=>0
                 ]);
 
                 /*
@@ -1988,10 +2013,10 @@ class SalesInvoiceController extends Controller
         $remainingDP = 0;
 
         /*
-|--------------------------------------------------------------------------
-| Ambil Down Payment berdasarkan Sales Order
-|--------------------------------------------------------------------------
-*/
+        |--------------------------------------------------------------------------
+        | Ambil Down Payment berdasarkan Sales Order
+        |--------------------------------------------------------------------------
+        */
         if ($salesInvoice->sales_order_id) {
 
             $downPayments = SalesDownPayment::from(

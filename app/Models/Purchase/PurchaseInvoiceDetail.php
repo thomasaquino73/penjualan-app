@@ -63,6 +63,7 @@ class PurchaseInvoiceDetail extends Model
             'receive_item_detail_id'
         );
     }
+
     public function warehouseID()
     {
         return $this->belongsTo(
@@ -71,5 +72,4 @@ class PurchaseInvoiceDetail extends Model
             'id'
         );
     }
-
 }

@@ -7,12 +7,14 @@ use App\Http\Requests\PurchaseInvoiceRequest;
 use App\Models\BasicCodeDetail;
 use App\Models\Inventory\Barang;
 use App\Models\Inventory\Warehouse;
+use App\Models\Purchase\PurchaseDownPayment;
 use App\Models\Purchase\PurchaseInvoice;
 use App\Models\Purchase\PurchaseInvoiceDetail;
 use App\Models\Purchase\PurchaseRequisition;
 use App\Models\Purchase\ReceiveItem;
 use App\Models\Purchase\ReceiveItemDetail;
 use App\Models\Purchase\Supplier;
+use App\Models\Sales\ArApHistory;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
@@ -572,7 +574,18 @@ class PurchaseInvoiceController extends Controller
                 $involvedPrIds = [];
 
                 if (is_array($items) && count($items) > 0) {
+                    $purchaseOrderIds = collect($items)
+                        ->pluck('purchase_order_id')
+                        ->filter()
+                        ->unique()
+                        ->values();
 
+                    // Jika semua detail berasal dari 1 Sales Order
+                    $purchaseOrderId = $purchaseOrderIds->first();
+
+                    $purchaseInvoice->update([
+                        'purchase_order_id' => $purchaseOrderId,
+                    ]);
                     foreach ($items as $index => $item) {
 
                         $prDetailId = $item['receive_item_detail_id']
@@ -659,7 +672,17 @@ class PurchaseInvoiceController extends Controller
                     }
                 }
             }
-
+            ArApHistory::create([
+                    'type'=>'payable',
+                    'party_id'=>$purchaseInvoice->supplier_id,
+                    'transaction_type'=>'invoice',
+                    'reference_type'=>'purchase_invoice',
+                    'reference_id'=>$purchaseInvoice->id,
+                    'document_no'=>$purchaseInvoice->code,
+                    'transaction_date'=>$purchaseInvoice->datePO,
+                    'debit'=>0,
+                        'credit'           => $purchaseInvoice->grand_total,
+                ]);
             DB::commit();
 
             return response()->json([
@@ -697,6 +720,7 @@ class PurchaseInvoiceController extends Controller
             'details.produkID',
             'details.unitID',
             'details.warehouseID',
+            'purchaseOrder',
             'details.receiveItemDetail.receiveItem',
         ])->findOrFail($id);
 
@@ -706,28 +730,22 @@ class PurchaseInvoiceController extends Controller
             ->count() > 0;
 
         $detailDataMapped = $purchaseInvoice->details->map(function ($detail) use ($purchaseInvoice, $year) {
-
             $receiveItemCode = null;
             $receivedQty = null;
             $outstandingQty = null;
             $totalInvoiceLainnya = 0;
-
+            $purchaseOrderId = null;
             if ($detail->receive_item_detail_id) {
-
                 $riDetail = $detail->receiveItemDetail;
-
                 if ($riDetail) {
-
                     $receivedQty = (float) $riDetail->qty;
                     $outstandingQty = (float) $riDetail->outstanding_qty;
-
                     // Qty invoice lain (selain invoice yang sedang diedit)
                     $totalInvoiceLainnya = DB::table("purchase_invoice_detail_{$year}")
                         ->where('receive_item_detail_id', $detail->receive_item_detail_id)
                         ->where('purchase_invoice_id', '<>', $purchaseInvoice->id)
                         ->where('active', 1)
                         ->sum('qty');
-
                     if ($riDetail->receiveItem) {
                         $receiveItemCode = $riDetail->receiveItem->receive_item_code;
                     }
@@ -737,44 +755,26 @@ class PurchaseInvoiceController extends Controller
             return [
 
                 'id' => $detail->id,
-
                 'purchase_invoice_id' => $detail->purchase_invoice_id,
-
+                'purchase_order_id' => $purchaseInvoice->purchase_order_id,
                 'receive_item_detail_id' => $detail->receive_item_detail_id,
-
                 'receive_item_code' => $receiveItemCode,
-
                 'product_id' => $detail->product_id,
-
                 'data_produk' => optional($detail->produkID)->nama_barang,
-
                 'quantity' => (float) $detail->qty,
-
                 'unit_id' => $detail->unit_id,
-
                 'unit' => optional($detail->unitID)->detail,
-
                 'warehouse_id' => $detail->warehouse_id,
-
                 'warehouse' => optional($detail->warehouseID)->nama_gudang,
-
                 'unit_price' => (float) $detail->unit_price,
-
                 'discount' => (float) $detail->discount,
-
                 'discount_percent' => $detail->discount_percent,
-
                 'amount' => (float) $detail->amount,
-
                 'received_qty' => $receivedQty,
-
                 'outstanding_qty' => $outstandingQty,
-
                 'total_invoice_lainnya' => (float) $totalInvoiceLainnya,
-
             ];
         });
-
         $taxes = Tax::where('is_active', true)
             ->whereIn('usage', ['purchase', 'both'])
             ->get();
@@ -837,7 +837,7 @@ class PurchaseInvoiceController extends Controller
         ]);
     }
 
-   public function update(PurchaseInvoiceRequest $request, string $id)
+    public function update(PurchaseInvoiceRequest $request, string $id)
     {
         DB::beginTransaction();
 
@@ -887,6 +887,27 @@ class PurchaseInvoiceController extends Controller
                 $involvedPrIds = [];
 
                 if (is_array($items) && count($items) > 0) {
+
+                    $purchaseOrderIds = collect($items)
+                        ->pluck('purchase_order_id')
+                        ->filter(function ($value) {
+                            return ! empty($value);
+                        })
+                        ->map(function ($value) {
+                            return (int) $value;
+                        })
+                        ->unique()
+                        ->values();
+
+                    if ($purchaseOrderIds->count() > 1) {
+                        throw new \Exception(
+                            'Sales Invoice tidak dapat menggunakan lebih dari satu Sales Order.'
+                        );
+                    }
+
+                    $purchaseOrderId = $purchaseOrderIds->first();
+                    $data['purchase_order_id'] = $purchaseOrderId;
+                    $purchaseInvoice->update($data);
                     foreach ($items as $index => $item) {
 
                         $prDetailId = $item['receive_item_detail_id']
@@ -918,7 +939,7 @@ class PurchaseInvoiceController extends Controller
                             'created_by' => Auth::id(),
                         ]);
 
-                        if ($prDetailId && !in_array($prDetailId, $affectedPrDetailIds)) {
+                        if ($prDetailId && ! in_array($prDetailId, $affectedPrDetailIds)) {
                             $affectedPrDetailIds[] = $prDetailId;
                         }
                     }
@@ -943,7 +964,7 @@ class PurchaseInvoiceController extends Controller
                                     'updated_at' => now(),
                                 ]);
 
-                            if (!in_array($prDetail->receive_item_id, $involvedPrIds)) {
+                            if (! in_array($prDetail->receive_item_id, $involvedPrIds)) {
                                 $involvedPrIds[] = $prDetail->receive_item_id;
                             }
                         }
@@ -975,6 +996,17 @@ class PurchaseInvoiceController extends Controller
                     }
                 }
             }
+            ArApHistory::create([
+                    'type'=>'payable',
+                    'party_id'=>$purchaseInvoice->supplier_id,
+                    'transaction_type'=>'invoice',
+                    'reference_type'=>'purchase_invoice',
+                    'reference_id'=>$purchaseInvoice->id,
+                     'document_no'=>$purchaseInvoice->code,
+                    'transaction_date'=>$purchaseInvoice->datePO,
+                    'debit'=>0,
+                    'credit'=>$purchaseInvoice->total_order,
+                ]);
 
             DB::commit();
 
@@ -1310,131 +1342,131 @@ class PurchaseInvoiceController extends Controller
     }
 
     public function restore($id)
-{
-    DB::beginTransaction();
+    {
+        DB::beginTransaction();
 
-    try {
+        try {
 
-        // ==========================================================
-        // Aktifkan kembali Purchase Invoice
-        // ==========================================================
-        $purchaseInvoice = PurchaseInvoice::findOrFail($id);
+            // ==========================================================
+            // Aktifkan kembali Purchase Invoice
+            // ==========================================================
+            $purchaseInvoice = PurchaseInvoice::findOrFail($id);
 
-        $purchaseInvoice->update([
-            'active'     => 1,
-            'updated_by' => Auth::id(),
-        ]);
+            $purchaseInvoice->update([
+                'active' => 1,
+                'updated_by' => Auth::id(),
+            ]);
 
-        PurchaseInvoiceDetail::where(
-            'purchase_invoice_id',
-            $purchaseInvoice->id
-        )->update([
-            'active'     => 1,
-            'updated_by' => Auth::id(),
-        ]);
+            PurchaseInvoiceDetail::where(
+                'purchase_invoice_id',
+                $purchaseInvoice->id
+            )->update([
+                'active' => 1,
+                'updated_by' => Auth::id(),
+            ]);
 
-        // ==========================================================
-        // Ambil seluruh detail Purchase Invoice
-        // ==========================================================
-        $invoiceDetails = PurchaseInvoiceDetail::where(
-            'purchase_invoice_id',
-            $purchaseInvoice->id
-        )->get();
+            // ==========================================================
+            // Ambil seluruh detail Purchase Invoice
+            // ==========================================================
+            $invoiceDetails = PurchaseInvoiceDetail::where(
+                'purchase_invoice_id',
+                $purchaseInvoice->id
+            )->get();
 
-        $receiveItemIds = [];
+            $receiveItemIds = [];
 
-        foreach ($invoiceDetails as $detail) {
+            foreach ($invoiceDetails as $detail) {
 
-            if (empty($detail->receive_item_detail_id)) {
-                continue;
-            }
+                if (empty($detail->receive_item_detail_id)) {
+                    continue;
+                }
 
-            $receiveItemDetail = ReceiveItemDetail::find(
-                $detail->receive_item_detail_id
-            );
+                $receiveItemDetail = ReceiveItemDetail::find(
+                    $detail->receive_item_detail_id
+                );
 
-            if (!$receiveItemDetail) {
-                continue;
-            }
+                if (! $receiveItemDetail) {
+                    continue;
+                }
 
-            if (!in_array($receiveItemDetail->receive_item_id, $receiveItemIds)) {
-                $receiveItemIds[] = $receiveItemDetail->receive_item_id;
-            }
+                if (! in_array($receiveItemDetail->receive_item_id, $receiveItemIds)) {
+                    $receiveItemIds[] = $receiveItemDetail->receive_item_id;
+                }
 
-            // ======================================================
-            // Hitung ulang seluruh Purchase Invoice aktif
-            // ======================================================
-            $totalInvoice = PurchaseInvoiceDetail::where(
+                // ======================================================
+                // Hitung ulang seluruh Purchase Invoice aktif
+                // ======================================================
+                $totalInvoice = PurchaseInvoiceDetail::where(
                     'receive_item_detail_id',
                     $detail->receive_item_detail_id
                 )
-                ->where('active', 1)
-                ->sum('qty');
+                    ->where('active', 1)
+                    ->sum('qty');
 
-            $outstanding = $receiveItemDetail->qty - $totalInvoice;
+                $outstanding = $receiveItemDetail->qty - $totalInvoice;
 
-            if ($outstanding < 0) {
-                $outstanding = 0;
+                if ($outstanding < 0) {
+                    $outstanding = 0;
+                }
+
+                $receiveItemDetail->update([
+                    'ri_qty' => $totalInvoice,
+                    'outstanding_qty' => $outstanding,
+                ]);
             }
 
-            $receiveItemDetail->update([
-                'ri_qty'          => $totalInvoice,
-                'outstanding_qty' => $outstanding,
-            ]);
-        }
+            // ==========================================================
+            // Update Status Receive Item
+            // ==========================================================
+            foreach ($receiveItemIds as $receiveItemId) {
 
-        // ==========================================================
-        // Update Status Receive Item
-        // ==========================================================
-        foreach ($receiveItemIds as $receiveItemId) {
-
-            $details = ReceiveItemDetail::where(
+                $details = ReceiveItemDetail::where(
                     'receive_item_id',
                     $receiveItemId
                 )
-                ->where('active', 1)
-                ->get();
+                    ->where('active', 1)
+                    ->get();
 
-            $totalQty   = $details->sum('qty');
-            $totalRiQty = $details->sum('ri_qty');
+                $totalQty = $details->sum('qty');
+                $totalRiQty = $details->sum('ri_qty');
 
-            if ($totalRiQty <= 0) {
+                if ($totalRiQty <= 0) {
 
-                $status = 'processing';
+                    $status = 'processing';
 
-            } elseif ($totalRiQty < $totalQty) {
+                } elseif ($totalRiQty < $totalQty) {
 
-                $status = 'partial';
+                    $status = 'partial';
 
-            } else {
+                } else {
 
-                $status = 'closed';
+                    $status = 'closed';
 
+                }
+
+                ReceiveItem::where('id', $receiveItemId)
+                    ->update([
+                        'status' => $status,
+                    ]);
             }
 
-            ReceiveItem::where('id', $receiveItemId)
-                ->update([
-                    'status' => $status,
-                ]);
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Purchase Invoice berhasil direstore.',
+            ], 200);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal restore Purchase Invoice : '.$e->getMessage(),
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Purchase Invoice berhasil direstore.',
-        ], 200);
-
-    } catch (\Exception $e) {
-
-        DB::rollBack();
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal restore Purchase Invoice : '.$e->getMessage(),
-        ], 500);
     }
-}
 
     public function getProcessingData()
     {
@@ -1456,7 +1488,7 @@ class PurchaseInvoiceController extends Controller
             return response()->json(['success' => false, 'data' => []]);
         }
 
-        // Load relasi salesOrderDetail
+        // Load relasi purchaseOrderDetail
         $details = ReceiveItemDetail::with([
             'produkID',
             'unitID',
@@ -1465,6 +1497,7 @@ class PurchaseInvoiceController extends Controller
         ])
             ->whereIn('receive_item_id', $ids)
             ->get();
+
         $formattedData = $details->map(function ($item) {
             $sisaQty = ($item->outstanding_qty !== null && $item->outstanding_qty > 0)
                         ? (float) $item->outstanding_qty
@@ -1476,6 +1509,7 @@ class PurchaseInvoiceController extends Controller
             return [
                 'id' => $item->id,
                 'receive_item_id' => $item->receive_item_id,
+                'purchase_order_id' => $item->purchaseOrderDetail->purchase_order_id ?? null,
 
                 'purchase_invoice_id' => $item->purchaseOrderDetail->purchase_invoice_id ?? null,
 
@@ -1533,40 +1567,245 @@ class PurchaseInvoiceController extends Controller
         return response()->json(['success' => true, 'message' => 'Purchase Invoice berhasil diajukan!']);
     }
 
-      public function print($id)
+    public function print($id)
     {
-        $purchaseInvoice = PurchaseInvoice::with(['details.produkID', 'details.unitID'])->findOrFail($id);
+        $currentYear = date('Y');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ambil Purchase Invoice
+        |--------------------------------------------------------------------------
+        */
+        $purchaseInvoice = PurchaseInvoice::with([
+            'details.produkID',
+            'details.unitID',
+            'details.warehouseID',
+            'supplier',
+            'details.receiveItemDetail.receiveItem',
+        ])->findOrFail($id);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Company
+        |--------------------------------------------------------------------------
+        */
         $company = Company::first();
-        // 1. LOGIKA LOGO PERUSAHAAN (Base64)
-        $logoBase64 = null;
-        if ($company && $company->logo) {
-            $path = public_path($company->logo);
-            if (file_exists($path)) {
-                $type = pathinfo($path, PATHINFO_EXTENSION);
-                $data = file_get_contents($path);
-                $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
-            }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Purchase Order
+        |--------------------------------------------------------------------------
+        */
+        $purchaseOrder = $purchaseInvoice->purchaseOrder;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Inisialisasi
+        |--------------------------------------------------------------------------
+        */
+        $downPayments = collect();
+
+        $totalDP = 0;
+
+        $remainingDP = 0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ambil Down Payment berdasarkan Purchase Order
+        |--------------------------------------------------------------------------
+        */
+        if ($purchaseInvoice->purchase_order_id) {
+
+            $downPayments = PurchaseDownPayment::from(
+                "purchase_down_payments_{$currentYear}"
+            )
+                ->where('purchase_order_id', $purchaseInvoice->purchase_order_id)
+                ->where('supplier_id', $purchaseInvoice->supplier_id)
+                ->where('active', 1)
+                ->where('status', '!=', 'cancelled')
+                ->orderBy('purchase_downpayment_date', 'asc')
+                ->get();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Total DP
+            |--------------------------------------------------------------------------
+            |
+            | Gunakan down_payment_amount karena ini nominal DP
+            | yang ditetapkan untuk Purchase Order.
+            |
+            */
+            $totalDP = $downPayments->sum(function ($dp) {
+                return (float) ($dp->down_payment_amount ?? 0);
+            });
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Total pembayaran yang diperhitungkan terhadap invoice
+        |--------------------------------------------------------------------------
+        */
+        $totalInvoicePaid = $totalDP;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Sisa Invoice
+        |--------------------------------------------------------------------------
+        */
+        $remainingInvoice = max(
+            0,
+            (float) $purchaseInvoice->grand_total
+            - $totalInvoicePaid
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status pembayaran
+        |--------------------------------------------------------------------------
+        */
+        $paymentStatus = 'Unpaid';
+
+        if ($totalInvoicePaid >= (float) $purchaseInvoice->grand_total) {
+
+            $paymentStatus = 'Paid';
+
+        } elseif ($totalInvoicePaid > 0) {
+
+            $paymentStatus = 'Partial';
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Persentase pembayaran
+        |--------------------------------------------------------------------------
+        */
+        $paymentPercent = 0;
+
+        if ((float) $purchaseInvoice->grand_total > 0) {
+
+            $paymentPercent = (
+                $totalInvoicePaid
+                / (float) $purchaseInvoice->grand_total
+            ) * 100;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Data PDF
+        |--------------------------------------------------------------------------
+        */
         $data = [
+
+            /*
+            |--------------------------------------------------------------------------
+            | Purchase Invoice
+            |--------------------------------------------------------------------------
+            */
             'model' => $purchaseInvoice,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Company
+            |--------------------------------------------------------------------------
+            */
             'company' => $company,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Purchase Order
+            |--------------------------------------------------------------------------
+            */
+            'purchaseOrder' => $purchaseOrder,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Invoice Details
+            |--------------------------------------------------------------------------
+            */
             'modelDetail' => $purchaseInvoice->details,
-            'logoBase64' => $logoBase64,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Purchase Down Payments
+            |--------------------------------------------------------------------------
+            */
+            'downPayments' => $downPayments,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Total DP Dibayar
+            |--------------------------------------------------------------------------
+            */
+            'totalDP' => $totalDP,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Sisa DP
+            |--------------------------------------------------------------------------
+            */
+            'remainingDP' => $remainingDP,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Payment Histories
+            |--------------------------------------------------------------------------
+            |
+            | Untuk Blade kita gunakan $paymentHistories.
+            | Isinya adalah Purchase Down Payment.
+            |
+            */
+            'paymentHistories' => $downPayments,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Total Invoice Paid
+            |--------------------------------------------------------------------------
+            */
+            'totalInvoicePaid' => $totalInvoicePaid,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Remaining Invoice
+            |--------------------------------------------------------------------------
+            */
+            'remainingInvoice' => $remainingInvoice,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Payment Status
+            |--------------------------------------------------------------------------
+            */
+            'paymentStatus' => $paymentStatus,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Payment Percentage
+            |--------------------------------------------------------------------------
+            */
+            'paymentPercent' => $paymentPercent,
         ];
 
-        $pdf = Pdf::loadView('pdf.purchase_invoice_pdf', $data)
-            ->setPaper('a4', 'portrait');
+        /*
+        |--------------------------------------------------------------------------
+        | Filename
+        |--------------------------------------------------------------------------
+        */
+        $filename = str_replace(
+            ['/', '\\'],
+            '-',
+            $purchaseInvoice->purchase_invoice_code
+        );
 
-        // preview di browser
-        $filename = $purchaseInvoice->code.'-'.$purchaseInvoice->supplier->nama_supplier;
-
-        // replace forbidden filename chars
-        $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
-        $pdf->getDomPDF()->set_option('isPhpEnabled', true);
-
-        return $pdf->stream($filename.'.pdf');
-
-        // kalau mau download:
-        // return $pdf->download('purchase-order.pdf');
+        /*
+        |--------------------------------------------------------------------------
+        | Generate PDF
+        |--------------------------------------------------------------------------
+        */
+        return Pdf::loadView(
+            'pdf.purchase_invoice_pdf',
+            $data
+        )
+            ->setPaper('a4', 'portrait')
+            ->stream($filename.'.pdf');
     }
 }

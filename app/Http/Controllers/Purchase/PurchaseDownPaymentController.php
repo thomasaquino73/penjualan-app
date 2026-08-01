@@ -7,6 +7,7 @@ use App\Http\Requests\PurchaseDownPaymentRequest;
 use App\Models\Purchase\PurchaseDownPayment;
 use App\Models\Purchase\PurchaseOrder;
 use App\Models\Purchase\Supplier;
+use App\Models\Sales\ArApHistory;
 use App\Models\Setting\Company;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -327,8 +328,18 @@ class PurchaseDownPaymentController extends Controller
                 : null;
             $data['created_by'] = Auth::user()->id;
 
-            PurchaseDownPayment::create($data);
-
+            $purchaseDownPayment=PurchaseDownPayment::create($data);
+ArApHistory::create([
+                    'type'=>'payable',
+                    'party_id'=>$purchaseDownPayment->supplier_id,
+                    'transaction_type'=>'down_payment',
+                    'reference_type'=>'purchase_down_payment',
+                    'reference_id'=>$purchaseDownPayment->id,
+                    'document_no'=>$purchaseDownPayment->purchase_downpayment_code,
+                    'transaction_date'=>$purchaseDownPayment->purchase_downpayment_date,
+                    'debit'=>$purchaseDownPayment->down_payment_amount,
+                    'credit'=>0,
+                ]);
             DB::commit();
             $redirectUrl = $request->save_and_new == 1
                             ? route('purchase-down-payment.create')
@@ -410,6 +421,17 @@ class PurchaseDownPaymentController extends Controller
 
             $purchaseDownPayment->update($data);
 
+            ArApHistory::create([
+                    'type'=>'payable',
+                    'party_id'=>$purchaseDownPayment->supplier_id,
+                    'transaction_type'=>'down_payment',
+                    'reference_type'=>'purchase_down_payment',
+                    'reference_id'=>$purchaseDownPayment->id,
+                    'document_no'=>$purchaseDownPayment->purchase_downpayment_code,
+                    'transaction_date'=>$purchaseDownPayment->purchase_downpayment_date,
+                    'debit'=>$purchaseDownPayment->down_payment_amount,
+                    'credit'=>0,
+                ]);
             DB::commit();
 
             return response()->json([

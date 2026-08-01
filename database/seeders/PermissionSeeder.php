@@ -110,6 +110,11 @@ class PermissionSeeder extends Seeder
                 'group' => 'Archive',
                 'actions' => ['browse'],
             ],
+            'inventory_reports' => [
+                'alias' => 'Inventory Reports',
+                'group' => 'Report',
+                'actions' => ['browse'],
+            ],
         ];
 
         $role = Roles::firstOrCreate([
