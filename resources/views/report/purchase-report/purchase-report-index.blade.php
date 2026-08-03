@@ -36,16 +36,9 @@
             <div class="demo-inline-spacing mt-3">
                 <ul class="list-group">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Stok Barang
+                        Hutang Supplier
                         <span class="badge ">
-                            <button class="btn btn btn-icon btn-label-primary waves-effect me-1" id="stockCard"><i
-                                    class="ti ti-folder"></i></button>
-                        </span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Kartu Mutasi Barang
-                        <span class="badge ">
-                            <button class="btn btn btn-icon btn-label-primary waves-effect me-1" id="mutationCard"><i
+                            <button class="btn btn btn-icon btn-label-primary waves-effect me-1" id="hutangCard"><i
                                     class="ti ti-folder"></i></button>
                         </span>
                     </li>
@@ -55,8 +48,7 @@
             {{--  --}}
         </div>
     </div>
-    @include('report.inventory-report.modals.modals_stok')
-    @include('report.inventory-report.modals.modals_mutation')
+    @include('report.purchase-report.modals.modals_hutang')
 @endsection
 @push('scripts')
     <script>
@@ -90,19 +82,19 @@
                 $this.wrap('<div class="position-relative"></div>').select2({
                     placeholder: $this.attr("data-placeholder"),
                     width: "100%",
-                    dropdownParent: $("#modalmutation"),
+                    dropdownParent: $("#modalhutang"),
                 });
             });
 
-            $("#formPrintStock").on("submit", function(e) {
+            $("#formPrintHutang").on("submit", function(e) {
 
-                if ($("#barang_id_stock").val() == "") {
+                if ($("#supplier_id").val() == "") {
                     e.preventDefault();
 
                     Swal.fire({
                         icon: "warning",
                         title: "Peringatan",
-                        text: "Silahkan pilih barang terlebih dahulu.",
+                        text: "Silahkan pilih supplier terlebih dahulu.",
                         customClass: {
                             confirmButton: 'btn btn-danger'
                         },
@@ -114,39 +106,13 @@
 
                 $(this).attr("target", "_blank");
 
-                $("#modalstok").modal("hide");
+                $("#modalhutang").modal("hide");
             });
 
-            $("#formPrintMutation").on("submit", function(e) {
 
-                if ($("#barang_id").val() == "") {
-                    e.preventDefault();
-
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Peringatan",
-                        text: "Silahkan pilih barang terlebih dahulu.",
-                        customClass: {
-                            confirmButton: 'btn btn-danger'
-                        },
-                        buttonsStyling: false
-                    });
-
-                    return false;
-                }
-
-                $(this).attr("target", "_blank");
-
-                $("#modalmutation").modal("hide");
-            });
         });
-
-        $('#stockCard').click(function() {
-            $('#modalstok').modal('show');
-        });
-
-        $('#mutationCard').click(function() {
-            $('#modalmutation').modal('show');
+        $('#hutangCard').click(function() {
+            $('#modalhutang').modal('show');
         });
     </script>
 @endpush

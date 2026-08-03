@@ -217,6 +217,7 @@
 @include('partials.button.select2_modal')
 @include('partials.js.calculate_total')
 @include('partials.js.loadAvailableStock')
+@include('sales.salesInvoice.part.loadCustomerAddress')
 @push('scripts')
     @push('scripts')
 
@@ -1124,18 +1125,18 @@
                         }
                     }
 
-                    if (isDuplicate) {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Product Already Exists!",
-                            html: `The product <b>"${productName}"</b> is already registered.<br>Please edit the item if you want to change it.`,
-                            customClass: {
-                                confirmButton: "btn btn-danger",
-                            },
-                            buttonsStyling: false,
-                        });
-                        return false;
-                    }
+                    // if (isDuplicate) {
+                    //     Swal.fire({
+                    //         icon: "error",
+                    //         title: "Product Already Exists!",
+                    //         html: `The product <b>"${productName}"</b> is already registered.<br>Please edit the item if you want to change it.`,
+                    //         customClass: {
+                    //             confirmButton: "btn btn-danger",
+                    //         },
+                    //         buttonsStyling: false,
+                    //     });
+                    //     return false;
+                    // }
 
                     // 3. Matematika Kalkulasi Amount (Tax dalam persen)
                     let subTotal = quantity * unitPrice;

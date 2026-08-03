@@ -243,7 +243,7 @@
                         </div>
                     @else
                         <div class="approval-title">
-                            Dibuat oleh,
+                            Hormat Kami,
                         </div>
                         <div style="height:85px;"></div>
 

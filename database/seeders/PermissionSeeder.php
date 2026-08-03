@@ -115,6 +115,16 @@ class PermissionSeeder extends Seeder
                 'group' => 'Report',
                 'actions' => ['browse'],
             ],
+            'purchase_reports' => [
+                'alias' => 'Purchase Reports',
+                'group' => 'Report',
+                'actions' => ['browse'],
+            ],
+            'sales_reports' => [
+                'alias' => 'Sales Reports',
+                'group' => 'Report',
+                'actions' => ['browse'],
+            ],
         ];
 
         $role = Roles::firstOrCreate([

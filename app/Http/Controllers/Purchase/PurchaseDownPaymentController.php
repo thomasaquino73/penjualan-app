@@ -328,18 +328,18 @@ class PurchaseDownPaymentController extends Controller
                 : null;
             $data['created_by'] = Auth::user()->id;
 
-            $purchaseDownPayment=PurchaseDownPayment::create($data);
-ArApHistory::create([
-                    'type'=>'payable',
-                    'party_id'=>$purchaseDownPayment->supplier_id,
-                    'transaction_type'=>'down_payment',
-                    'reference_type'=>'purchase_down_payment',
-                    'reference_id'=>$purchaseDownPayment->id,
-                    'document_no'=>$purchaseDownPayment->purchase_downpayment_code,
-                    'transaction_date'=>$purchaseDownPayment->purchase_downpayment_date,
-                    'debit'=>$purchaseDownPayment->down_payment_amount,
-                    'credit'=>0,
-                ]);
+            $purchaseDownPayment = PurchaseDownPayment::create($data);
+            ArApHistory::create([
+                'type' => 'payable',
+                'party_id' => $purchaseDownPayment->supplier_id,
+                'transaction_type' => 'down_payment',
+                'reference_type' => 'purchase_down_payment',
+                'reference_id' => $purchaseDownPayment->id,
+                'document_no' => $purchaseDownPayment->purchase_downpayment_code,
+                'transaction_date' => $purchaseDownPayment->purchase_downpayment_date,
+                'debit' => $purchaseDownPayment->down_payment_amount,
+                'credit' => 0,
+            ]);
             DB::commit();
             $redirectUrl = $request->save_and_new == 1
                             ? route('purchase-down-payment.create')
@@ -422,16 +422,16 @@ ArApHistory::create([
             $purchaseDownPayment->update($data);
 
             ArApHistory::create([
-                    'type'=>'payable',
-                    'party_id'=>$purchaseDownPayment->supplier_id,
-                    'transaction_type'=>'down_payment',
-                    'reference_type'=>'purchase_down_payment',
-                    'reference_id'=>$purchaseDownPayment->id,
-                    'document_no'=>$purchaseDownPayment->purchase_downpayment_code,
-                    'transaction_date'=>$purchaseDownPayment->purchase_downpayment_date,
-                    'debit'=>$purchaseDownPayment->down_payment_amount,
-                    'credit'=>0,
-                ]);
+                'type' => 'payable',
+                'party_id' => $purchaseDownPayment->supplier_id,
+                'transaction_type' => 'down_payment',
+                'reference_type' => 'purchase_down_payment',
+                'reference_id' => $purchaseDownPayment->id,
+                'document_no' => $purchaseDownPayment->purchase_downpayment_code,
+                'transaction_date' => $purchaseDownPayment->purchase_downpayment_date,
+                'debit' => $purchaseDownPayment->down_payment_amount,
+                'credit' => 0,
+            ]);
             DB::commit();
 
             return response()->json([

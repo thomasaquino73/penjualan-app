@@ -221,6 +221,7 @@
 @include('partials.button.select2_modal')
 @include('partials.js.calculate_total')
 @include('partials.js.loadAvailableStock')
+@include('sales.salesInvoice.part.loadCustomerAddress')
 @push('scripts')
     <script>
         let prDetailsData = [];
@@ -491,7 +492,7 @@
                         data: "warehouse",
                         className: "text-center"
                     },
-                 
+
                 ],
                 layout: {
                     topStart: {
@@ -1048,18 +1049,18 @@
                     }
                 }
 
-                if (isDuplicate) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Product Already Exists!",
-                        html: `The product <b>"${productName}"</b> is already registered.<br>Please edit the item if you want to change it.`,
-                        customClass: {
-                            confirmButton: "btn btn-danger",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return false;
-                }
+                // if (isDuplicate) {
+                //     Swal.fire({
+                //         icon: "error",
+                //         title: "Product Already Exists!",
+                //         html: `The product <b>"${productName}"</b> is already registered.<br>Please edit the item if you want to change it.`,
+                //         customClass: {
+                //             confirmButton: "btn btn-danger",
+                //         },
+                //         buttonsStyling: false,
+                //     });
+                //     return false;
+                // }
 
                 // 3. Matematika Kalkulasi Amount (Tax dalam persen)
                 let subTotal = quantity * unitPrice;
@@ -1189,16 +1190,12 @@
 
                     let item = {
                         detail_id: $(this).data("id"),
-
                         delivery_order_id: $(this).data("delivery_order_id"),
-
                         sales_order_id: $(this).data("sales_order_id"),
-
                         order_code: $(this).data("delivery_order_code"),
-
                         product_id: $(this).data("product_id"),
                         data_produk: $(this).data("product_name"),
-                        quantity: parseFloat($(this).data("outstanding_qty")) || 0,
+                        quantity: parseFloat($(this).data("qty")) || 0,
                         sisa_pr: parseFloat($(this).data("qty")) || 0,
                         unit_id: $(this).data("unit_id"),
                         unit: $(this).data("unit_name"),

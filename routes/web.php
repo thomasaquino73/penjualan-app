@@ -22,6 +22,8 @@ use App\Http\Controllers\Purchase\ReceiveItemController;
 use App\Http\Controllers\Purchase\Supplier\KategoriSupplierController;
 use App\Http\Controllers\Purchase\Supplier\SupplierController;
 use App\Http\Controllers\Report\InventoryReportController;
+use App\Http\Controllers\Report\PurchaseReportController;
+use App\Http\Controllers\Report\SalesReportController;
 use App\Http\Controllers\Sales\Customer\CustomerController;
 use App\Http\Controllers\Sales\Customer\KategoriCustomerController;
 use App\Http\Controllers\Sales\DeliveryOrderController;
@@ -362,6 +364,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('delivery-order', DeliveryOrderController::class);
 
     // INVOICE
+    Route::get('/sales-invoice/get-address-list/{customer}', [SalesInvoiceController::class, 'getAddress'])->name('sales-invoice.getAddress');
     Route::get('/sales-invoice/get-delivery/{customer}', [SalesInvoiceController::class, 'getDelivery'])->name('sales-invoice.getDelivery');
     Route::post('/sales-invoice/get-order-detail', [SalesInvoiceController::class, 'getDeliveryDetail'])->name('sales-invoice.getDeliveryDetail');
     Route::get('/sales-invoice/{id}/data', [SalesInvoiceController::class, 'getCustomerData'])->name('sales-invoice.getCustomerData');
@@ -433,6 +436,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('inventory-reports', [InventoryReportController::class, 'index'])->name('inventory-reports.index');
     Route::get('inventory-reports/print-mutation', [InventoryReportController::class, 'printMutation'])->name('inventory-reports.print_mutation');
+    Route::get('purchase-reports', [PurchaseReportController::class, 'index'])->name('purchase-reports.index');
+    Route::get('purchase-reports/print-hutang', [PurchaseReportController::class, 'printHutang'])->name('purchase-reports.print_hutang');
+    Route::get('sales-reports', [SalesReportController::class, 'index'])->name('sales-reports.index');
+    Route::get('sales-reports/print-piutang', [SalesReportController::class, 'printPiutang'])->name('sales-reports.print_piutang');
 });
 
 Route::fallback(function () {

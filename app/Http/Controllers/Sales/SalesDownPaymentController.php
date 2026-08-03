@@ -366,17 +366,17 @@ class SalesDownPaymentController extends Controller
                 : null;
             $data['created_by'] = Auth::user()->id;
 
-            $sdp=SalesDownPayment::create($data);
-        ArApHistory::create([
-                'type'=>'receivable',
-                'party_id'=> $sdp->customer_id,
-                'transaction_type'=>'down_payment',
-                'reference_type'=>'sales_down_payment',
-                'reference_id'=> $sdp->id,
-                'document_no'=> $sdp->sales_downpayment_code,
-                'transaction_date'=> $sdp->sales_downpayment_date,
-                'debit'=>0,
-                'credit'=> $sdp->down_payment_amount,
+            $sdp = SalesDownPayment::create($data);
+            ArApHistory::create([
+                'type' => 'receivable',
+                'party_id' => $sdp->customer_id,
+                'transaction_type' => 'down_payment',
+                'reference_type' => 'sales_down_payment',
+                'reference_id' => $sdp->id,
+                'document_no' => $sdp->sales_downpayment_code,
+                'transaction_date' => $sdp->sales_downpayment_date,
+                'debit' => 0,
+                'credit' => $sdp->down_payment_amount,
             ]);
             DB::commit();
             $redirectUrl = $request->save_and_new == 1
@@ -487,16 +487,16 @@ class SalesDownPaymentController extends Controller
 
             // Update data
             $salesDownPayment->update($data);
- ArApHistory::create([
-                'type'=>'receivable',
-                'party_id'=> $salesDownPayment->customer_id,
-                'transaction_type'=>'invoice',
-                'reference_type'=>'sales_down_payment',
-                'reference_id'=> $salesDownPayment->id,
-                'document_no'=> $salesDownPayment->sales_downpayment_code,
-                'transaction_date'=> $salesDownPayment->sales_downpayment_date,
-                'debit'=>0,
-                'credit'=> $salesDownPayment->down_payment_amount,
+            ArApHistory::create([
+                'type' => 'receivable',
+                'party_id' => $salesDownPayment->customer_id,
+                'transaction_type' => 'invoice',
+                'reference_type' => 'sales_down_payment',
+                'reference_id' => $salesDownPayment->id,
+                'document_no' => $salesDownPayment->sales_downpayment_code,
+                'transaction_date' => $salesDownPayment->sales_downpayment_date,
+                'debit' => 0,
+                'credit' => $salesDownPayment->down_payment_amount,
             ]);
             DB::commit();
 

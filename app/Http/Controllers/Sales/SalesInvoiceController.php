@@ -627,15 +627,15 @@ class SalesInvoiceController extends Controller
             }
 
             ArApHistory::create([
-                'type'=>'receivable',
-                'party_id'=>$salesInvoice->customer_id,
-                'transaction_type'=>'invoice',
-                'reference_type'=>'sales_invoice',
-                'reference_id'=>$salesInvoice->id,
-                'document_no'=>$salesInvoice->sales_invoice_code,
-                'transaction_date'=>$salesInvoice->sales_invoice_date,
-                'debit'=>$salesInvoice->grand_total,
-                'credit'=>0
+                'type' => 'receivable',
+                'party_id' => $salesInvoice->customer_id,
+                'transaction_type' => 'invoice',
+                'reference_type' => 'sales_invoice',
+                'reference_id' => $salesInvoice->id,
+                'document_no' => $salesInvoice->sales_invoice_code,
+                'transaction_date' => $salesInvoice->sales_invoice_date,
+                'debit' => $salesInvoice->grand_total,
+                'credit' => 0,
             ]);
 
             DB::commit();
@@ -1284,16 +1284,16 @@ class SalesInvoiceController extends Controller
                     ]),
                 ]);
 
-                 ArApHistory::create([
-                    'type'=>'receivable',
-                    'party_id'=>$salesInvoice->customer_id,
-                    'transaction_type'=>'invoice',
-                    'reference_type'=>'sales_invoice',
-                    'reference_id'=>$salesInvoice->id,
-                    'document_no'=>$salesInvoice->sales_invoice_code,
-                    'transaction_date'=>$salesInvoice->sales_invoice_date,
-                    'debit'=>$salesInvoice->grand_total,
-                    'credit'=>0
+                ArApHistory::create([
+                    'type' => 'receivable',
+                    'party_id' => $salesInvoice->customer_id,
+                    'transaction_type' => 'invoice',
+                    'reference_type' => 'sales_invoice',
+                    'reference_id' => $salesInvoice->id,
+                    'document_no' => $salesInvoice->sales_invoice_code,
+                    'transaction_date' => $salesInvoice->sales_invoice_date,
+                    'debit' => $salesInvoice->grand_total,
+                    'credit' => 0,
                 ]);
 
                 /*
@@ -1934,41 +1934,7 @@ class SalesInvoiceController extends Controller
         }
     }
 
-    // public function print($id)
-    // {
-    //     $salesInvoice = SalesInvoice::with(['details.produkID', 'details.unitID'])->findOrFail($id);
-    //     $company = Company::first();
-    //     // 1. LOGIKA LOGO PERUSAHAAN (Base64)
-    //     $logoBase64 = null;
-    //     if ($company && $company->logo) {
-    //         $path = public_path($company->logo);
-    //         if (file_exists($path)) {
-    //             $type = pathinfo($path, PATHINFO_EXTENSION);
-    //             $data = file_get_contents($path);
-    //             $logoBase64 = 'data:image/'.$type.';base64,'.base64_encode($data);
-    //         }
-    //     }
-    //     $data = [
-    //         'model' => $salesInvoice,
-    //         'company' => $company,
-    //         'modelDetail' => $salesInvoice->details,
-    //         'logoBase64' => $logoBase64,
-    //     ];
-
-    //     $pdf = Pdf::loadView('pdf.sales_invoice_pdf', $data)
-    //         ->setPaper('a4', 'portrait');
-
-    //     // preview di browser
-    //     $filename = $salesInvoice->sales_invoice_code.'-'.$salesInvoice->customerID->nama_customer;
-
-    //     // replace forbidden filename chars
-    //     $filename = preg_replace('/[\/\\\\:*?"<>|]/', '-', $filename);
-
-    //     return $pdf->stream($filename.'.pdf');
-
-    //     // kalau mau download:
-    //     // return $pdf->download('sales-invoice.pdf');
-    // }
+    
 
     public function print($id)
     {
@@ -2440,4 +2406,57 @@ class SalesInvoiceController extends Controller
             'address' => $address,
         ]);
     }
+    
+    public function getAddress($customerId)
+{
+    $customer = Customer::find($customerId);
+
+    if (!$customer) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Customer tidak ditemukan'
+        ]);
+    }
+
+    // Billing Address
+    $billingAddress = trim(implode("\n", array_filter([
+        $customer->alamat_tagihan,
+        $customer->kota_tagihan,
+        $customer->provinsi_tagihan,
+        $customer->kodepos_tagihan,
+        $customer->negara_tagihan,
+    ])));
+
+    // Delivery Address
+    $deliveryAddresses = DB::table('customer_pengiriman')->where('customer_id', $customerId)
+        ->orderByDesc('default_pengiriman')
+        ->get()
+        ->map(function ($item) {
+
+            $address = trim(implode("\n", array_filter([
+                $item->alamat_pengiriman,
+                $item->kota_pengiriman,
+                $item->provinsi_pengiriman,
+                $item->kodepos_pengiriman,
+                $item->negara_pengiriman,
+            ])));
+
+            return [
+                'title' => 'Delivery Address',
+                'receiver' => $item->nama_penerima,
+                'phone' => $item->handphone_penerima,
+                'address' => $address,
+                'default' => $item->default_pengiriman,
+            ];
+        });
+
+    return response()->json([
+        'success' => true,
+        'billing' => [
+            'title' => 'Billing Address',
+            'address' => $billingAddress,
+        ],
+        'delivery' => $deliveryAddresses,
+    ]);
+}
 }

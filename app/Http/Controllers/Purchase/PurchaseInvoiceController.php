@@ -673,16 +673,16 @@ class PurchaseInvoiceController extends Controller
                 }
             }
             ArApHistory::create([
-                    'type'=>'payable',
-                    'party_id'=>$purchaseInvoice->supplier_id,
-                    'transaction_type'=>'invoice',
-                    'reference_type'=>'purchase_invoice',
-                    'reference_id'=>$purchaseInvoice->id,
-                    'document_no'=>$purchaseInvoice->code,
-                    'transaction_date'=>$purchaseInvoice->datePO,
-                    'debit'=>0,
-                        'credit'           => $purchaseInvoice->grand_total,
-                ]);
+                'type' => 'payable',
+                'party_id' => $purchaseInvoice->supplier_id,
+                'transaction_type' => 'invoice',
+                'reference_type' => 'purchase_invoice',
+                'reference_id' => $purchaseInvoice->id,
+                'document_no' => $purchaseInvoice->code,
+                'transaction_date' => $purchaseInvoice->datePO,
+                'debit' => 0,
+                'credit' => $purchaseInvoice->grand_total,
+            ]);
             DB::commit();
 
             return response()->json([
@@ -997,16 +997,16 @@ class PurchaseInvoiceController extends Controller
                 }
             }
             ArApHistory::create([
-                    'type'=>'payable',
-                    'party_id'=>$purchaseInvoice->supplier_id,
-                    'transaction_type'=>'invoice',
-                    'reference_type'=>'purchase_invoice',
-                    'reference_id'=>$purchaseInvoice->id,
-                     'document_no'=>$purchaseInvoice->code,
-                    'transaction_date'=>$purchaseInvoice->datePO,
-                    'debit'=>0,
-                    'credit'=>$purchaseInvoice->total_order,
-                ]);
+                'type' => 'payable',
+                'party_id' => $purchaseInvoice->supplier_id,
+                'transaction_type' => 'invoice',
+                'reference_type' => 'purchase_invoice',
+                'reference_id' => $purchaseInvoice->id,
+                'document_no' => $purchaseInvoice->code,
+                'transaction_date' => $purchaseInvoice->datePO,
+                'debit' => 0,
+                'credit' => $purchaseInvoice->total_order,
+            ]);
 
             DB::commit();
 
