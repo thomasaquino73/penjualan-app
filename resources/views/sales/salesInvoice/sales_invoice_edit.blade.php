@@ -218,6 +218,7 @@
 @include('partials.js.calculate_total')
 @include('partials.js.loadAvailableStock')
 @include('sales.salesInvoice.part.loadCustomerAddress')
+@include('sales.salesInvoice.part.js')
 @push('scripts')
     @push('scripts')
 
@@ -846,12 +847,116 @@
                             }
 
                             $('#address').val(data.address ?? '');
-
+                            loadReference();
 
                         }
                     });
 
                 });
+
+                function loadReference() {
+
+                    let customerId = $("#customer_id").val();
+                    let type = $("input[name='payment_type']:checked").val();
+
+                    if (!customerId || !type) return;
+
+                    $.ajax({
+                        url: `/sales-invoice/get-reference/${customerId}/${type}`,
+                        type: "GET",
+                        dataType: "json",
+                        success: function(response) {
+
+                            let select = (type === 'proforma') ?
+                                $("#proforma_id") :
+                                $("#down_payment_id");
+
+                            select.empty().append('<option value="">Pilih Referensi</option>');
+
+                            if (response.length > 0) {
+
+                                $.each(response, function(i, item) {
+
+                                    select.append(`
+                        <option 
+                            value="${item.id}"
+                            data-amount="${item.amount}">
+                            ${item.code} - ${item.date} 
+                            (Rp ${formatRupiah(item.amount)})
+                        </option>
+                    `);
+
+                                });
+
+                            }
+
+                            $("#total_dp").val("");
+
+                        },
+                        error: function(xhr) {
+                            console.log(xhr.responseText);
+                        }
+                    });
+                }
+
+
+                $("#proforma_id, #down_payment_id").on("change", function() {
+
+                    let amount = $(this)
+                        .find(":selected")
+                        .attr("data-amount");
+
+                    amount = parseFloat(amount) || 0;
+
+                    $("#total_dp").val(formatRupiah(amount));
+
+                });
+
+
+
+                function toggleSelect() {
+
+                    let type = $("input[name='payment_type']:checked").val();
+
+                    if (type === "proforma") {
+
+                        $("#proforma_id").prop("disabled", false);
+                        $("#down_payment_id")
+                            .prop("disabled", true)
+                            .val(null)
+                            .trigger("change");
+
+                        loadReference();
+
+                    } else if (type === "down_payment") {
+
+                        $("#proforma_id")
+                            .prop("disabled", true)
+                            .val(null)
+                            .trigger("change");
+
+                        $("#down_payment_id").prop("disabled", false);
+
+                        loadReference();
+
+                    } else if (type === "no_down_payment") {
+
+                        $("#proforma_id")
+                            .prop("disabled", true)
+                            .val(null)
+                            .trigger("change");
+
+                        $("#down_payment_id")
+                            .prop("disabled", true)
+                            .val(null)
+                            .trigger("change");
+                    }
+                }
+                $(document).on("change", "input[name='payment_type']", function() {
+                    toggleSelect();
+                });
+
+                toggleSelect();
 
                 $(document).on("change", "#product_id", function() {
                     let productId = $(this).val();

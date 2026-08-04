@@ -364,6 +364,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('delivery-order', DeliveryOrderController::class);
 
     // INVOICE
+    Route::get('/sales-invoice/get-reference/{customer}/{type}', [SalesInvoiceController::class, 'getReference'])->name('sales-invoice.get-reference');
     Route::get('/sales-invoice/get-address-list/{customer}', [SalesInvoiceController::class, 'getAddress'])->name('sales-invoice.getAddress');
     Route::get('/sales-invoice/get-delivery/{customer}', [SalesInvoiceController::class, 'getDelivery'])->name('sales-invoice.getDelivery');
     Route::post('/sales-invoice/get-order-detail', [SalesInvoiceController::class, 'getDeliveryDetail'])->name('sales-invoice.getDeliveryDetail');

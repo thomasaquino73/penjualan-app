@@ -365,6 +365,9 @@ class SalesDownPaymentController extends Controller
                 ? Carbon::parse($request->due_date)->format('Y-m-d')
                 : null;
             $data['created_by'] = Auth::user()->id;
+            $data['remaining_amount'] = $this->parseNominal(
+                $request->input('down_payment_amount', 0)
+            );
 
             $sdp = SalesDownPayment::create($data);
             ArApHistory::create([
@@ -484,7 +487,9 @@ class SalesDownPaymentController extends Controller
 
             // User yang melakukan update
             $data['updated_by'] = Auth::user()->id;
-
+            $data['remaining_amount'] = $this->parseNominal(
+                $request->input('down_payment_amount', 0)
+            );
             // Update data
             $salesDownPayment->update($data);
             ArApHistory::create([

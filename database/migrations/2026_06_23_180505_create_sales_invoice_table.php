@@ -51,6 +51,15 @@ return new class extends Migration
             $table->date('tanggal_pengiriman')->nullable();
             $table->unsignedBigInteger('jenis_pengiriman')->nullable();
             $table->string('fob_id')->nullable();
+            $table->unsignedBigInteger('sales_down_payment_id')->nullable();
+            $table->unsignedBigInteger('proforma_id')->nullable();
+            $table->decimal('total_dp', 15, 2)->default(0);
+            $table->decimal('sisa_pembayaran', 15, 2)->default(0);
+            $table->enum('payment_type', [
+                'proforma',
+                'down_payment',
+                'no_down_payment',
+            ])->default('no_down_payment');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

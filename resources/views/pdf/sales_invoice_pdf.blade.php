@@ -111,89 +111,34 @@
                             {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1), 2) : '' }}
                         </td>
                     </tr>
-                    {{-- ============================================================
-    RIWAYAT DOWN PAYMENT
-============================================================= --}}
-                    @if ($downPayments->count() > 0)
-
-                        @foreach ($downPayments as $payment)
-                            <tr>
-                                <td>
-
-                                    {{ $payment->description }}
-
-                                    @if ((float) ($payment->down_payment_percent ?? 0) > 0)
-                                        {{ rtrim(rtrim(number_format((float) $payment->down_payment_percent, 2, ',', '.'), '0'), ',') }}%
-                                    @endif
-
-                                    <br>
-
-                                    <small>
-                                        @if (!empty($payment->sales_downpayment_date))
-                                            {{ \Carbon\Carbon::parse($payment->sales_downpayment_date)->format('d/m/Y') }}
-                                        @else
-                                            -
-                                        @endif
-                                    </small>
-
-                                </td>
-
-                                <td class="text-right">
-                                    {{ isset($payment) ? format_uang(convert_currency($payment->down_payment_amount, $payment->currency_id ?? 1)) : '' }}
-
-                                </td>
-                            </tr>
-                        @endforeach
-                    @else
+                    @if ($model->payment_type == 'down_payment')
                         <tr>
-                            <td>
-                                Pembayaran DP
-                            </td>
-
+                            <td>Total Pembayaran DP</td>
                             <td class="text-right">
-                                {{ format_uang(0, 2) }}
+                                {{ isset($model) ? format_uang(convert_currency($model->total_dp, $detail->currency_id ?? 1), 2) : '' }}
                             </td>
                         </tr>
-
+                        <tr class="total-row">
+                            <td>Sisa Pembayaran</td>
+                            <td class="text-right">
+                                {{ isset($model) ? format_uang(convert_currency($model->sisa_pembayaran, $detail->currency_id ?? 1), 2) : '' }}
+                            </td>
+                        </tr>
+                    @elseif ($model->payment_type == 'proforma')
+                        <tr>
+                            <td>Total Pembayaran DP</td>
+                            <td class="text-right">
+                                {{ isset($model) ? format_uang(convert_currency($model->total_dp, $detail->currency_id ?? 1), 2) : '' }}
+                            </td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>Sisa Pembayaran</td>
+                            <td class="text-right">
+                                {{ isset($model) ? format_uang(convert_currency($model->sisa_pembayaran, $detail->currency_id ?? 1), 2) : '' }}
+                            </td>
+                        </tr>
+                    @else
                     @endif
-
-
-                    {{-- TOTAL PEMBAYARAN --}}
-                    <tr>
-                        <td>
-                            <strong>
-                                Total Pembayaran DP
-                            </strong>
-                        </td>
-
-                        <td class="text-right">
-                            <strong>
-
-                                {{ isset($payment) ? format_uang(convert_currency($totalInvoicePaid, $payment->currency_id ?? 1)) : format_uang(0, 2) }}
-
-                            </strong>
-                        </td>
-                    </tr>
-
-
-                    {{-- SISA PEMBAYARAN --}}
-                    <tr class="total-row">
-
-                        <td>
-                            <strong>
-                                Sisa Pembayaran
-                            </strong>
-                        </td>
-
-                        <td class="text-right">
-                            <strong>
-
-                                {{ isset($payment) ? format_uang(convert_currency($remainingInvoice, $payment->currency_id ?? 1)) : format_uang(0, 2) }}
-
-                            </strong>
-                        </td>
-
-                    </tr>
                 </table>
             </td>
         </tr>
@@ -205,10 +150,20 @@
                     $currencyId = session('currency_id') ?? \App\Models\Setting\Company::first()->default_currency_id;
                     $currencyCode = \App\Models\Setting\Currency::find($currencyId)?->code ?? 'IDR';
 
-                    // Gunakan nilai asli (jangan di-round agar sen tidak hilang)
-                    $grandTotalConvert = convert_currency($remainingInvoice, $model->currency_id ?? 1);
+                    if ($model->payment_type == 'down_payment' || $model->payment_type == 'proforma') {
+                        // Jika ada DP tampilkan sisa pembayaran
+                        $nilaiTerbilang = $model->sisa_pembayaran;
+                    } else {
+                        // Jika tidak ada DP tampilkan grand total
+                        $nilaiTerbilang = $model->grand_total;
+                    }
+
+                    $nilaiTerbilangConvert = convert_currency($nilaiTerbilang, $model->currency_id ?? 1);
                 @endphp
-                <div>Terbilang: {{ terbilang($grandTotalConvert, $currencyCode) }}</div>
+
+                <div>
+                    Terbilang: {{ terbilang($nilaiTerbilangConvert, $currencyCode) }}
+                </div>
             </td>
         </tr>
     </table>

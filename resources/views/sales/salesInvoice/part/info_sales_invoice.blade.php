@@ -167,6 +167,47 @@
                 </div>
             </div>
         </div>
+        <h6><strong>Down Payment</strong></h6>
+        <div class="mb-3">
+            <!-- Proforma -->
+            <div class="input-group mb-3">
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0 me-2" type="radio" name="payment_type" value="proforma">
+                    Proforma
+                </div>
+
+                <select name="proforma_id" id="proforma_id" class="form-select select2"
+                    data-placeholder="Select Proforma">
+                    <option></option>
+                </select>
+            </div>
+            <!-- Down Payment -->
+            <div class="input-group mb-3">
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0 me-2" type="radio" name="payment_type"
+                        value="down_payment">
+                    Down Payment
+                </div>
+
+                <select name="down_payment_id" id="down_payment_id" class="form-select select2"
+                    data-placeholder="Select Down Payment" disabled>
+                    <option></option>
+                </select>
+            </div>
+            <div class="input-group mb-3">
+                <div class="input-group-text">
+                    <input class="form-check-input mt-0 me-2" type="radio" name="payment_type"
+                        value="no_down_payment" checked>
+                    Tidak Ada DP
+                </div>
+            </div>
+            <div class="input-group">
+                <div class="input-group-text">
+                    Total DP
+                </div>
+                <input type="text" class="form-control" id="total_dp" name="total_dp" readonly>
+            </div>
+        </div>
     </div>
     @push('scripts')
         <script>

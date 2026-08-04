@@ -266,8 +266,11 @@
     <div class="signature-section " style="margin-top:14px">
         <table style="width:100%; table-layout:fixed;">
             <tr>
+                <td style="width:75%;"></td>
+
                 <td style="width:25%; text-align:center; vertical-align:top;">
-                    <div class="approval-title">Dibuat,</div>
+                    <div class="approval-title">Disetujui,</div>
+
                     <div style="height:70px;"></div>
 
                     <div
@@ -279,36 +282,6 @@
             ">
                     </div>
                 </td>
-
-                <td style="width:25%; text-align:center; vertical-align:top;">
-                    <div class="approval-title">Disetujui,</div>
-                    <div style="height:70px;"></div>
-
-                    <div
-                        style="
-                    width:80%;
-                    margin:0 auto;
-                    border-bottom:1px solid #000;
-                    height:10px;
-                ">
-                    </div>
-                </td>
-
-                <td style="width:25%; text-align:center; vertical-align:top;">
-                    <div class="approval-title">Konsumen,</div>
-                    <div style="height:70px;"></div>
-
-                    <div
-                        style="
-                width:80%;
-                margin:0 auto;
-                border-bottom:1px solid #000;
-                height:10px;
-                         ">
-                    </div>
-                </td>
-
-
             </tr>
         </table>
     </div>

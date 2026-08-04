@@ -13,6 +13,7 @@ use App\Models\Sales\ArApHistory;
 use App\Models\Sales\Customer;
 use App\Models\Sales\DeliveryOrder;
 use App\Models\Sales\DeliveryOrderDetail;
+use App\Models\Sales\ProformaInvoice;
 use App\Models\Sales\SalesDownPayment;
 use App\Models\Sales\SalesInvoice;
 use App\Models\Sales\SalesInvoiceDetail;
@@ -422,6 +423,19 @@ class SalesInvoiceController extends Controller
         return view('sales.salesInvoice.sales_invoice_create', $x);
     }
 
+    private function parseNominal($value)
+    {
+        if (! $value) {
+            return 0;
+        }
+
+        // format Indonesia: 99.000,00
+        $value = str_replace('.', '', $value);
+        $value = str_replace(',', '.', $value);
+
+        return (float) $value;
+    }
+
     public function store(SalesInvoiceRequest $request)
     {
         DB::beginTransaction();
@@ -448,6 +462,20 @@ class SalesInvoiceController extends Controller
             $data['taxpayer_data'] = $request->taxpayer_data;
             $data['tax_id'] = $request->tax_id;
             $data['tax_amount'] = $request->tax_amount;
+            $data['total_dp'] = $this->parseNominal($request->total_dp);
+            $data['sisa_pembayaran'] = $this->parseNominal($request->grand_total) - $this->parseNominal($request->total_dp);
+            $data['payment_type'] = $request->payment_type;
+
+            if ($request->payment_type == 'down_payment') {
+                $data['sales_down_payment_id'] = $request->down_payment_id;
+                $data['proforma_id'] = null;
+            } elseif ($request->payment_type == 'proforma') {
+                $data['proforma_id'] = $request->proforma_id;
+                $data['sales_down_payment_id'] = null;
+            } else {
+                $data['sales_down_payment_id'] = null;
+                $data['proforma_id'] = null;
+            }
 
             // do {
             //     $generatedCode = $this->generateNumberId();
@@ -873,13 +901,38 @@ class SalesInvoiceController extends Controller
             | UPDATE HEADER SALES INVOICE
             |--------------------------------------------------------------------------
             */
-            $salesInvoice->update([
+            $paymentData = [];
+
+            if ($request->payment_type == 'down_payment') {
+
+                $paymentData = [
+                    'sales_down_payment_id' => $request->down_payment_id,
+                    'proforma_id' => null,
+                ];
+
+            } elseif ($request->payment_type == 'proforma') {
+
+                $paymentData = [
+                    'proforma_id' => $request->proforma_id,
+                    'sales_down_payment_id' => null,
+                ];
+
+            } else {
+
+                $paymentData = [
+                    'sales_down_payment_id' => null,
+                    'proforma_id' => null,
+                ];
+            }
+
+            // Update Sales Invoice
+            $salesInvoice->update(array_merge([
 
                 'customer_id' => $request->customer_id,
 
                 /*
                 |--------------------------------------------------------------------------
-                | INI YANG SEBELUMNYA HILANG
+                | Sales Order Relation
                 |--------------------------------------------------------------------------
                 */
                 'sales_order_id' => $salesOrderId,
@@ -898,18 +951,33 @@ class SalesInvoiceController extends Controller
                     ? Carbon::parse($request->shipping_date)->format('Y-m-d')
                     : null,
 
-                'sub_total' => $request->sub_total,
+                /*
+                |--------------------------------------------------------------------------
+                | Total
+                |--------------------------------------------------------------------------
+                */
+                'sub_total' => $this->parseNominal($request->sub_total),
 
                 'disc_percent' => $request->percent,
 
-                'disc_nominal' => $request->discount_all,
+                'disc_nominal' => $this->parseNominal($request->discount_all),
 
                 'po_number' => $request->po_number,
 
-                'grand_total' => $request->total_order,
+                'grand_total' => $this->parseNominal($request->total_order),
 
+                /*
+                |--------------------------------------------------------------------------
+                | Pengiriman
+                |--------------------------------------------------------------------------
+                */
                 'jenis_pengiriman' => $request->jenis_pengiriman,
 
+                /*
+                |--------------------------------------------------------------------------
+                | Pajak
+                |--------------------------------------------------------------------------
+                */
                 'kena_pajak' => $request->has('kena_pajak')
                     ? 1
                     : 0,
@@ -918,20 +986,49 @@ class SalesInvoiceController extends Controller
                     ? 1
                     : 0,
 
+                /*
+                |--------------------------------------------------------------------------
+                | Address
+                |--------------------------------------------------------------------------
+                */
                 'fob_id' => $request->fob_id,
 
                 'address' => $request->address,
 
                 'description' => $request->description,
 
+                /*
+                |--------------------------------------------------------------------------
+                | Tax
+                |--------------------------------------------------------------------------
+                */
                 'taxpayer_data' => $request->taxpayer_data,
 
                 'tax_id' => $request->tax_id,
 
-                'tax_amount' => $request->tax_amount,
+                'tax_amount' => $this->parseNominal($request->tax_amount),
 
+                /*
+                |--------------------------------------------------------------------------
+                | Payment
+                |--------------------------------------------------------------------------
+                */
+                'total_dp' => $this->parseNominal($request->total_dp),
+
+                'sisa_pembayaran' => $this->parseNominal($request->total_order)
+                    -
+                    $this->parseNominal($request->total_dp),
+
+                'payment_type' => $request->payment_type,
+
+                /*
+                |--------------------------------------------------------------------------
+                | Audit
+                |--------------------------------------------------------------------------
+                */
                 'updated_by' => Auth::id(),
-            ]);
+
+            ], $paymentData));
 
             /*
             |--------------------------------------------------------------------------
@@ -1934,8 +2031,6 @@ class SalesInvoiceController extends Controller
         }
     }
 
-    
-
     public function print($id)
     {
         $currentYear = date('Y');
@@ -2406,57 +2501,107 @@ class SalesInvoiceController extends Controller
             'address' => $address,
         ]);
     }
-    
-    public function getAddress($customerId)
-{
-    $customer = Customer::find($customerId);
 
-    if (!$customer) {
+    public function getAddress($customerId)
+    {
+        $customer = Customer::find($customerId);
+
+        if (! $customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer tidak ditemukan',
+            ]);
+        }
+
+        // Billing Address
+        $billingAddress = trim(implode("\n", array_filter([
+            $customer->alamat_tagihan,
+            $customer->kota_tagihan,
+            $customer->provinsi_tagihan,
+            $customer->kodepos_tagihan,
+            $customer->negara_tagihan,
+        ])));
+
+        // Delivery Address
+        $deliveryAddresses = DB::table('customer_pengiriman')->where('customer_id', $customerId)
+            ->orderByDesc('default_pengiriman')
+            ->get()
+            ->map(function ($item) {
+
+                $address = trim(implode("\n", array_filter([
+                    $item->alamat_pengiriman,
+                    $item->kota_pengiriman,
+                    $item->provinsi_pengiriman,
+                    $item->kodepos_pengiriman,
+                    $item->negara_pengiriman,
+                ])));
+
+                return [
+                    'title' => 'Delivery Address',
+                    'receiver' => $item->nama_penerima,
+                    'phone' => $item->handphone_penerima,
+                    'address' => $address,
+                    'default' => $item->default_pengiriman,
+                ];
+            });
+
         return response()->json([
-            'success' => false,
-            'message' => 'Customer tidak ditemukan'
+            'success' => true,
+            'billing' => [
+                'title' => 'Billing Address',
+                'address' => $billingAddress,
+            ],
+            'delivery' => $deliveryAddresses,
         ]);
     }
 
-    // Billing Address
-    $billingAddress = trim(implode("\n", array_filter([
-        $customer->alamat_tagihan,
-        $customer->kota_tagihan,
-        $customer->provinsi_tagihan,
-        $customer->kodepos_tagihan,
-        $customer->negara_tagihan,
-    ])));
+    public function getReference($customerId, $type)
+    {
+        $year = date('Y');
 
-    // Delivery Address
-    $deliveryAddresses = DB::table('customer_pengiriman')->where('customer_id', $customerId)
-        ->orderByDesc('default_pengiriman')
-        ->get()
-        ->map(function ($item) {
+        try {
 
-            $address = trim(implode("\n", array_filter([
-                $item->alamat_pengiriman,
-                $item->kota_pengiriman,
-                $item->provinsi_pengiriman,
-                $item->kodepos_pengiriman,
-                $item->negara_pengiriman,
-            ])));
+            if ($type == 'proforma') {
 
-            return [
-                'title' => 'Delivery Address',
-                'receiver' => $item->nama_penerima,
-                'phone' => $item->handphone_penerima,
-                'address' => $address,
-                'default' => $item->default_pengiriman,
-            ];
-        });
+                $data = ProformaInvoice::from("proforma_invoice_$year as p")
+                    ->where('p.customer_id', $customerId)
+                    ->where('p.active', 1)
+                    ->whereNotIn('p.status', ['draft', 'cancelled', 'closed'])
+                    ->select(
+                        'p.id',
+                        'p.proforma_invoice_code as code',
+                        'p.proforma_invoice_date as date',
+                        'p.grand_total as amount'
+                    )
+                    ->get();
 
-    return response()->json([
-        'success' => true,
-        'billing' => [
-            'title' => 'Billing Address',
-            'address' => $billingAddress,
-        ],
-        'delivery' => $deliveryAddresses,
-    ]);
-}
+            } else {
+
+                $data = SalesDownPayment::from("sales_down_payments_$year as dp")
+                    ->where('dp.customer_id', $customerId)
+                    ->where('dp.active', 1)
+        // ->where('dp.remaining_amount', '>', 0)
+                    ->whereNotIn('dp.status', ['cancelled', 'closed'])
+                    ->select(
+                        'dp.id',
+                        'dp.sales_downpayment_code as code',
+                        'dp.sales_downpayment_date as date',
+                        'dp.down_payment_amount as amount'
+                    )
+                    ->get();
+
+            }
+
+            return response()->json($data);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ], 500);
+
+        }
+    }
 }
