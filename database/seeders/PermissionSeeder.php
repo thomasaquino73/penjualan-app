@@ -19,6 +19,7 @@ class PermissionSeeder extends Seeder
             'receive_item' => ['alias' => 'Receive Item', 'group' => 'Purchase'],
             'purchase_invoice' => ['alias' => 'Purchase Invoice', 'group' => 'Purchase'],
             'permintaan_pembelian' => ['alias' => 'Purchase Requisition', 'group' => 'Purchase'],
+            'purchase_down_payment' => ['alias' => 'Purchase Down Payment', 'group' => 'Purchase'],
             'purchase_order' => [
                 'alias' => 'Purchase Order',
                 'group' => 'Purchase',
@@ -42,13 +43,12 @@ class PermissionSeeder extends Seeder
             'proforma_invoice' => ['alias' => 'Proforma Invoice', 'group' => 'Sales'],
             'penjualan_toko' => ['alias' => 'Store Sales', 'group' => 'Sales'],
             'sales_down_payment' => ['alias' => 'Sales Down Payment', 'group' => 'Sales'],
-            'purchase_down_payment' => ['alias' => 'Purchase Down Payment', 'group' => 'Purchase'],
+            'sales_receipt' => ['alias' => 'Pembayaran Penjualan', 'group' => 'Sales'],
 
             'warehouse' => ['alias' => 'Warehouse', 'group' => 'Inventory'],
             'barang' => ['alias' => 'Product', 'group' => 'Inventory'],
             'kategori_barang' => ['alias' => 'Product Category', 'group' => 'Inventory'],
             'satuan_barang' => ['alias' => 'Unit', 'group' => 'Inventory'],
-            'brand' => ['alias' => 'Brands', 'group' => 'Inventory'],
 
             'role' => ['alias' => 'Role', 'group' => 'Setting'],
             'user' => ['alias' => 'User', 'group' => 'Setting'],

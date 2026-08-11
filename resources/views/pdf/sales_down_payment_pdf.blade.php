@@ -269,7 +269,7 @@
                 <td style="width:75%;"></td>
 
                 <td style="width:25%; text-align:center; vertical-align:top;">
-                    <div class="approval-title">Disetujui,</div>
+                    <div class="approval-title">Hormat Kami,</div>
 
                     <div style="height:70px;"></div>
 
@@ -278,9 +278,10 @@
                 width:80%;
                 margin:0 auto;
                 border-bottom:1px solid #000;
-                height:10px;
+                height:5px;
             ">
                     </div>
+                    {{ $company->approval_name }}
                 </td>
             </tr>
         </table>

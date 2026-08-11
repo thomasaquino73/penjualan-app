@@ -87,8 +87,10 @@ return new class extends Migration
             $table->enum('reference_type', [
                 'sales_order',
                 'sales_invoice',
+                'sales_receipt',
                 'purchase_order',
                 'purchase_invoice',
+                'purchase_payment',
                 'expense',
                 'income',
                 'transfer',

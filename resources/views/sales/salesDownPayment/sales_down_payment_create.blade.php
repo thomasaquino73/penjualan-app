@@ -138,6 +138,10 @@
                                     <span class="error text-danger" id="total_orderError"></span>
                                 </div>
                                 <div class="col-lg-6 col-sm-12 mb-3">
+                                <input type="text" name="total_payment" id="total_payment" class="form-control"
+                                            readonly>
+                                </div>
+                                <div class="col-lg-6 col-sm-12 mb-3">
                                     <label class="form-label">
                                         Down Payment<small class="text-danger">*</small>
                                     </label>
@@ -378,12 +382,17 @@
 
                         let remainingAmount =
                             parseFloat(data.remaining_amount) || 0;
+                        let totalPayment =
+                            parseFloat(data.total_payment) || 0;
 
 
                         // Total Sales Order
                         $('#total_order')
                             .val(formatRupiah(salesOrderAmount))
                             .attr('data-value', salesOrderAmount);
+                        $('#total_payment')
+                            .val(formatRupiah(totalPayment))
+                            .attr('data-value', totalPayment);
 
 
                         // Sisa DP

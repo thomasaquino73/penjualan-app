@@ -244,6 +244,16 @@ class Sidebar extends Component
             ],
             [
                 'type' => 'single',
+                'name' => 'Pembayaran Penjualan',
+                'route' => 'sales-receipts.index',
+                'icon' => 'ti ti-receipt',
+                'pattern' => 'sales-receipts.*',
+                'active' => true,
+                'roles' => ['Super Admin'],
+                'permissions' => ['sales_receipt-browse'],
+            ],
+            [
+                'type' => 'single',
                 'name' => 'Pengiriman',
                 'route' => 'delivery-order.index',
                 'icon' => 'ti ti-truck-delivery',

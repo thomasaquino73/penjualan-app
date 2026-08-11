@@ -44,6 +44,7 @@
         <div class="card-body table-responsive p-3">
             <form action="{{ route('sales-invoice.store') }}" method="POST" id="postForm" enctype="multipart/form-data">
                 @csrf
+                <input type="hidden" id="sales_order_id" name="sales_order_id">
                 <div class="row mb-5">
 
                     <div class="col-md-6 mb-3">
@@ -804,7 +805,8 @@
                                 select.append(`
                         <option 
                             value="${item.id}"
-                            data-amount="${item.amount}">
+                            data-amount="${item.amount}"
+                            data-sales-order="${item.sales_order_id}">
                             ${item.code} - ${item.date} 
                             (Rp ${formatRupiah(item.amount)})
                         </option>
@@ -833,7 +835,7 @@
                 amount = parseFloat(amount) || 0;
 
                 $("#total_dp").val(formatRupiah(amount));
-
+                $("#sales_order_id").val(option.data("sales-order-id") ?? "");
             });
 
 

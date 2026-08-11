@@ -463,9 +463,9 @@ class SalesInvoiceController extends Controller
             $data['tax_id'] = $request->tax_id;
             $data['tax_amount'] = $request->tax_amount;
             $data['total_dp'] = $this->parseNominal($request->total_dp);
-            $data['sisa_pembayaran'] = $this->parseNominal($request->grand_total) - $this->parseNominal($request->total_dp);
+            $data['sisa_pembayaran'] = $this->parseNominal($request->total_order) - $this->parseNominal($request->total_dp);
             $data['payment_type'] = $request->payment_type;
-
+            $data['sales_order_id'] = $request->sales_order_id;
             if ($request->payment_type == 'down_payment') {
                 $data['sales_down_payment_id'] = $request->down_payment_id;
                 $data['proforma_id'] = null;
@@ -935,7 +935,8 @@ class SalesInvoiceController extends Controller
                 | Sales Order Relation
                 |--------------------------------------------------------------------------
                 */
-                'sales_order_id' => $salesOrderId,
+                // 'sales_order_id' => $salesOrderId,
+                'sales_order_id' => $request->sales_order_id,
 
                 'sales_invoice_code' => $request->sales_invoice_code,
 
@@ -1015,9 +1016,7 @@ class SalesInvoiceController extends Controller
                 */
                 'total_dp' => $this->parseNominal($request->total_dp),
 
-                'sisa_pembayaran' => $this->parseNominal($request->total_order)
-                    -
-                    $this->parseNominal($request->total_dp),
+                'sisa_pembayaran' => $this->parseNominal($request->total_order) - $this->parseNominal($request->total_dp),
 
                 'payment_type' => $request->payment_type,
 
@@ -2031,6 +2030,539 @@ class SalesInvoiceController extends Controller
         }
     }
 
+    // public function print($id)
+    // {
+    //     $currentYear = date('Y');
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Ambil Sales Invoice
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $salesInvoice = SalesInvoice::with([
+    //         'salesOrder',
+    //         'customerID',
+    //         'paymentTermID',
+    //         'details.produkID',
+    //         'details.unitID',
+    //     ])->findOrFail($id);
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Company
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $company = Company::first();
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Sales Order
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $salesOrder = $salesInvoice->salesOrder;
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Inisialisasi DP
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $downPayments = collect();
+
+    //     $totalDP = 0;
+
+    //     $remainingDP = 0;
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Ambil semua DP berdasarkan Sales Order
+    //     |--------------------------------------------------------------------------
+    //     |
+    //     | Contoh:
+    //     |
+    //     | SO001
+    //     |  |
+    //     |  |-- DP001 500.000 (SI1)
+    //     |  |
+    //     |  |-- DP002 500.000 (SI2)
+    //     |
+    //     | Saat print SI2 tampil DP001 + DP002
+    //     |
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     if ($salesInvoice->sales_order_id) {
+
+    //         $downPayments = SalesDownPayment::from(
+    //             "sales_down_payments_{$currentYear} as dp"
+    //         )
+    //             ->where(
+    //                 'dp.sales_order_id',
+    //                 $salesInvoice->sales_order_id
+    //             )
+    //             ->where(
+    //                 'dp.id',
+    //                 $salesInvoice->sales_down_payment_id
+    //             )
+    //             ->where(
+    //                 'dp.customer_id',
+    //                 $salesInvoice->customer_id
+    //             )
+    //             ->where(
+    //                 'dp.active',
+    //                 1
+    //             )
+    //             ->whereNotIn(
+    //                 'dp.status',
+    //                 [
+    //                     'cancelled',
+    //                     'closed',
+    //                 ]
+    //             )
+    //             ->orderBy(
+    //                 'dp.id',
+    //                 'asc'
+    //             )
+    //             ->get();
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Total semua DP
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         $totalDP = $downPayments->sum(function ($dp) {
+
+    //             return (float) $dp->down_payment_amount;
+
+    //         });
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Total sisa DP
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         $remainingDP = $downPayments->sum(function ($dp) {
+
+    //             return (float) $dp->remaining_amount;
+
+    //         });
+
+    //     }
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Total pembayaran invoice
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $totalInvoicePaid = $totalDP;
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Sisa invoice
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $remainingInvoice = max(
+    //         0,
+    //         (float) $salesInvoice->grand_total -
+    //         $totalInvoicePaid
+    //     );
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Status pembayaran
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $paymentStatus = 'Unpaid';
+
+    //     if ($totalInvoicePaid >= (float) $salesInvoice->grand_total) {
+
+    //         $paymentStatus = 'Paid';
+
+    //     } elseif ($totalInvoicePaid > 0) {
+
+    //         $paymentStatus = 'Partial';
+
+    //     }
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Persentase pembayaran
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $paymentPercent = 0;
+
+    //     if ((float) $salesInvoice->grand_total > 0) {
+
+    //         $paymentPercent =
+    //             ($totalInvoicePaid /
+    //             (float) $salesInvoice->grand_total) * 100;
+
+    //     }
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Data PDF
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $data = [
+
+    //         'model' => $salesInvoice,
+
+    //         'company' => $company,
+
+    //         'salesOrder' => $salesOrder,
+
+    //         'modelDetail' => $salesInvoice->details,
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Semua Down Payment
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         'downPayments' => $downPayments,
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Total DP
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         'totalDP' => $totalDP,
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Sisa DP
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         'remainingDP' => $remainingDP,
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | History pembayaran
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         'paymentHistories' => $downPayments,
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Total pembayaran
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         'totalInvoicePaid' => $totalInvoicePaid,
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Sisa invoice
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         'remainingInvoice' => $remainingInvoice,
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Status
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         'paymentStatus' => $paymentStatus,
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Persentase
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         'paymentPercent' => $paymentPercent,
+
+    //     ];
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Filename
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $filename = str_replace(
+    //         ['/', '\\'],
+    //         '-',
+    //         $salesInvoice->sales_invoice_code
+    //     );
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Generate PDF
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     return Pdf::loadView(
+    //         'pdf.sales_invoice_pdf',
+    //         $data
+    //     )
+    //         ->setPaper(
+    //             'a4',
+    //             'portrait'
+    //         )
+    //         ->stream(
+    //             $filename.'.pdf'
+    //         );
+    // }
+
+    // public function print($id)
+    // {
+    //     $currentYear = date('Y');
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Ambil Sales Invoice
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $salesInvoice = SalesInvoice::with([
+    //         'salesOrder',
+    //         'customerID',
+    //         'paymentTermID',
+    //         'details.produkID',
+    //         'details.unitID',
+    //     ])->findOrFail($id);
+
+    //     $company = Company::first();
+    //     $salesOrder = $salesInvoice->salesOrder;
+    //     $downPayments = collect();
+    //     $totalDP = 0;
+    //     $totalDPPaid = 0;
+    //     $remainingDP = 0;
+
+    //     if ($salesInvoice->sales_order_id) {
+    //         $downPayments = SalesDownPayment::from(
+    //             "sales_down_payments_{$currentYear} as dp"
+    //         )
+    //             ->where(
+    //                 'dp.sales_order_id',
+    //                 $salesInvoice->sales_order_id
+    //             )
+    //             ->where(
+    //                 'dp.customer_id',
+    //                 $salesInvoice->customer_id
+    //             )
+    //             ->where(
+    //                 'dp.active',
+    //                 1
+    //             )
+    //             ->whereNotIn(
+    //                 'dp.status',
+    //                 [
+    //                     'cancelled',
+    //                     'closed',
+    //                 ]
+    //             )
+    //             ->orderBy(
+    //                 'dp.id',
+    //                 'asc'
+    //             )
+    //             ->get();
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Total DP dibuat
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         $totalDP = $downPayments->sum(function ($dp) {
+
+    //             return (float) $dp->down_payment_amount;
+
+    //         });
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Total DP sudah dibayar
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         $totalDPPaid = $downPayments->sum(function ($dp) {
+
+    //             return (float) $dp->paid_amount;
+
+    //         });
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Sisa DP
+    //         |--------------------------------------------------------------------------
+    //         |
+    //         | Total DP - DP sudah dibayar
+    //         |
+    //         */
+    //         $remainingDP = max(
+    //             0,
+    //             $totalDP - $totalDPPaid
+    //         );
+
+    //     }
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Pembayaran Invoice langsung
+    //     |--------------------------------------------------------------------------
+    //     |
+    //     | Tidak termasuk DP
+    //     |
+    //     */
+    //     $invoicePaidAmount = (float) $salesInvoice->paid_amount;
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Total Invoice
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $invoiceTotal = (float) $salesInvoice->grand_total;
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Total pembayaran invoice
+    //     |--------------------------------------------------------------------------
+    //     |
+    //     | Jangan tambah DP lagi
+    //     |
+    //     | Karena DP adalah transaksi terpisah
+    //     |
+    //     */
+    //     $totalInvoicePaid = $invoicePaidAmount;
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Sisa Invoice
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $remainingInvoice = max(
+    //         0,
+    //         $invoiceTotal - $totalInvoicePaid
+    //     );
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Total Pembayaran Customer
+    //     |--------------------------------------------------------------------------
+    //     |
+    //     | Untuk tampilan histori:
+    //     |
+    //     | DP Paid + Invoice Paid
+    //     |
+    //     */
+    //     $totalCustomerPayment =
+    //         $totalDPPaid +
+    //         $invoicePaidAmount;
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Status Pembayaran Invoice
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     if ($totalInvoicePaid >= $invoiceTotal) {
+
+    //         $paymentStatus = 'Paid';
+
+    //     } elseif ($totalInvoicePaid > 0) {
+
+    //         $paymentStatus = 'Partial';
+
+    //     } else {
+
+    //         $paymentStatus = 'Unpaid';
+
+    //     }
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Persentase Pembayaran Invoice
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $paymentPercent = 0;
+
+    //     if ($invoiceTotal > 0) {
+
+    //         $paymentPercent =
+    //             round(
+    //                 ($totalInvoicePaid / $invoiceTotal) * 100,
+    //                 2
+    //             );
+
+    //     }
+
+    //     $data = [
+
+    //         /*
+    //         | Invoice
+    //         */
+    //         'model' => $salesInvoice,
+
+    //         /*
+    //         | Company
+    //         */
+    //         'company' => $company,
+
+    //         /*
+    //         | Sales Order
+    //         */
+    //         'salesOrder' => $salesOrder,
+
+    //         /*
+    //         | Detail Produk
+    //         */
+    //         'modelDetail' => $salesInvoice->details,
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Down Payment
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         'downPayments' => $downPayments,
+
+    //         'totalDP' => $totalDP,
+
+    //         'totalDPPaid' => $totalDPPaid,
+
+    //         'remainingDP' => $remainingDP,
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Payment
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         'paymentHistories' => $downPayments,
+
+    //         'invoicePaidAmount' => $invoicePaidAmount,
+
+    //         'totalInvoicePaid' => $totalInvoicePaid,
+
+    //         'totalCustomerPayment' => $totalCustomerPayment,
+
+    //         'remainingInvoice' => $remainingInvoice,
+
+    //         /*
+    //         |--------------------------------------------------------------------------
+    //         | Status
+    //         |--------------------------------------------------------------------------
+    //         */
+    //         'paymentStatus' => $paymentStatus,
+
+    //         'paymentPercent' => $paymentPercent,
+
+    //     ];
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Filename
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $filename = str_replace(
+    //         ['/', '\\'],
+    //         '-',
+    //         $salesInvoice->sales_invoice_code
+    //     );
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | Generate PDF
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $customerName = $salesInvoice->customerID?->nama_customer
+    //     ?? $salesInvoice->salesOrder?->customerID?->nama_customer
+    //     ?? 'Customer';
+
+    //     return Pdf::loadView('pdf.sales_invoice_pdf', $data)
+    //         ->setPaper('a4', 'portrait')
+    //         ->stream($filename . ' - ' . $customerName . '.pdf');
+    // }
     public function print($id)
     {
         $currentYear = date('Y');
@@ -2048,68 +2580,107 @@ class SalesInvoiceController extends Controller
             'details.unitID',
         ])->findOrFail($id);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Company
-        |--------------------------------------------------------------------------
-        */
         $company = Company::first();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Sales Order
-        |--------------------------------------------------------------------------
-        */
         $salesOrder = $salesInvoice->salesOrder;
-
-        /*
-        |--------------------------------------------------------------------------
-        | Inisialisasi
-        |--------------------------------------------------------------------------
-        */
         $downPayments = collect();
-
         $totalDP = 0;
-
+        $totalDPPaid = 0;
         $remainingDP = 0;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Ambil Down Payment berdasarkan Sales Order
-        |--------------------------------------------------------------------------
-        */
         if ($salesInvoice->sales_order_id) {
-
             $downPayments = SalesDownPayment::from(
-                "sales_down_payments_{$currentYear}"
+                "sales_down_payments_{$currentYear} as dp"
             )
-                ->where('sales_order_id', $salesInvoice->sales_order_id)
-                ->where('customer_id', $salesInvoice->customer_id)
-                ->where('active', 1)
-                ->where('status', '!=', 'cancelled')
-                ->orderBy('sales_downpayment_date', 'asc')
+                ->where(
+                    'dp.sales_order_id',
+                    $salesInvoice->sales_order_id
+                )
+                ->where(
+                    'dp.customer_id',
+                    $salesInvoice->customer_id
+                )
+                ->where(
+                    'dp.active',
+                    1
+                )
+                ->whereNotIn(
+                    'dp.status',
+                    [
+                        'cancelled',
+                        'closed',
+                    ]
+                )
+                ->orderBy(
+                    'dp.id',
+                    'asc'
+                )
                 ->get();
 
             /*
             |--------------------------------------------------------------------------
-            | Total DP
+            | Total DP dibuat
             |--------------------------------------------------------------------------
-            |
-            | Gunakan down_payment_amount karena ini nominal DP
-            | yang ditetapkan untuk Sales Order.
-            |
             */
             $totalDP = $downPayments->sum(function ($dp) {
-                return (float) ($dp->down_payment_amount ?? 0);
+
+                return (float) $dp->down_payment_amount;
+
             });
+
+            /*
+            |--------------------------------------------------------------------------
+            | Total DP sudah dibayar
+            |--------------------------------------------------------------------------
+            */
+            $totalDPPaid = $downPayments->sum(function ($dp) {
+
+                return (float) $dp->paid_amount;
+
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | Sisa DP
+            |--------------------------------------------------------------------------
+            |
+            | Total DP - DP sudah dibayar
+            |
+            */
+            $remainingDP = max(
+                0,
+                $totalDP - $totalDPPaid
+            );
+
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Total pembayaran yang diperhitungkan terhadap invoice
+        | Pembayaran Invoice langsung
+        |--------------------------------------------------------------------------
+        |
+        | Tidak termasuk DP
+        |
+        */
+        $invoicePaidAmount = (float) $salesInvoice->paid_amount;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Total Invoice
         |--------------------------------------------------------------------------
         */
-        $totalInvoicePaid = $totalDP;
+        $invoiceTotal = (float) $salesInvoice->grand_total;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Total pembayaran invoice
+        |--------------------------------------------------------------------------
+        |
+        | Jangan tambah DP lagi
+        |
+        | Karena DP adalah transaksi terpisah
+        |
+        */
+        $totalInvoicePaid = $invoicePaidAmount;
 
         /*
         |--------------------------------------------------------------------------
@@ -2118,135 +2689,118 @@ class SalesInvoiceController extends Controller
         */
         $remainingInvoice = max(
             0,
-            (float) $salesInvoice->grand_total
-            - $totalInvoicePaid
+            $invoiceTotal - $totalInvoicePaid
         );
 
         /*
         |--------------------------------------------------------------------------
-        | Status pembayaran
+        | Total Pembayaran Customer
+        |--------------------------------------------------------------------------
+        |
+        | Untuk tampilan histori:
+        |
+        | DP Paid + Invoice Paid
+        |
+        */
+        $totalCustomerPayment =
+            $totalDPPaid +
+            $invoicePaidAmount;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Pembayaran Invoice
         |--------------------------------------------------------------------------
         */
-        $paymentStatus = 'Unpaid';
-
-        if ($totalInvoicePaid >= (float) $salesInvoice->grand_total) {
+        if ($totalInvoicePaid >= $invoiceTotal) {
 
             $paymentStatus = 'Paid';
 
         } elseif ($totalInvoicePaid > 0) {
 
             $paymentStatus = 'Partial';
+
+        } else {
+
+            $paymentStatus = 'Unpaid';
+
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Persentase pembayaran
+        | Persentase Pembayaran Invoice
         |--------------------------------------------------------------------------
         */
         $paymentPercent = 0;
 
-        if ((float) $salesInvoice->grand_total > 0) {
+        if ($invoiceTotal > 0) {
 
-            $paymentPercent = (
-                $totalInvoicePaid
-                / (float) $salesInvoice->grand_total
-            ) * 100;
+            $paymentPercent =
+                round(
+                    ($totalInvoicePaid / $invoiceTotal) * 100,
+                    2
+                );
+
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Data PDF
-        |--------------------------------------------------------------------------
-        */
         $data = [
 
             /*
-            |--------------------------------------------------------------------------
-            | Sales Invoice
-            |--------------------------------------------------------------------------
+            | Invoice
             */
             'model' => $salesInvoice,
 
             /*
-            |--------------------------------------------------------------------------
             | Company
-            |--------------------------------------------------------------------------
             */
             'company' => $company,
 
             /*
-            |--------------------------------------------------------------------------
             | Sales Order
-            |--------------------------------------------------------------------------
             */
             'salesOrder' => $salesOrder,
 
             /*
-            |--------------------------------------------------------------------------
-            | Invoice Details
-            |--------------------------------------------------------------------------
+            | Detail Produk
             */
             'modelDetail' => $salesInvoice->details,
 
             /*
             |--------------------------------------------------------------------------
-            | Sales Down Payments
+            | Down Payment
             |--------------------------------------------------------------------------
             */
             'downPayments' => $downPayments,
 
-            /*
-            |--------------------------------------------------------------------------
-            | Total DP Dibayar
-            |--------------------------------------------------------------------------
-            */
             'totalDP' => $totalDP,
 
-            /*
-            |--------------------------------------------------------------------------
-            | Sisa DP
-            |--------------------------------------------------------------------------
-            */
+            'totalDPPaid' => $totalDPPaid,
+
             'remainingDP' => $remainingDP,
 
             /*
             |--------------------------------------------------------------------------
-            | Payment Histories
+            | Payment
             |--------------------------------------------------------------------------
-            |
-            | Untuk Blade kita gunakan $paymentHistories.
-            | Isinya adalah Sales Down Payment.
-            |
             */
             'paymentHistories' => $downPayments,
 
-            /*
-            |--------------------------------------------------------------------------
-            | Total Invoice Paid
-            |--------------------------------------------------------------------------
-            */
+            'invoicePaidAmount' => $invoicePaidAmount,
+
             'totalInvoicePaid' => $totalInvoicePaid,
 
-            /*
-            |--------------------------------------------------------------------------
-            | Remaining Invoice
-            |--------------------------------------------------------------------------
-            */
+            'totalCustomerPayment' => $totalCustomerPayment,
+
             'remainingInvoice' => $remainingInvoice,
 
             /*
             |--------------------------------------------------------------------------
-            | Payment Status
+            | Status
             |--------------------------------------------------------------------------
             */
             'paymentStatus' => $paymentStatus,
 
-            /*
-            |--------------------------------------------------------------------------
-            | Payment Percentage
-            |--------------------------------------------------------------------------
-            */
             'paymentPercent' => $paymentPercent,
+
         ];
 
         /*
@@ -2265,12 +2819,13 @@ class SalesInvoiceController extends Controller
         | Generate PDF
         |--------------------------------------------------------------------------
         */
-        return Pdf::loadView(
-            'pdf.sales_invoice_pdf',
-            $data
-        )
+        $customerName = $salesInvoice->customerID?->nama_customer
+        ?? $salesInvoice->salesOrder?->customerID?->nama_customer
+        ?? 'Customer';
+
+        return Pdf::loadView('pdf.sales_invoice_pdf', $data)
             ->setPaper('a4', 'portrait')
-            ->stream($filename.'.pdf');
+            ->stream($filename.' - '.$customerName.'.pdf');
     }
 
     public function getPriceHistory(Request $request)
@@ -2569,6 +3124,7 @@ class SalesInvoiceController extends Controller
                     ->whereNotIn('p.status', ['draft', 'cancelled', 'closed'])
                     ->select(
                         'p.id',
+                        'p.sales_order_id',
                         'p.proforma_invoice_code as code',
                         'p.proforma_invoice_date as date',
                         'p.grand_total as amount'
@@ -2580,10 +3136,11 @@ class SalesInvoiceController extends Controller
                 $data = SalesDownPayment::from("sales_down_payments_$year as dp")
                     ->where('dp.customer_id', $customerId)
                     ->where('dp.active', 1)
-        // ->where('dp.remaining_amount', '>', 0)
+                    ->where('dp.remaining_amount', '>', 0)
                     ->whereNotIn('dp.status', ['cancelled', 'closed'])
                     ->select(
                         'dp.id',
+                        'dp.sales_order_id',
                         'dp.sales_downpayment_code as code',
                         'dp.sales_downpayment_date as date',
                         'dp.down_payment_amount as amount'

@@ -33,6 +33,7 @@ use App\Http\Controllers\Sales\SalesDownPaymentController;
 use App\Http\Controllers\Sales\SalesInvoiceController;
 use App\Http\Controllers\Sales\SalesOrderController;
 use App\Http\Controllers\Sales\SalesQuotationController;
+use App\Http\Controllers\Sales\SalesReceiptController;
 use App\Http\Controllers\Setting\BankListController;
 use App\Http\Controllers\Setting\Company\FobController;
 use App\Http\Controllers\Setting\Company\ShippingController;
@@ -441,6 +442,9 @@ Route::middleware('auth')->group(function () {
     Route::get('purchase-reports/print-hutang', [PurchaseReportController::class, 'printHutang'])->name('purchase-reports.print_hutang');
     Route::get('sales-reports', [SalesReportController::class, 'index'])->name('sales-reports.index');
     Route::get('sales-reports/print-piutang', [SalesReportController::class, 'printPiutang'])->name('sales-reports.print_piutang');
+
+    Route::get('sales-receipts', [SalesReceiptController::class, 'index'])->name('sales-receipts.index');
+
 });
 
 Route::fallback(function () {

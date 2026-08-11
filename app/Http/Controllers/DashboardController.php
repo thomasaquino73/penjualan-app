@@ -27,6 +27,7 @@ class DashboardController extends Controller
 
         // Minimum stock
         $minStock = $this->getMinimumStock();
+        $getMostBuyers = $this->getMostBuyers();
 
         // Produk transaksi terbanyak
         $transaksiTerbanyak = $this->getTransaksiTerbanyak();
@@ -53,6 +54,7 @@ class DashboardController extends Controller
 
             // Stock
             'minStock' => $minStock,
+            'mostBuyers' => $getMostBuyers,
 
             // Transaksi
             'transaksiTerbanyak' => $transaksiTerbanyak,
@@ -109,7 +111,7 @@ class DashboardController extends Controller
         return Barang::query()
             ->join('stock_mutations', 'data_barang.id', '=', 'stock_mutations.data_barang_id')
             ->where('data_barang.status', 2)
-            ->whereMonth('stock_mutations.date_stock', $currentMonth)
+            // ->whereMonth('stock_mutations.date_stock', $currentMonth)
             ->whereYear('stock_mutations.date_stock', $currentYear)
             ->select(
                 'data_barang.id',
@@ -321,5 +323,26 @@ class DashboardController extends Controller
             'totalSales' => number_format($totalSales, 0, ',', '.'),
             'year' => $year,
         ]);
+    }
+
+    private function getMostBuyers()
+    {
+        $year = date('Y');
+        $table = "sales_order_{$year}";
+
+        return DB::table($table)
+            ->join('customer', "{$table}.customer_id", '=', 'customer.id')
+            ->select(
+                'customer.nama_customer as customer_name',
+                DB::raw("COUNT({$table}.id) as total_invoice"),
+                DB::raw("SUM({$table}.grand_total) as total_amount")
+            )
+            ->whereNotNull("{$table}.customer_id")
+            ->whereMonth("{$table}.sales_order_date", now()->month)
+            ->whereYear("{$table}.sales_order_date", now()->year)
+            ->groupBy('customer.id', 'customer.nama_customer')
+            ->orderByDesc('total_amount')
+            ->limit(5)
+            ->get();
     }
 }

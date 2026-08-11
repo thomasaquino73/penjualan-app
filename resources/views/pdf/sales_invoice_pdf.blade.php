@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Sales Invoice - {{ $model->sales_invoice_code }}</title>
+    <title>Sales Invoice - {{ $model->sales_invoice_code }} [{{ $model->customerID->nama_customer }}]</title>
     @include('pdf.partials.css')
 </head>
 

@@ -141,6 +141,7 @@
                                     </div>
                                     <span class="error text-danger" id="total_orderError"></span>
                                 </div>
+
                                 <div class="col-lg-6 col-sm-12 mb-3">
                                     <label class="form-label">
                                         Down Payment<small class="text-danger">*</small>

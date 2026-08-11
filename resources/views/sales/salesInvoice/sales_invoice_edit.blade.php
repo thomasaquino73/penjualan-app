@@ -39,6 +39,8 @@
                 enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
+                <input type="hidden" id="sales_order_id" name="sales_order_id">
+
                 <div class="row mb-5">
 
                     <div class="col-md-6 mb-3">
@@ -221,8 +223,46 @@
 @include('sales.salesInvoice.part.js')
 @push('scripts')
     @push('scripts')
-
         <script>
+            const paymentType = @json($model->payment_type);
+            const proformaId = @json($model->proforma_id);
+            const downPaymentId = @json($model->sales_down_payment_id);
+            const totalDP = @json($model->total_dp);
+        </script>
+        <script>
+            $(function() {
+
+                if (totalDP) {
+                    $("#total_dp").val(formatRupiah(totalDP));
+                }
+
+                if (paymentType) {
+
+                    $("input[name='payment_type'][value='" + paymentType + "']")
+                        .prop("checked", true);
+
+                    if (paymentType == "proforma") {
+
+                        $("#proforma_id").prop("disabled", false);
+                        $("#down_payment_id").prop("disabled", true);
+
+                        loadReference(proformaId);
+
+                    } else if (paymentType == "down_payment") {
+
+                        $("#proforma_id").prop("disabled", true);
+                        $("#down_payment_id").prop("disabled", false);
+
+                        loadReference(downPaymentId);
+
+                    } else {
+
+                        $("#proforma_id,#down_payment_id").prop("disabled", true);
+
+                    }
+                }
+
+            });
             $(function() {
                 const datePicker = flatpickr("#sales_invoice_date", {
                     enableTime: false,
@@ -438,6 +478,50 @@
                     $("#checkAll").prop("checked", false);
                 }
             });
+
+
+            function loadReference(selectedId = null) {
+
+                let customerId = $("#customer_id").val();
+                let type = $("input[name='payment_type']:checked").val();
+
+                if (!customerId || !type) return;
+
+                $.ajax({
+                    url: `/sales-invoice/get-reference/${customerId}/${type}`,
+                    type: "GET",
+                    dataType: "json",
+                    success: function(response) {
+
+                        let select = type === "proforma" ?
+                            $("#proforma_id") :
+                            $("#down_payment_id");
+
+                        select.empty().append('<option value=""></option>');
+
+                        $.each(response, function(i, item) {
+
+                            let option = new Option(
+                                `${item.code} - ${item.date} (Rp ${formatRupiah(item.amount)})`,
+                                item.id,
+                                false,
+                                false
+                            );
+
+                            $(option).attr("data-amount", item.amount).attr("data-sales-order-id", item
+                                .sales_order_id);;
+
+                            select.append(option);
+                        });
+
+                        if (selectedId) {
+                            select.val(String(selectedId)).trigger("change");
+                        } else {
+                            select.val("").trigger("change");
+                        }
+                    }
+                });
+            }
 
 
             $(document).ready(function() {
@@ -793,11 +877,30 @@
                     // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
                     table.rows().invalidate();
 
-                    console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
                 });
 
-                $('#customer_id').on('change', function() {
+                if (paymentType) {
 
+                    $("input[name='payment_type'][value='" + paymentType + "']")
+                        .prop("checked", true);
+
+                    if (paymentType === "proforma") {
+
+                        $("#proforma_id").prop("disabled", false);
+                        $("#down_payment_id").prop("disabled", true);
+
+                        loadReference(proformaId);
+
+                    } else if (paymentType === "down_payment") {
+
+                        $("#proforma_id").prop("disabled", true);
+                        $("#down_payment_id").prop("disabled", false);
+
+                        loadReference(downPaymentId);
+
+                    }
+                }
+                $('#customer_id').on('change', function() {
                     let customerId = $(this).val();
                     let contactDropdown = $('#customer_contact_id');
 
@@ -811,6 +914,10 @@
                         return;
                     }
 
+
+                    // AMBIL NILAI VARIABEL YANG SEBELUMNYA UNDEFINED
+
+
                     $.ajax({
                         url: '/sales-invoice/' + customerId + '/data',
                         type: 'GET',
@@ -820,143 +927,111 @@
                             // ======================
                             // Kontak
                             // ======================
-
                             contactDropdown.empty();
                             contactDropdown.append('<option value="">Pilih Kontak</option>');
 
                             $.each(data.kontak, function(key, value) {
-
                                 contactDropdown.append(
                                     `<option value="${value.id}">
                         ${value.sapaan} ${value.contact_person}
                         (${value.posisi_jabatan})
                     </option>`
                                 );
-
                             });
+
+                            // Refresh Select2 untuk kontak jika pakai Select2
+                            contactDropdown.trigger('change.select2');
 
                             // ======================
                             // Pajak
                             // ======================
-
                             if (data.pajak) {
-                                $('#taxpayer_data').val(data.pajak.tipe_id_pajak + ' :' + data
-                                    .pajak.nomor_wajib_pajak);
+                                $('#taxpayer_data').val(data.pajak.tipe_id_pajak + ' :' + data.pajak
+                                    .nomor_wajib_pajak);
                             } else {
                                 $('#taxpayer_data').val('');
                             }
 
                             $('#address').val(data.address ?? '');
-                            loadReference();
 
+                            // Panggil loadReference berdasarkan paymentType yang aktif
+                            if (paymentType === "proforma") {
+                                loadReference(proformaId);
+                            } else if (paymentType === "down_payment") {
+                                loadReference(downPaymentId);
+                            } else {
+                                loadReference();
+                            }
                         }
                     });
-
                 });
 
-                function loadReference() {
+                // $("#proforma_id, #down_payment_id").on("change", function() {
+                //     let amount = $(this)
+                //         .find(":selected")
+                //         .attr("data-amount");
+                //     amount = parseFloat(amount) || 0;
+                //     $("#total_dp").val(formatRupiah(amount));
 
-                    let customerId = $("#customer_id").val();
-                    let type = $("input[name='payment_type']:checked").val();
-
-                    if (!customerId || !type) return;
-
-                    $.ajax({
-                        url: `/sales-invoice/get-reference/${customerId}/${type}`,
-                        type: "GET",
-                        dataType: "json",
-                        success: function(response) {
-
-                            let select = (type === 'proforma') ?
-                                $("#proforma_id") :
-                                $("#down_payment_id");
-
-                            select.empty().append('<option value="">Pilih Referensi</option>');
-
-                            if (response.length > 0) {
-
-                                $.each(response, function(i, item) {
-
-                                    select.append(`
-                        <option 
-                            value="${item.id}"
-                            data-amount="${item.amount}">
-                            ${item.code} - ${item.date} 
-                            (Rp ${formatRupiah(item.amount)})
-                        </option>
-                    `);
-
-                                });
-
-                            }
-
-                            $("#total_dp").val("");
-
-                        },
-                        error: function(xhr) {
-                            console.log(xhr.responseText);
-                        }
-                    });
-                }
-
+                // });
 
                 $("#proforma_id, #down_payment_id").on("change", function() {
 
-                    let amount = $(this)
-                        .find(":selected")
-                        .attr("data-amount");
+                    let selected = $(this).find(":selected");
 
-                    amount = parseFloat(amount) || 0;
+                    let amount = parseFloat(selected.data("amount")) || 0;
 
-                    $("#total_dp").val(formatRupiah(amount));
+                    $("#total_dp").val(amount.toFixed(0)); // hasil: 499500
+                    $("#sales_order_id").val(selected.data("sales-order-id") || "");
 
                 });
 
-
-
-                function toggleSelect() {
+                function toggleSelect(selected = false) {
 
                     let type = $("input[name='payment_type']:checked").val();
 
                     if (type === "proforma") {
 
                         $("#proforma_id").prop("disabled", false);
-                        $("#down_payment_id")
-                            .prop("disabled", true)
-                            .val(null)
-                            .trigger("change");
+                        $("#down_payment_id").prop("disabled", true);
 
-                        loadReference();
+                        if (!selected) {
+                            $("#down_payment_id").val(null).trigger("change");
+                        }
+
+                        loadReference(selected ? proformaId : null);
 
                     } else if (type === "down_payment") {
 
-                        $("#proforma_id")
-                            .prop("disabled", true)
-                            .val(null)
-                            .trigger("change");
+                        $("#proforma_id").prop("disabled", true);
+
+                        if (!selected) {
+                            $("#proforma_id").val(null).trigger("change");
+                        }
 
                         $("#down_payment_id").prop("disabled", false);
 
-                        loadReference();
+                        loadReference(selected ? downPaymentId : null);
 
-                    } else if (type === "no_down_payment") {
+                    } else {
 
-                        $("#proforma_id")
-                            .prop("disabled", true)
-                            .val(null)
-                            .trigger("change");
+                        $("#proforma_id,#down_payment_id")
+                            .prop("disabled", true);
 
-                        $("#down_payment_id")
-                            .prop("disabled", true)
-                            .val(null)
-                            .trigger("change");
+                        if (!selected) {
+                            $("#proforma_id,#down_payment_id")
+                                .val(null)
+                                .trigger("change");
+                        }
+
+                        $("#total_dp").val("");
                     }
                 }
+                toggleSelect(true);
                 $(document).on("change", "input[name='payment_type']", function() {
-                    toggleSelect();
+                    toggleSelect(false);
                 });
 
-                toggleSelect();
 
                 $(document).on("change", "#product_id", function() {
                     let productId = $(this).val();

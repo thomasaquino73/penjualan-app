@@ -67,7 +67,7 @@
     </div>
 
     <div class="row">
-        <div class="col-sm-12 col-xl-4 mb-4">
+        <div class="col-sm-12 col-xl-5 mb-4">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between">
                     <div class="card-title m-0 me-2">
@@ -121,7 +121,7 @@
             </div>
 
         </div>
-        <div class="col-sm-12 col-xl-8 mb-4">
+        <div class="col-sm-12 col-xl-7 mb-4">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between">
                     <div class="card-title m-0 me-2">
@@ -241,6 +241,62 @@
 
                         </div>
                     @endif
+
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <div class="card-title m-0 me-2">
+                        <h5 class="m-0 me-2">Most Buyers</h5>
+                        <small class="text-muted">
+                            {{ now()->translatedFormat('F Y') }}
+                        </small>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="btn p-0" type="button" data-bs-toggle="dropdown">
+                            <i class="ti ti-dots-vertical ti-sm text-muted"></i>
+                        </button>
+
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <a class="dropdown-item" href="{{ route('sales-order.index') }}">
+                                View All
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+
+                    @forelse($mostBuyers as $buyer)
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+
+                            <div>
+                                <h6 class="mb-0">
+                                    {{ $buyer->customer_name }}
+                                </h6>
+
+                                <small class="text-muted">
+                                    {{ $buyer->total_invoice }} Orders
+                                </small>
+                            </div>
+
+                            <div class="text-end">
+                                <span class="fw-semibold">
+                                    Rp {{ number_format($buyer->total_amount, 0, ',', '.') }}
+                                </span>
+                            </div>
+
+                        </div>
+
+                    @empty
+
+                        <p class="text-muted text-center">
+                            Belum ada transaksi
+                        </p>
+                    @endforelse
 
                 </div>
             </div>
