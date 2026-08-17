@@ -20,7 +20,7 @@ class CashBankRequest extends FormRequest
         $id = $this->input('id');
 
         return [
-            'account_name' => [
+            'account_cashbank' => [
                 'required',
                 Rule::unique('cash_banks', 'account_name')->ignore($id),
             ],
@@ -31,7 +31,7 @@ class CashBankRequest extends FormRequest
     public function message(): array
     {
         return [
-            'account_name.required' => 'Account Name is required',
+            'account_cashbank.required' => 'Account Name is required',
         ];
     }
 }

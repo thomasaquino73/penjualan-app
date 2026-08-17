@@ -23,8 +23,8 @@
                     <input type="hidden" name="id" id="idCashBank">
                     <div class="row">
                         <div class="col-12 mb-3">
-                            <label for="account_name" class="form-label">Account Name<small>*</small></label>
-                            <input type="text" id="account_name" name="account_name" class="form-control"
+                            <label for="account_cashbank" class="form-label">Account Name<small>*</small></label>
+                            <input type="text" id="account_cashbank" name="account_cashbank" class="form-control"
                                 placeholder="Enter Account Name">
                             <span class="error text-danger" id="account_nameError"></span>
 
@@ -76,7 +76,7 @@
                         data: 'account_name',
                     },
                     {
-                        data: 'opening_balance',
+                        data: 'openingBalance',
                     },
                     {
                         data: 'created_at',
@@ -145,11 +145,10 @@
 
                                         // 4. Isi field form modal sesuai dengan property object data dari database
                                         $('#idCashBank').val(data.id);
-                                        $('#account_name').val(data.account_name);
-                                        $('#account_name').val(data.account_name);
-                                        $('#account_number').val(data
-                                            .account_number);
-
+                                        $('#account_cashbank').val(data
+                                            .account_name);
+                                        $('#opening_balance').val(data
+                                            .opening_balance);
 
                                     },
                                     error: function() {

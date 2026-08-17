@@ -25,6 +25,10 @@ class CashBankController extends Controller
                         ' <br><small class="text-muted"> '.$row->created_at->diffForHumans().'</small>'
                         : 'N/A';
                 })
+                ->addColumn('openingBalance', function ($row) {
+                    $selectedCurrencyId = session('currency_id', 1); 
+                    return format_uang(convert_currency($row->opening_balance, $selectedCurrencyId));
+                })
                 ->addColumn('updated_at', function ($row) {
                     if ($row->updated_at) {
                         $updaterName = $row->updater->fullname ?? 'Unknown';
@@ -36,7 +40,7 @@ class CashBankController extends Controller
 
                     return 'N/A';
                 })
-                ->rawColumns(['created_at', 'updated_at'])
+                ->rawColumns(['created_at', 'updated_at','openingBalance'])
                 ->make(true);
         }
 
@@ -48,13 +52,15 @@ class CashBankController extends Controller
 
         try {
 
-            $data = $r->validated();
+            $data = $r->except('account_cashbank','_token');
 
             if (! empty($id)) {
 
                 // ✅ UPDATE
                 $data['updated_at'] = now();
                 $data['updated_by'] = Auth::id();
+                $data['account_name'] = $r->account_cashbank;
+                $data['opening_balance'] = $r->opening_balance;
 
                 CashBank::where('id', $id)
                     ->update($data);
@@ -69,6 +75,8 @@ class CashBankController extends Controller
                 // ✅ CREATE
                 $data['created_at'] = now();
                 $data['created_by'] = Auth::id();
+                $data['account_name'] = $r->account_cashbank;
+                $data['opening_balance'] = $r->opening_balance;
 
                 CashBank::create($data);
 
@@ -84,6 +92,17 @@ class CashBankController extends Controller
                 'error' => 'Error: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+        public function edit($id)
+    {
+        $data = CashBank::find($id);
+
+        if (! $data) {
+            return response()->json(['message' => 'Data tidak ditemukan'], 404);
+        }
+
+        return response()->json($data);
     }
 
 }
