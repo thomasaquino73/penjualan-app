@@ -71,7 +71,7 @@ class BankListController extends Controller
                 $data['updated_at'] = now();
                 $data['updated_by'] = Auth::id();
 
-                DB::table('bank_account')
+                DB::table('bank_list')
                     ->where('id', $id)
                     ->update($data);
 

@@ -173,7 +173,7 @@
                                 if (!selectedData) return;
 
                                 var id = selectedData.id;
-                                var name = selectedData.name;
+                                var name = selectedData.account_name;
                                 let token = $("meta[name='csrf-token']").attr("content");
 
                                 // 2. Jalankan SweetAlert Konfirmasi
@@ -192,7 +192,7 @@
                                 }).then(function(result) {
                                     if (result.isConfirmed) {
                                         $.ajax({
-                                            url: `/bank-list/${id}`,
+                                            url: `/cash-bank/${id}`,
                                             type: "DELETE",
                                             data: {
                                                 _token: token
