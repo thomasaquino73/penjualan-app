@@ -23,7 +23,7 @@
                 <li class="nav-item" role="presentation">
                     <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab"
                         data-bs-target="#navs-pills-top-bank" aria-controls="navs-pills-top-bank" aria-selected="true">
-                        Bank List
+                        Company Bank List
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -47,6 +47,13 @@
                         Company Delivery Address
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
+                        data-bs-target="#navs-pills-top-cash" aria-controls="navs-pills-top-cash" aria-selected="false"
+                        tabindex="-1">
+                        Cash & Bank
+                    </button>
+                </li>
             </ul>
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="navs-pills-top-bank" role="tabpanel">
@@ -60,6 +67,9 @@
                 </div>
                 <div class="tab-pane fade" id="navs-pills-top-delivery" role="tabpanel">
                     @include('partials.general.company_delivery_table')
+                </div>
+                <div class="tab-pane fade" id="navs-pills-top-cash" role="tabpanel">
+                    @include('partials.general.cash_and_bank_table')
                 </div>
             </div>
         </div>

@@ -17,31 +17,12 @@ return new class extends Migration
         |--------------------------------------------------------------------------
         */
         Schema::create('cash_banks', function (Blueprint $table) {
-
             $table->id();
-
-            $table->string('code')->unique();
-            $table->string('name');
-
-            $table->enum('type', [
-                'cash',
-                'bank',
-            ]);
-
-            $table->string('bank_name')->nullable();
-            $table->string('account_number')->nullable();
-            $table->string('account_name')->nullable();
-            $table->string('branch_name')->nullable();
-            $table->string('currency', 10)->default('IDR');
-
+            $table->string('name')->unique();
             $table->decimal('opening_balance', 18, 2)->default(0);
-            $table->decimal('current_balance', 18, 2)->default(0);
-
             $table->boolean('is_active')->default(true);
-
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
-
             $table->timestamps();
             $table->softDeletes();
         });
@@ -53,37 +34,17 @@ return new class extends Migration
         */
 
         Schema::create('cash_bank_transactions', function (Blueprint $table) {
-
             $table->id();
-
             $table->string('transaction_no')->unique();
-
             $table->date('transaction_date');
-
             $table->unsignedBigInteger('cash_bank_id');
-
             $table->enum('transaction_type', [
                 'receipt',     // uang masuk
                 'payment',     // uang keluar
                 'transfer',     // transfer antar rekening
             ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Referensi Dokumen
-            |--------------------------------------------------------------------------
-            |
-            | Karena sistem memakai tabel per tahun maka disimpan:
-            |
-            | reference_table = sales_invoice_2026
-            | reference_id    = 15
-            |
-            */
-
             $table->string('reference_table')->nullable();
-
             $table->unsignedBigInteger('reference_id')->nullable();
-
             $table->enum('reference_type', [
                 'sales_order',
                 'sales_invoice',
@@ -97,42 +58,30 @@ return new class extends Migration
                 'journal',
                 'others',
             ])->default('others');
-
             $table->string('reference_number')->nullable();
-
             $table->decimal('amount', 18, 2);
-
             $table->text('description')->nullable();
-
             $table->enum('status', [
                 'draft',
                 'posted',
                 'void',
             ])->default('draft');
-
             $table->timestamp('posted_at')->nullable();
-
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
-
             $table->timestamps();
-
             $table->softDeletes();
-
             $table->foreign('cash_bank_id')
                 ->references('id')
                 ->on('cash_banks')
                 ->cascadeOnDelete();
-
             $table->index([
                 'reference_table',
                 'reference_id',
             ]);
-
             $table->index([
                 'reference_type',
             ]);
-
             $table->index([
                 'transaction_date',
             ]);

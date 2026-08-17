@@ -69,6 +69,7 @@ class AppServiceProvider extends ServiceProvider
 
             // Kirim semua variabel ke views
             $view->with([
+                'company' => $company,
                 'mataUang' => $currency,
                 'currencies' => $currencies,
                 'logo' => $logo,

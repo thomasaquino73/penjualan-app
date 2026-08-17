@@ -35,6 +35,7 @@ use App\Http\Controllers\Sales\SalesOrderController;
 use App\Http\Controllers\Sales\SalesQuotationController;
 use App\Http\Controllers\Sales\SalesReceiptController;
 use App\Http\Controllers\Setting\BankListController;
+use App\Http\Controllers\Setting\CashBankController;
 use App\Http\Controllers\Setting\Company\FobController;
 use App\Http\Controllers\Setting\Company\ShippingController;
 use App\Http\Controllers\Setting\Company\SyaratPembayaranController;
@@ -230,6 +231,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/verify-user/{id}', [UserController::class, 'verify_user'])->name('verify');
     });
 
+    Route::resource('/cash-bank', CashBankController::class);
     Route::resource('/mata-uang', CurrencyController::class);
     Route::resource('/bank-list', BankListController::class);
     Route::resource('/exchange-rate', ExchangeRateController::class);

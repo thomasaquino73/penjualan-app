@@ -155,7 +155,7 @@
                             $user = $model->approvedBy?->fullname;
                         }
                     @endphp
-                    @if ($model->status == 'processing')
+                    @if ($model->status != 'draft' && $model->status != 'pending')
                         <div class="approval-title">
                             Disetujui Oleh
                         </div>

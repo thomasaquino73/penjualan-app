@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sales\SalesReceipt;
 
 class SalesReceiptController extends Controller
 {
@@ -47,7 +48,7 @@ class SalesReceiptController extends Controller
         return view('sales.salesReceipt.sales_receipt_index', $x);
     }
 
-     public function bulanRomawi($bulan)
+    public function bulanRomawi($bulan)
     {
         $romawi = [
             1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',
@@ -66,11 +67,11 @@ class SalesReceiptController extends Controller
 
         $prefix = "SR/{$tahun}/{$bulanRomawi}/";
 
-        $last = SalesQuotation::where('sales_quotation_code', 'like', $prefix.'%')
+        $last = SalesReceipt::where('sales_receipt_code', 'like', $prefix.'%')
             ->orderByRaw("
             CAST(
                 REGEXP_REPLACE(
-                    SUBSTRING_INDEX(sales_quotation_code,'/',-1),
+                    SUBSTRING_INDEX(sales_receipt_code,'/',-1),
                     '[^0-9]',
                     ''
                 ) AS UNSIGNED
@@ -79,7 +80,7 @@ class SalesReceiptController extends Controller
             ->first();
 
         if ($last) {
-            preg_match('/(\d+)/', substr($last->sales_quotation_code, strrpos($last->sales_quotation_code, '/') + 1), $match);
+            preg_match('/(\d+)/', substr($last->sales_receipt_code, strrpos($last->sales_receipt_code, '/') + 1), $match);
             $lastNumber = isset($match[1]) ? (int) $match[1] : 0;
             $nextNumber = $lastNumber + 1;
         } else {
@@ -88,6 +89,7 @@ class SalesReceiptController extends Controller
 
         return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
+
     public function create()
     {
         $x = [
@@ -101,6 +103,4 @@ class SalesReceiptController extends Controller
 
         return view('sales.salesReceipt.sales_receipt_index', $x);
     }
-
-
 }
