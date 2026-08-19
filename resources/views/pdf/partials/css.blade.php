@@ -1,7 +1,7 @@
 <style>
     /* Pengaturan Halaman */
     @page {
-        margin: 140px 40px 60px 40px;
+        margin: 140px 40px 30px 40px;
         /* Atas, Kanan, Bawah, Kiri */
     }
 
@@ -148,5 +148,9 @@
     /* Opsional: Jika tabel terpotong di tengah baris, cegah dengan ini */
     tr {
         page-break-inside: avoid;
+    }
+
+    .approval-title {
+        margin-top: -15px;
     }
 </style>

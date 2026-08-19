@@ -205,6 +205,16 @@
             $("#tax_amount").val(Math.round(tax));
 
             $("#total_order").val(Math.round(totalOrder));
+
+            // ===============================
+            // TAMBAHKAN BIAYA LAIN-LAIN
+            // ===============================
+            let biayaLain = parseFloat($("#biaya_lain").val()) || 0;
+
+            totalOrder += biayaLain;
+
+            // Total Order
+            $("#total_order").val(Math.round(totalOrder));
         }
 
         // ===============================

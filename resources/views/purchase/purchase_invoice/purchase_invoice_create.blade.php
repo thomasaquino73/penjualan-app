@@ -1427,8 +1427,6 @@
                 }
 
                 checkedBoxes.each(function() {
-                    console.log(this);
-                    console.log($(this).data());
                     let item = {
                         detail_id: $(this).data("id"),
                         receive_item_detail_id: $(this).data("receive_item_detail_id"),
@@ -1447,7 +1445,6 @@
                         order_code: $(this).data("order_code"),
                         purchase_order_id: $(this).data("purchase_order_id"),
                     };
-                    console.log(item);
 
                     // Hindari data ganda
                     let exists = prDetailsData.some(x => x.detail_id == item.detail_id);
@@ -1560,10 +1557,103 @@
                             $('#shipping_address').val(alamat.join('\n'));
                         }
 
+                        loadReference();
+
                     }
                 });
 
             });
+
+            function loadReference() {
+
+                let supplierId = $("#supplier_id").val();
+                let type = $("input[name='payment_type']:checked").val();
+
+                if (!supplierId || !type) return;
+
+                $.ajax({
+                    url: `/purchase-invoice/get-reference/${supplierId}/${type}`,
+                    type: "GET",
+                    dataType: "json",
+                    success: function(response) {
+
+                        let select = (type === 'proforma') ?
+                            $("#proforma_id") :
+                            $("#down_payment_id");
+
+                        select.empty().append('<option value="">Pilih Referensi</option>');
+
+                        if (response.length > 0) {
+
+                            $.each(response, function(i, item) {
+
+                                select.append(`
+                        <option
+                            value="${item.id}"
+                            data-amount="${item.amount}"
+                            data-sales-order="${item.sales_order_id}">
+                            ${item.code} - ${item.date}
+                            (Rp ${formatRupiah(item.amount)})
+                        </option>
+                    `);
+
+                            });
+
+                        }
+
+                        $("#total_dp").val("");
+
+                    },
+                    error: function(xhr) {
+                        console.log(xhr.responseText);
+                    }
+                });
+            }
+
+
+            function toggleSelect() {
+
+                let type = $("input[name='payment_type']:checked").val();
+
+                if (type === "proforma") {
+
+                    $("#proforma_id").prop("disabled", false);
+                    $("#down_payment_id")
+                        .prop("disabled", true)
+                        .val(null)
+                        .trigger("change");
+
+                    loadReference();
+
+                } else if (type === "down_payment") {
+
+                    $("#proforma_id")
+                        .prop("disabled", true)
+                        .val(null)
+                        .trigger("change");
+
+                    $("#down_payment_id").prop("disabled", false);
+
+                    loadReference();
+
+                } else if (type === "no_down_payment") {
+
+                    $("#proforma_id")
+                        .prop("disabled", true)
+                        .val(null)
+                        .trigger("change");
+
+                    $("#down_payment_id")
+                        .prop("disabled", true)
+                        .val(null)
+                        .trigger("change");
+                }
+            }
+            $(document).on("change", "input[name='payment_type']", function() {
+                toggleSelect();
+            });
+
+            toggleSelect();
         });
         $(document).on("click", "#btn-history-address", function() {
             let supplierId = $("#supplier_id").val();

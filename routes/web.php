@@ -297,6 +297,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('purchase-invoice')->name('purchase-invoice.')->group(function () {
+    Route::get('/get-reference/{supplier}/{type}', [PurchaseInvoiceController::class, 'getReference'])->name('purchase-invoice.get-reference');
         Route::get('/{id}/data', [PurchaseInvoiceController::class, 'getSupplierData'])->name('getSupplierData');
         Route::patch('/{id}/close', [PurchaseInvoiceController::class, 'CloseDocument'])->name('close');
         Route::get('/trash', [PurchaseInvoiceController::class, 'trash'])->name('trash');
@@ -445,7 +446,9 @@ Route::middleware('auth')->group(function () {
     Route::get('sales-reports', [SalesReportController::class, 'index'])->name('sales-reports.index');
     Route::get('sales-reports/print-piutang', [SalesReportController::class, 'printPiutang'])->name('sales-reports.print_piutang');
 
-    Route::get('sales-receipts', [SalesReceiptController::class, 'index'])->name('sales-receipts.index');
+    Route::get('sales-receipt', [SalesReceiptController::class, 'index'])->name('sales-receipt.index');
+    Route::get('sales-receipt/create', [SalesReceiptController::class, 'create'])->name('sales-receipt.create');
+    Route::get('sales-receipt/trash', [SalesReceiptController::class, 'trash'])->name('sales-receipt.trash');
 
 });
 

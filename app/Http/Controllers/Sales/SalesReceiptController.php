@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sales\SalesReceipt;
+use App\Models\Setting\CashBank;
+use App\Models\Sales\Customer;
 
 class SalesReceiptController extends Controller
 {
@@ -93,14 +95,17 @@ class SalesReceiptController extends Controller
     public function create()
     {
         $x = [
-            'title' => 'Sales Receipt List',
+            'title' => 'Create Sales Receipt',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Sales Receipt', 'url' => ''],
+                ['label' => 'Sales Receipt', 'url' => route('sales-receipt.index')],
+                ['label' => 'Sales Receipt New', 'url' => ''],
             ],
+            'customer' => Customer::where('status', '<>', 0)->get(),
+            'cashBank' => CashBank::all(),
 
         ];
 
-        return view('sales.salesReceipt.sales_receipt_index', $x);
+        return view('sales.salesReceipt.sales_receipt_create', $x);
     }
 }

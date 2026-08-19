@@ -1240,7 +1240,6 @@
                 // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
                 table.rows().invalidate();
 
-                console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
 
             $("#btnSubmitModal").on("click", function(e) {
@@ -1459,7 +1458,6 @@
                         }
                     },
                     error: function() {
-                        console.error("Gagal memuat list unit dari Controller.");
                         unitSelect
                             .empty()
                             .append("<option></option>")
@@ -1563,7 +1561,6 @@
                         }
                     },
                     error: function(xhr) {
-                        console.error("Gagal mengambil data riwayat harga:", xhr);
                         helperText
                             .attr("class", "form-text text-danger")
                             .text("Gagal memuat riwayat harga.");

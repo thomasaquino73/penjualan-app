@@ -42,6 +42,13 @@ return new class extends Migration
             $table->enum('status', [
                 'draft', 'processing', 'unpaid', 'partial', 'paid', 'cancelled', 'closed', 'overdue',
             ])->default('draft');
+             $table->unsignedBigInteger('purchase_down_payment_id')->nullable();
+            $table->decimal('total_dp', 15, 2)->default(0);
+            $table->decimal('sisa_pembayaran', 15, 2)->default(0);
+            $table->enum('payment_type', [
+                'down_payment',
+                'no_down_payment',
+            ])->default('no_down_payment');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

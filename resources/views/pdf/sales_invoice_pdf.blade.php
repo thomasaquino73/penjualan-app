@@ -81,11 +81,11 @@
     </table>
     <table class="w-100 footer-table">
         <tr>
-            <td class="keterangan-box" width="60%">
+            <td class="keterangan-box" width="50%">
                 <div class="keterangan-title">Keterangan</div>
                 <div class="keterangan-content">{!! nl2br(e($model->description)) !!}</div>
             </td>
-            <td class="summary-box"width="40%">
+            <td class="summary-box"width="50%">
                 <table class="summary-table">
                     <tr>
                         <td>Sub Total</td>
@@ -105,6 +105,12 @@
                             {{ isset($model) ? format_uang(convert_currency($model->tax_amount, $detail->currency_id ?? 1), 2) : '' }}
                         </td>
                     </tr>
+                    <tr>
+                        <td>Biaya Lain-lain</td>
+                        <td class="text-right">
+                            {{ isset($model) ? format_uang(convert_currency($model->biaya_lain, $detail->currency_id ?? 1), 2) : '' }}
+                        </td>
+                    </tr>
                     <tr class="total-row">
                         <td>Grand Total</td>
                         <td class="text-right">
@@ -113,15 +119,18 @@
                     </tr>
                     @if ($model->payment_type == 'down_payment')
                         <tr>
-                            <td>Total Pembayaran DP</td>
+                            <td>
+                                {{ $model->salesDownPayments?->description ?? 'Down Payment' }}
+                            </td>
                             <td class="text-right">
-                                {{ isset($model) ? format_uang(convert_currency($model->total_dp, $detail->currency_id ?? 1), 2) : '' }}
+                                {{ format_uang(convert_currency($model->total_dp, $detail->currency_id ?? 1), 2) }}
                             </td>
                         </tr>
+
                         <tr class="total-row">
-                            <td>Sisa Pembayaran</td>
+                            <td>Jumlah Tertagih</td>
                             <td class="text-right">
-                                {{ isset($model) ? format_uang(convert_currency($model->sisa_pembayaran, $detail->currency_id ?? 1), 2) : '' }}
+                                {{ format_uang(convert_currency($model->sisa_pembayaran, $detail->currency_id ?? 1), 2) }}
                             </td>
                         </tr>
                     @elseif ($model->payment_type == 'proforma')
@@ -132,7 +141,7 @@
                             </td>
                         </tr>
                         <tr class="total-row">
-                            <td>Sisa Pembayaran</td>
+                            <td>Jumlah Tertagih</td>
                             <td class="text-right">
                                 {{ isset($model) ? format_uang(convert_currency($model->sisa_pembayaran, $detail->currency_id ?? 1), 2) : '' }}
                             </td>
@@ -150,8 +159,8 @@
                     $currencyId = session('currency_id') ?? \App\Models\Setting\Company::first()->default_currency_id;
                     $currencyCode = \App\Models\Setting\Currency::find($currencyId)?->code ?? 'IDR';
 
-                    if ($model->payment_type == 'down_payment' || $model->payment_type == 'proforma') {
-                        // Jika ada DP tampilkan sisa pembayaran
+                    if ($model->payment_type = 'down_payment' || ($model->payment_type = 'proforma')) {
+                        // Jika ada DP tampilkan jumlah tertagih
                         $nilaiTerbilang = $model->sisa_pembayaran;
                     } else {
                         // Jika tidak ada DP tampilkan grand total

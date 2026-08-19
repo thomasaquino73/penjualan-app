@@ -27,12 +27,12 @@
                     justify-content-start justify-content-lg-end">
 
                     @canany(['sales_receipt-create'])
-                        <a href="{{ route('delivery-order.create') }}" class="btn btn-sm btn-primary">
+                        <a href="{{ route('sales-receipt.create') }}" class="btn btn-sm btn-primary">
                             <i class="ti ti-plus me-1"></i> Add Data
                         </a>
                     @endcanany
                     @canany(['sales_receipt-trash'])
-                        <a href="{{ route('delivery-order.trash') }}" class="btn btn-sm btn-secondary">
+                        <a href="{{ route('sales-receipt.trash') }}" class="btn btn-sm btn-secondary">
                             <i class="ti ti-trash me-1"></i> Trash Bin
                         </a>
                     @endcanany

@@ -143,8 +143,60 @@
                 </div>
 
                 <div class="row mb-5">
-                    <div class="col-md-2"></div>
-                    <div class="col-md-2">
+                    <div class="col-md-7"></div>
+                    <div class="col-md-5">
+                        <div class="col-12 mb-3 ">
+                            <label class="form-label" for="sub_total">Sub Total</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
+                                <input type="number" id="sub_total" name="sub_total" class="form-control"
+                                    placeholder="0" readonly>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label" for="discount_all">Discount</label>
+                            <div class="row">
+                                <div class="col-4">
+                                    <div class="input-group input-group-merge">
+                                        <span class="input-group-text">%</span>
+                                        <input type="number" id="percent" name="percent" min="0"
+                                            step="any" class="form-control" placeholder="0">
+                                        <span class="text-danger" id="discountError"></span>
+                                    </div>
+                                </div>
+                                <div class="col-8">
+                                    <div class="input-group input-group-merge">
+                                        <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
+                                        <input type="number" id="discount_all" name="discount_all" class="form-control"
+                                            placeholder="0" min='0'>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3 " id="ppn_container" style="display:none;">
+                            <label class="form-label" for="sub_total" id="taxes">Tax</label>
+                            <div class="input-group input-group-merge">
+                                <input type="text" name="tax_amount" id="tax_amount" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label" for="biaya_lain"> <strong>Biaya Lain-lain</strong></label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
+                                <input type="number" id="biaya_lain" name="biaya_lain" class="form-control"
+                                    placeholder="0">
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label" for="total_order"> <strong>Total Order</strong></label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
+                                <input type="number" id="total_order" name="total_order" class="form-control"
+                                    placeholder="0" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    {{-- <div class="col-md-2">
                         <div class="col-12 mb-3 ">
                             <label class="form-label" for="sub_total">Sub Total</label>
                             <div class="input-group input-group-merge">
@@ -195,7 +247,7 @@
                             </div>
 
                         </div>
-                    </div>
+                    </div> --}}
 
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">
@@ -718,7 +770,9 @@
                 console.log("Urutan prDetailsData terkunci permanen:", prDetailsData);
             });
 
-
+            $("#biaya_lain").on("input", function() {
+                calculateTotalOrder();
+            })
 
 
             $('#customer_id').on('change', function() {
@@ -803,11 +857,11 @@
                             $.each(response, function(i, item) {
 
                                 select.append(`
-                        <option 
+                        <option
                             value="${item.id}"
                             data-amount="${item.amount}"
                             data-sales-order="${item.sales_order_id}">
-                            ${item.code} - ${item.date} 
+                            ${item.code} - ${item.date}
                             (Rp ${formatRupiah(item.amount)})
                         </option>
                     `);
@@ -828,16 +882,18 @@
 
             $("#proforma_id, #down_payment_id").on("change", function() {
 
-                let amount = $(this)
-                    .find(":selected")
-                    .attr("data-amount");
+                let option = $(this).find(":selected");
 
-                amount = parseFloat(amount) || 0;
+                let amount = parseFloat(
+                    option.attr("data-amount")
+                ) || 0;
 
                 $("#total_dp").val(formatRupiah(amount));
-                $("#sales_order_id").val(option.data("sales-order-id") ?? "");
-            });
 
+                $("#sales_order_id").val(
+                    option.attr("data-sales-order") || ""
+                );
+            });
 
 
             function toggleSelect() {
@@ -1274,10 +1330,10 @@
                 calculateTotalOrder();
             });
 
+
+
             $("#btnSubmitSelected").on("click", function() {
-
                 let checkedBoxes = $(".checkItem:checked");
-
                 if (checkedBoxes.length === 0) {
                     Swal.fire({
                         icon: "warning",
@@ -1290,13 +1346,10 @@
                     });
                     return;
                 }
-
                 if (typeof prDetailsData === "undefined") {
                     window.prDetailsData = [];
                 }
-
                 checkedBoxes.each(function() {
-
                     let item = {
                         detail_id: $(this).data("id"),
                         delivery_order_id: $(this).data("delivery_order_id"),
@@ -1320,18 +1373,15 @@
                         prDetailsData.push(item);
                     }
                 });
-
                 table.clear().rows.add(prDetailsData).draw();
 
                 calculateGrandTotal();
                 calculateTotalOrder();
-
                 $("#modalDeliveryDetail").modal("hide");
-
                 Swal.fire({
                     icon: "success",
                     title: "Success",
-                    text: "Data quotation berhasil dimasukkan.",
+                    text: "Data delivery berhasil dimasukkan.",
                     customClass: {
                         confirmButton: "btn btn-primary",
                     },
@@ -1339,8 +1389,121 @@
                 });
 
             });
-
-
         });
+
+        // $(document).on("click", "#btnSubmitSelected", function(e) {
+        //     e.preventDefault();
+
+        //     console.log("Process Selected clicked");
+
+        //     const checkedBoxes = $("#orderTableBody .checkItem:checked");
+
+        //     console.log("Selected:", checkedBoxes.length);
+
+        //     if (checkedBoxes.length === 0) {
+        //         Swal.fire({
+        //             icon: "warning",
+        //             title: "Warning",
+        //             text: "Silakan pilih minimal satu item delivery.",
+        //             customClass: {
+        //                 confirmButton: "btn btn-danger"
+        //             },
+        //             buttonsStyling: false
+        //         });
+
+        //         return;
+        //     }
+
+        //     if (!Array.isArray(prDetailsData)) {
+        //         prDetailsData = [];
+        //     }
+
+        //     checkedBoxes.each(function() {
+
+        //         const checkbox = $(this);
+
+        //         const item = {
+        //             detail_id: checkbox.attr("data-id"),
+
+        //             delivery_order_id: checkbox.attr("data-delivery_order_id"),
+        //             sales_order_id: checkbox.attr("data-sales_order_id"),
+
+        //             order_code: checkbox.attr("data-delivery_order_code"),
+
+        //             product_id: checkbox.attr("data-product_id"),
+        //             data_produk: checkbox.attr("data-product_name"),
+
+        //             quantity: parseFloat(
+        //                 checkbox.attr("data-qty")
+        //             ) || 0,
+
+        //             sisa_pr: parseFloat(
+        //                 checkbox.attr("data-outstanding_qty")
+        //             ) || 0,
+
+        //             unit_id: checkbox.attr("data-unit_id"),
+        //             unit: checkbox.attr("data-unit_name"),
+
+        //             warehouse_id: checkbox.attr("data-warehouse_id"),
+        //             warehouse: checkbox.attr("data-warehouse_name"),
+
+        //             unit_price: parseFloat(
+        //                 checkbox.attr("data-unit_price")
+        //             ) || 0,
+
+        //             discount: parseFloat(
+        //                 checkbox.attr("data-discount")
+        //             ) || 0,
+
+        //             amount: parseFloat(
+        //                 checkbox.attr("data-amount")
+        //             ) || 0
+        //         };
+
+        //         console.log("Delivery item:", item);
+
+        //         const exists = prDetailsData.some(function(x) {
+        //             return String(x.detail_id) === String(item.detail_id);
+        //         });
+
+        //         if (!exists) {
+        //             prDetailsData.push(item);
+        //         }
+        //     });
+
+        //     console.log("prDetailsData:", prDetailsData);
+
+        //     // Pastikan DataTable tersedia
+        //     if (typeof table === "undefined") {
+        //         console.error("DataTable 'table' belum tersedia.");
+        //         return;
+        //     }
+
+        //     table
+        //         .clear()
+        //         .rows
+        //         .add(prDetailsData)
+        //         .draw();
+
+        //     if (typeof calculateGrandTotal === "function") {
+        //         calculateGrandTotal();
+        //     }
+
+        //     if (typeof calculateTotalOrder === "function") {
+        //         calculateTotalOrder();
+        //     }
+
+        //     $("#modalDeliveryDetail").modal("hide");
+
+        //     Swal.fire({
+        //         icon: "success",
+        //         title: "Success",
+        //         text: "Data delivery berhasil dimasukkan.",
+        //         customClass: {
+        //             confirmButton: "btn btn-primary"
+        //         },
+        //         buttonsStyling: false
+        //     });
+        // });
     </script>
 @endpush

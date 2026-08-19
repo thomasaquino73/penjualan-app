@@ -38,6 +38,7 @@ return new class extends Migration
             $table->unsignedBigInteger('tax_id')->nullable();
             $table->decimal('tax_percent', 5, 2)->default(0)->nullable();
             $table->decimal('tax_amount', 15, 2)->default(0)->nullable();
+            $table->decimal('biaya_lain', 15, 2)->default(0)->nullable();
             $table->string('po_number')->nullable();
             $table->date('tanggal_pengiriman')->nullable();
             $table->unsignedBigInteger('jenis_pengiriman')->nullable();

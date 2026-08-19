@@ -196,6 +196,14 @@
             </div>
             <div class="input-group mb-3">
                 <div class="input-group-text">
+                    <input class="form-check-input mt-0 me-2" type="radio" name="payment_type" value="pelunasan"
+                        checked>
+                    Pelunasan
+                </div>
+                <input type="text" class="form-control" id="total_pelunasan" name="total_pelunasan" readonly>
+            </div>
+            <div class="input-group mb-3">
+                <div class="input-group-text">
                     <input class="form-check-input mt-0 me-2" type="radio" name="payment_type"
                         value="no_down_payment" checked>
                     Tidak Ada DP

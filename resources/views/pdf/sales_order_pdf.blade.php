@@ -101,14 +101,17 @@
                             {{ isset($model) ? format_uang(convert_currency($model->tax_amount, $detail->currency_id ?? 1)) : '' }}
                         </td>
                     </tr>
-                    {{-- <tr>
+                    <tr>
                         <td>Biaya Lain-lain</td>
-                        <td class="text-right">0</td>
-                    </tr> --}}
+                        <td class="text-right">
+                            {{ isset($model) ? format_uang(convert_currency($model->biaya_lain, $detail->currency_id ?? 1)) : '' }}
+                        </td>
+                    </tr>
                     <tr class="total-row">
                         <td>Total</td>
                         <td class="text-right">
                             {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1)) : '' }}
+                        </td>
                     </tr>
                 </table>
             </td>

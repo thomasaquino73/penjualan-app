@@ -143,8 +143,8 @@
                 </div>
 
                 <div class="row mb-5">
-                    <div class="col-md-2"></div>
-                    <div class="col-md-2">
+                    <div class="col-md-7"></div>
+                    <div class="col-md-5">
                         <div class="col-12 mb-3 ">
                             <label class="form-label" for="sub_total">Sub Total</label>
                             <div class="input-group input-group-merge">
@@ -152,10 +152,7 @@
                                 <input type="number" id="sub_total" name="sub_total" class="form-control"
                                     placeholder="0" value="{{ $model->sub_total ?? 0 }}" readonly>
                             </div>
-
                         </div>
-                    </div>
-                    <div class="col-md-3">
                         <div class="col-12 mb-3">
                             <label class="form-label" for="discount_all">Discount</label>
                             <div class="row">
@@ -177,16 +174,20 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-2 mb-3" id="ppn_container" style="display:none;">
-                        <div class="col-12 mb-3 ">
+                        <div class="col-12 mb-3 " id="ppn_container" style="display:none;">
                             <label class="form-label" for="sub_total" id="taxes">Tax</label>
                             <div class="input-group input-group-merge">
                                 <input type="text" name="tax_amount" id="tax_amount" class="form-control" readonly>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-lg-3">
+                        <div class="col-12 mb-3">
+                            <label class="form-label" for="biaya_lain"> <strong>Biaya Lain-lain</strong></label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
+                                <input type="number" id="biaya_lain" name="biaya_lain" class="form-control"
+                                    placeholder="0" value="{{ $model->biaya_lain ?? 0 }}">
+                            </div>
+                        </div>
                         <div class="col-12 mb-3">
                             <label class="form-label" for="total_order"> <strong>Total Order</strong></label>
                             <div class="input-group input-group-merge">
@@ -194,7 +195,6 @@
                                 <input type="number" id="total_order" name="total_order" class="form-control"
                                     placeholder="0" readonly value="{{ $model->grand_total ?? 0 }}">
                             </div>
-
                         </div>
                     </div>
 
@@ -977,13 +977,17 @@
 
                 $("#proforma_id, #down_payment_id").on("change", function() {
 
-                    let selected = $(this).find(":selected");
+                    let option = $(this).find(":selected");
 
-                    let amount = parseFloat(selected.data("amount")) || 0;
+                    let amount = parseFloat(
+                        option.attr("data-amount")
+                    ) || 0;
 
-                    $("#total_dp").val(amount.toFixed(0)); // hasil: 499500
-                    $("#sales_order_id").val(selected.data("sales-order-id") || "");
+                    $("#total_dp").val(formatRupiah(amount));
 
+                    $("#sales_order_id").val(
+                        option.attr("data-sales-order") || ""
+                    );
                 });
 
                 function toggleSelect(selected = false) {
@@ -1220,6 +1224,9 @@
                     });
                 });
 
+                $("#biaya_lain").on("input", function() {
+                    calculateTotalOrder();
+                })
 
                 $("#btnSubmitModal").on("click", function(e) {
                     let qtyInput = $("#quantity");

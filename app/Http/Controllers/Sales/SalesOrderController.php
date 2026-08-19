@@ -500,6 +500,7 @@ class SalesOrderController extends Controller
             $data['taxpayer_data'] = $request->taxpayer_data;
             $data['tax_id'] = $request->tax_id;
             $data['tax_amount'] = $request->tax_amount;
+            $data['biaya_lain'] = $request->biaya_lain;
             // Generate kode SO
             $salesOrder = null;
             $maxRetry = 10;
@@ -803,6 +804,7 @@ class SalesOrderController extends Controller
                 'taxpayer_data' => $request->taxpayer_data,
                 'tax_id' => $request->tax_id,
                 'tax_amount' => $request->tax_amount,
+                'biaya_lain' => $request->biaya_lain,
                 'updated_by' => Auth::id(),
                 'updated_at' => now(),
             ]);
