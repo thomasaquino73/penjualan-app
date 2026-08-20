@@ -384,6 +384,7 @@
                     dropdownParent: $("#modalQuotationDetail"),
                 });
             });
+            
             // ========================================================
             // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
             // ========================================================

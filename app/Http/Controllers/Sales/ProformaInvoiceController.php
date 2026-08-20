@@ -432,6 +432,7 @@ class ProformaInvoiceController extends Controller
             $data['payment_term_id'] = $request->payment_term_id;
             $data['disc_percent'] = $request->percent;
             $data['disc_nominal'] = $request->discount_all;
+            $data['biaya_lain'] = $request->biaya_lain;
             $data['grand_total'] = $request->total_order;
             $data['taxpayer_data'] = $request->taxpayer_data;
             $data['tax_id'] = $request->tax_id;
@@ -731,6 +732,7 @@ class ProformaInvoiceController extends Controller
                 'payment_term_id' => $request->payment_term_id,
                 'disc_percent' => $request->percent,
                 'disc_nominal' => $request->discount_all,
+                'biaya_lain' => $request->biaya_lain,
                 'grand_total' => $request->total_order,
                 'jenis_pengiriman' => $request->jenis_pengiriman,
                 'kena_pajak' => $request->has('kena_pajak') ? 1 : 0,

@@ -647,6 +647,7 @@ class PurchaseOrderController extends Controller
             $data['sub_total'] = $request->sub_total;
             $data['disc_percent'] = $request->percent;
             $data['disc_nominal'] = $request->discount_all;
+            $data['biaya_lain'] = $request->biaya_lain;
             $data['grand_total'] = $request->total_order;
             $data['payment_term'] = $request->payment_term;
             $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
@@ -961,6 +962,7 @@ class PurchaseOrderController extends Controller
                 'sub_total' => $request->sub_total,
                 'disc_percent' => $request->percent,
                 'disc_nominal' => $request->discount_all,
+                'biaya_lain' => $request->biaya_lain,
                 'grand_total' => $request->total_order,
 
                 'updated_by' => Auth::id(),

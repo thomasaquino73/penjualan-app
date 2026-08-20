@@ -135,8 +135,8 @@
                 </div>
 
                 <div class="row mb-5">
-                    <div class="col-md-2"></div>
-                    <div class="col-md-2">
+                    <div class="col-md-7"></div>
+                    <div class="col-md-5">
                         <div class="col-12 mb-3 ">
                             <label class="form-label" for="sub_total">Sub Total</label>
                             <div class="input-group input-group-merge">
@@ -144,10 +144,7 @@
                                 <input type="number" id="sub_total" name="sub_total" class="form-control"
                                     placeholder="0" readonly>
                             </div>
-
                         </div>
-                    </div>
-                    <div class="col-md-3">
                         <div class="col-12 mb-3">
                             <label class="form-label" for="discount_all">Discount</label>
                             <div class="row">
@@ -168,16 +165,20 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-2 mb-3" id="ppn_container" style="display:none;">
-                        <div class="col-12 mb-3 ">
+                        <div class="col-12 mb-3 " id="ppn_container" style="display:none;">
                             <label class="form-label" for="sub_total" id="taxes">Tax</label>
                             <div class="input-group input-group-merge">
                                 <input type="text" name="tax_amount" id="tax_amount" class="form-control" readonly>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-lg-3">
+                        <div class="col-12 mb-3">
+                            <label class="form-label" for="biaya_lain"> <strong>Biaya Lain-lain</strong></label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text">{{ $company->currency?->symbol ?? 'Rp' }}</span>
+                                <input type="number" id="biaya_lain" name="biaya_lain" class="form-control"
+                                    placeholder="0">
+                            </div>
+                        </div>
                         <div class="col-12 mb-3">
                             <label class="form-label" for="total_order"> <strong>Total Order</strong></label>
                             <div class="input-group input-group-merge">
@@ -185,7 +186,6 @@
                                 <input type="number" id="total_order" name="total_order" class="form-control"
                                     placeholder="0" readonly>
                             </div>
-
                         </div>
                     </div>
 
@@ -969,6 +969,9 @@
                 });
             });
 
+            $("#biaya_lain").on("input", function() {
+                calculateTotalOrder();
+            })
 
             $("#btnSubmitModal").on("click", function(e) {
                 let qtyInput = $("#quantity");
@@ -1355,6 +1358,9 @@
 
             let discount = parseFloat($("#discount_all").val()) || 0;
 
+            // Ambil biaya lain-lain
+            let biayaLain = parseFloat($("#biaya_lain").val()) || 0;
+
             let kenaPajak = $("#kena_pajak").is(":checked");
             let totalInclude = $("#total_termasuk_pajak").is(":checked");
 
@@ -1370,7 +1376,7 @@
                 }
             }
 
-            // subtotal setelah diskon
+            // Subtotal setelah diskon
             let subtotal = grandSubTotal - discount;
 
             if (subtotal < 0)
@@ -1386,11 +1392,7 @@
 
                 if (totalInclude) {
 
-                    // ==================================
                     // TAX INCLUSIVE
-                    // subtotal sudah termasuk pajak
-                    // ==================================
-
                     dpp = subtotal / (1 + (taxPercent / 100));
 
                     tax = subtotal - dpp;
@@ -1399,11 +1401,7 @@
 
                 } else {
 
-                    // ==================================
                     // TAX EXCLUSIVE
-                    // subtotal belum termasuk pajak
-                    // ==================================
-
                     dpp = subtotal;
 
                     tax = dpp * taxPercent / 100;
@@ -1428,15 +1426,22 @@
             );
 
             // ===================================================
-            // SUB TOTAL TETAP DARI TABEL (JANGAN DPP)
+            // SUB TOTAL
             // ===================================================
             $("#sub_total").val(Math.round(subtotal));
 
-            // Simpan DPP jika diperlukan
+            // DPP
             $("#dpp_amount").val(Math.round(dpp));
 
+            // TAX
             $("#tax_amount").val(Math.round(tax));
 
+            // ===================================================
+            // TAMBAHKAN BIAYA LAIN-LAIN
+            // ===================================================
+            totalOrder += biayaLain;
+
+            // TOTAL ORDER
             $("#total_order").val(Math.round(totalOrder));
         }
 

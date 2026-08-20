@@ -557,7 +557,7 @@ class SalesInvoiceController extends Controller
 
                     $involvedDoIds = [];
 
-                    foreach ($items as $item) {
+                     foreach ($items as $index => $item) {
 
                         $doDetailId = $item['sales_order_detail_id'] ?? $item['detail_id'] ?? null;
                         $doId = $item['sales_order_code_id'] ?? $item['order_code'] ?? null;
@@ -574,6 +574,7 @@ class SalesInvoiceController extends Controller
                             'sales_order_code_id' => $doId,
                             'product_id' => $item['product_id'],
                             'qty' => $qty,
+                            'urutan' => $index,
                             'unit_id' => $item['unit_id'],
                             'warehouse_id' => $item['warehouse_id'],
                             'unit_price' => $unitPrice,
@@ -714,8 +715,10 @@ class SalesInvoiceController extends Controller
         $isFromPR = $purchaseOrder->details->whereNotNull('sales_order_detail_id')->count() > 0;
         $salesOrderId = $purchaseOrder->sales_order_id;
         // 3. Mapping data detail
-        $detailDataMapped = $purchaseOrder->details->map(function ($detail) use ($purchaseOrder, $year) {
-
+        $detailDataMapped = $purchaseOrder->details
+         ->sortBy('urutan')
+        ->values()
+        ->map(function ($detail) use ($purchaseOrder, $year) {
             $orderCode = null;
             $sisaPr = null;
             $kuotaAsliPr = null;
@@ -754,7 +757,7 @@ class SalesInvoiceController extends Controller
 
                 // HEADER SALES ORDER
                 'sales_order_id' => $salesOrderId,
-
+                'urutan' => (int) $detail->urutan,
                 // DETAIL SALES ORDER
                 'sales_order_detail_id' => $detail->sales_order_detail_id,
 
@@ -1168,7 +1171,7 @@ class SalesInvoiceController extends Controller
             */
             $involvedDoIds = [];
 
-            foreach ($items as $item) {
+             foreach (array_values($items) as $index => $item) {
 
                 /*
                 |--------------------------------------------------------------------------
@@ -1291,58 +1294,29 @@ class SalesInvoiceController extends Controller
                 |--------------------------------------------------------------------------
                 */
                 $salesInvoiceDetail = SalesInvoiceDetail::create([
-
                     'sales_invoice_id' => $salesInvoice->id,
-
                     'sales_order_detail_id' => $salesOrderDetailId,
-
                     'sales_order_code_id' => $deliveryOrderId,
-
                     'product_id' => $productId,
-
                     'qty' => $qty,
-
+                    'urutan' => $index + 1,
                     'unit_id' => $unitId,
-
                     'warehouse_id' => $warehouseId,
-
                     'unit_price' => $unitPrice,
-
                     'discount_percent' => $discountPercent,
-
                     'discount' => $discount,
-
                     'amount' => $amount,
-
                     'so_qty' => $qty,
-
                     'outstanding_qty' => 0,
-
                     'status' => 'open',
-
                     'active' => 1,
-
                     'created_by' => Auth::id(),
                 ]);
 
-                /*
-                |--------------------------------------------------------------------------
-                | DOCUMENT TRANSACTION HISTORY
-                |--------------------------------------------------------------------------
-                |
-                | Sesuaikan dengan STORE:
-                |
-                | from_type = DeliveryOrder
-                | from_id = Delivery Order Detail ID
-                | from_detail_id = Delivery Order Detail ID
-                |
-                */
+              
                 DocumentTransactionHistory::create([
-
                     'module' => 'sales',
-
                     'from_type' => 'DeliveryOrder',
-
                     /*
                     |--------------------------------------------------------------------------
                     | PENTING
@@ -1351,27 +1325,16 @@ class SalesInvoiceController extends Controller
                     | Kita samakan agar konsisten.
                     */
                     'from_id' => $salesOrderDetailId,
-
                     'from_detail_id' => $salesOrderDetailId,
-
                     'to_type' => 'SalesInvoice',
-
                     'to_id' => $salesInvoice->id,
-
                     'to_detail_id' => $salesInvoiceDetail->id,
-
                     'transaction_type' => 'invoice',
-
                     'qty' => $salesInvoiceDetail->qty,
-
                     'unit_price' => $salesInvoiceDetail->unit_price,
-
                     'discount' => $salesInvoiceDetail->discount,
-
                     'amount' => $salesInvoiceDetail->amount,
-
                     'transaction_date' => $salesInvoice->sales_invoice_date,
-
                     'metadata' => json_encode([
                         'warehouse_id' => $salesInvoiceDetail->warehouse_id,
                         'product_id' => $salesInvoiceDetail->product_id,
@@ -1552,38 +1515,14 @@ class SalesInvoiceController extends Controller
                     ]);
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | COMMIT
-            |--------------------------------------------------------------------------
-            */
             DB::commit();
-
-            /*
-            |--------------------------------------------------------------------------
-            | RESPONSE
-            |--------------------------------------------------------------------------
-            */
             return response()->json([
                 'status' => 'success',
                 'message' => 'Sales Invoice berhasil diupdate.',
                 'redirect' => route('sales-invoice.index'),
             ]);
-
         } catch (\Throwable $e) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | ROLLBACK
-            |--------------------------------------------------------------------------
-            */
             DB::rollBack();
-
-            /*
-            |--------------------------------------------------------------------------
-            | ERROR RESPONSE
-            |--------------------------------------------------------------------------
-            */
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
@@ -2032,7 +1971,7 @@ class SalesInvoiceController extends Controller
         }
     }
 
-    
+
     public function print($id)
     {
         $currentYear = date('Y');
@@ -2050,6 +1989,8 @@ class SalesInvoiceController extends Controller
             'details.unitID',
             'salesDownPayments',
         ])->findOrFail($id);
+
+        $modelDetail = $salesInvoice->details->sortBy('urutan')->values();
 
         $company = Company::first();
         $salesOrder = $salesInvoice->salesOrder;
@@ -2233,7 +2174,7 @@ class SalesInvoiceController extends Controller
             /*
             | Detail Produk
             */
-            'modelDetail' => $salesInvoice->details,
+            'modelDetail' => $modelDetail,
 
             /*
             |--------------------------------------------------------------------------

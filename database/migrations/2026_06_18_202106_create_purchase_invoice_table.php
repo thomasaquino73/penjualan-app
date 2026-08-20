@@ -35,6 +35,7 @@ return new class extends Migration
             $table->decimal('sub_total', 18, 2)->default(0)->nullable();
             $table->decimal('disc_percent', 5, 2)->default(0)->nullable();
             $table->decimal('disc_nominal', 18, 2)->default(0)->nullable();
+            $table->decimal('biaya_lain', 18, 2)->default(0)->nullable();
             $table->decimal('grand_total', 18, 2)->default(0)->nullable();
             $table->unsignedBigInteger('tax_id')->nullable();
             $table->decimal('tax_percent', 5, 2)->default(0)->nullable();

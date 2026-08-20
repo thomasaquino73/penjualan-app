@@ -356,6 +356,7 @@ class SalesQuotationController extends Controller
             $data['sub_total'] = $request->sub_total;
             $data['disc_percent'] = $request->percent;
             $data['disc_nominal'] = $request->discount_all;
+            $data['biaya_lain'] = $request->biaya_lain;
             $data['grand_total'] = $request->total_order;
             $data['payment_term_id'] = $request->payment_term_id;
             $data['kena_pajak'] = $request->has('kena_pajak') ? 1 : 0;
@@ -575,6 +576,7 @@ class SalesQuotationController extends Controller
             $data['sub_total'] = $request->sub_total;
             $data['disc_percent'] = $request->percent;
             $data['disc_nominal'] = $request->discount_all;
+            $data['biaya_lain'] = $request->biaya_lain;
             $data['grand_total'] = $request->total_order;
             $data['payment_term_id'] = $request->payment_term_id;
             $data['address'] = $request->address;

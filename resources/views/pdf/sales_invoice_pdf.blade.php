@@ -66,7 +66,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($model->details as $detail)
+            @foreach ($modelDetail as $detail)
                 <tr>
                     <td>{{ $detail->produkID->id_barang }}</td>
                     <td>{{ $detail->produkID->nama_barang }}</td>
