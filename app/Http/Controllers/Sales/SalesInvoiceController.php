@@ -2573,4 +2573,27 @@ class SalesInvoiceController extends Controller
 
         }
     }
+
+    public function getDownPayment($customerId)
+    {
+        $year = date('Y');
+
+        $orders = SalesDownPayment::where('customer_id', $customerId)
+            ->where('active', 1)
+            ->where('status', '!=', 'cancelled')
+            ->whereNotExists(function ($query) use ($year) {
+                $query->select(DB::raw(1))
+                    ->from("sales_invoice_{$year} as si")
+                    ->whereColumn(
+                        'si.sales_down_payment_id',
+                        "sales_down_payments_{$year}.id"
+                    );
+            })
+            ->get();
+
+        return response()->json($orders);
+    }
+       public function getDownPaymentDetail(Request $request)
+    {
+    }
 }

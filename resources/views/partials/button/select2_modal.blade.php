@@ -17,6 +17,14 @@
                     dropdownParent: $("#modalRequisitionDetail"),
                 });
             });
+            $(".select2-modaldp").each(function() {
+                var $this = $(this);
+                $this.wrap('<div class="position-relative"></div>').select2({
+                    placeholder: $this.attr("data-placeholder"),
+                    width: "100%",
+                    dropdownParent: $("#modalDownPayment"),
+                });
+            });
 
         });
     </script>

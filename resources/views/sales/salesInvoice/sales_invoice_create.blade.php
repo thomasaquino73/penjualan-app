@@ -32,8 +32,14 @@
                             Get Form
                         </button>
                         <ul class="dropdown-menu">
-                            <li><button class="dropdown-item btn-info btn-sm " id="showModalpr">
+                            <li><button class="dropdown-item btn-info btn-sm " id="showModaldv">
                                     <i class="ti ti-clipboard me-1"></i>DELIVERY
+                                </button></li>
+                            <li><button class="dropdown-item btn-primary btn-sm " id="showModaldp">
+                                    <i class="ti ti-clipboard me-1"></i>DOWN PAYMENT
+                                </button></li>
+                            <li><button class="dropdown-item btn-success btn-sm " id="showModalso">
+                                    <i class="ti ti-clipboard me-1"></i>SALES ORDER
                                 </button></li>
                         </ul>
                     </div>
@@ -120,9 +126,9 @@
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" id='tabIndo'
-                                    data-bs-target="#navs-pills-left-profile" aria-controls="navs-pills-left-profile"
-                                    aria-selected="false" tabindex="-1">
+                                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
+                                    id='tabIndo' data-bs-target="#navs-pills-left-profile"
+                                    aria-controls="navs-pills-left-profile" aria-selected="false" tabindex="-1">
                                     <i class="ti ti-info-circle"></i>
                                 </button>
                             </li>
@@ -265,6 +271,7 @@
     </div>
     @include('sales.salesInvoice.part.modal_sales_invoice')
     @include('sales.salesInvoice.part.modalDeliveryOrder')
+    @include('sales.salesInvoice.part.modalDownPayment')
 @endsection
 @include('partials.tabel.css')
 @include('partials.tabel.js')
@@ -287,7 +294,7 @@
             });
         });
         // Show Modal Proforma
-        $("#showModalpr").on("click", function(e) {
+        $("#showModaldv").on("click", function(e) {
             e.preventDefault();
 
             var customerId = $("#customer_id").val();
@@ -399,6 +406,51 @@
             });
 
         });
+
+          $("#showModaldp").on("click", function(e) {
+            e.preventDefault();
+
+            var customerId = $("#customer_id").val();
+                 $("#dp_number")
+                .empty()
+                .append('<option value="">Select Down Payment</option>')
+                .val(null)
+                .trigger("change");
+            if (!customerId) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Warning!",
+                    text: "Please select Customer first before adding new data.",
+                    confirmButtonColor: "#3085d6",
+                    confirmButtonText: "OK",
+                    customClass: {
+                        confirmButton: "btn btn-danger",
+                    },
+                    buttonsStyling: false,
+                });
+                return;
+            }
+
+             $.ajax({
+                url: "/sales-invoice/get-down-payment/" + customerId,
+                type: "GET",
+                success: function(response) {
+
+                    let option = '<option value="">Select Down Payment</option>';
+
+                    $.each(response, function(i, item) {
+                        option += `<option value="${item.id}">
+                                ${item.sales_downpayment_code}
+                           </option>`;
+                    });
+
+                    $("#dp_number").html(option);
+
+                    $("#modalDownPayment").modal("show");
+                }
+            });
+        });
+
         //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
         $("#checkAll").on("change", function() {
             // Jika checkAll dicentang, semua .checkItem ikut dicentang, begitu sebaliknya

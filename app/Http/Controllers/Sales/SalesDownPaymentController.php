@@ -345,7 +345,7 @@ class SalesDownPaymentController extends Controller
 
         try {
 
-            $data = $request->except(['total_order', 'save_and_new']);
+            $data = $request->except(['total_order', 'save_and_new','total_payment']);
 
             // Ambil total_order dari request
             $data['sales_order_amount'] = $this->parseNominal(
@@ -367,8 +367,9 @@ class SalesDownPaymentController extends Controller
             $data['created_by'] = Auth::user()->id;
             $totalOrder = $this->parseNominal($request->input('total_order', 0));
             $downPayment = $this->parseNominal($request->input('down_payment_amount', 0));
+            $totalPayment = $this->parseNominal($request->input('total_payment', 0));
 
-            $data['remaining_amount'] = $totalOrder - $downPayment;
+            $data['remaining_amount'] = $totalOrder - $downPayment - $totalPayment;
 
             $sdp = SalesDownPayment::create($data);
             ArApHistory::create([
@@ -462,30 +463,24 @@ class SalesDownPaymentController extends Controller
         try {
 
             $salesDownPayment = SalesDownPayment::findOrFail($id);
-
             // Ambil semua data kecuali total_order
-            $data = $request->except(['total_order']);
-
+            $data = $request->except(['total_order', 'total_payment']);
             // Ambil Total Sales Order
             $data['sales_order_amount'] = $this->parseNominal(
                 $request->input('total_order', 0)
             );
-
             // Bersihkan nominal Down Payment
             $data['down_payment_amount'] = $this->parseNominal(
                 $request->input('down_payment_amount', 0)
             );
-
             // Format tanggal Sales Down Payment
             $data['sales_downpayment_date'] = Carbon::parse(
                 $request->sales_downpayment_date
             )->format('Y-m-d');
-
             // Format Due Date
             $data['due_date'] = $request->due_date
                 ? Carbon::parse($request->due_date)->format('Y-m-d')
                 : null;
-
             // User yang melakukan update
             $data['updated_by'] = Auth::user()->id;
             $totalOrder = $this->parseNominal($request->input('total_order', 0));
@@ -940,44 +935,6 @@ class SalesDownPaymentController extends Controller
             'grand_total' => $salesOrder->grand_total,
         ]);
     }
-
-    // public function getSalesOrderDownPayment($salesOrderId)
-    // {
-    //     $year = date('Y');
-
-    //     $table = "sales_down_payments_{$year}";
-
-    //     $salesOrder = SalesOrder::findOrFail($salesOrderId);
-
-    //     // Semua DP aktif untuk Sales Order ini
-    //     $downPayments = DB::table($table)
-    //         ->where('sales_order_id', $salesOrderId)
-    //         ->where('active', 1)
-    //         ->where('status', '!=', 'closed')
-    //         ->get();
-
-    //     // Total nominal DP yang sudah dibuat
-    //     $totalDownPayment = $downPayments->sum(function ($dp) {
-    //         return (float) $dp->down_payment_amount;
-    //     });
-
-    //     // Sisa yang masih bisa dibuat sebagai DP
-    //     $remainingAmount = max(
-    //         0,
-    //         (float) $salesOrder->grand_total - $totalDownPayment
-    //     );
-
-    //     return response()->json([
-    //         'sales_order_id' => $salesOrder->id,
-    //         'sales_order_code' => $salesOrder->sales_order_code,
-
-    //         'sales_order_amount' => (float) $salesOrder->grand_total,
-
-    //         'total_down_payment' => $totalDownPayment,
-
-    //         'remaining_amount' => $remainingAmount,
-    //     ]);
-    // }
 
     public function getSalesOrderDownPayment($salesOrderId)
     {
