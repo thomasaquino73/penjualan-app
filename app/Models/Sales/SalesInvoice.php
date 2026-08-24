@@ -61,7 +61,8 @@ class SalesInvoice extends Model
             'id'
         );
     }
-     public function pelunasanID()
+
+    public function pelunasanID()
     {
         return $this->belongsTo(
             SalesDownPayment::class,

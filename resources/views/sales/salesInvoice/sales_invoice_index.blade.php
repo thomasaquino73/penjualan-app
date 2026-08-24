@@ -81,6 +81,7 @@
                         <th>Customer</th>
                         <th>Description</th>
                         <th>Status</th>
+                        <th>Type</th>
                         <th>Total</th>
                         <th>Created</th>
                         <th>Updated</th>
@@ -144,6 +145,9 @@
                     },
                     {
                         data: 'status',
+                    },
+                    {
+                        data: 'type',
                     },
                     {
                         data: 'total',

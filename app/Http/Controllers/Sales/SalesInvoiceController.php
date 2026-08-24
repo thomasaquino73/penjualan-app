@@ -106,6 +106,20 @@ class SalesInvoiceController extends Controller
                 ->addColumn('customer', function ($row) {
                     return $row->customerID->nama_customer ?? 'N/A';
                 })
+                ->addColumn('type', function ($row) {
+                    if (
+                        is_null($row->sales_down_payment_id)
+                        && $row->payment_type === 'pelunasan'
+                    ) {
+                        return '<span class="badge bg-success">Pelunasan</span>';
+                    }
+
+                    if (! is_null($row->sales_down_payment_id)) {
+                        return '<span class="badge bg-warning">Faktur DP</span>';
+                    }
+
+                    return '';
+                })
                 ->addColumn('status', function ($row) {
 
                     switch ($row->status) {
@@ -202,7 +216,18 @@ class SalesInvoiceController extends Controller
                     return '';
                 })
                 ->addColumn('total', function ($row) {
-                    return format_uang(convert_currency($row->grand_total, $row->currency_id ?? 1));
+                    if ($row->payment_type == 'pelunasan') {
+                        $bayar = format_uang(convert_currency($row->sisa_pembayaran, $row->currency_id ?? 1));
+
+                    } elseif ($row->payment_type == 'no_down_payment') {
+                        $bayar = format_uang(convert_currency($row->grand_total, $row->currency_id ?? 1));
+
+                    } else {
+                        $bayar = format_uang(convert_currency($row->sisa_pembayaran, $row->currency_id ?? 1));
+
+                    }
+
+                    return $bayar;
                 })
                 ->addColumn('action', function ($row) {
 
@@ -291,14 +316,14 @@ class SalesInvoiceController extends Controller
                     ) {
 
                         $btn .= '
-            <a class="dropdown-item text-danger btn-cancel-po"
-                href="javascript:void(0)"
-                data-id="'.$row->id.'">
+                    <a class="dropdown-item text-danger btn-cancel-po"
+                        href="javascript:void(0)"
+                        data-id="'.$row->id.'">
 
-                <i class="ti ti-circle-x me-1"></i>
-                Cancel
-            </a>
-        ';
+                        <i class="ti ti-circle-x me-1"></i>
+                        Cancel
+                    </a>
+                ';
                     }
                     if ($row->status != 'closed') {
                         $btn .= '<a class="dropdown-item"
@@ -329,7 +354,7 @@ class SalesInvoiceController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_invoice_date', 'total', 'customer'])
+                ->rawColumns(['action', 'created_at', 'updated_at', 'status', 'cekbok', 'sales_invoice_date', 'total', 'customer', 'type'])
                 ->make(true);
         }
 
@@ -721,8 +746,6 @@ class SalesInvoiceController extends Controller
         //
     }
 
-    
-
     public function edit(string $id)
     {
         $year = date('Y');
@@ -1087,11 +1110,11 @@ class SalesInvoiceController extends Controller
             | Idealnya satu invoice hanya berasal dari satu Sales Order.
             |
             */
-            if ($salesOrderIds->count() > 1) {
-                throw new \Exception(
-                    'Sales Invoice tidak dapat menggunakan lebih dari satu Sales Order.'
-                );
-            }
+            // if ($salesOrderIds->count() > 1) {
+            //     throw new \Exception(
+            //         'Sales Invoice tidak dapat menggunakan lebih dari satu Sales Order.'
+            //     );
+            // }
 
             $salesOrderId = $salesOrderIds->first();
 
@@ -1101,21 +1124,21 @@ class SalesInvoiceController extends Controller
             |--------------------------------------------------------------------------
             */
             $paymentData = [
-            'sales_down_payment_id' => null,
-            'proforma_id' => null,
-            'pelunasan_id' => null,
-        ];
+                'sales_down_payment_id' => null,
+                'proforma_id' => null,
+                'pelunasan_id' => null,
+            ];
 
-        if ($request->payment_type === 'pelunasan') {
+            if ($request->payment_type === 'pelunasan') {
 
-            // $paymentData['sales_down_payment_id'] = $downPaymentId;
+                // $paymentData['sales_down_payment_id'] = $downPaymentId;
 
-            $paymentData['pelunasan_id'] = $request->pelunasan_id;
+                $paymentData['pelunasan_id'] = $request->pelunasan_id;
 
-        } elseif ($request->payment_type === 'proforma') {
+            } elseif ($request->payment_type === 'proforma') {
 
-            $paymentData['proforma_id'] = $request->proforma_id;
-        }
+                $paymentData['proforma_id'] = $request->proforma_id;
+            }
 
             // Update Sales Invoice
             $salesInvoice->update(array_merge([
