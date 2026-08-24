@@ -483,39 +483,17 @@
                 @if (isset($jsonDetails))
                     @foreach ($jsonDetails as $detail)
                         {
-                            // =====================================================
-                            // SALES INVOICE DETAIL
-                            // =====================================================
                             id: @json($detail['id'] ?? null),
-
                             sales_invoice_id: @json($detail['sales_invoice_id'] ?? null),
-
-                            // =====================================================
-                            // URUTAN
-                            // =====================================================
                             urutan: @json($detail['urutan'] ?? 0),
-
-                            // =====================================================
-                            // SALES ORDER
-                            // =====================================================
                             sales_order_id: @json($detail['sales_order_id'] ?? null),
-
                             sales_order_detail_id: @json($detail['sales_order_detail_id'] ?? null),
-
                             detail_id: @json($detail['sales_order_detail_id'] ?? null),
-
                             order_code: @json($detail['order_code'] ?? null),
-
-                            // =====================================================
-                            // PRODUCT
-                            // =====================================================
+                            // product_id: @json($detail['product_id'] ?? null),
                             product_id: @json($detail['product_id'] ?? null),
-
-                            data_produk: @json($detail['data_produk'] ?? null),
-
-                            // =====================================================
-                            // QUANTITY
-                            // =====================================================
+                            data_produk: @json($detail['data_produk'] ?? ($detail['product_name'] ?? 'Product Not Found')),
+                            // data_produk: @json($detail['data_produk'] ?? null),
                             quantity: @json($detail['quantity'] ?? 0),
 
                             // =====================================================
@@ -727,9 +705,18 @@
                                     productName = row.product_id;
                                 }
 
-                                if (!productName || String(productName).trim() === '') {
-                                    productName = 'Product Not Found';
+                                // if (!productName || String(productName).trim() === '') {
+                                //     productName = 'Product Not Found';
+                                // }
+                                if (row.data_produk) {
+                                    return `<strong>${row.data_produk}</strong>`;
                                 }
+
+                                if (row.product_id) {
+                                    return `<strong>${row.product_id}</strong>`;
+                                }
+
+                                return '<span class="text-muted">Product Not Found</span>';
 
                                 if (row.order_code) {
                                     return `
@@ -1675,9 +1662,9 @@
                                     prDetailsData.push({
                                         id: detail.id,
                                         data_produk: detail.data_produk ??
-                                            "Down Payment",
+                                            "",
                                         product_id: detail.data_produk ??
-                                            "Down Payment",
+                                            "",
                                         quantity: parseFloat(
                                             detail.quantity ?? 1
                                         ),

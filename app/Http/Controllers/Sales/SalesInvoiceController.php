@@ -746,302 +746,534 @@ class SalesInvoiceController extends Controller
         //
     }
 
+    // public function edit(string $id)
+    // {
+    //     $year = date('Y');
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 1. Ambil Sales Invoice beserta relasi
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $salesInvoice = SalesInvoice::with([
+    //         'salesOrder',
+    //         'customerID',
+    //         'paymentTermID',
+    //         'details.produkID',
+    //         'details.unitID',
+    //         'details.warehouseID',
+    //         'details.salesOrderDetail.salesOrder',
+    //     ])->findOrFail($id);
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 2. Cek apakah Sales Invoice ini berasal dari Sales Order
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $isFromSO = $salesInvoice->details
+    //         ->whereNotNull('sales_order_detail_id')
+    //         ->count() > 0;
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 3. Sales Order ID
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $salesOrderId = $salesInvoice->sales_order_id;
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 4. Mapping detail
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $detailDataMapped = $salesInvoice->details
+    //         ->sortBy('urutan')
+    //         ->values()
+    //         ->map(function ($detail) use ($salesInvoice, $year) {
+
+    //             $orderCode = null;
+    //             $salesOrderIdDetail = null;
+
+    //             $sisaSO = null;
+    //             $kuotaAsliSO = null;
+    //             $totalDiambilLainnya = 0;
+
+    //             /*
+    //             |--------------------------------------------------------------------------
+    //             | Jika detail berasal dari Sales Order
+    //             |--------------------------------------------------------------------------
+    //             */
+    //             if ($detail->sales_order_detail_id) {
+
+    //                 /*
+    //                 | Ambil Sales Order ID dari Sales Order Detail
+    //                 */
+    //                 if ($detail->salesOrderDetail) {
+
+    //                     $salesOrderIdDetail =
+    //                         $detail->salesOrderDetail->sales_order_id;
+
+    //                     /*
+    //                     | Ambil kode Sales Order
+    //                     */
+    //                     if ($detail->salesOrderDetail->salesOrder) {
+    //                         $orderCode =
+    //                             $detail->salesOrderDetail->salesOrder->sales_order_code
+    //                             ?? $detail->salesOrderDetail->salesOrder->code
+    //                             ?? null;
+    //                     }
+
+    //                     /*
+    //                     |--------------------------------------------------------------------------
+    //                     | Qty asli Sales Order
+    //                     |--------------------------------------------------------------------------
+    //                     */
+    //                     $kuotaAsliSO = (float) $detail
+    //                         ->salesOrderDetail
+    //                         ->qty;
+
+    //                     /*
+    //                     |--------------------------------------------------------------------------
+    //                     | Hitung qty yang sudah digunakan oleh
+    //                     | Sales Invoice lain
+    //                     |--------------------------------------------------------------------------
+    //                     */
+    //                     $totalDiambilLainnya = DB::table(
+    //                         "sales_invoice_detail_{$year}"
+    //                     )
+    //                         ->where(
+    //                             'sales_order_detail_id',
+    //                             $detail->sales_order_detail_id
+    //                         )
+    //                         ->where(
+    //                             'sales_invoice_id',
+    //                             '<>',
+    //                             $salesInvoice->id
+    //                         )
+    //                         ->where('active', 1)
+    //                         ->sum('qty');
+
+    //                     /*
+    //                     |--------------------------------------------------------------------------
+    //                     | Sisa Sales Order
+    //                     |--------------------------------------------------------------------------
+    //                     */
+    //                     $sisaSO = max(
+    //                         0,
+    //                         $kuotaAsliSO - $totalDiambilLainnya
+    //                     );
+    //                 }
+    //             }
+
+    //             return [
+    //                 'id' => $detail->id,
+    //                 'sales_invoice_id' => $detail->sales_invoice_id,
+    //                 'sales_order_id' => $salesOrderIdDetail,
+    //                 'urutan' => (int) $detail->urutan,
+    //                 'sales_order_detail_id' => $detail->sales_order_detail_id,
+    //                 'order_code' => $orderCode,
+    //                 'product_id' => $detail->product_id,
+    //                 'data_produk' => $detail->produkID->nama_barang
+    //                     ?? 'Product Not Found',
+    //                 'quantity' => (float) $detail->qty,
+    //                 'unit_id' => $detail->unit_id,
+    //                 'unit' => $detail->unitID->detail
+    //                     ?? '-',
+    //                 'warehouse_id' => $detail->warehouse_id,
+    //                 'warehouse' => $detail->warehouseID->nama_gudang
+    //                     ?? '-',
+    //                 'unit_price' => (float) $detail->unit_price,
+    //                 'discount' => (float) $detail->discount,
+    //                 'discount_percent' => $detail->discount_percent,
+    //                 'amount' => (float) $detail->amount,
+    //                 'tax' => (float) ($detail->tax ?? 0),
+    //                 'sisa_so' => $sisaSO,
+    //                 'kuota_asli_so' => $kuotaAsliSO,
+    //                 'total_diambil_lainnya' => (float) $totalDiambilLainnya,
+    //             ];
+    //         });
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 5. Pajak
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $taxes = Tax::where('is_active', true)
+    //         ->whereIn('usage', ['sales', 'both'])
+    //         ->get();
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 6. Default tax
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $defaultTax = Tax::where('is_active', true)
+    //         ->where('is_default', true)
+    //         ->whereIn('usage', ['sales', 'both'])
+    //         ->first();
+
+    //     /*
+    //     |--------------------------------------------------------------------------
+    //     | 7. Data untuk View
+    //     |--------------------------------------------------------------------------
+    //     */
+    //     $x = [
+    //         'title' => 'Edit Sales Invoice',
+
+    //         'breadcrumb' => [
+    //             [
+    //                 'label' => 'Sales Invoice',
+    //                 'url' => route('sales-invoice.index'),
+    //             ],
+    //             [
+    //                 'label' => 'Edit Sales Invoice',
+    //                 'url' => '',
+    //             ],
+    //         ],
+
+    //         'customer' => Customer::where('status', '<>', 0)->get(),
+
+    //         /*
+    //         | Jangan generate nomor baru untuk EDIT
+    //         */
+    //         'idNumber' => $salesInvoice->sales_invoice_code,
+
+    //         'product' => Barang::where('status', '<>', 0)->get(),
+
+    //         'warehouse' => Warehouse::where('status', 1)->get(),
+
+    //         'paymentTerm' => SyaratPembayaran::where(
+    //             'status',
+    //             '<>',
+    //             0
+    //         )->get(),
+
+    //         'salesman' => User::where(
+    //             'status',
+    //             '<>',
+    //             0
+    //         )->get(),
+
+    //         'shipping' => Shipping::where(
+    //             'status',
+    //             1
+    //         )->get(),
+
+    //         'fob' => BasicCodeDetail::where(
+    //             'master_id',
+    //             7
+    //         )->get(),
+
+    //         'model' => $salesInvoice,
+
+    //         'isFromSO' => $isFromSO,
+
+    //         'salesOrderId' => $salesOrderId,
+
+    //         'jsonDetails' => $detailDataMapped,
+
+    //         'taxes' => $taxes,
+
+    //         'defaultTax' => $defaultTax,
+    //     ];
+
+    //     return view(
+    //         'sales.salesInvoice.sales_invoice_edit',
+    //         $x
+    //     );
+    // }
+
     public function edit(string $id)
-    {
-        $year = date('Y');
+{
+    $year = date('Y');
 
-        /*
-        |--------------------------------------------------------------------------
-        | 1. Ambil Sales Invoice beserta relasi
-        |--------------------------------------------------------------------------
-        */
-        $salesInvoice = SalesInvoice::with([
-            'salesOrder',
-            'customerID',
-            'paymentTermID',
-            'details.produkID',
-            'details.unitID',
-            'details.warehouseID',
-            'details.salesOrderDetail.salesOrder',
-        ])->findOrFail($id);
+    /*
+    |--------------------------------------------------------------------------
+    | 1. Ambil Sales Invoice beserta relasi
+    |--------------------------------------------------------------------------
+    */
+    $salesInvoice = SalesInvoice::with([
+        'salesOrder',
+        'customerID',
+        'paymentTermID',
+        'details.produkID',
+        'details.unitID',
+        'details.warehouseID',
+        'details.salesOrderDetail.salesOrder',
+    ])->findOrFail($id);
 
-        /*
-        |--------------------------------------------------------------------------
-        | 2. Cek apakah Sales Invoice ini berasal dari Sales Order
-        |--------------------------------------------------------------------------
-        */
-        $isFromSO = $salesInvoice->details
-            ->whereNotNull('sales_order_detail_id')
-            ->count() > 0;
+    /*
+    |--------------------------------------------------------------------------
+    | 2. Cek apakah Invoice berasal dari Sales Order
+    |--------------------------------------------------------------------------
+    */
+    $isFromSO = $salesInvoice->details
+        ->contains(fn ($detail) => !empty($detail->sales_order_detail_id));
 
-        /*
-        |--------------------------------------------------------------------------
-        | 3. Sales Order ID
-        |--------------------------------------------------------------------------
-        */
-        $salesOrderId = $salesInvoice->sales_order_id;
+    /*
+    |--------------------------------------------------------------------------
+    | 3. Sales Order ID
+    |--------------------------------------------------------------------------
+    */
+    $salesOrderId = $salesInvoice->sales_order_id;
 
-        /*
-        |--------------------------------------------------------------------------
-        | 4. Mapping detail
-        |--------------------------------------------------------------------------
-        */
-        $detailDataMapped = $salesInvoice->details
-            ->sortBy('urutan')
-            ->values()
-            ->map(function ($detail) use ($salesInvoice, $year) {
+    /*
+    |--------------------------------------------------------------------------
+    | 4. Mapping detail
+    |--------------------------------------------------------------------------
+    */
+    $detailDataMapped = $salesInvoice->details
+        ->sortBy('urutan')
+        ->values()
+        ->map(function ($detail) use ($salesInvoice, $year, $salesOrderId) {
 
-                $orderCode = null;
-                $salesOrderIdDetail = null;
+            $orderCode = null;
+            $salesOrderIdDetail = $salesOrderId;
 
-                $sisaSO = null;
-                $kuotaAsliSO = null;
-                $totalDiambilLainnya = 0;
+            $sisaSO = null;
+            $kuotaAsliSO = null;
+            $totalDiambilLainnya = 0;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Jika detail berasal dari Sales Order
+            |--------------------------------------------------------------------------
+            */
+            if (!empty($detail->sales_order_detail_id)) {
+
+                $salesOrderDetail = $detail->salesOrderDetail;
+
+                if ($salesOrderDetail) {
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Sales Order ID dari detail
+                    |--------------------------------------------------------------------------
+                    */
+                    $salesOrderIdDetail =
+                        $salesOrderDetail->sales_order_id
+                        ?? $salesOrderId;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Kode Sales Order
+                    |--------------------------------------------------------------------------
+                    */
+                    if ($salesOrderDetail->salesOrder) {
+                        $orderCode =
+                            $salesOrderDetail->salesOrder->sales_order_code
+                            ?? $salesOrderDetail->salesOrder->code
+                            ?? null;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Qty asli Sales Order
+                    |--------------------------------------------------------------------------
+                    */
+                    $kuotaAsliSO = (float) $salesOrderDetail->qty;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Qty yang sudah dipakai invoice LAIN
+                    |--------------------------------------------------------------------------
+                    */
+                    $totalDiambilLainnya = (float) DB::table(
+                        "sales_invoice_detail_{$year}"
+                    )
+                        ->where(
+                            'sales_order_detail_id',
+                            $detail->sales_order_detail_id
+                        )
+                        ->where(
+                            'sales_invoice_id',
+                            '<>',
+                            $salesInvoice->id
+                        )
+                        ->where('active', 1)
+                        ->sum('qty');
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Sisa SO yang tersedia
+                    |--------------------------------------------------------------------------
+                    */
+                    $sisaSO = max(
+                        0,
+                        $kuotaAsliSO - $totalDiambilLainnya
+                    );
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Data Produk
+            |--------------------------------------------------------------------------
+            */
+            $productName = $detail->produkID?->nama_barang
+                ?? $detail->product_id
+                ?? 'Product Not Found';
+
+            /*
+            |--------------------------------------------------------------------------
+            | Unit
+            |--------------------------------------------------------------------------
+            */
+            $unitName = $detail->unitID?->detail ?? '-';
+
+            /*
+            |--------------------------------------------------------------------------
+            | Warehouse
+            |--------------------------------------------------------------------------
+            */
+            $warehouseName = $detail->warehouseID?->nama_gudang ?? '-';
+
+            return [
+                'id' => $detail->id,
+
+                'sales_invoice_id' => $detail->sales_invoice_id,
+
+                'sales_order_id' => $salesOrderIdDetail,
+
+                'urutan' => (int) $detail->urutan,
+
+                'sales_order_detail_id' =>
+                    $detail->sales_order_detail_id,
+
+                'order_code' => $orderCode,
 
                 /*
                 |--------------------------------------------------------------------------
-                | Jika detail berasal dari Sales Order
+                | product_id JANGAN di-cast integer
                 |--------------------------------------------------------------------------
                 */
-                if ($detail->sales_order_detail_id) {
+                'product_id' => (string) $detail->product_id,
 
-                    /*
-                    | Ambil Sales Order ID dari Sales Order Detail
-                    */
-                    if ($detail->salesOrderDetail) {
+                'data_produk' => $productName,
 
-                        $salesOrderIdDetail =
-                            $detail->salesOrderDetail->sales_order_id;
+                'quantity' => (float) $detail->qty,
 
-                        /*
-                        | Ambil kode Sales Order
-                        */
-                        if ($detail->salesOrderDetail->salesOrder) {
-                            $orderCode =
-                                $detail->salesOrderDetail->salesOrder->sales_order_code
-                                ?? $detail->salesOrderDetail->salesOrder->code
-                                ?? null;
-                        }
+                'unit_id' => $detail->unit_id,
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Qty asli Sales Order
-                        |--------------------------------------------------------------------------
-                        */
-                        $kuotaAsliSO = (float) $detail
-                            ->salesOrderDetail
-                            ->qty;
+                'unit' => $unitName,
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Hitung qty yang sudah digunakan oleh
-                        | Sales Invoice lain
-                        |--------------------------------------------------------------------------
-                        */
-                        $totalDiambilLainnya = DB::table(
-                            "sales_invoice_detail_{$year}"
-                        )
-                            ->where(
-                                'sales_order_detail_id',
-                                $detail->sales_order_detail_id
-                            )
-                            ->where(
-                                'sales_invoice_id',
-                                '<>',
-                                $salesInvoice->id
-                            )
-                            ->where('active', 1)
-                            ->sum('qty');
+                'warehouse_id' => $detail->warehouse_id,
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Sisa Sales Order
-                        |--------------------------------------------------------------------------
-                        */
-                        $sisaSO = max(
-                            0,
-                            $kuotaAsliSO - $totalDiambilLainnya
-                        );
-                    }
-                }
+                'warehouse' => $warehouseName,
 
-                return [
-                    'id' => $detail->id,
+                'unit_price' => (float) $detail->unit_price,
 
-                    'sales_invoice_id' => $detail->sales_invoice_id,
+                'discount' => (float) $detail->discount,
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | HEADER SALES ORDER
-                    |--------------------------------------------------------------------------
-                    */
-                    'sales_order_id' => $salesOrderIdDetail,
+                'discount_percent' =>
+                    $detail->discount_percent !== null
+                        ? (float) $detail->discount_percent
+                        : 0,
 
-                    'urutan' => (int) $detail->urutan,
+                'amount' => (float) $detail->amount,
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | DETAIL SALES ORDER
-                    |--------------------------------------------------------------------------
-                    */
-                    'sales_order_detail_id' => $detail->sales_order_detail_id,
+                'tax' => (float) ($detail->tax ?? 0),
 
-                    'order_code' => $orderCode,
+                'sisa_so' => $sisaSO,
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PRODUCT
-                    |--------------------------------------------------------------------------
-                    */
-                    'product_id' => $detail->product_id,
+                'kuota_asli_so' => $kuotaAsliSO,
 
-                    'data_produk' => $detail->produkID->nama_barang
-                        ?? 'Product Not Found',
+                'total_diambil_lainnya' =>
+                    (float) $totalDiambilLainnya,
+            ];
+        });
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | QUANTITY
-                    |--------------------------------------------------------------------------
-                    */
-                    'quantity' => (float) $detail->qty,
+    /*
+    |--------------------------------------------------------------------------
+    | 5. Pajak
+    |--------------------------------------------------------------------------
+    */
+    $taxes = Tax::where('is_active', true)
+        ->whereIn('usage', ['sales', 'both'])
+        ->get();
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | UNIT
-                    |--------------------------------------------------------------------------
-                    */
-                    'unit_id' => $detail->unit_id,
+    /*
+    |--------------------------------------------------------------------------
+    | 6. Default Tax
+    |--------------------------------------------------------------------------
+    */
+    $defaultTax = Tax::where('is_active', true)
+        ->where('is_default', true)
+        ->whereIn('usage', ['sales', 'both'])
+        ->first();
 
-                    'unit' => $detail->unitID->detail
-                        ?? '-',
+    /*
+    |--------------------------------------------------------------------------
+    | 7. Data View
+    |--------------------------------------------------------------------------
+    */
+    $x = [
+        'title' => 'Edit Sales Invoice',
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | WAREHOUSE
-                    |--------------------------------------------------------------------------
-                    */
-                    'warehouse_id' => $detail->warehouse_id,
-
-                    'warehouse' => $detail->warehouseID->nama_gudang
-                        ?? '-',
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PRICE
-                    |--------------------------------------------------------------------------
-                    */
-                    'unit_price' => (float) $detail->unit_price,
-
-                    'discount' => (float) $detail->discount,
-
-                    'discount_percent' => $detail->discount_percent,
-
-                    'amount' => (float) $detail->amount,
-
-                    'tax' => (float) ($detail->tax ?? 0),
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | SALES ORDER INFO
-                    |--------------------------------------------------------------------------
-                    */
-                    'sisa_so' => $sisaSO,
-
-                    'kuota_asli_so' => $kuotaAsliSO,
-
-                    'total_diambil_lainnya' => (float) $totalDiambilLainnya,
-                ];
-            });
-
-        /*
-        |--------------------------------------------------------------------------
-        | 5. Pajak
-        |--------------------------------------------------------------------------
-        */
-        $taxes = Tax::where('is_active', true)
-            ->whereIn('usage', ['sales', 'both'])
-            ->get();
-
-        /*
-        |--------------------------------------------------------------------------
-        | 6. Default tax
-        |--------------------------------------------------------------------------
-        */
-        $defaultTax = Tax::where('is_active', true)
-            ->where('is_default', true)
-            ->whereIn('usage', ['sales', 'both'])
-            ->first();
-
-        /*
-        |--------------------------------------------------------------------------
-        | 7. Data untuk View
-        |--------------------------------------------------------------------------
-        */
-        $x = [
-            'title' => 'Edit Sales Invoice',
-
-            'breadcrumb' => [
-                [
-                    'label' => 'Sales Invoice',
-                    'url' => route('sales-invoice.index'),
-                ],
-                [
-                    'label' => 'Edit Sales Invoice',
-                    'url' => '',
-                ],
+        'breadcrumb' => [
+            [
+                'label' => 'Sales Invoice',
+                'url' => route('sales-invoice.index'),
             ],
+            [
+                'label' => 'Edit Sales Invoice',
+                'url' => '',
+            ],
+        ],
 
-            'customer' => Customer::where('status', '<>', 0)->get(),
+        'customer' => Customer::where('status', '<>', 0)->get(),
 
-            /*
-            | Jangan generate nomor baru untuk EDIT
-            */
-            'idNumber' => $salesInvoice->sales_invoice_code,
+        /*
+        | Jangan generate nomor baru saat edit
+        */
+        'idNumber' => $salesInvoice->sales_invoice_code,
 
-            'product' => Barang::where('status', '<>', 0)->get(),
+        'product' => Barang::where('status', '<>', 0)->get(),
 
-            'warehouse' => Warehouse::where('status', 1)->get(),
+        'warehouse' => Warehouse::where('status', 1)->get(),
 
-            'paymentTerm' => SyaratPembayaran::where(
-                'status',
-                '<>',
-                0
-            )->get(),
+        'paymentTerm' => SyaratPembayaran::where(
+            'status',
+            '<>',
+            0
+        )->get(),
 
-            'salesman' => User::where(
-                'status',
-                '<>',
-                0
-            )->get(),
+        'salesman' => User::where(
+            'status',
+            '<>',
+            0
+        )->get(),
 
-            'shipping' => Shipping::where(
-                'status',
-                1
-            )->get(),
+        'shipping' => Shipping::where(
+            'status',
+            1
+        )->get(),
 
-            'fob' => BasicCodeDetail::where(
-                'master_id',
-                7
-            )->get(),
+        'fob' => BasicCodeDetail::where(
+            'master_id',
+            7
+        )->get(),
 
-            'model' => $salesInvoice,
+        'model' => $salesInvoice,
 
-            'isFromSO' => $isFromSO,
+        'isFromSO' => $isFromSO,
 
-            'salesOrderId' => $salesOrderId,
+        'salesOrderId' => $salesOrderId,
 
-            'jsonDetails' => $detailDataMapped,
+        'jsonDetails' => $detailDataMapped,
 
-            'taxes' => $taxes,
+        'taxes' => $taxes,
 
-            'defaultTax' => $defaultTax,
-        ];
+        'defaultTax' => $defaultTax,
+    ];
 
-        return view(
-            'sales.salesInvoice.sales_invoice_edit',
-            $x
-        );
-    }
+    return view(
+        'sales.salesInvoice.sales_invoice_edit',
+        $x
+    );
+}
+
+    
 
     public function update(SalesInvoiceRequest $request, $id)
     {
@@ -2628,24 +2860,17 @@ class SalesInvoiceController extends Controller
             return [
                 'id' => $item->id,
                 'delivery_order_id' => $item->delivery_order_id,
-
                 'sales_order_id' => $item->salesOrderDetail->sales_order_id ?? null,
-
                 'product_id' => $item->data_barang_id,
                 'product_name' => $item->produkID->nama_barang ?? '-',
-
                 'qty' => $sisaQty,
-
                 'unit_id' => $item->unit_id,
                 'unit_name' => $item->unitID->detail ?? '-',
-
                 'warehouse_id' => $item->warehouse_id,
                 'warehouse_name' => $item->warehouseID->nama_gudang ?? '-',
-
                 'unit_price' => $price,
                 'discount' => $discount,
                 'amount' => (($price * $sisaQty) - $discount),
-
                 'order_code' => $item->deliveryOrder->delivery_order_code ?? '-',
             ];
         });
@@ -2824,11 +3049,11 @@ class SalesInvoiceController extends Controller
             return [
                 'id' => $dp->id,
                 'data_produk' => $dp->description
-                    ? 'Down Payment - '.$dp->description
-                    : 'Down Payment '.$dp->sales_downpayment_code,
+                    ? $dp->description
+                    : $dp->sales_downpayment_code,
                 'product_id' => $dp->description
-                    ? 'Down Payment - '.$dp->description
-                    : 'Down Payment '.$dp->sales_downpayment_code,
+                    ? $dp->description
+                    : $dp->sales_downpayment_code,
                 'quantity' => 1,
                 'unit' => null,
                 'unit_id' => null,
