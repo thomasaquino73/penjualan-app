@@ -297,7 +297,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('purchase-invoice')->name('purchase-invoice.')->group(function () {
-    Route::get('/get-reference/{supplier}/{type}', [PurchaseInvoiceController::class, 'getReference'])->name('purchase-invoice.get-reference');
+        Route::get('/get-reference/{supplier}/{type}', [PurchaseInvoiceController::class, 'getReference'])->name('purchase-invoice.get-reference');
         Route::get('/{id}/data', [PurchaseInvoiceController::class, 'getSupplierData'])->name('getSupplierData');
         Route::patch('/{id}/close', [PurchaseInvoiceController::class, 'CloseDocument'])->name('close');
         Route::get('/trash', [PurchaseInvoiceController::class, 'trash'])->name('trash');
@@ -368,6 +368,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('delivery-order', DeliveryOrderController::class);
 
     // INVOICE
+    Route::get('/sales-invoice/get-down-payment-detail', [SalesInvoiceController::class, 'getDownPaymentDetail'])->name('sales-invoice.getDownPaymentDetail');
     Route::get('/sales-invoice/get-down-payment/{customer}', [SalesInvoiceController::class, 'getDownPayment'])->name('sales-invoice.getDownPayment');
     Route::get('/sales-invoice/get-reference/{customer}/{type}', [SalesInvoiceController::class, 'getReference'])->name('sales-invoice.get-reference');
     Route::get('/sales-invoice/get-address-list/{customer}', [SalesInvoiceController::class, 'getAddress'])->name('sales-invoice.getAddress');

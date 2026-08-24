@@ -52,13 +52,14 @@ return new class extends Migration
             $table->date('tanggal_pengiriman')->nullable();
             $table->unsignedBigInteger('jenis_pengiriman')->nullable();
             $table->string('fob_id')->nullable();
+            $table->unsignedBigInteger('pelunasan_id')->nullable();
             $table->unsignedBigInteger('sales_down_payment_id')->nullable();
             $table->unsignedBigInteger('proforma_id')->nullable();
             $table->decimal('total_dp', 15, 2)->default(0);
             $table->decimal('sisa_pembayaran', 15, 2)->default(0);
             $table->enum('payment_type', [
                 'proforma',
-                'down_payment',
+                'pelunasan',
                 'no_down_payment',
             ])->default('no_down_payment');
             $table->tinyInteger('active')->default(1)->comment('0=delete, 1=active, 2=not active');
@@ -77,15 +78,14 @@ return new class extends Migration
             $table->integer('urutan')->default(0);
             $table->unsignedBigInteger('sales_order_detail_id')->nullable();
             $table->string('sales_order_code_id')->nullable();
-            $table->unsignedBigInteger('product_id');
+            $table->string('product_id');
             $table->decimal('qty', 18, 4);
-            $table->unsignedBigInteger('unit_id');
-
+            $table->string('unit_id');
             $table->decimal('unit_price', 15, 2);
             $table->string('discount_percent')->nullable();
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('amount', 15, 2);
-            $table->unsignedBigInteger('warehouse_id');
+            $table->unsignedBigInteger('warehouse_id')->nullable();
             $table->decimal('so_qty', 18, 4)->default(0)->comment('Qty yang sudah sukses di-SO-kan');
             $table->decimal('outstanding_qty', 18, 4)->default(0)
                 ->comment('Sisa qty yang belum di-SQ-kan: qty - sq_qty');

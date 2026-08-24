@@ -345,7 +345,7 @@ class SalesDownPaymentController extends Controller
 
         try {
 
-            $data = $request->except(['total_order', 'save_and_new','total_payment']);
+            $data = $request->except(['total_order', 'save_and_new', 'total_payment']);
 
             // Ambil total_order dari request
             $data['sales_order_amount'] = $this->parseNominal(

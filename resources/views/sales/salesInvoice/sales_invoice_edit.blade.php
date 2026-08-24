@@ -26,10 +26,23 @@
                 <div
                     class="d-flex flex-column flex-md-row gap-2
                     justify-content-start justify-content-lg-end">
-                    <button class="btn btn-success btn-sm " id="showModalpr">
-                        <i class="ti ti-clipboard me-1"></i>DELIVERY
-                    </button>
-
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary dropdown-toggle waves-effect waves-light"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Get Form
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><button class="dropdown-item btn-info btn-sm " id="showModaldv">
+                                    <i class="ti ti-clipboard me-1"></i>DELIVERY
+                                </button></li>
+                            <li><button class="dropdown-item btn-primary btn-sm " id="showModaldp">
+                                    <i class="ti ti-clipboard me-1"></i>DOWN PAYMENT
+                                </button></li>
+                            {{-- <li><button class="dropdown-item btn-success btn-sm " id="showModalso">
+                                    <i class="ti ti-clipboard me-1"></i>SALES ORDER
+                                </button></li> --}}
+                        </ul>
+                    </div>
                 </div>
             </div>
 
@@ -120,9 +133,9 @@
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" id='tabIndo'
-                                    data-bs-target="#navs-pills-left-profile" aria-controls="navs-pills-left-profile"
-                                    aria-selected="false" tabindex="-1">
+                                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
+                                    id='tabIndo' data-bs-target="#navs-pills-left-profile"
+                                    aria-controls="navs-pills-left-profile" aria-selected="false" tabindex="-1">
                                     <i class="ti ti-info-circle"></i>
                                 </button>
                             </li>
@@ -210,6 +223,7 @@
     </div>
     @include('sales.salesInvoice.part.modal_sales_invoice')
     @include('sales.salesInvoice.part.modalDeliveryOrder')
+    @include('sales.salesInvoice.part.modalDownPayment')
 @endsection
 @include('partials.tabel.css')
 @include('partials.tabel.js')
@@ -241,23 +255,23 @@
                     $("input[name='payment_type'][value='" + paymentType + "']")
                         .prop("checked", true);
 
-                    if (paymentType == "proforma") {
+                    if (paymentType === "proforma") {
 
                         $("#proforma_id").prop("disabled", false);
-                        $("#down_payment_id").prop("disabled", true);
+                        $("#pelunasan_id").prop("disabled", true);
 
                         loadReference(proformaId);
 
-                    } else if (paymentType == "down_payment") {
+                    } else if (paymentType === "pelunasan") {
 
                         $("#proforma_id").prop("disabled", true);
-                        $("#down_payment_id").prop("disabled", false);
+                        $("#pelunasan_id").prop("disabled", false);
 
                         loadReference(downPaymentId);
 
                     } else {
 
-                        $("#proforma_id,#down_payment_id").prop("disabled", true);
+                        $("#proforma_id,#pelunasan_id").prop("disabled", true);
 
                     }
                 }
@@ -270,7 +284,7 @@
                 });
             });
             // Show Modal Proforma
-            $("#showModalpr").on("click", function(e) {
+            $("#showModaldv").on("click", function(e) {
                 e.preventDefault();
 
                 var customerId = $("#customer_id").val();
@@ -380,6 +394,50 @@
                 });
 
             });
+
+            $("#showModaldp").on("click", function(e) {
+                e.preventDefault();
+
+                var customerId = $("#customer_id").val();
+                $("#dp_number")
+                    .empty()
+                    .append('<option value="">Select Down Payment</option>')
+                    .val(null)
+                    .trigger("change");
+                if (!customerId) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Warning!",
+                        text: "Please select Customer first before adding new data.",
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: "OK",
+                        customClass: {
+                            confirmButton: "btn btn-danger",
+                        },
+                        buttonsStyling: false,
+                    });
+                    return;
+                }
+
+                $.ajax({
+                    url: "/sales-invoice/get-down-payment/" + customerId,
+                    type: "GET",
+                    success: function(response) {
+
+                        let option = '<option value="">Select Down Payment</option>';
+
+                        $.each(response, function(i, item) {
+                            option += `<option value="${item.id}">
+                                ${item.sales_downpayment_code}
+                           </option>`;
+                        });
+
+                        $("#dp_number").html(option);
+
+                        $("#modalDownPayment").modal("show");
+                    }
+                });
+            });
             //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
             $("#checkAll").on("change", function() {
                 // Jika checkAll dicentang, semua .checkItem ikut dicentang, begitu sebaliknya
@@ -425,37 +483,92 @@
                 @if (isset($jsonDetails))
                     @foreach ($jsonDetails as $detail)
                         {
-                            id: "{{ $detail['id'] }}",
-                            sales_invoice_id: "{{ $detail['sales_invoice_id'] }}",
+                            // =====================================================
+                            // SALES INVOICE DETAIL
+                            // =====================================================
+                            id: @json($detail['id'] ?? null),
 
-                            detail_id: "{{ $detail['sales_order_detail_id'] }}",
-                            delivery_order_id: "{{ $detail['sales_order_code_id'] ?? '' }}",
+                            sales_invoice_id: @json($detail['sales_invoice_id'] ?? null),
 
-                            product_id: "{{ $detail['product_id'] }}",
-                            data_produk: "{{ $detail['data_produk'] }}",
-                            quantity: "{{ $detail['quantity'] }}",
+                            // =====================================================
+                            // URUTAN
+                            // =====================================================
+                            urutan: @json($detail['urutan'] ?? 0),
 
-                            unit_id: "{{ $detail['unit_id'] }}",
-                            unit: "{{ $detail['unit'] }}",
+                            // =====================================================
+                            // SALES ORDER
+                            // =====================================================
+                            sales_order_id: @json($detail['sales_order_id'] ?? null),
 
-                            warehouse_id: "{{ $detail['warehouse_id'] }}",
-                            warehouse: "{{ $detail['warehouse'] }}",
+                            sales_order_detail_id: @json($detail['sales_order_detail_id'] ?? null),
 
-                            unit_price: "{{ $detail['unit_price'] }}",
-                            discount_percent: "{{ $detail['discount_percent'] }}",
-                            discount: "{{ $detail['discount'] }}",
-                            amount: "{{ $detail['amount'] }}",
-                            sales_order_id: "{{ $detail['sales_order_id'] }}"
+                            detail_id: @json($detail['sales_order_detail_id'] ?? null),
+
+                            order_code: @json($detail['order_code'] ?? null),
+
+                            // =====================================================
+                            // PRODUCT
+                            // =====================================================
+                            product_id: @json($detail['product_id'] ?? null),
+
+                            data_produk: @json($detail['data_produk'] ?? null),
+
+                            // =====================================================
+                            // QUANTITY
+                            // =====================================================
+                            quantity: @json($detail['quantity'] ?? 0),
+
+                            // =====================================================
+                            // UNIT
+                            // =====================================================
+                            unit_id: @json($detail['unit_id'] ?? null),
+
+                            unit: @json($detail['unit'] ?? null),
+
+                            // =====================================================
+                            // WAREHOUSE
+                            // =====================================================
+                            warehouse_id: @json($detail['warehouse_id'] ?? null),
+
+                            warehouse: @json($detail['warehouse'] ?? null),
+
+                            // =====================================================
+                            // PRICE
+                            // =====================================================
+                            unit_price: @json($detail['unit_price'] ?? 0),
+
+                            // =====================================================
+                            // DISCOUNT
+                            // =====================================================
+                            discount_percent: @json($detail['discount_percent'] ?? 0),
+
+                            discount: @json($detail['discount'] ?? 0),
+
+                            // =====================================================
+                            // AMOUNT
+                            // =====================================================
+                            amount: @json($detail['amount'] ?? 0),
+
+                            // =====================================================
+                            // TAX
+                            // =====================================================
+                            tax: @json($detail['tax'] ?? 0),
+
+                            // =====================================================
+                            // SALES ORDER QUOTA
+                            // =====================================================
+                            sisa_so: @json($detail['sisa_so'] ?? null),
+
+                            kuota_asli_so: @json($detail['kuota_asli_so'] ?? null),
+
+                            total_diambil_lainnya: @json($detail['total_diambil_lainnya'] ?? 0)
                         }
                         {{ !$loop->last ? ',' : '' }}
                     @endforeach
                 @endif
             ];
-            // const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
-            let poIsFromPR = {{ $isFromPR ? 'true' : 'false' }};
-            if (poIsFromPR) {
-                $(".btn-success").html('<i class="ti ti-link"></i> Linked to SO').prop('disabled', true);
-            }
+            const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
+
             $(function() {
                 const datePicker = flatpickr("#sales_invoice_date", {
                     enableTime: false,
@@ -495,7 +608,7 @@
 
                         let select = type === "proforma" ?
                             $("#proforma_id") :
-                            $("#down_payment_id");
+                            $("#pelunasan_id");
 
                         select.empty().append('<option value=""></option>');
 
@@ -575,7 +688,6 @@
                     responsive: true,
                     select: true,
                     searching: false,
-                    // 1. Tambahkan indeks pengurutan awal ke kolom pertama [0] agar engine rowReorder aktif
                     order: [
                         [0, 'asc']
                     ],
@@ -583,7 +695,6 @@
                         [10, 25, 50, -1],
                         [10, 25, 50, "All"],
                     ],
-                    // 2. Hubungkan fungsi pencarian indeks dinamis berdasarkan data objek array langsung
                     rowReorder: {
                         selector: 'td:first-child',
                         dataSrc: function(row) {
@@ -609,11 +720,28 @@
                         {
                             data: "data_produk",
                             render: function(data, type, row) {
-                                // Menampilkan kode referensi PR di bawah nama produk jika ada
-                                if (row.order_code) {
-                                    return `<strong>${data}</strong><br><small class="text-primary">Ref: ${row.order_code}</small>`;
+
+                                let productName = row.data_produk;
+
+                                if (!productName || String(productName).trim() === '') {
+                                    productName = row.product_id;
                                 }
-                                return `<strong>${data}</strong>`;
+
+                                if (!productName || String(productName).trim() === '') {
+                                    productName = 'Product Not Found';
+                                }
+
+                                if (row.order_code) {
+                                    return `
+                                        <strong>${productName}</strong>
+                                        <br>
+                                        <small class="text-primary">
+                                            Ref: ${row.order_code}
+                                        </small>
+                                    `;
+                                }
+
+                                return `<strong>${productName}</strong>`;
                             }
                         },
                         {
@@ -887,14 +1015,14 @@
                     if (paymentType === "proforma") {
 
                         $("#proforma_id").prop("disabled", false);
-                        $("#down_payment_id").prop("disabled", true);
+                        $("#pelunasan_id").prop("disabled", true);
 
                         loadReference(proformaId);
 
                     } else if (paymentType === "down_payment") {
 
                         $("#proforma_id").prop("disabled", true);
-                        $("#down_payment_id").prop("disabled", false);
+                        $("#pelunasan_id").prop("disabled", false);
 
                         loadReference(downPaymentId);
 
@@ -966,16 +1094,8 @@
                     });
                 });
 
-                // $("#proforma_id, #down_payment_id").on("change", function() {
-                //     let amount = $(this)
-                //         .find(":selected")
-                //         .attr("data-amount");
-                //     amount = parseFloat(amount) || 0;
-                //     $("#total_dp").val(formatRupiah(amount));
 
-                // });
-
-                $("#proforma_id, #down_payment_id").on("change", function() {
+                $("#proforma_id, #pelunasan_id").on("change", function() {
 
                     let option = $(this).find(":selected");
 
@@ -997,15 +1117,15 @@
                     if (type === "proforma") {
 
                         $("#proforma_id").prop("disabled", false);
-                        $("#down_payment_id").prop("disabled", true);
+                        $("#pelunasan_id").prop("disabled", true);
 
                         if (!selected) {
-                            $("#down_payment_id").val(null).trigger("change");
+                            $("#pelunasan_id").val(null).trigger("change");
                         }
 
                         loadReference(selected ? proformaId : null);
 
-                    } else if (type === "down_payment") {
+                    } else if (type === "pelunasan") {
 
                         $("#proforma_id").prop("disabled", true);
 
@@ -1013,17 +1133,17 @@
                             $("#proforma_id").val(null).trigger("change");
                         }
 
-                        $("#down_payment_id").prop("disabled", false);
+                        $("#pelunasan_id").prop("disabled", false);
 
                         loadReference(selected ? downPaymentId : null);
 
                     } else {
 
-                        $("#proforma_id,#down_payment_id")
+                        $("#proforma_id,#pelunasan_id")
                             .prop("disabled", true);
 
                         if (!selected) {
-                            $("#proforma_id,#down_payment_id")
+                            $("#proforma_id,#pelunasan_id")
                                 .val(null)
                                 .trigger("change");
                         }
@@ -1493,6 +1613,157 @@
                         buttonsStyling: false,
                     });
 
+                });
+                $("#btnSubmitDp").on("click", function() {
+                    let dpIds = $("#dp_number").val();
+                    if (!dpIds || dpIds.length === 0) {
+                        $("#dp_numberError").text(
+                            "Silakan pilih Down Payment terlebih dahulu."
+                        );
+                        return;
+                    }
+                    $("#dp_numberError").text("");
+                    let $button = $(this);
+                    $button
+                        .prop("disabled", true)
+                        .html(
+                            '<i class="fas fa-spinner fa-spin me-1"></i> Processing...'
+                        );
+
+                    $.ajax({
+                        url: "{{ route('sales-invoice.getDownPaymentDetail') }}",
+                        type: "GET",
+
+                        data: {
+                            sales_down_payment_ids: dpIds
+                        },
+
+                        success: function(response) {
+
+                            console.log("Response DP:", response);
+
+                            if (
+                                !response.success ||
+                                !Array.isArray(response.data) ||
+                                response.data.length === 0
+                            ) {
+                                Swal.fire({
+                                    icon: "warning",
+                                    title: "Warning",
+                                    text: "Detail Down Payment tidak ditemukan."
+                                });
+
+                                return;
+                            }
+
+                            // ==========================================
+                            // MASUKKAN DP KE prDetailsData
+                            // ==========================================
+
+                            response.data.forEach(function(detail) {
+
+                                console.log("Detail DP:", detail);
+
+                                // Cek apakah DP sudah ada
+                                let exists = prDetailsData.some(function(item) {
+                                    return String(item.sales_down_payment_id) ===
+                                        String(detail.sales_down_payment_id);
+                                });
+
+                                if (!exists) {
+
+                                    prDetailsData.push({
+                                        id: detail.id,
+                                        data_produk: detail.data_produk ??
+                                            "Down Payment",
+                                        product_id: detail.data_produk ??
+                                            "Down Payment",
+                                        quantity: parseFloat(
+                                            detail.quantity ?? 1
+                                        ),
+                                        unit: detail.unit ?? "x",
+                                        unit_id: detail.unit_id ?? "x",
+                                        unit_price: parseFloat(
+                                            detail.unit_price ?? 0
+                                        ),
+                                        discount: parseFloat(
+                                            detail.discount ?? 0
+                                        ),
+                                        amount: parseFloat(
+                                            detail.amount ?? 0
+                                        ),
+                                        warehouse: detail.warehouse ?? null,
+                                        warehouse_id: detail.warehouse_id ?? null,
+
+                                        sales_down_payment_id: detail
+                                            .sales_down_payment_id,
+
+                                        sales_downpayment_code: detail
+                                            .sales_downpayment_code,
+
+                                        is_down_payment: true
+                                    });
+                                }
+                            });
+
+                            // ==========================================
+                            // REFRESH DATATABLE
+                            // ==========================================
+
+                            table.clear();
+
+                            table.rows.add(prDetailsData);
+
+                            table.draw();
+
+                            // ==========================================
+                            // HITUNG TOTAL
+                            // ==========================================
+
+                            calculateGrandTotal();
+                            calculateTotalOrder();
+
+                            // ==========================================
+                            // RESET SELECT
+                            // ==========================================
+
+                            $("#dp_number")
+                                .val(null)
+                                .trigger("change");
+
+                            // ==========================================
+                            // TUTUP MODAL
+                            // ==========================================
+
+                            $("#modalDownPayment").modal("hide");
+
+                            toastr.success(
+                                "Down Payment berhasil ditambahkan.",
+                                "", {
+                                    timeOut: 1500,
+                                    progressBar: true
+                                }
+                            );
+                        },
+
+                        error: function(xhr) {
+
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "Gagal mengambil detail Down Payment."
+                            });
+                        },
+
+                        complete: function() {
+
+                            $button
+                                .prop("disabled", false)
+                                .html(
+                                    '<i class="ti ti-check me-1"></i> Process Selected'
+                                );
+                        }
+                    });
                 });
 
 

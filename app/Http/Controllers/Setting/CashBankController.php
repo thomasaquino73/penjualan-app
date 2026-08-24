@@ -7,7 +7,6 @@ use App\Http\Requests\CashBankRequest;
 use App\Models\Setting\CashBank;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 class CashBankController extends Controller
@@ -26,7 +25,8 @@ class CashBankController extends Controller
                         : 'N/A';
                 })
                 ->addColumn('openingBalance', function ($row) {
-                    $selectedCurrencyId = session('currency_id', 1); 
+                    $selectedCurrencyId = session('currency_id', 1);
+
                     return format_uang(convert_currency($row->opening_balance, $selectedCurrencyId));
                 })
                 ->addColumn('updated_at', function ($row) {
@@ -40,7 +40,7 @@ class CashBankController extends Controller
 
                     return 'N/A';
                 })
-                ->rawColumns(['created_at', 'updated_at','openingBalance'])
+                ->rawColumns(['created_at', 'updated_at', 'openingBalance'])
                 ->make(true);
         }
 
@@ -52,7 +52,7 @@ class CashBankController extends Controller
 
         try {
 
-            $data = $r->except('account_cashbank','_token');
+            $data = $r->except('account_cashbank', '_token');
 
             if (! empty($id)) {
 
@@ -94,7 +94,7 @@ class CashBankController extends Controller
         }
     }
 
-        public function edit($id)
+    public function edit($id)
     {
         $data = CashBank::find($id);
 
@@ -104,5 +104,4 @@ class CashBankController extends Controller
 
         return response()->json($data);
     }
-
 }

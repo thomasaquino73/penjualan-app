@@ -52,11 +52,20 @@ class SalesInvoice extends Model
     {
         return $this->belongsTo(SyaratPembayaran::class, 'payment_term_id');
     }
+
     public function salesDownPayments()
     {
         return $this->belongsTo(
             SalesDownPayment::class,
             'sales_down_payment_id',
+            'id'
+        );
+    }
+     public function pelunasanID()
+    {
+        return $this->belongsTo(
+            SalesDownPayment::class,
+            'pelunasan_id',
             'id'
         );
     }

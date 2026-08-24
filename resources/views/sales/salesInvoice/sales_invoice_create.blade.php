@@ -38,9 +38,9 @@
                             <li><button class="dropdown-item btn-primary btn-sm " id="showModaldp">
                                     <i class="ti ti-clipboard me-1"></i>DOWN PAYMENT
                                 </button></li>
-                            <li><button class="dropdown-item btn-success btn-sm " id="showModalso">
+                            {{-- <li><button class="dropdown-item btn-success btn-sm " id="showModalso">
                                     <i class="ti ti-clipboard me-1"></i>SALES ORDER
-                                </button></li>
+                                </button></li> --}}
                         </ul>
                     </div>
                 </div>
@@ -407,11 +407,11 @@
 
         });
 
-          $("#showModaldp").on("click", function(e) {
+        $("#showModaldp").on("click", function(e) {
             e.preventDefault();
 
             var customerId = $("#customer_id").val();
-                 $("#dp_number")
+            $("#dp_number")
                 .empty()
                 .append('<option value="">Select Down Payment</option>')
                 .val(null)
@@ -431,7 +431,7 @@
                 return;
             }
 
-             $.ajax({
+            $.ajax({
                 url: "/sales-invoice/get-down-payment/" + customerId,
                 type: "GET",
                 success: function(response) {
@@ -598,7 +598,6 @@
                         data: "warehouse",
                         className: "text-center"
                     },
-
                 ],
                 layout: {
                     topStart: {
@@ -900,7 +899,7 @@
 
                         let select = (type === 'proforma') ?
                             $("#proforma_id") :
-                            $("#down_payment_id");
+                            $("#pelunasan_id");
 
                         select.empty().append('<option value="">Pilih Referensi</option>');
 
@@ -932,7 +931,7 @@
             }
 
 
-            $("#proforma_id, #down_payment_id").on("change", function() {
+            $("#proforma_id, #pelunasan_id").on("change", function() {
 
                 let option = $(this).find(":selected");
 
@@ -955,21 +954,21 @@
                 if (type === "proforma") {
 
                     $("#proforma_id").prop("disabled", false);
-                    $("#down_payment_id")
+                    $("#pelunasan_id")
                         .prop("disabled", true)
                         .val(null)
                         .trigger("change");
 
                     loadReference();
 
-                } else if (type === "down_payment") {
+                } else if (type === "pelunasan") {
 
                     $("#proforma_id")
                         .prop("disabled", true)
                         .val(null)
                         .trigger("change");
 
-                    $("#down_payment_id").prop("disabled", false);
+                    $("#pelunasan_id").prop("disabled", false);
 
                     loadReference();
 
@@ -980,7 +979,7 @@
                         .val(null)
                         .trigger("change");
 
-                    $("#down_payment_id")
+                    $("#pelunasan_id")
                         .prop("disabled", true)
                         .val(null)
                         .trigger("change");
@@ -991,8 +990,6 @@
             });
 
             toggleSelect();
-
-
 
             $(document).on("change", "#product_id", function() {
                 let productId = $(this).val();
@@ -1216,7 +1213,6 @@
 
             $("#formPrDetail").on("submit", function(e) {
                 e.preventDefault();
-
                 let productId = $("#product_id").val();
                 let productName = $("#product_id option:selected").text();
                 let quantity = parseFloat($("#quantity").val()) || 0;
@@ -1226,12 +1222,10 @@
                 let warehouseName = $("#warehouse_id option:selected").text();
                 let detailId = $("#detail_id")
                     .val(); // Ini adalah index row array (kosong jika barang baru)
-
                 let unitPrice = parseFloat($("#unit_price").val()) || 0;
                 let discountPercent = $("#discount_percent").val() || 0;
                 let discount = parseFloat($("#discount").val()) || 0;
                 let tax = parseFloat($("#tax").val()) || 0;
-
                 let requiredDate = $("#required_date").val() || "";
                 let salesOrderId = $("#sales_order_id").val() || null;
                 // 1. Validasi Input Wajib
@@ -1382,8 +1376,6 @@
                 calculateTotalOrder();
             });
 
-
-
             $("#btnSubmitSelected").on("click", function() {
                 let checkedBoxes = $(".checkItem:checked");
                 if (checkedBoxes.length === 0) {
@@ -1441,121 +1433,157 @@
                 });
 
             });
+            $("#btnSubmitDp").on("click", function() {
+                let dpIds = $("#dp_number").val();
+                if (!dpIds || dpIds.length === 0) {
+                    $("#dp_numberError").text(
+                        "Silakan pilih Down Payment terlebih dahulu."
+                    );
+                    return;
+                }
+                $("#dp_numberError").text("");
+                let $button = $(this);
+                $button
+                    .prop("disabled", true)
+                    .html(
+                        '<i class="fas fa-spinner fa-spin me-1"></i> Processing...'
+                    );
+
+                $.ajax({
+                    url: "{{ route('sales-invoice.getDownPaymentDetail') }}",
+                    type: "GET",
+
+                    data: {
+                        sales_down_payment_ids: dpIds
+                    },
+
+                    success: function(response) {
+
+                        console.log("Response DP:", response);
+
+                        if (
+                            !response.success ||
+                            !Array.isArray(response.data) ||
+                            response.data.length === 0
+                        ) {
+                            Swal.fire({
+                                icon: "warning",
+                                title: "Warning",
+                                text: "Detail Down Payment tidak ditemukan."
+                            });
+
+                            return;
+                        }
+
+                        // ==========================================
+                        // MASUKKAN DP KE prDetailsData
+                        // ==========================================
+
+                        response.data.forEach(function(detail) {
+
+                            console.log("Detail DP:", detail);
+
+                            // Cek apakah DP sudah ada
+                            let exists = prDetailsData.some(function(item) {
+                                return String(item.sales_down_payment_id) ===
+                                    String(detail.sales_down_payment_id);
+                            });
+
+                            if (!exists) {
+
+                                prDetailsData.push({
+                                    id: detail.id,
+                                    data_produk: detail.data_produk ??
+                                        "Down Payment",
+                                    product_id: detail.data_produk ??
+                                        "Down Payment",
+                                    quantity: parseFloat(
+                                        detail.quantity ?? 1
+                                    ),
+                                    unit: detail.unit ?? "x",
+                                    unit_id: detail.unit_id ?? "x",
+                                    unit_price: parseFloat(
+                                        detail.unit_price ?? 0
+                                    ),
+                                    discount: parseFloat(
+                                        detail.discount ?? 0
+                                    ),
+                                    amount: parseFloat(
+                                        detail.amount ?? 0
+                                    ),
+                                    warehouse: detail.warehouse ?? null,
+                                    warehouse_id: detail.warehouse_id ?? null,
+
+                                    sales_down_payment_id: detail
+                                        .sales_down_payment_id,
+
+                                    sales_downpayment_code: detail
+                                        .sales_downpayment_code,
+
+                                    is_down_payment: true
+                                });
+                            }
+                        });
+
+                        // ==========================================
+                        // REFRESH DATATABLE
+                        // ==========================================
+
+                        table.clear();
+
+                        table.rows.add(prDetailsData);
+
+                        table.draw();
+
+                        // ==========================================
+                        // HITUNG TOTAL
+                        // ==========================================
+
+                        calculateGrandTotal();
+                        calculateTotalOrder();
+
+                        // ==========================================
+                        // RESET SELECT
+                        // ==========================================
+
+                        $("#dp_number")
+                            .val(null)
+                            .trigger("change");
+
+                        // ==========================================
+                        // TUTUP MODAL
+                        // ==========================================
+
+                        $("#modalDownPayment").modal("hide");
+
+                        toastr.success(
+                            "Down Payment berhasil ditambahkan.",
+                            "", {
+                                timeOut: 1500,
+                                progressBar: true
+                            }
+                        );
+                    },
+
+                    error: function(xhr) {
+
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "Gagal mengambil detail Down Payment."
+                        });
+                    },
+
+                    complete: function() {
+
+                        $button
+                            .prop("disabled", false)
+                            .html(
+                                '<i class="ti ti-check me-1"></i> Process Selected'
+                            );
+                    }
+                });
+            });
         });
-
-        // $(document).on("click", "#btnSubmitSelected", function(e) {
-        //     e.preventDefault();
-
-        //     console.log("Process Selected clicked");
-
-        //     const checkedBoxes = $("#orderTableBody .checkItem:checked");
-
-        //     console.log("Selected:", checkedBoxes.length);
-
-        //     if (checkedBoxes.length === 0) {
-        //         Swal.fire({
-        //             icon: "warning",
-        //             title: "Warning",
-        //             text: "Silakan pilih minimal satu item delivery.",
-        //             customClass: {
-        //                 confirmButton: "btn btn-danger"
-        //             },
-        //             buttonsStyling: false
-        //         });
-
-        //         return;
-        //     }
-
-        //     if (!Array.isArray(prDetailsData)) {
-        //         prDetailsData = [];
-        //     }
-
-        //     checkedBoxes.each(function() {
-
-        //         const checkbox = $(this);
-
-        //         const item = {
-        //             detail_id: checkbox.attr("data-id"),
-
-        //             delivery_order_id: checkbox.attr("data-delivery_order_id"),
-        //             sales_order_id: checkbox.attr("data-sales_order_id"),
-
-        //             order_code: checkbox.attr("data-delivery_order_code"),
-
-        //             product_id: checkbox.attr("data-product_id"),
-        //             data_produk: checkbox.attr("data-product_name"),
-
-        //             quantity: parseFloat(
-        //                 checkbox.attr("data-qty")
-        //             ) || 0,
-
-        //             sisa_pr: parseFloat(
-        //                 checkbox.attr("data-outstanding_qty")
-        //             ) || 0,
-
-        //             unit_id: checkbox.attr("data-unit_id"),
-        //             unit: checkbox.attr("data-unit_name"),
-
-        //             warehouse_id: checkbox.attr("data-warehouse_id"),
-        //             warehouse: checkbox.attr("data-warehouse_name"),
-
-        //             unit_price: parseFloat(
-        //                 checkbox.attr("data-unit_price")
-        //             ) || 0,
-
-        //             discount: parseFloat(
-        //                 checkbox.attr("data-discount")
-        //             ) || 0,
-
-        //             amount: parseFloat(
-        //                 checkbox.attr("data-amount")
-        //             ) || 0
-        //         };
-
-        //         console.log("Delivery item:", item);
-
-        //         const exists = prDetailsData.some(function(x) {
-        //             return String(x.detail_id) === String(item.detail_id);
-        //         });
-
-        //         if (!exists) {
-        //             prDetailsData.push(item);
-        //         }
-        //     });
-
-        //     console.log("prDetailsData:", prDetailsData);
-
-        //     // Pastikan DataTable tersedia
-        //     if (typeof table === "undefined") {
-        //         console.error("DataTable 'table' belum tersedia.");
-        //         return;
-        //     }
-
-        //     table
-        //         .clear()
-        //         .rows
-        //         .add(prDetailsData)
-        //         .draw();
-
-        //     if (typeof calculateGrandTotal === "function") {
-        //         calculateGrandTotal();
-        //     }
-
-        //     if (typeof calculateTotalOrder === "function") {
-        //         calculateTotalOrder();
-        //     }
-
-        //     $("#modalDeliveryDetail").modal("hide");
-
-        //     Swal.fire({
-        //         icon: "success",
-        //         title: "Success",
-        //         text: "Data delivery berhasil dimasukkan.",
-        //         customClass: {
-        //             confirmButton: "btn btn-primary"
-        //         },
-        //         buttonsStyling: false
-        //     });
-        // });
     </script>
 @endpush

@@ -68,13 +68,39 @@
         <tbody>
             @foreach ($modelDetail as $detail)
                 <tr>
-                    <td>{{ $detail->produkID->id_barang }}</td>
-                    <td>{{ $detail->produkID->nama_barang }}</td>
-                    <td class="text-center">{{ rtrim(rtrim(number_format($detail->qty, 2, ',', '.'), '0'), ',') }}</td>
-                    <td class="text-center">{{ $detail->unitID->detail }}</td>
-                    <td class="text-right">{{ number_format($detail->unit_price, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detail->discount, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detail->amount, 2, ',', '.') }}</td>
+                    @if ($detail->produkID)
+                        {{-- Detail Produk --}}
+                        <td>{{ $detail->produkID->id_barang }}</td>
+                        <td>{{ $detail->produkID->nama_barang }}</td>
+                        <td class="text-center">
+                            {{ rtrim(rtrim(number_format($detail->qty, 2, ',', '.'), '0'), ',') }}
+                        </td>
+                        <td class="text-center">
+                            {{ $detail->unitID?->detail ?? '-' }}
+                        </td>
+                    @else
+                        {{-- Detail Down Payment / non-product --}}
+                        <td></td>
+                        <td>
+                            {{ $detail->product_id }}
+                        </td>
+                        <td class="text-center">
+                            {{ rtrim(rtrim(number_format($detail->qty, 2, ',', '.'), '0'), ',') }}
+                        </td>
+                        <td class="text-center">-</td>
+                    @endif
+
+                    <td class="text-right">
+                        {{ number_format($detail->unit_price, 2, ',', '.') }}
+                    </td>
+
+                    <td class="text-right">
+                        {{ number_format($detail->discount, 2, ',', '.') }}
+                    </td>
+
+                    <td class="text-right">
+                        {{ number_format($detail->amount, 2, ',', '.') }}
+                    </td>
                 </tr>
             @endforeach
         </tbody>
@@ -117,10 +143,10 @@
                             {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1), 2) : '' }}
                         </td>
                     </tr>
-                    @if ($model->payment_type == 'down_payment')
+                    @if ($model->payment_type == 'pelunasan')
                         <tr>
                             <td>
-                                {{ $model->salesDownPayments?->description ?? 'Down Payment' }}
+                                {{ $model->pelunasanID?->description }}
                             </td>
                             <td class="text-right">
                                 {{ format_uang(convert_currency($model->total_dp, $detail->currency_id ?? 1), 2) }}
@@ -128,7 +154,7 @@
                         </tr>
 
                         <tr class="total-row">
-                            <td>Jumlah Tertagih</td>
+                            <td>Sisa Pembayaran</td>
                             <td class="text-right">
                                 {{ format_uang(convert_currency($model->sisa_pembayaran, $detail->currency_id ?? 1), 2) }}
                             </td>
@@ -141,7 +167,7 @@
                             </td>
                         </tr>
                         <tr class="total-row">
-                            <td>Jumlah Tertagih</td>
+                            <td>Sisa Pembayaran</td>
                             <td class="text-right">
                                 {{ isset($model) ? format_uang(convert_currency($model->sisa_pembayaran, $detail->currency_id ?? 1), 2) : '' }}
                             </td>

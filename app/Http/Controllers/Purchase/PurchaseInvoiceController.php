@@ -1817,20 +1817,19 @@ class PurchaseInvoiceController extends Controller
 
         try {
 
-                $data = PurchaseDownPayment::from("purchase_down_payments_$year as dp")
-                    ->where('dp.supplier_id', $supplierId)
-                    ->where('dp.active', 1)
-                    ->where('dp.remaining_amount', '>', 0)
-                    ->whereNotIn('dp.status', ['cancelled', 'closed'])
-                    ->select(
-                        'dp.id',
-                        'dp.sales_order_id',
-                        'dp.sales_downpayment_code as code',
-                        'dp.sales_downpayment_date as date',
-                        'dp.down_payment_amount as amount'
-                    )
-                    ->get();
-
+            $data = PurchaseDownPayment::from("purchase_down_payments_$year as dp")
+                ->where('dp.supplier_id', $supplierId)
+                ->where('dp.active', 1)
+                ->where('dp.remaining_amount', '>', 0)
+                ->whereNotIn('dp.status', ['cancelled', 'closed'])
+                ->select(
+                    'dp.id',
+                    'dp.sales_order_id',
+                    'dp.sales_downpayment_code as code',
+                    'dp.sales_downpayment_date as date',
+                    'dp.down_payment_amount as amount'
+                )
+                ->get();
 
             return response()->json($data);
 

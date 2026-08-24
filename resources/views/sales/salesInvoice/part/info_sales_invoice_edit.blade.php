@@ -189,13 +189,12 @@
             </div>
             <!-- Down Payment -->
             <div class="input-group mb-3">
-                <div class="input-group-text">
-                    <input class="form-check-input mt-0 me-2" type="radio" name="payment_type"
-                        value="down_payment">
-                    Down Payment
+                 <div class="input-group-text">
+                    <input class="form-check-input mt-0 me-2" type="radio" name="payment_type" value="pelunasan">
+                    Pelunasan
                 </div>
 
-                <select name="down_payment_id" id="down_payment_id" class="form-select select2"
+                <select name="pelunasan_id" id="pelunasan_id" class="form-select select2"
                     data-placeholder="Select Down Payment" disabled>
                     <option></option>
                 </select>

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sales\Customer;
 use App\Models\Sales\SalesReceipt;
 use App\Models\Setting\CashBank;
-use App\Models\Sales\Customer;
 
 class SalesReceiptController extends Controller
 {
