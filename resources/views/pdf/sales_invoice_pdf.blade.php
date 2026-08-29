@@ -29,22 +29,27 @@
                 <div class="po-box-title">Sales Invoice</div>
                 <table style="width:100%;">
                     <tr>
-                        <td width="70">Nomor</td>
+                        <td width="80">Nomor</td>
                         <td width="10">:</td>
                         <td>{{ $model->sales_invoice_code }}</td>
                     </tr>
                     <tr>
-                        <td width="70">Tanggal</td>
+                        <td width="80">Tanggal</td>
                         <td width="10">:</td>
                         <td>{{ date('d M Y', strtotime($model->sales_invoice_date)) }}</td>
                     </tr>
                     <tr>
-                        <td width="70">PO Nomor</td>
+                        <td width="80">Nomor PO</td>
                         <td width="10">:</td>
                         <td>{{ $model->po_number }}</td>
                     </tr>
                     <tr>
-                        <td width="70">Pembayaran</td>
+                        <td width="80">Nomor Faktur Pajak</td>
+                        <td width="10">:</td>
+                        <td>{{ $model->no_faktur_pajak }}</td>
+                    </tr>
+                    <tr>
+                        <td width="80">Pembayaran</td>
                         <td width="10">:</td>
                         <td>{{ $model->paymentTermID?->nama ?? '-' }}</td>
                     </tr>

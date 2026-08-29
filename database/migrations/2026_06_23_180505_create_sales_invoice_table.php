@@ -22,6 +22,7 @@ return new class extends Migration
             $table->unsignedBigInteger('sales_order_id')->nullable();
             $table->unsignedBigInteger('payment_term_id')->nullable();
             $table->unsignedBigInteger('salesman_id')->nullable();
+            $table->string('no_faktur_pajak')->nullable();
             $table->string('address')->nullable();
             $table->string('description')->nullable();
             $table->string('taxpayer_data')->nullable();

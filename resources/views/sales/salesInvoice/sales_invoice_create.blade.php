@@ -15,13 +15,10 @@
             @endforeach
         </span>
     </h4>
-
     <div class="card">
         <div
             class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
-
             <h5 class="card-title mb-2 mb-lg-0">{{ $title }}</h5>
-
             <div class="col-12 col-lg-5">
                 <div
                     class="d-flex flex-column flex-md-row gap-2
@@ -38,9 +35,9 @@
                             <li><button class="dropdown-item btn-primary btn-sm " id="showModaldp">
                                     <i class="ti ti-clipboard me-1"></i>DOWN PAYMENT
                                 </button></li>
-                            {{-- <li><button class="dropdown-item btn-success btn-sm " id="showModalso">
+                            <li><button class="dropdown-item btn-success btn-sm " id="showModalso">
                                     <i class="ti ti-clipboard me-1"></i>SALES ORDER
-                                </button></li> --}}
+                                </button></li>
                         </ul>
                     </div>
                 </div>
@@ -82,6 +79,15 @@
                                         class="form-control" value="{{ $idNumber }}">
                                 </div>
                                 <span class="error text-danger" id="sales_invoice_codeError"></span>
+
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Tax Invoice Number<small class="text-danger">*</small> </label>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text"><i class="ti ti-barcode"></i></span>
+                                    <input type="text" name="no_faktur_pajak" id="no_faktur_pajak" class="form-control">
+                                </div>
+                                <span class="error text-danger" id="no_faktur_pajakError"></span>
 
                             </div>
                         </div>
@@ -272,6 +278,7 @@
     @include('sales.salesInvoice.part.modal_sales_invoice')
     @include('sales.salesInvoice.part.modalDeliveryOrder')
     @include('sales.salesInvoice.part.modalDownPayment')
+    @include('sales.salesInvoice.part.modalSalesOrder')
 @endsection
 @include('partials.tabel.css')
 @include('partials.tabel.js')
@@ -449,6 +456,134 @@
                     $("#modalDownPayment").modal("show");
                 }
             });
+        });
+        $("#showModalso").on("click", function(e) {
+    e.preventDefault();
+
+    let customerId = $("#customer_id").val();
+
+    if (!customerId) {
+        Swal.fire({
+            icon: "warning",
+            title: "Warning!",
+            text: "Please select Customer first before adding new data.",
+            confirmButtonText: "OK",
+            customClass: {
+                confirmButton: "btn btn-danger",
+            },
+            buttonsStyling: false,
+        });
+
+        return;
+    }
+
+    $.ajax({
+        url: "/sales-invoice/get-sales-order/" + customerId,
+        type: "GET",
+        dataType: "json",
+
+        success: function(response) {
+
+            console.log("Sales Order Response:", response);
+
+            let option = '<option value="">Select Sales Order</option>';
+
+            $.each(response, function(i, item) {
+                option += `
+                    <option value="${item.id}">
+                        ${item.sales_order_code}
+                    </option>
+                `;
+            });
+
+            $("#so_number").html(option);
+
+            // Bootstrap 5
+            $("#modalSalesOrder").modal("show");
+        },
+
+        error: function(xhr, status, error) {
+            console.log("AJAX ERROR");
+            console.log("Status:", xhr.status);
+            console.log("Response:", xhr.responseText);
+            console.log("Error:", error);
+
+            Swal.fire({
+                icon: "error",
+                title: "Gagal",
+                text: "Gagal mengambil Sales Order.",
+            });
+        }
+    });
+});
+
+         $('#so_number').on('change', function() {
+
+            let quotationIds = $(this).val();
+
+            if (!quotationIds || quotationIds.length === 0) {
+                $('#orderTableBody').html('');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('sales-invoice.getDeliveryDetail') }}",
+                type: "POST",
+                data: {
+                    quotation_ids: quotationIds,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    let html = '';
+
+                    if (response.success && response.data.length > 0) {
+                        $.each(response.data, function(index, item) {
+                            let safeProductName = (item.product_name || '').replace(/"/g,
+                                '&quot;');
+
+                            // Konversi ke angka yang valid sebelum toLocaleString
+                            let price = parseFloat(item.unit_price) || 0;
+                            let discount = parseFloat(item.discount) || 0;
+                            let amount = parseFloat(item.amount) || 0;
+
+                            html += `
+                                <tr>
+                                    <td>
+                                        <input class="form-check-input checkItem" type="checkbox"
+                                            data-id="${item.id}"
+                                            data-product_id="${item.product_id}"
+                                            data-product_name="${safeProductName}"
+                                            data-qty="${item.qty}"
+                                            data-outstanding_qty="${item.outstanding_qty}"
+                                            data-unit_id="${item.unit_id}"
+                                            data-unit_name="${item.unit_name}"
+                                            data-warehouse_id="${item.warehouse_id}"
+                                            data-warehouse_name="${item.warehouse_name}"
+                                            data-unit_price="${price}"
+                                            data-discount="${discount}"
+                                            data-amount="${amount}"
+                                            data-delivery_order_id="${item.delivery_order_id}"
+                                            data-delivery_order_code="${item.order_code}"
+                                            data-sales_order_id="${item.sales_order_id}"
+                                        >
+                                    </td>
+                                    <td>${item.product_name}</td>
+                                    <td class="text-end">${item.qty}</td>
+                                    <td>${item.unit_name}</td>
+                                    <td class="text-end">${price.toLocaleString('id-ID')}</td>
+                                    <td class="text-end">${discount.toLocaleString('id-ID')}</td>
+                                    <td class="text-end">${amount.toLocaleString('id-ID')}</td>
+                                </tr>`;
+                        });
+                    } else {
+                        html =
+                            '<tr><td colspan="7" class="text-center">Tidak ada data ditemukan</td></tr>';
+                    }
+
+                    $("#orderTableBody").html(html);
+                }
+            });
+
         });
 
         //  LOGIC LOCK: CHECK ALL / UNCHECK ALL

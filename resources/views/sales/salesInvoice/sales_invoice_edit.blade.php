@@ -79,13 +79,23 @@
 
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="form-label">SO Number <small class="text-danger">*</small> </label>
+                                <label class="form-label">SI Number <small class="text-danger">*</small> </label>
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ti ti-barcode"></i></span>
                                     <input type="text" name="sales_invoice_code" id="sales_invoice_code"
                                         class="form-control" value="{{ $model->sales_invoice_code }}">
                                 </div>
                                 <span class="error text-danger" id="sales_invoice_codeError"></span>
+
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Tax Invoice Number<small class="text-danger">*</small> </label>
+                                <div class="input-group input-group-merge">
+                                    <span class="input-group-text"><i class="ti ti-barcode"></i></span>
+                                    <input type="text" name="no_faktur_pajak" id="no_faktur_pajak" class="form-control"
+                                        value="{{ $model->no_faktur_pajak }}">
+                                </div>
+                                <span class="error text-danger" id="no_faktur_pajakError"></span>
 
                             </div>
                         </div>

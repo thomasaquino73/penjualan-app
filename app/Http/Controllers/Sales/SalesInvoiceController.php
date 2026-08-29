@@ -19,6 +19,7 @@ use App\Models\Sales\SalesInvoice;
 use App\Models\Sales\SalesInvoiceDetail;
 use App\Models\Sales\SalesQuotation;
 use App\Models\Sales\SalesQuotationDetail;
+use App\Models\Sales\SalesOrder;
 use App\Models\Setting\Company;
 use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
@@ -481,6 +482,7 @@ class SalesInvoiceController extends Controller
             $data['total_termasuk_pajak'] = $request->has('total_termasuk_pajak');
             $data['sub_total'] = $request->sub_total;
             $data['disc_percent'] = $request->percent;
+            $data['no_faktur_pajak'] = $request->no_faktur_pajak;
             $data['disc_nominal'] = $request->discount_all;
             $data['po_number'] = $request->po_number;
             $data['biaya_lain'] = $this->parseNominal($request->biaya_lain);
@@ -1386,6 +1388,7 @@ class SalesInvoiceController extends Controller
                 'sales_order_id' => $request->sales_order_id,
 
                 'sales_invoice_code' => $request->sales_invoice_code,
+                'no_faktur_pajak' => $request->no_faktur_pajak,
 
                 'salesman_id' => $request->salesman_id,
 
@@ -3072,4 +3075,14 @@ class SalesInvoiceController extends Controller
             'data' => $data->values(),
         ]);
     }
+
+     public function getSalesOrder($customerId)
+    {
+
+            $orders = SalesOrder::where('customer_id', $customerId)
+                ->where('status', ['processing','fully_delivered','partial'])
+                ->get();
+
+            return response()->json($orders);
+        }
 }
