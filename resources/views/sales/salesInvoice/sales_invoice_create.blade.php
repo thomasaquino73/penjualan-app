@@ -458,66 +458,66 @@
             });
         });
         $("#showModalso").on("click", function(e) {
-    e.preventDefault();
+            e.preventDefault();
 
-    let customerId = $("#customer_id").val();
+            let customerId = $("#customer_id").val();
 
-    if (!customerId) {
-        Swal.fire({
-            icon: "warning",
-            title: "Warning!",
-            text: "Please select Customer first before adding new data.",
-            confirmButtonText: "OK",
-            customClass: {
-                confirmButton: "btn btn-danger",
-            },
-            buttonsStyling: false,
+            if (!customerId) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Warning!",
+                    text: "Please select Customer first before adding new data.",
+                    confirmButtonText: "OK",
+                    customClass: {
+                        confirmButton: "btn btn-danger",
+                    },
+                    buttonsStyling: false,
+                });
+
+                return;
+            }
+
+            $.ajax({
+                url: "/sales-invoice/get-sales-order/" + customerId,
+                type: "GET",
+                dataType: "json",
+
+                success: function(response) {
+
+                    console.log("Sales Order Response:", response);
+
+                    let option = '<option value="">Select Sales Order</option>';
+
+                    $.each(response, function(i, item) {
+                        option += `
+                            <option value="${item.id}">
+                                ${item.sales_order_code}
+                            </option>
+                        `;
+                    });
+
+                    $("#so_number").html(option);
+
+                    // Bootstrap 5
+                    $("#modalSalesOrder").modal("show");
+                },
+
+                error: function(xhr, status, error) {
+                    console.log("AJAX ERROR");
+                    console.log("Status:", xhr.status);
+                    console.log("Response:", xhr.responseText);
+                    console.log("Error:", error);
+
+                    Swal.fire({
+                        icon: "error",
+                        title: "Gagal",
+                        text: "Gagal mengambil Sales Order.",
+                    });
+                }
+            });
         });
 
-        return;
-    }
-
-    $.ajax({
-        url: "/sales-invoice/get-sales-order/" + customerId,
-        type: "GET",
-        dataType: "json",
-
-        success: function(response) {
-
-            console.log("Sales Order Response:", response);
-
-            let option = '<option value="">Select Sales Order</option>';
-
-            $.each(response, function(i, item) {
-                option += `
-                    <option value="${item.id}">
-                        ${item.sales_order_code}
-                    </option>
-                `;
-            });
-
-            $("#so_number").html(option);
-
-            // Bootstrap 5
-            $("#modalSalesOrder").modal("show");
-        },
-
-        error: function(xhr, status, error) {
-            console.log("AJAX ERROR");
-            console.log("Status:", xhr.status);
-            console.log("Response:", xhr.responseText);
-            console.log("Error:", error);
-
-            Swal.fire({
-                icon: "error",
-                title: "Gagal",
-                text: "Gagal mengambil Sales Order.",
-            });
-        }
-    });
-});
-
-         $('#so_number').on('change', function() {
+        $('#so_number').on('change', function() {
 
             let quotationIds = $(this).val();
 

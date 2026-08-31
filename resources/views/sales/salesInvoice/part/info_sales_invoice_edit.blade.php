@@ -189,7 +189,7 @@
             </div>
             <!-- Down Payment -->
             <div class="input-group mb-3">
-                 <div class="input-group-text">
+                <div class="input-group-text">
                     <input class="form-check-input mt-0 me-2" type="radio" name="payment_type" value="pelunasan">
                     Pelunasan
                 </div>
