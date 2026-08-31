@@ -246,128 +246,129 @@
 @include('sales.salesInvoice.part.loadCustomerAddress')
 @include('sales.salesInvoice.part.js')
 @push('scripts')
-    @push('scripts')
-        <script>
-            const paymentType = @json($model->payment_type);
-            const proformaId = @json($model->proforma_id);
-            const downPaymentId = @json($model->sales_down_payment_id);
-            const totalDP = @json($model->total_dp);
-        </script>
-        <script>
-            $(function() {
+    <script>
+        const paymentType = @json($model->payment_type);
+        const proformaId = @json($model->proforma_id);
+        const downPaymentId = @json($model->sales_down_payment_id);
+        const totalDP = @json($model->total_dp);
+    </script>
+    <script>
+        $(function() {
 
-                if (totalDP) {
-                    $("#total_dp").val(formatRupiah(totalDP));
+            if (totalDP) {
+                $("#total_dp").val(formatRupiah(totalDP));
+            }
+
+            if (paymentType) {
+
+                $("input[name='payment_type'][value='" + paymentType + "']")
+                    .prop("checked", true);
+
+                if (paymentType === "proforma") {
+
+                    $("#proforma_id").prop("disabled", false);
+                    $("#pelunasan_id").prop("disabled", true);
+
+                    loadReference(proformaId);
+
+                } else if (paymentType === "pelunasan") {
+
+                    $("#proforma_id").prop("disabled", true);
+                    $("#pelunasan_id").prop("disabled", false);
+
+                    loadReference(downPaymentId);
+
+                } else if (paymentType === "no_down_payment") {
+
+                    $("#proforma_id").prop("disabled", true);
+                    $("#pelunasan_id").prop("disabled", true);
+
+                    $("#total_dp").val("");
                 }
+            }
 
-                if (paymentType) {
-
-                    $("input[name='payment_type'][value='" + paymentType + "']")
-                        .prop("checked", true);
-
-                    if (paymentType === "proforma") {
-
-                        $("#proforma_id").prop("disabled", false);
-                        $("#pelunasan_id").prop("disabled", true);
-
-                        loadReference(proformaId);
-
-                    } else if (paymentType === "pelunasan") {
-
-                        $("#proforma_id").prop("disabled", true);
-                        $("#pelunasan_id").prop("disabled", false);
-
-                        loadReference(downPaymentId);
-
-                    } else {
-
-                        $("#proforma_id,#pelunasan_id").prop("disabled", true);
-
-                    }
-                }
-
+        });
+        $(function() {
+            const datePicker = flatpickr("#sales_invoice_date", {
+                enableTime: false,
+                dateFormat: "d-m-Y",
             });
-            $(function() {
-                const datePicker = flatpickr("#sales_invoice_date", {
-                    enableTime: false,
-                    dateFormat: "d-m-Y",
+        });
+        // Show Modal Proforma
+        $("#showModaldv").on("click", function(e) {
+            e.preventDefault();
+
+            var customerId = $("#customer_id").val();
+            $("#sq_number")
+                .empty()
+                .append('<option value="">Select Quotation</option>')
+                .val(null)
+                .trigger("change");
+            if (!customerId) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Warning!",
+                    text: "Please select Customer first before adding new data.",
+                    confirmButtonColor: "#3085d6",
+                    confirmButtonText: "OK",
+                    customClass: {
+                        confirmButton: "btn btn-danger",
+                    },
+                    buttonsStyling: false,
                 });
-            });
-            // Show Modal Proforma
-            $("#showModaldv").on("click", function(e) {
-                e.preventDefault();
+                return;
+            }
 
-                var customerId = $("#customer_id").val();
-                $("#sq_number")
-                    .empty()
-                    .append('<option value="">Select Quotation</option>')
-                    .val(null)
-                    .trigger("change");
-                if (!customerId) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Warning!",
-                        text: "Please select Customer first before adding new data.",
-                        confirmButtonColor: "#3085d6",
-                        confirmButtonText: "OK",
-                        customClass: {
-                            confirmButton: "btn btn-danger",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return;
-                }
+            $.ajax({
+                url: "/sales-invoice/get-delivery/" + customerId,
+                type: "GET",
+                success: function(response) {
 
-                $.ajax({
-                    url: "/sales-invoice/get-delivery/" + customerId,
-                    type: "GET",
-                    success: function(response) {
+                    let option = '<option value="">Select Delivery</option>';
 
-                        let option = '<option value="">Select Delivery</option>';
-
-                        $.each(response, function(i, item) {
-                            option += `<option value="${item.id}">
+                    $.each(response, function(i, item) {
+                        option += `<option value="${item.id}">
                                 ${item.delivery_order_code}
                            </option>`;
-                        });
+                    });
 
-                        $("#sq_number").html(option);
+                    $("#sq_number").html(option);
 
-                        $("#modalDeliveryDetail").modal("show");
-                    }
-                });
-            });
-
-            $('#sq_number').on('change', function() {
-
-                let quotationIds = $(this).val();
-
-                if (!quotationIds || quotationIds.length === 0) {
-                    $('#orderTableBody').html('');
-                    return;
+                    $("#modalDeliveryDetail").modal("show");
                 }
+            });
+        });
 
-                $.ajax({
-                    url: "{{ route('sales-invoice.getDeliveryDetail') }}",
-                    type: "POST",
-                    data: {
-                        quotation_ids: quotationIds,
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(response) {
-                        let html = '';
+        $('#sq_number').on('change', function() {
 
-                        if (response.success && response.data.length > 0) {
-                            $.each(response.data, function(index, item) {
-                                let safeProductName = (item.product_name || '').replace(/"/g,
-                                    '&quot;');
+            let quotationIds = $(this).val();
 
-                                // Konversi ke angka yang valid sebelum toLocaleString
-                                let price = parseFloat(item.unit_price) || 0;
-                                let discount = parseFloat(item.discount) || 0;
-                                let amount = parseFloat(item.amount) || 0;
+            if (!quotationIds || quotationIds.length === 0) {
+                $('#orderTableBody').html('');
+                return;
+            }
 
-                                html += `
+            $.ajax({
+                url: "{{ route('sales-invoice.getDeliveryDetail') }}",
+                type: "POST",
+                data: {
+                    quotation_ids: quotationIds,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    let html = '';
+
+                    if (response.success && response.data.length > 0) {
+                        $.each(response.data, function(index, item) {
+                            let safeProductName = (item.product_name || '').replace(/"/g,
+                                '&quot;');
+
+                            // Konversi ke angka yang valid sebelum toLocaleString
+                            let price = parseFloat(item.unit_price) || 0;
+                            let discount = parseFloat(item.discount) || 0;
+                            let amount = parseFloat(item.amount) || 0;
+
+                            html += `
                                 <tr>
                                     <td>
                                         <input class="form-check-input checkItem" type="checkbox"
@@ -393,1377 +394,271 @@
                                     <td class="text-end">${discount.toLocaleString('id-ID')}</td>
                                     <td class="text-end">${amount.toLocaleString('id-ID')}</td>
                                 </tr>`;
-                            });
-                        } else {
-                            html =
-                                '<tr><td colspan="7" class="text-center">Tidak ada data ditemukan</td></tr>';
-                        }
-
-                        $("#orderTableBody").html(html);
-                    }
-                });
-
-            });
-
-            $("#showModaldp").on("click", function(e) {
-                e.preventDefault();
-
-                var customerId = $("#customer_id").val();
-                $("#dp_number")
-                    .empty()
-                    .append('<option value="">Select Down Payment</option>')
-                    .val(null)
-                    .trigger("change");
-                if (!customerId) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Warning!",
-                        text: "Please select Customer first before adding new data.",
-                        confirmButtonColor: "#3085d6",
-                        confirmButtonText: "OK",
-                        customClass: {
-                            confirmButton: "btn btn-danger",
-                        },
-                        buttonsStyling: false,
-                    });
-                    return;
-                }
-
-                $.ajax({
-                    url: "/sales-invoice/get-down-payment/" + customerId,
-                    type: "GET",
-                    success: function(response) {
-
-                        let option = '<option value="">Select Down Payment</option>';
-
-                        $.each(response, function(i, item) {
-                            option += `<option value="${item.id}">
-                                ${item.sales_downpayment_code}
-                           </option>`;
                         });
-
-                        $("#dp_number").html(option);
-
-                        $("#modalDownPayment").modal("show");
+                    } else {
+                        html =
+                            '<tr><td colspan="7" class="text-center">Tidak ada data ditemukan</td></tr>';
                     }
+
+                    $("#orderTableBody").html(html);
+                }
+            });
+
+        });
+
+        $("#showModaldp").on("click", function(e) {
+            e.preventDefault();
+
+            var customerId = $("#customer_id").val();
+            $("#dp_number")
+                .empty()
+                .append('<option value="">Select Down Payment</option>')
+                .val(null)
+                .trigger("change");
+            if (!customerId) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Warning!",
+                    text: "Please select Customer first before adding new data.",
+                    confirmButtonColor: "#3085d6",
+                    confirmButtonText: "OK",
+                    customClass: {
+                        confirmButton: "btn btn-danger",
+                    },
+                    buttonsStyling: false,
                 });
-            });
-            //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
-            $("#checkAll").on("change", function() {
-                // Jika checkAll dicentang, semua .checkItem ikut dicentang, begitu sebaliknya
-                $(".checkItem").prop("checked", $(this).prop("checked"));
-            });
-
-            // Jika salah satu item diuncheck secara manual, matikan checkAll di atas head tabel
-            $(document).on("change", ".checkItem", function() {
-                if ($(".checkItem:checked").length === $(".checkItem").length) {
-                    $("#checkAll").prop("checked", true);
-                } else {
-                    $("#checkAll").prop("checked", false);
-                }
-            });
-
-            $(document).ready(function() {
-
-                // 🔥 SET STATE AWAL checkbox
-                if ($("#kena_pajak").is(":checked")) {
-                    $("#tax_container").show();
-                    $("#ppn_container").show();
-                } else {
-                    $("#tax_container").hide();
-                    $("#ppn_container").hide();
-                }
-
-                // 🔥 kalau sudah ada tax_id dari DB, jangan override default
-                let existingTaxId = $("#tax_id").val();
-
-                if ($("#kena_pajak").is(":checked")) {
-                    if (!existingTaxId && DEFAULT_TAX_ID) {
-                        $("#tax_id").val(numeral(DEFAULT_TAX_ID).format('0,0.00'));
-                    }
-                }
-
-                // 🔥 WAJIB: hitung ulang saat pertama load
-                calculateTotalOrder();
-                calculateGrandTotal();
-            });
-        </script>
-        <script>
-            let prDetailsData = [
-                @if (isset($jsonDetails))
-                    @foreach ($jsonDetails as $detail)
-                        {
-                            id: @json($detail['id'] ?? null),
-                            sales_invoice_id: @json($detail['sales_invoice_id'] ?? null),
-                            urutan: @json($detail['urutan'] ?? 0),
-                            sales_order_id: @json($detail['sales_order_id'] ?? null),
-                            sales_order_detail_id: @json($detail['sales_order_detail_id'] ?? null),
-                            detail_id: @json($detail['sales_order_detail_id'] ?? null),
-                            order_code: @json($detail['order_code'] ?? null),
-                            // product_id: @json($detail['product_id'] ?? null),
-                            product_id: @json($detail['product_id'] ?? null),
-                            data_produk: @json($detail['data_produk'] ?? ($detail['product_name'] ?? 'Product Not Found')),
-                            // data_produk: @json($detail['data_produk'] ?? null),
-                            quantity: @json($detail['quantity'] ?? 0),
-
-                            // =====================================================
-                            // UNIT
-                            // =====================================================
-                            unit_id: @json($detail['unit_id'] ?? null),
-
-                            unit: @json($detail['unit'] ?? null),
-
-                            // =====================================================
-                            // WAREHOUSE
-                            // =====================================================
-                            warehouse_id: @json($detail['warehouse_id'] ?? null),
-
-                            warehouse: @json($detail['warehouse'] ?? null),
-
-                            // =====================================================
-                            // PRICE
-                            // =====================================================
-                            unit_price: @json($detail['unit_price'] ?? 0),
-
-                            // =====================================================
-                            // DISCOUNT
-                            // =====================================================
-                            discount_percent: @json($detail['discount_percent'] ?? 0),
-
-                            discount: @json($detail['discount'] ?? 0),
-
-                            // =====================================================
-                            // AMOUNT
-                            // =====================================================
-                            amount: @json($detail['amount'] ?? 0),
-
-                            // =====================================================
-                            // TAX
-                            // =====================================================
-                            tax: @json($detail['tax'] ?? 0),
-
-                            // =====================================================
-                            // SALES ORDER QUOTA
-                            // =====================================================
-                            sisa_so: @json($detail['sisa_so'] ?? null),
-
-                            kuota_asli_so: @json($detail['kuota_asli_so'] ?? null),
-
-                            total_diambil_lainnya: @json($detail['total_diambil_lainnya'] ?? 0)
-                        }
-                        {{ !$loop->last ? ',' : '' }}
-                    @endforeach
-                @endif
-            ];
-            const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
-
-            $(function() {
-                const datePicker = flatpickr("#sales_invoice_date", {
-                    enableTime: false,
-                    dateFormat: "d-m-Y",
-                });
-            });
-
-
-            //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
-            $("#checkAll").on("change", function() {
-                // Jika checkAll dicentang, semua .checkItem ikut dicentang, begitu sebaliknya
-                $(".checkItem").prop("checked", $(this).prop("checked"));
-            });
-
-            // Jika salah satu item diuncheck secara manual, matikan checkAll di atas head tabel
-            $(document).on("change", ".checkItem", function() {
-                if ($(".checkItem:checked").length === $(".checkItem").length) {
-                    $("#checkAll").prop("checked", true);
-                } else {
-                    $("#checkAll").prop("checked", false);
-                }
-            });
-
-
-            function loadReference(selectedId = null) {
-
-                let customerId = $("#customer_id").val();
-                let type = $("input[name='payment_type']:checked").val();
-
-                if (!customerId || !type) return;
-
-                $.ajax({
-                    url: `/sales-invoice/get-reference/${customerId}/${type}`,
-                    type: "GET",
-                    dataType: "json",
-                    success: function(response) {
-
-                        let select = type === "proforma" ?
-                            $("#proforma_id") :
-                            $("#pelunasan_id");
-
-                        select.empty().append('<option value=""></option>');
-
-                        $.each(response, function(i, item) {
-
-                            let option = new Option(
-                                `${item.code} - ${item.date} (Rp ${formatRupiah(item.amount)})`,
-                                item.id,
-                                false,
-                                false
-                            );
-
-                            $(option).attr("data-amount", item.amount).attr("data-sales-order-id", item
-                                .sales_order_id);;
-
-                            select.append(option);
-                        });
-
-                        if (selectedId) {
-                            select.val(String(selectedId)).trigger("change");
-                        } else {
-                            select.val("").trigger("change");
-                        }
-                    }
-                });
+                return;
             }
 
+            $.ajax({
+                url: "/sales-invoice/get-down-payment/" + customerId,
+                type: "GET",
+                success: function(response) {
 
-            $(document).ready(function() {
-                $(".select2-modal").each(function() {
-                    var $this = $(this);
-                    $this.wrap('<div class="position-relative"></div>').select2({
-                        placeholder: $this.attr("data-placeholder"),
-                        width: "100%",
-                        dropdownParent: $("#modalPrDetail"),
+                    let option = '<option value="">Select Down Payment</option>';
+
+                    $.each(response, function(i, item) {
+                        option += `<option value="${item.id}">
+                                ${item.sales_downpayment_code}
+                           </option>`;
                     });
-                });
-                $(".select2-modal2").each(function() {
-                    var $this = $(this);
-                    $this.wrap('<div class="position-relative"></div>').select2({
-                        placeholder: $this.attr("data-placeholder"),
-                        width: "100%",
-                        dropdownParent: $("#modalDeliveryDetail"),
-                    });
-                });
 
-                $("#customer_contact_id").select2({
-                    placeholder: "Select Contact",
-                    width: "100%",
-                });
+                    $("#dp_number").html(option);
 
-                $("#payment_term_id").select2({
-                    placeholder: "Select Payment Term",
-                    width: "100%",
-                });
-                $("#jenis_pengiriman").select2({
-                    placeholder: "Select Shipping",
-                    width: "100%",
-                });
-
-                // ========================================================
-                // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
-                // ========================================================
-                function refreshDataIndices() {
-                    if (Array.isArray(prDetailsData)) {
-                        prDetailsData.forEach((item, index) => {
-                            item.urutan_lokal = index; // Membuat nomor ID unik lokal berbasis index array
-                        });
-                    }
+                    $("#modalDownPayment").modal("show");
                 }
-                // Jalankan fungsi sebelum tabel diinisialisasi
-                refreshDataIndices();
-
-                let table = new DataTable("#table", {
-                    processing: true,
-                    serverSide: false,
-                    responsive: true,
-                    select: true,
-                    searching: false,
-                    order: [
-                        [0, 'asc']
-                    ],
-                    lengthMenu: [
-                        [10, 25, 50, -1],
-                        [10, 25, 50, "All"],
-                    ],
-                    rowReorder: {
-                        selector: 'td:first-child',
-                        dataSrc: function(row) {
-                            return prDetailsData.indexOf(row);
-                        }
-                    },
-                    data: prDetailsData,
-                    columns: [{
-                            // 3. Menggunakan data: null agar aman dari error unknown parameter
-                            data: null,
-                            orderable: true, // Wajib TRUE agar baris bisa digeser
-                            className: "text-center reorder-pointer",
-                            searchable: false,
-                            render: function(data, type, row, meta) {
-                                // Memberikan angka visual statis sesuai baris di layar saat ini
-                                if (type === 'display') {
-                                    return meta.row + 1;
-                                }
-                                // Kembalikan indeks array murni ke internal DataTables agar kalkulasi drag & drop berjalan
-                                return prDetailsData.indexOf(row);
-                            },
-                        },
-                        {
-                            data: "data_produk",
-                            render: function(data, type, row) {
-
-                                let productName = row.data_produk;
-
-                                if (!productName || String(productName).trim() === '') {
-                                    productName = row.product_id;
-                                }
-
-                                // if (!productName || String(productName).trim() === '') {
-                                //     productName = 'Product Not Found';
-                                // }
-                                if (row.data_produk) {
-                                    return `<strong>${row.data_produk}</strong>`;
-                                }
-
-                                if (row.product_id) {
-                                    return `<strong>${row.product_id}</strong>`;
-                                }
-
-                                return '<span class="text-muted">Product Not Found</span>';
-
-                                if (row.order_code) {
-                                    return `
-                                        <strong>${productName}</strong>
-                                        <br>
-                                        <small class="text-primary">
-                                            Ref: ${row.order_code}
-                                        </small>
-                                    `;
-                                }
-
-                                return `<strong>${productName}</strong>`;
-                            }
-                        },
-                        {
-                            data: "quantity",
-                            className: "text-end", // Rata kanan untuk angka
-                            render: function(data) {
-                                return parseFloat(data).toLocaleString('id-ID');
-                            }
-                        },
-                        {
-                            data: "unit",
-                            className: "text-center"
-                        },
-                        {
-                            data: "unit_price",
-                            className: "text-end",
-                            render: function(data) {
-                                return parseFloat(data ?? 0).toLocaleString('id-ID', {
-                                    minimumFractionDigits: 0
-                                });
-                            }
-                        },
-                        {
-                            data: "discount",
-                            className: "text-end",
-                            render: function(data) {
-                                return parseFloat(data ?? 0).toLocaleString('id-ID', {
-                                    minimumFractionDigits: 0
-                                });
-                            }
-                        },
-                        {
-                            data: "amount",
-                            className: "text-end",
-                            render: function(data) {
-                                return `<strong>${parseFloat(data ?? 0).toLocaleString('id-ID', { minimumFractionDigits: 0 })}</strong>`;
-                            }
-                        },
-                        {
-                            data: "warehouse",
-                            className: "text-center"
-                        },
-
-                    ],
-                    layout: {
-                        topStart: {
-                            buttons: [{
-                                    text: '<i class="ti ti-plus me-1"></i> New',
-                                    className: "btn btn-primary btn-sm me-2 AddNew",
-                                    action: function(e, dt, node, config) {
-                                        var customerId = $("#customer_id").val();
-
-                                        if (!customerId || customerId === "") {
-                                            Swal.fire({
-                                                icon: "warning",
-                                                title: "Warning!",
-                                                text: "Please select Customer first before adding new data.",
-                                                confirmButtonColor: "#3085d6",
-                                                confirmButtonText: "OK",
-                                                customClass: {
-                                                    confirmButton: "btn btn-danger",
-                                                },
-                                                buttonsStyling: false,
-                                            });
-                                            return false;
-                                        }
-
-                                        $("#formPrDetail")[0].reset();
-                                        $("#warehouse_id").val("").trigger("change");
-                                        $("#detail_id").val("");
-
-                                        if ($.fn.select2) {
-                                            $("#product_id").val("").trigger("change");
-                                            $("#unit_id").val("").trigger("change");
-                                        }
-
-                                        $("#modalTitle").text("Create new entry");
-                                        $("#btnSubmitModal").text("Create");
-                                        $("#modalPrDetail").modal("show");
-
-                                    },
-                                },
-                                {
-                                    text: '<i class="ti ti-edit me-1"></i> Edit',
-                                    className: "btn btn-warning btn-sm me-2",
-                                    extend: "selectedSingle",
-                                    action: function(e, dt, node, config) {
-
-                                        const row = dt.row({
-                                            selected: true
-                                        });
-
-                                        if (!row.any()) {
-                                            Swal.fire({
-                                                icon: "warning",
-                                                title: "Warning",
-                                                text: "Please select one data first."
-                                            });
-                                            return;
-                                        }
-
-                                        const data = row.data();
-                                        const rowIndex = row.index();
-
-                                        window.isEditingMode = true;
-
-                                        // Reset error
-                                        $("#formPrDetail .error").html("");
-
-                                        // ==========================
-                                        // HEADER
-                                        // ==========================
-
-                                        $("#modalTitle").text("Edit entry");
-                                        $("#btnSubmitModal").text("Update");
-
-                                        // ==========================
-                                        // HIDDEN
-                                        // ==========================
-
-                                        $("#detail_id").val(rowIndex);
-
-                                        $("#modal_sales_quotation_detail_id").val(
-                                            data.detail_id ??
-                                            data.sales_quotation_detail_id ??
-                                            ""
-                                        );
-
-                                        $("#modal_requisition_code").val(
-                                            data.requisition_code ?? ""
-                                        );
-
-                                        // ==========================
-                                        // TEXTBOX
-                                        // ==========================
-
-                                        $("#quantity").val(data.quantity ?? "");
-
-                                        $("#unit_price").val(data.unit_price ?? 0);
-
-                                        $("#discount").val(data.discount ?? 0);
-
-                                        $("#discount_percent").val(data.discount_percent ?? 0);
-
-                                        $("#tax").val(data.tax ?? 0);
-
-                                        $("#total_price").val(data.amount ?? 0);
-
-                                        $("#available_stok").val(data.available_stok ?? "");
-
-                                        // ==========================
-                                        // ATTRIBUTE
-                                        // ==========================
-
-                                        if (data.sisa_pr != null) {
-                                            $("#quantity").attr("data-sisa-pr", data.sisa_pr);
-                                        } else {
-                                            $("#quantity").removeAttr("data-sisa-pr");
-                                        }
-
-                                        // ==========================
-                                        // SELECT
-                                        // ==========================
-
-                                        $("#warehouse_id")
-                                            .val(data.warehouse_id)
-                                            .trigger("change.select2");
-
-                                        // simpan unit yg dipilih
-                                        $("#unit_id").data("pending-val", data.unit_id);
-
-                                        // simpan harga lama
-                                        $("#unit_price").data("pending-price", data.unit_price);
-
-                                        // buka modal dulu
-                                        $("#modalPrDetail").modal("show");
-
-                                        // terakhir trigger product
-                                        $("#product_id")
-                                            .val(data.product_id)
-                                            .trigger("change");
-                                    }
-                                },
-                                {
-                                    text: '<i class="ti ti-trash me-1"></i> Delete',
-                                    className: "btn btn-danger btn-sm me-2",
-                                    extend: "selected",
-                                    action: function(e, dt, node, config) {
-                                        let rowIndex = dt.row({
-                                            selected: true
-                                        }).index();
-                                        let data = dt.row({
-                                            selected: true
-                                        }).data();
-                                        let name = data.data_produk ? data.data_produk : "";
-
-                                        Swal.fire({
-                                            title: "Are you sure?",
-                                            text: "Want to delete data: " + name,
-                                            icon: "warning",
-                                            showCancelButton: true,
-                                            confirmButtonText: "Yes, delete it!",
-                                            cancelButtonText: "Cancel",
-                                            customClass: {
-                                                confirmButton: "btn btn-primary me-3 waves-effect waves-light",
-                                                cancelButton: "btn btn-label-secondary waves-effect waves-light",
-                                            },
-                                            buttonsStyling: false,
-                                        }).then(function(result) {
-                                            if (result.isConfirmed) {
-                                                prDetailsData.splice(rowIndex, 1);
-                                                dt.clear().rows.add(prDetailsData).draw();
-                                                calculateGrandTotal();
-                                                calculateTotalOrder();
-                                                toastr.success(
-                                                    "Deleted Data Successfully",
-                                                    "", {
-                                                        timeOut: 1500,
-                                                        progressBar: true,
-                                                    },
-                                                );
-                                            }
-                                        });
-                                    },
-                                },
-                                {
-                                    text: '<i class="ti ti-refresh me-1"></i> Clear All',
-                                    className: "btn btn-secondary btn-sm",
-                                    action: function(e, dt, node, config) {
-                                        prDetailsData = [];
-                                        dt.clear().draw();
-                                        calculateGrandTotal();
-                                        calculateTotalOrder();
-                                        $("#percent").val(0);
-                                    },
-                                },
-                            ],
-                        },
-                    },
-                });
-                // ========================================================
-                // 🔄 EVENT SINKRONISASI COCOK UNTUK STRUKTUR JAVASCRIPT ARRAY
-                // ========================================================
-                table.on('row-reorder', function(e, diff, edit) {
-                    // Jika tidak ada perubahan posisi penyeretan, abaikan proses
-                    if (diff.length === 0) return;
-
-                    // Lakukan loop manipulasi urutan elemen array asli di javascript menggunakan splice
-                    diff.forEach(function(change) {
-                        let movedRowData = table.row(change.node).data();
-                        let oldIndex = prDetailsData.indexOf(movedRowData);
-
-                        if (oldIndex !== -1) {
-                            // Hapus dari posisi lama
-                            prDetailsData.splice(oldIndex, 1);
-                            // Masukkan tepat ke indeks baris baru hasil geser visual
-                            prDetailsData.splice(change.newPosition, 0, movedRowData);
-                        }
-                    });
-
-                    // Perbarui cache internal instan tanpa memicu re-render / draw agresif yang merusak urutan baru
-                    table.rows().invalidate();
-
-                });
-
-                if (paymentType) {
-
-                    $("input[name='payment_type'][value='" + paymentType + "']")
-                        .prop("checked", true);
-
-                    if (paymentType === "proforma") {
-
-                        $("#proforma_id").prop("disabled", false);
-                        $("#pelunasan_id").prop("disabled", true);
-
-                        loadReference(proformaId);
-
-                    } else if (paymentType === "down_payment") {
-
-                        $("#proforma_id").prop("disabled", true);
-                        $("#pelunasan_id").prop("disabled", false);
-
-                        loadReference(downPaymentId);
-
-                    }
-                }
-                $('#customer_id').on('change', function() {
-                    let customerId = $(this).val();
-                    let contactDropdown = $('#customer_contact_id');
-
-                    contactDropdown.empty().append('<option>Loading...</option>');
-
-                    // kosongkan data pajak
-                    $('#taxpayer_data').val('');
-
-                    if (!customerId) {
-                        contactDropdown.empty().append('<option value="">Pilih Kontak</option>');
-                        return;
-                    }
-
-
-                    // AMBIL NILAI VARIABEL YANG SEBELUMNYA UNDEFINED
-
-
-                    $.ajax({
-                        url: '/sales-invoice/' + customerId + '/data',
-                        type: 'GET',
-                        dataType: 'json',
-                        success: function(data) {
-
-                            // ======================
-                            // Kontak
-                            // ======================
-                            contactDropdown.empty();
-                            contactDropdown.append('<option value="">Pilih Kontak</option>');
-
-                            $.each(data.kontak, function(key, value) {
-                                contactDropdown.append(
-                                    `<option value="${value.id}">
-                        ${value.sapaan} ${value.contact_person}
-                        (${value.posisi_jabatan})
-                    </option>`
-                                );
-                            });
-
-                            // Refresh Select2 untuk kontak jika pakai Select2
-                            contactDropdown.trigger('change.select2');
-
-                            // ======================
-                            // Pajak
-                            // ======================
-                            if (data.pajak) {
-                                $('#taxpayer_data').val(data.pajak.tipe_id_pajak + ' :' + data.pajak
-                                    .nomor_wajib_pajak);
-                            } else {
-                                $('#taxpayer_data').val('');
-                            }
-
-                            $('#address').val(data.address ?? '');
-
-                            // Panggil loadReference berdasarkan paymentType yang aktif
-                            if (paymentType === "proforma") {
-                                loadReference(proformaId);
-                            } else if (paymentType === "down_payment") {
-                                loadReference(downPaymentId);
-                            } else {
-                                loadReference();
-                            }
-                        }
-                    });
-                });
-
-
-                $("#proforma_id, #pelunasan_id").on("change", function() {
-
-                    let option = $(this).find(":selected");
-
-                    let amount = parseFloat(
-                        option.attr("data-amount")
-                    ) || 0;
-
-                    $("#total_dp").val(formatRupiah(amount));
-
-                    $("#sales_order_id").val(
-                        option.attr("data-sales-order") || ""
-                    );
-                });
-
-                function toggleSelect(selected = false) {
-
-                    let type = $("input[name='payment_type']:checked").val();
-
-                    if (type === "proforma") {
-
-                        $("#proforma_id").prop("disabled", false);
-                        $("#pelunasan_id").prop("disabled", true);
-
-                        if (!selected) {
-                            $("#pelunasan_id").val(null).trigger("change");
-                        }
-
-                        loadReference(selected ? proformaId : null);
-
-                    } else if (type === "pelunasan") {
-
-                        $("#proforma_id").prop("disabled", true);
-
-                        if (!selected) {
-                            $("#proforma_id").val(null).trigger("change");
-                        }
-
-                        $("#pelunasan_id").prop("disabled", false);
-
-                        loadReference(selected ? downPaymentId : null);
-
-                    } else {
-
-                        $("#proforma_id,#pelunasan_id")
-                            .prop("disabled", true);
-
-                        if (!selected) {
-                            $("#proforma_id,#pelunasan_id")
-                                .val(null)
-                                .trigger("change");
-                        }
-
-                        $("#total_dp").val("");
-                    }
-                }
-                toggleSelect(true);
-                $(document).on("change", "input[name='payment_type']", function() {
-                    toggleSelect(false);
-                });
-
-
-                $(document).on("change", "#product_id", function() {
-                    let productId = $(this).val();
-                    let unitSelect = $("#unit_id");
-                    let priceInput = $("#unit_price");
-                    let dropdownBtn = $("#btn-history-po");
-                    let dropdownMenu = $("#po-price-dropdown-menu");
-                    let helperText = $("#po-history-helper");
-
-                    // Pastikan ID selector ini sesuai dengan ID Select Customer di form utama kamu
-                    let customerId = $("#customer_id").val();
-
-                    if (!productId) {
-                        unitSelect.empty().append("<option></option>").trigger("change");
-                        priceInput.val("");
-                        dropdownBtn.prop("disabled", true);
-                        dropdownMenu.empty();
-                        helperText.text("Pilih produk untuk melacak riwayat harga jual.");
-                        return;
-                    }
-
-                    // Tambahan Validasi: Ingatkan user jika customer belum dipilih
-                    if (!customerId) {
-                        alert(
-                            "Silahkan pilih Customer terlebih dahulu pada form utama SI!",
-                        );
-                        $(this).val("").trigger("change"); // Reset pilihan produk
-                        return;
-                    }
-
-                    // ==========================================
-                    // 1. AJAX List Unit (Sesuai Kode Bawaanmu)
-                    // ==========================================
-                    $.ajax({
-                        url: window.routes.getUnits.replace(':id', productId),
-                        type: "GET",
-                        dataType: "json",
-                        beforeSend: function() {
-                            unitSelect
-                                .html("<option>Loading units...</option>")
-                                .prop("disabled", true);
-                        },
-                        success: function(response) {
-                            unitSelect
-                                .empty()
-                                .append("<option></option>")
-                                .prop("disabled", false);
-
-                            // FIX: Akses properti 'units' dari objek response
-                            let units = response.units;
-
-                            if (units && units.length > 0) {
-                                $.each(units, function(key, item) {
-                                    unitSelect.append(
-                                        `<option value="${item.id}">${item.name}</option>`,
-                                    );
-                                });
-                            } else {
-                                unitSelect.append(
-                                    '<option value="">No unit available</option>',
-                                );
-                            }
-
-                            unitSelect.trigger("change");
-
-                            // Gunakan response.default_price
-                            // priceInput.val(response.default_price || 0);
-                            if (!window.isEditingMode) {
-                                priceInput.val(response.default_price || 0);
-                            }
-                            let pendingUnitId = unitSelect.data("pending-val");
-                            if (pendingUnitId) {
-                                unitSelect.val(pendingUnitId).trigger("change");
-                                unitSelect.removeData("pending-val");
-                            }
-                        },
-                        error: function() {
-                            unitSelect
-                                .empty()
-                                .append("<option></option>")
-                                .prop("disabled", false)
-                                .trigger("change");
-                        },
-                    });
-
-                    // ==========================================
-                    // 2. AJAX History PO + Fallback Harga Master
-                    // ==========================================
-                    $.ajax({
-                        url: `/sales-invoice/si/price-history?product_id=${productId}&customer_id=${customerId}`,
-                        type: "GET",
-                        dataType: "json",
-                        beforeSend: function() {
-                            // Jangan hapus isi textbox jika sudah ada nilainya (misal saat mode EDIT)
-                            if (priceInput.val() === "" || priceInput.val() == "0") {
-                                priceInput.val("0");
-                            }
-                            dropdownBtn.prop("disabled", true);
-                            dropdownMenu.empty();
-                            helperText.text("Mencari riwayat harga...");
-                        },
-                        success: function(response) {
-                            if (response.success && response.history.length > 0) {
-                                dropdownBtn.prop("disabled", false);
-                                helperText
-                                    .attr("class", "form-text text-success")
-                                    .text(
-                                        "Riwayat ditemukan. Klik icon untuk ganti harga lama.",
-                                    );
-
-                                // Render ulang list dropdown menu
-                                $.each(response.history, function(index, item) {
-                                    // 1. Ambil nilai harga dan tanggal dari objek item
-                                    let harga = item.harga;
-                                    let tanggalMentah = item.tanggal;
-
-                                    // 2. Format Tanggal (Contoh Hasil: 23-05-2026 14:30)
-                                    let formattedDate = "-";
-                                    if (tanggalMentah) {
-                                        let d = new Date(tanggalMentah);
-                                        let tgl = String(d.getDate()).padStart(2, "0");
-                                        let bln = String(d.getMonth() + 1).padStart(2,
-                                            "0"); // Bulan dimulai dari 0
-                                        let thn = d.getFullYear();
-                                        let jam = String(d.getHours()).padStart(2, "0");
-                                        let mnt = String(d.getMinutes()).padStart(2, "0");
-
-                                        formattedDate =
-                                            `${tgl}-${bln}-${thn} ${jam}:${mnt}`;
-                                    }
-
-                                    // 3. Format Tampilan Harga Ke Rupiah
-                                    let formattedPrice =
-                                        `Rp ${Number(harga).toLocaleString("id-ID")}`;
-
-                                    // 4. Susun konten teks menu dropdown (Harga di kiri, Tanggal & Badge di kanan)
-                                    let badgeTerakhir =
-                                        index === 0 ?
-                                        `<span class="badge bg-label-success text-xs ms-1">Terakhir</span>` :
-                                        "";
-
-                                    let itemContent = `
-                                        <div class="d-flex flex-column w-100">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span><strong>${formattedPrice}</strong></span>
-                                                ${badgeTerakhir}
-                                            </div>
-                                            <small class="text-muted" style="font-size: 11px;">
-                                                <i class="ti ti-calendar text-xs me-1"></i>${formattedDate}
-                                            </small>
-                                        </div>
-                                    `;
-
-                                    let li = $("<li></li>");
-                                    let a = $(
-                                        `<a class="dropdown-item d-flex align-items-center py-2" href="#" style="min-width: 220px;">${itemContent}</a>`,
-                                    );
-
-                                    // Ketika item di klik, harga dimasukkan ke textbox
-                                    a.on("click", function(e) {
-                                        e.preventDefault();
-                                        priceInput.val(harga);
-                                        calculateTotal();
-                                    });
-
-                                    li.append(a);
-                                    dropdownMenu.append(li);
-                                });
-                            } else {
-                                helperText
-                                    .attr("class", "form-text text-muted")
-                                    .text(
-                                        "Belum ada riwayat harga dengan customer ini. Silahkan isi harga manual.",
-                                    );
-                                dropdownBtn.prop("disabled", true);
-                                if (priceInput.val() === "") {
-                                    priceInput.val("0");
-                                }
-                            }
-                        },
-                        error: function(xhr) {
-                            helperText
-                                .attr("class", "form-text text-danger")
-                                .text("Gagal memuat riwayat harga.");
-                        },
-                    });
-                });
-
-                $("#biaya_lain").on("input", function() {
-                    calculateTotalOrder();
-                })
-
-                $("#btnSubmitModal").on("click", function(e) {
-                    let qtyInput = $("#quantity");
-                    let currentQty = parseFloat(qtyInput.val()) || 0;
-
-                    // Ambil batas sisa PR dari atribut input modal
-                    let maxPrLimit = qtyInput.attr("data-sisa-pr");
-
-                    // JIKA BERDASARKAN PR (maxPrLimit terdefinisi dan tidak kosong)
-                    if (maxPrLimit !== undefined && maxPrLimit !== null && maxPrLimit !== '') {
-                        maxPrLimit = parseFloat(maxPrLimit);
-
-                        if (currentQty > maxPrLimit) {
-                            e.preventDefault(); // Hentikan proses simpan/update ke array
-
-                            Swal.fire({
-                                icon: "warning",
-                                title: "Melebihi Sisa PR",
-                                text: `Kuantitas item ini tidak boleh melebihi sisa PR (Maksimal sisa: ${maxPrLimit}).`,
-                                customClass: {
-                                    confirmButton: "btn btn-warning"
-                                },
-                                buttonsStyling: false
-                            });
-
-                            qtyInput.val(maxPrLimit); // Otomatis reset input ke angka maksimal
-                            return false;
-                        }
-                    }
-
-                    // JIKA PO BEBAS (maxPrLimit tidak ada), AKAN LOLOS TANPA VALIDASI MAKSIMAL
-                });
-
-                $("#formPrDetail").on("submit", function(e) {
-                    e.preventDefault();
-
-                    let productId = $("#product_id").val();
-                    let productName = $("#product_id option:selected").text();
-                    let quantity = parseFloat($("#quantity").val()) || 0;
-                    let unitId = $("#unit_id").val();
-                    let unitName = $("#unit_id option:selected").text();
-                    let warehouseId = $("#warehouse_id").val();
-                    let warehouseName = $("#warehouse_id option:selected").text();
-                    let detailId = $("#detail_id")
-                        .val(); // Ini adalah index row array (kosong jika barang baru)
-
-                    let unitPrice = parseFloat($("#unit_price").val()) || 0;
-                    let discountPercent = $("#discount_percent").val() || 0;
-                    let discount = parseFloat($("#discount").val()) || 0;
-                    let tax = parseFloat($("#tax").val()) || 0;
-
-                    let requiredDate = $("#required_date").val() || "";
-
-                    // 1. Validasi Input Wajib
-                    if (!productId || quantity <= 0 || !unitId) {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Oops...",
-                            text: "Please fill all required fields! (Product, Valid Quantity, and Unit)",
-                            customClass: {
-                                confirmButton: "btn btn-danger",
-                            },
-                            buttonsStyling: false,
-                        });
-                        return false;
-                    }
-
-                    // 2. Validasi Duplikasi Produk
-                    let isDuplicate = false;
-                    if (prDetailsData && prDetailsData.length > 0) {
-                        for (let i = 0; i < prDetailsData.length; i++) {
-                            if (prDetailsData[i].product_id == productId) {
-                                if (detailId === "") {
-                                    // Jika tambah baru dan produk sudah ada di tabel
-                                    isDuplicate = true;
-                                    break;
-                                } else if (detailId !== "" && i != detailId) {
-                                    // Jika sedang edit, tapi produk diubah ke produk lain yang sudah ada di tabel
-                                    isDuplicate = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    // if (isDuplicate) {
-                    //     Swal.fire({
-                    //         icon: "error",
-                    //         title: "Product Already Exists!",
-                    //         html: `The product <b>"${productName}"</b> is already registered.<br>Please edit the item if you want to change it.`,
-                    //         customClass: {
-                    //             confirmButton: "btn btn-danger",
-                    //         },
-                    //         buttonsStyling: false,
-                    //     });
-                    //     return false;
-                    // }
-
-                    // 3. Matematika Kalkulasi Amount (Tax dalam persen)
-                    let subTotal = quantity * unitPrice;
-                    let totalDiscount = discount; // Diskon nominal tetap
-                    let setelahDiskon = subTotal - totalDiscount;
-                    let totalTax = setelahDiskon * (tax / 100);
-                    let amount = setelahDiskon + totalTax;
-
-                    // 4. Menyusun Object Data Baru / Hasil Editan Form
-                    let itemData = {
-                        product_id: productId,
-                        data_produk: productName,
-                        quantity: quantity,
-                        unit_id: unitId,
-                        unit: unitName,
-                        warehouse_id: warehouseId,
-                        warehouse: warehouseName,
-                        unit_price: unitPrice,
-                        discount_percent: discountPercent,
-                        discount: discount,
-                        tax: tax,
-                        amount: amount,
-                        required_date: requiredDate,
-                    };
-
-                    // 5. Logika Penyimpanan Berdasarkan 2 Cara Pengisian PO
-                    if (detailId === "") {
-                        // --- CARA A: PO ISI SENDIRI (TAMBAH BARU MANUAL) ---
-                        prDetailsData.push(itemData);
-                    } else {
-                        // --- CARA B: AMBIL DARI PR & EDIT DATA ---
-                        // Kita gabungkan data lama di dalam array dengan data yang baru diinput.
-                        // Properti bawaan PR seperti 'quotation_code' & 'purchase_quotation_detail_id'
-                        // akan otomatis aman dan dipertahankan.
-                        prDetailsData[detailId] = {
-                            ...prDetailsData[detailId], // Pertahankan data lama (Ref PR)
-                            ...itemData // Update dengan data baru dari form modal
-                        };
-                    }
-
-                    // 6. Refresh Tampilan & Hitung Total Akhir PO
-                    table.clear().rows.add(prDetailsData).draw();
-
-                    // Panggil fungsi hitung total keseluruhan halaman PO kamu
-                    if (typeof calculateGrandTotal === "function") calculateGrandTotal();
-                    if (typeof calculateTotalOrder === "function") calculateTotalOrder();
-
-                    // Tutup Modal Form Detail
-                    $("#modalPrDetail").modal("hide");
-                });
-
-                $("#percent").on("input", function() {
-                    let subTotal = parseFloat($("#sub_total").val()) || 0;
-                    let percent = parseFloat($(this).val()) || 0;
-
-                    // Batasi agar persen tidak minus atau lebih dari 100
-                    if (percent < 0) {
-                        percent = 0;
-                        $(this).val(0);
-                    }
-                    if (percent > 100) {
-                        percent = 100;
-                        $(this).val(100);
-                    }
-
-                    // Hitung nominal Rupiahnya
-                    let discountNominal = subTotal * (percent / 100);
-
-                    // Masukkan hasil ke kolom Rupiah (discount_all)
-                    $("#discount_all").val(Math.round(discountNominal));
-
-                    // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
-                    calculateTotalOrder();
-                });
-
-                // B. Jika User Mengetik di Kolom NOMINAL (Rp)
-                $("#discount_all").on("input", function() {
-                    let subTotal = parseFloat($("#sub_total").val()) || 0;
-                    let discountNominal = parseFloat($(this).val()) || 0;
-
-                    // Batasi agar nominal diskon tidak melebihi subtotal
-                    if (discountNominal < 0) {
-                        discountNominal = 0;
-                        $(this).val(0);
-                    }
-                    if (discountNominal > subTotal) {
-                        discountNominal = subTotal;
-                        $(this).val(subTotal);
-                    }
-
-                    // Hitung Persentasenya
-                    let percent = 0;
-                    if (subTotal > 0) {
-                        percent = (discountNominal / subTotal) * 100;
-                    }
-
-                    // Masukkan hasil ke kolom persen (ambil 2 angka di belakang koma agar presisi)
-                    $("#percent").val(percent % 1 === 0 ? percent : percent.toFixed(2));
-
-                    // Hitung ulang Grand Total Akhir (Memanggil fungsi yang benar)
-                    calculateTotalOrder();
-                });
-
-                $("#btnSubmitSelected").on("click", function() {
-
-                    let checkedBoxes = $(".checkItem:checked");
-
-                    if (checkedBoxes.length === 0) {
-                        Swal.fire({
-                            icon: "warning",
-                            title: "Warning",
-                            text: "Silakan pilih minimal satu item delivery.",
-                            customClass: {
-                                confirmButton: "btn btn-danger",
-                            },
-                            buttonsStyling: false,
-                        });
-                        return;
-                    }
-
-                    if (typeof prDetailsData === "undefined") {
-                        window.prDetailsData = [];
-                    }
-
-                    checkedBoxes.each(function() {
-
-                        let item = {
-                            detail_id: $(this).data("id"),
-                            product_id: $(this).data("product_id"),
-                            data_produk: $(this).data("product_name"),
-                            quantity: parseFloat($(this).data("outstanding_qty")) || 0,
-                            sisa_pr: parseFloat($(this).data("qty")) || 0,
-                            unit_id: $(this).data("unit_id"),
-
-                            // MENGGUNAKAN FALLBACK (JIKA UNDEFINED, MAKA ISI DENGAN "-")
-                            unit: $(this).data("unit_name") !== undefined ? $(this).data(
-                                "unit_name") : "-",
-
-                            warehouse_id: $(this).data("warehouse_id"),
-                            warehouse: $(this).data("warehouse_name") || "-",
-                            unit_price: parseFloat($(this).data("unit_price")) || 0,
-                            discount: parseFloat($(this).data("discount")) || 0,
-                            amount: parseFloat($(this).data("amount")) || 0,
-                            order_code: $(this).data("delivery_order_code") || "-",
-                        };
-
-                        let exists = prDetailsData.some(x => x.detail_id == item.detail_id);
-                        if (!exists) {
-                            prDetailsData.push(item);
-                        }
-                    });
-
-                    table.clear().rows.add(prDetailsData).draw();
-
-                    calculateGrandTotal();
-                    calculateTotalOrder();
-
-                    $("#modalDeliveryDetail").modal("hide");
-
-                    Swal.fire({
-                        icon: "success",
-                        title: "Success",
-                        text: "Data quotation berhasil dimasukkan.",
-                        customClass: {
-                            confirmButton: "btn btn-primary",
-                        },
-                        buttonsStyling: false,
-                    });
-
-                });
-                $("#btnSubmitDp").on("click", function() {
-                    let dpIds = $("#dp_number").val();
-                    if (!dpIds || dpIds.length === 0) {
-                        $("#dp_numberError").text(
-                            "Silakan pilih Down Payment terlebih dahulu."
-                        );
-                        return;
-                    }
-                    $("#dp_numberError").text("");
-                    let $button = $(this);
-                    $button
-                        .prop("disabled", true)
-                        .html(
-                            '<i class="fas fa-spinner fa-spin me-1"></i> Processing...'
-                        );
-
-                    $.ajax({
-                        url: "{{ route('sales-invoice.getDownPaymentDetail') }}",
-                        type: "GET",
-
-                        data: {
-                            sales_down_payment_ids: dpIds
-                        },
-
-                        success: function(response) {
-
-                            console.log("Response DP:", response);
-
-                            if (
-                                !response.success ||
-                                !Array.isArray(response.data) ||
-                                response.data.length === 0
-                            ) {
-                                Swal.fire({
-                                    icon: "warning",
-                                    title: "Warning",
-                                    text: "Detail Down Payment tidak ditemukan."
-                                });
-
-                                return;
-                            }
-
-                            // ==========================================
-                            // MASUKKAN DP KE prDetailsData
-                            // ==========================================
-
-                            response.data.forEach(function(detail) {
-
-                                console.log("Detail DP:", detail);
-
-                                // Cek apakah DP sudah ada
-                                let exists = prDetailsData.some(function(item) {
-                                    return String(item.sales_down_payment_id) ===
-                                        String(detail.sales_down_payment_id);
-                                });
-
-                                if (!exists) {
-
-                                    prDetailsData.push({
-                                        id: detail.id,
-                                        data_produk: detail.data_produk ??
-                                            "",
-                                        product_id: detail.data_produk ??
-                                            "",
-                                        quantity: parseFloat(
-                                            detail.quantity ?? 1
-                                        ),
-                                        unit: detail.unit ?? "x",
-                                        unit_id: detail.unit_id ?? "x",
-                                        unit_price: parseFloat(
-                                            detail.unit_price ?? 0
-                                        ),
-                                        discount: parseFloat(
-                                            detail.discount ?? 0
-                                        ),
-                                        amount: parseFloat(
-                                            detail.amount ?? 0
-                                        ),
-                                        warehouse: detail.warehouse ?? null,
-                                        warehouse_id: detail.warehouse_id ?? null,
-
-                                        sales_down_payment_id: detail
-                                            .sales_down_payment_id,
-
-                                        sales_downpayment_code: detail
-                                            .sales_downpayment_code,
-
-                                        is_down_payment: true
-                                    });
-                                }
-                            });
-
-                            // ==========================================
-                            // REFRESH DATATABLE
-                            // ==========================================
-
-                            table.clear();
-
-                            table.rows.add(prDetailsData);
-
-                            table.draw();
-
-                            // ==========================================
-                            // HITUNG TOTAL
-                            // ==========================================
-
-                            calculateGrandTotal();
-                            calculateTotalOrder();
-
-                            // ==========================================
-                            // RESET SELECT
-                            // ==========================================
-
-                            $("#dp_number")
-                                .val(null)
-                                .trigger("change");
-
-                            // ==========================================
-                            // TUTUP MODAL
-                            // ==========================================
-
-                            $("#modalDownPayment").modal("hide");
-
-                            toastr.success(
-                                "Down Payment berhasil ditambahkan.",
-                                "", {
-                                    timeOut: 1500,
-                                    progressBar: true
-                                }
-                            );
-                        },
-
-                        error: function(xhr) {
-
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error",
-                                text: "Gagal mengambil detail Down Payment."
-                            });
-                        },
-
-                        complete: function() {
-
-                            $button
-                                .prop("disabled", false)
-                                .html(
-                                    '<i class="ti ti-check me-1"></i> Process Selected'
-                                );
-                        }
-                    });
-                });
-
-
             });
-        </script>
-    @endpush
+        });
+        //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
+        $("#checkAll").on("change", function() {
+            // Jika checkAll dicentang, semua .checkItem ikut dicentang, begitu sebaliknya
+            $(".checkItem").prop("checked", $(this).prop("checked"));
+        });
+
+        // Jika salah satu item diuncheck secara manual, matikan checkAll di atas head tabel
+        $(document).on("change", ".checkItem", function() {
+            if ($(".checkItem:checked").length === $(".checkItem").length) {
+                $("#checkAll").prop("checked", true);
+            } else {
+                $("#checkAll").prop("checked", false);
+            }
+        });
+
+        $(document).ready(function() {
+
+            // 🔥 SET STATE AWAL checkbox
+            if ($("#kena_pajak").is(":checked")) {
+                $("#tax_container").show();
+                $("#ppn_container").show();
+            } else {
+                $("#tax_container").hide();
+                $("#ppn_container").hide();
+            }
+
+            // 🔥 kalau sudah ada tax_id dari DB, jangan override default
+            let existingTaxId = $("#tax_id").val();
+
+            if ($("#kena_pajak").is(":checked")) {
+                if (!existingTaxId && DEFAULT_TAX_ID) {
+                    $("#tax_id").val(numeral(DEFAULT_TAX_ID).format('0,0.00'));
+                }
+            }
+
+            // 🔥 WAJIB: hitung ulang saat pertama load
+            calculateTotalOrder();
+            calculateGrandTotal();
+        });
+    </script>
+    <script>
+        let prDetailsData = [
+            @if (isset($jsonDetails))
+                @foreach ($jsonDetails as $detail)
+                    {
+                        id: @json($detail['id'] ?? null),
+                        sales_invoice_id: @json($detail['sales_invoice_id'] ?? null),
+                        urutan: @json($detail['urutan'] ?? 0),
+                        sales_order_id: @json($detail['sales_order_id'] ?? null),
+                        sales_order_detail_id: @json($detail['sales_order_detail_id'] ?? null),
+                        detail_id: @json($detail['sales_order_detail_id'] ?? null),
+                        order_code: @json($detail['order_code'] ?? null),
+                        // product_id: @json($detail['product_id'] ?? null),
+                        product_id: @json($detail['product_id'] ?? null),
+                        data_produk: @json($detail['data_produk'] ?? ($detail['product_name'] ?? 'Product Not Found')),
+                        // data_produk: @json($detail['data_produk'] ?? null),
+                        quantity: @json($detail['quantity'] ?? 0),
+
+                        // =====================================================
+                        // UNIT
+                        // =====================================================
+                        unit_id: @json($detail['unit_id'] ?? null),
+
+                        unit: @json($detail['unit'] ?? null),
+
+                        // =====================================================
+                        // WAREHOUSE
+                        // =====================================================
+                        warehouse_id: @json($detail['warehouse_id'] ?? null),
+
+                        warehouse: @json($detail['warehouse'] ?? null),
+
+                        // =====================================================
+                        // PRICE
+                        // =====================================================
+                        unit_price: @json($detail['unit_price'] ?? 0),
+
+                        // =====================================================
+                        // DISCOUNT
+                        // =====================================================
+                        discount_percent: @json($detail['discount_percent'] ?? 0),
+
+                        discount: @json($detail['discount'] ?? 0),
+
+                        // =====================================================
+                        // AMOUNT
+                        // =====================================================
+                        amount: @json($detail['amount'] ?? 0),
+
+                        // =====================================================
+                        // TAX
+                        // =====================================================
+                        tax: @json($detail['tax'] ?? 0),
+
+                        // =====================================================
+                        // SALES ORDER QUOTA
+                        // =====================================================
+                        sisa_so: @json($detail['sisa_so'] ?? null),
+
+                        kuota_asli_so: @json($detail['kuota_asli_so'] ?? null),
+
+                        total_diambil_lainnya: @json($detail['total_diambil_lainnya'] ?? 0)
+                    }
+                    {{ !$loop->last ? ',' : '' }}
+                @endforeach
+            @endif
+        ];
+        const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
+
+        $(function() {
+            const datePicker = flatpickr("#sales_invoice_date", {
+                enableTime: false,
+                dateFormat: "d-m-Y",
+            });
+        });
+
+
+        //  LOGIC LOCK: CHECK ALL / UNCHECK ALL
+        $("#checkAll").on("change", function() {
+            // Jika checkAll dicentang, semua .checkItem ikut dicentang, begitu sebaliknya
+            $(".checkItem").prop("checked", $(this).prop("checked"));
+        });
+
+        // Jika salah satu item diuncheck secara manual, matikan checkAll di atas head tabel
+        $(document).on("change", ".checkItem", function() {
+            if ($(".checkItem:checked").length === $(".checkItem").length) {
+                $("#checkAll").prop("checked", true);
+            } else {
+                $("#checkAll").prop("checked", false);
+            }
+        });
+
+        function loadReference(selectedId = null) {
+            let customerId = $("#customer_id").val();
+            let type = $("input[name='payment_type']:checked").val();
+
+            console.log("LOAD REFERENCE:", {
+                customerId: customerId,
+                type: type,
+                selectedId: selectedId
+            });
+
+            if (!customerId || !type) {
+                return;
+            }
+
+            $.ajax({
+                url: `/sales-invoice/get-reference/${customerId}/${type}`,
+                type: "GET",
+                dataType: "json",
+
+                success: function(response) {
+                    console.log("REFERENCE RESPONSE:", response);
+
+                    let select = type === "proforma" ?
+                        $("#proforma_id") :
+                        $("#pelunasan_id");
+
+                    select.empty();
+
+                    select.append(
+                        new Option("Pilih Referensi", "", false, false)
+                    );
+
+                    $.each(response, function(i, item) {
+                        let option = new Option(
+                            `${item.code} - ${item.date} (Rp ${formatRupiah(item.amount)})`,
+                            item.id,
+                            false,
+                            false
+                        );
+
+                        $(option)
+                            .attr("data-amount", item.amount)
+                            .attr("data-sales-order-id", item.sales_order_id);
+
+                        select.append(option);
+                    });
+
+                    let valueToSelect = null;
+
+                    if (
+                        selectedId !== null &&
+                        selectedId !== undefined &&
+                        selectedId !== ""
+                    ) {
+                        valueToSelect = String(selectedId);
+                    } else if (response.length === 1) {
+                        valueToSelect = String(response[0].id);
+                    }
+
+                    if (valueToSelect !== null) {
+                        select.val(valueToSelect);
+                    } else {
+                        select.val("");
+                    }
+
+                    select.trigger("change");
+
+                    console.log("SELECTED VALUE:", select.val());
+                },
+
+                error: function(xhr) {
+                    console.error(
+                        "GET REFERENCE ERROR:",
+                        xhr.status,
+                        xhr.responseText
+                    );
+                }
+            });
+        }
+    </script>
+@endpush

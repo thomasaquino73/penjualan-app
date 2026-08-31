@@ -40,6 +40,13 @@
                             {{ date('d M Y', strtotime($model->datePO)) }}</td>
                     </tr>
                     <tr>
+                        <td width="70">Pengiriman</td>
+                        <td width="10">:</td>
+                        <td class="value">
+                            {{ $model->ship->nama }}
+                        </td>
+                    </tr>
+                    <tr>
                         <td width="70">Tanggal Kirim</td>
                         <td width="10">:</td>
                         <td class="value">

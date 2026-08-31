@@ -2,6 +2,7 @@
 
 namespace App\Models\Sales;
 
+use App\Models\Setting\Shipping;
 use App\Models\Setting\SyaratPembayaran;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -51,6 +52,10 @@ class SalesOrder extends Model
     public function rejectedBy()
     {
         return $this->belongsTo(User::class, 'pic_by');
+    }
+     public function ship()
+    {
+        return $this->belongsTo(Shipping::class, 'jenis_pengiriman');
     }
 
     public function salesQuotation()

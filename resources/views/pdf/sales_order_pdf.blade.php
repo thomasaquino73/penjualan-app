@@ -43,6 +43,7 @@
                         <td width="10">:</td>
                         <td>{{ $model->paymentTermID?->nama ?? '-' }}</td>
                     </tr>
+
                 </table>
             </td>
         </tr>

@@ -501,6 +501,7 @@ class SalesOrderController extends Controller
             $data['tax_id'] = $request->tax_id;
             $data['tax_amount'] = $request->tax_amount;
             $data['biaya_lain'] = $request->biaya_lain;
+            $data['jenis_pengiriman'] = $request->jenis_pengiriman;
             // Generate kode SO
             $salesOrder = null;
             $maxRetry = 10;
@@ -791,6 +792,7 @@ class SalesOrderController extends Controller
                 'salesman_id' => $request->salesman_id,
                 'sales_order_date' => Carbon::parse($request->sales_order_date)->format('Y-m-d'),
                 'tanggal_pengiriman' => Carbon::parse($request->shipping_date)->format('Y-m-d'),
+                'jenis_pengiriman' => $request->jenis_pengiriman,
                 'sub_total' => $request->sub_total,
                 'disc_percent' => $request->percent,
                 'disc_nominal' => $request->discount_all,
@@ -805,6 +807,7 @@ class SalesOrderController extends Controller
                 'tax_id' => $request->tax_id,
                 'tax_amount' => $request->tax_amount,
                 'biaya_lain' => $request->biaya_lain,
+                'jenis_pengiriman' => $request->jenis_pengiriman,
                 'updated_by' => Auth::id(),
                 'updated_at' => now(),
             ]);
