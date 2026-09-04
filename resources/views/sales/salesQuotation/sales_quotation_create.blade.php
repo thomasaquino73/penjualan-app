@@ -205,6 +205,7 @@
 {{-- @include('partials.button.btn_submitform') --}}
 @include('partials.button.select2_modal')
 @include('partials.js.calculate_total')
+@include('sales.salesQuotation.part.loadCustomerAddress')
 
 @push('scripts')
     <script>

@@ -55,6 +55,7 @@ class SalesDownPaymentController extends Controller
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
             $query = SalesDownPayment::where('active', '<>', 0)
+                ->whereYear('created_at', now()->year)
                 ->orderBy('created_at', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);

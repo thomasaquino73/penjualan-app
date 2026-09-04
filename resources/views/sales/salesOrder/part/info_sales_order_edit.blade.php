@@ -38,16 +38,25 @@
             </div>
         </div>
         <div class="mb-3 row">
-            <label class="col-md-4 col-form-label">Address</label>
+            <label class="col-md-4 col-form-label">
+                Address
+                <span class="dropdown d-inline-block">
+                    <button class="btn btn-sm  dropdown-toggle no-caret" type="button" id="btn-history-address"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ti ti-map me-1"></i>Choose Address
+                    </button>
+                    <ul class="dropdown-menu shadow" id="address-dropdown-menu"
+                        style="min-width: 320px; max-height: 250px; overflow-y: auto; background-color: #ffffff !important;">
+                    </ul>
+                </span>
+            </label>
+
             <div class="col-md-8">
                 <div class="input-group input-group-merge">
-                    <span class="input-group-text">
-                        <i class="ti ti-map"></i>
-                    </span>
-                    <textarea name="address" id="address" class="form-control" placeholder="Enter address">{{ $model->address }}</textarea>
+                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                    <textarea name="address" id="address" rows="3" class="form-control">{{ $model->address }}</textarea>
                 </div>
                 <span class="error text-danger" id="addressError"></span>
-
             </div>
         </div>
         <div class="mb-3 row">
@@ -100,7 +109,8 @@
         <div class="mb-3 row">
             <label class="col-md-4 col-form-label">Shipping Date</label>
             <div class="col-md-8">
-                <input name="shipping_date" id="shipping_date" class="form-control" placeholder="Enter shipping date"
+                <input name="shipping_date" id="shipping_date" class="form-control"
+                    placeholder="Enter shipping date"
                     value="{{ Carbon\Carbon::parse($model->tanggal_pengiriman)->format('d-m-Y') }}">
                 <span class="error text-danger" id="shipping_dateError"></span>
             </div>

@@ -276,6 +276,7 @@
 @include('partials.js.calculate_total')
 @include('partials.js.loadAvailableStock')
 @include('sales.salesOrder.part.js.btnSubmitSelected')
+@include('sales.salesOrder.part.loadCustomerAddress')
 
 @push('scripts')
     <script>
@@ -384,7 +385,7 @@
                     dropdownParent: $("#modalQuotationDetail"),
                 });
             });
-            
+
             // ========================================================
             // 🛠️ LANGKAH UTAMA: SUNTIKKAN PROPERTI URUTAN KE DATA ASAL
             // ========================================================

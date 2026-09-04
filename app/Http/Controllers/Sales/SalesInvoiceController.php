@@ -70,6 +70,7 @@ class SalesInvoiceController extends Controller
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
             $query = SalesInvoice::where('active', '<>', 0)
+                ->whereYear('created_at', now()->year)
                 ->where(function ($q) use ($userId) {
                     $q->where('status', '<>', 'draft')
                         ->orWhere(function ($subQ) use ($userId) {
