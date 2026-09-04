@@ -70,7 +70,7 @@ class PurchaseInvoiceController extends Controller
                                 ->where('created_by', $userId);
                         });
                 })
-                ->orderby('code', 'desc');
+                ->orderby('created_at', 'desc');
 
             return DataTables::of($query)
                 ->addIndexColumn()

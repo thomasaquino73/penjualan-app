@@ -34,7 +34,8 @@ class CustomerRequest extends FormRequest
             'syarat_pembelian' => 'nullable|string|max:255',
             'default_diskon' => 'nullable|numeric|min:0|max:100', // Asumsi diskon berupa angka persen (0-100)
             'default_deskripsi' => 'nullable|string|max:500',
-            'status' => 'required|in:0,1,2', // Hanya boleh diis
+            'status' => 'required|in:0,1,2',
+            'pr_details' => ['nullable', 'json'],
         ];
     }
 

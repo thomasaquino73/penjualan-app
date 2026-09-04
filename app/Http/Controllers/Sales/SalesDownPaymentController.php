@@ -55,7 +55,7 @@ class SalesDownPaymentController extends Controller
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
             $query = SalesDownPayment::where('active', '<>', 0)
-                ->orderBy('sales_downpayment_code', 'desc');
+                ->orderBy('created_at', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);
             }

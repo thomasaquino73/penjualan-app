@@ -68,7 +68,7 @@ class PurchaseOrderController extends Controller
                             ->where('created_by', $userId);
                     });
             })
-            ->orderby('code', 'desc');
+            ->orderby('created_at', 'desc');
         if ($r->ajax()) {
             return DataTables::of($query)
                 ->addIndexColumn()

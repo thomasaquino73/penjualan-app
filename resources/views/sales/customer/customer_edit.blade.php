@@ -19,6 +19,7 @@
         <form id="postForm" name="postForm" method="POST" action="{{ route('customer.update', $customer->id) }}">
             @csrf
             @method('PUT')
+            <input type="hidden" name="pr_details" id="pr_details">
             <div class="card-body table-responsive p-3">
                 <div class="col-xl-12">
                     <div class="nav-align-top mb-4">
@@ -85,7 +86,7 @@
                                                     <span class="input-group-text"><i class="ti ti-category"></i></span>
                                                     <select name="kategori_customer_id" id="kategori_customer_id"
                                                         class="form-select select2"
-                                                        data-placeholder="Select Supplier Category">
+                                                        data-placeholder="Select Customer Category">
                                                         <option></option>
                                                         @foreach ($kategoriCustomer as $kat)
                                                             <option value="{{ $kat->id }}"
@@ -101,8 +102,9 @@
                                                 <label for="email" class="form-label">Email</label>
                                                 <div class="input-group input-group-merge">
                                                     <span class="input-group-text"><i class="ti ti-mail"></i></span>
-                                                    <input type="email" id="email" name="email" class="form-control"
-                                                        placeholder="Enter Email" value=" {{ $customer->email }}">
+                                                    <input type="email" id="email" name="email"
+                                                        class="form-control" placeholder="Enter Email"
+                                                        value=" {{ $customer->email }}">
                                                 </div>
                                                 <span class="error text-danger" id="emailError"></span>
                                             </div>
@@ -363,6 +365,20 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <input type="hidden" id="old_alamat_pengiriman"
+                                                value="{{ optional($pengiriman)->alamat_pengiriman }}">
+
+                                            <input type="hidden" id="old_kota_pengiriman"
+                                                value="{{ optional($pengiriman)->kota_pengiriman }}">
+
+                                            <input type="hidden" id="old_kodepos_pengiriman"
+                                                value="{{ optional($pengiriman)->kodepos_pengiriman }}">
+
+                                            <input type="hidden" id="old_provinsi_pengiriman"
+                                                value="{{ optional($pengiriman)->provinsi_pengiriman }}">
+
+                                            <input type="hidden" id="old_negara_pengiriman"
+                                                value="{{ optional($pengiriman)->negara_pengiriman }}">
                                             <div class="col-md-12 col-sm-12 mb-3">
                                                 <label for="kota_pengiriman" class="form-label">Delivery Address</label>
 
@@ -418,6 +434,9 @@
                                             </div>
 
                                         </div>
+                                    </div>
+                                    <div class="col-md-6 col-sm-12">
+                                        @include('sales.customer.part.data_delivery')
                                     </div>
                                 </div>
                             </div>
@@ -606,6 +625,7 @@
     </div>
 
     </div>
+    @include('sales.customer.part.modals_delivery')
 @endsection
 @push('scripts')
     <script>
@@ -614,30 +634,34 @@
                 const isDelivery = $('#default_pengiriman').is(':checked');
                 const alamat = $('#alamat_tagihan').val().trim();
 
-                // ❌ VALIDASI: kalau checkbox dicentang tapi alamat kosong
-                if (isDelivery && alamat === '') {
-
-                    // balikin ke unchecked
-                    $('#default_pengiriman').prop('checked', false);
-
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Oops...',
-                        text: 'Billing address is still empty!',
-                        confirmButtonText: 'OK',
-                        customClass: {
-                            confirmButton: 'btn btn-success'
-                        },
-                        buttonsStyling: false
-                    });
-
-                    return;
-                }
-
-                // ✅ KALAU CHECKED
+                // ==============================
+                // CHECKED
+                // ==============================
                 if (isDelivery) {
 
+                    // Billing address wajib ada
+                    if (alamat === '') {
 
+                        $('#default_pengiriman').prop('checked', false);
+
+                        // Kembalikan data delivery dari database
+                        restoreDelivery();
+
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Oops...',
+                            text: 'Billing address is still empty!',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-success'
+                            },
+                            buttonsStyling: false
+                        });
+
+                        return;
+                    }
+
+                    // Delivery mengikuti Billing
                     $('#alamat_pengiriman, #kota_pengiriman, #kodepos_pengiriman, #provinsi_pengiriman, #negara_pengiriman')
                         .prop('readonly', true);
 
@@ -648,13 +672,28 @@
                     $('#negara_pengiriman').val($('#negara_tagihan').val());
 
                 }
-                // ❌ KALAU UNCHECKED
+
+                // ==============================
+                // UNCHECKED
+                // ==============================
                 else {
 
+                    // Bisa diedit
                     $('#alamat_pengiriman, #kota_pengiriman, #kodepos_pengiriman, #provinsi_pengiriman, #negara_pengiriman')
-                        .prop('readonly', false)
-                        .val('');
+                        .prop('readonly', false);
+
+                    // Tampilkan kembali data delivery dari database
+                    restoreDelivery();
                 }
+            }
+
+            function restoreDelivery() {
+
+                $('#alamat_pengiriman').val($('#old_alamat_pengiriman').val());
+                $('#kota_pengiriman').val($('#old_kota_pengiriman').val());
+                $('#kodepos_pengiriman').val($('#old_kodepos_pengiriman').val());
+                $('#provinsi_pengiriman').val($('#old_provinsi_pengiriman').val());
+                $('#negara_pengiriman').val($('#old_negara_pengiriman').val());
             }
 
             function toggleAddress() {
@@ -722,11 +761,168 @@
             });
 
         });
+        let prDetailsData = [
+            @foreach ($CustomerDelivery as $custDel)
+                {
+                    nama_penerima: "{{ $custDel->nama_penerima }}",
+                    handphone_penerima: "{{ $custDel->handphone_penerima }}",
+                    alamat_pengiriman: "{{ $custDel->alamat_pengiriman }}",
+                    kota_pengiriman: "{{ $custDel->kota_pengiriman }}",
+                    provinsi_pengiriman: "{{ $custDel->provinsi_pengiriman }}",
+                    negara_pengiriman: "{{ $custDel->negara_pengiriman }}",
+                    kodepos_pengiriman: "{{ $custDel->kodepos_pengiriman }}",
+                }
+                {{ !$loop->last ? ',' : '' }}
+            @endforeach
+        ];
+        const originalPrDetailsData = JSON.parse(JSON.stringify(prDetailsData));
         $(document).ready(function() {
+            let table = new DataTable('#table', {
+                processing: true,
+                serverSide: false,
+                responsive: true,
+                select: true,
+                searching: false,
+                lengthMenu: [
+                    [10, 25, 50, -1],
+                    [10, 25, 50, 'All']
+                ],
+                data: prDetailsData, // Mengarah ke array di atas
+                columns: [{
+                        data: 'nama_penerima'
+                    },
+                    {
+                        data: 'handphone_penerima'
+                    },
+                    {
+                        data: 'alamat_pengiriman'
+                    },
+                    {
+                        data: 'kota_pengiriman'
+                    },
+                    {
+                        data: 'provinsi_pengiriman'
+                    },
+                    {
+                        data: 'negara_pengiriman'
+                    },
+                    {
+                        data: 'kodepos_pengiriman'
+                    }
+                ],
+                layout: {
+                    topStart: {
+                        buttons: [{
+                                text: '<i class="ti ti-plus me-1"></i> New',
+                                className: 'btn btn-primary btn-sm me-2',
+                                action: function(e, dt, node, config) {
+                                    var customerId = $('#nama_customer').val();
+                                    if (!customerId || customerId === '') {
+                                        Swal.fire({
+                                            icon: 'warning',
+                                            title: 'Warning!',
+                                            text: 'Please enter Customer Name first before adding new data.',
+                                            confirmButtonColor: '#3085d6',
+                                            confirmButtonText: 'OK',
+                                            customClass: {
+                                                confirmButton: 'btn btn-danger'
+                                            },
+                                            buttonsStyling: false
+                                        });
+                                        return false;
+                                    }
+                                    $('#formPrDetail')[0].reset();
+                                    $('#detail_id').val('');
+                                    $('#modalTitle').text('Create new entry');
+                                    $('#btnSubmitModal').text('Create');
+                                    $('#modalsDelivery').modal('show');
+                                }
+                            },
+                            {
+                                text: '<i class="ti ti-edit me-1"></i> Edit',
+                                className: 'btn btn-warning btn-sm me-2',
+                                extend: 'selectedSingle',
+                                action: function(e, dt, node, config) {
 
+                                    let rowIndex = dt.row({
+                                        selected: true
+                                    }).index();
+
+                                    let data = dt.row({
+                                        selected: true
+                                    }).data();
+
+                                    if (!data) {
+                                        return;
+                                    }
+
+                                    window.isEditingMode = true;
+
+                                    $('#detail_id').val(rowIndex);
+
+                                    // Isi modal Delivery
+                                    $('#nama_penerima_sub').val(data.nama_penerima);
+                                    $('#handphone_penerima_sub').val(data.handphone_penerima);
+                                    $('#alamat_penerima_sub').val(data.alamat_pengiriman);
+                                    $('#kota_penerima_sub').val(data.kota_pengiriman);
+                                    $('#provinsi_penerima_sub').val(data.provinsi_pengiriman);
+                                    $('#negara_penerima_sub').val(data.negara_pengiriman);
+                                    $('#kodepos_penerima_sub').val(data.kodepos_pengiriman);
+
+                                    $('#modalTitle').text('Edit Entry');
+                                    $('#btnSubmitModal').text('Update');
+
+                                    $('#modalsDelivery').modal('show');
+                                }
+                            },
+                            {
+                                text: '<i class="ti ti-trash me-1"></i> Delete',
+                                className: 'btn btn-danger btn-sm me-2',
+                                extend: 'selected',
+                                action: function(e, dt, node, config) {
+                                    let rowIndex = dt.row({
+                                        selected: true
+                                    }).index();
+                                    let data = dt.row({
+                                        selected: true
+                                    }).data();
+                                    let name = data.nama_penerima ? data.nama_penerima : '';
+
+                                    Swal.fire({
+                                        title: 'Are you sure?',
+                                        text: "Want to delete data: " + name,
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Yes, delete it!',
+                                        cancelButtonText: 'Cancel',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary me-3 waves-effect waves-light',
+                                            cancelButton: 'btn btn-label-secondary waves-effect waves-light'
+                                        },
+                                        buttonsStyling: false
+                                    }).then(function(result) {
+                                        if (result.isConfirmed) {
+                                            prDetailsData.splice(rowIndex, 1);
+                                            dt.clear().rows.add(prDetailsData).draw();
+                                            calculateGrandTotal();
+                                            calculateTotalOrder()
+                                            toastr.success('Deleted Data Successfully',
+                                                '', {
+                                                    timeOut: 1500,
+                                                    progressBar: true
+                                                });
+                                        }
+                                    });
+                                }
+                            },
+                        ]
+                    }
+                }
+            });
 
             $('#postForm').on('submit', function(e) {
                 e.preventDefault();
+                $('#pr_details').val(JSON.stringify(prDetailsData));
                 var form = this;
                 let formData = new FormData(form);
                 $.ajax({
@@ -783,6 +979,136 @@
                         });
                     }
                 });
+            });
+
+
+            $('#formPrDetail').on('submit', function(e) {
+                e.preventDefault();
+
+                let nama_penerima = $('#nama_penerima_sub').val();
+                let handphone_penerima = $('#handphone_penerima_sub').val();
+                let alamat_pengiriman = $('#alamat_penerima_sub').val();
+                let kota_pengiriman = $('#kota_penerima_sub').val();
+                let provinsi_pengiriman = $('#provinsi_penerima_sub').val();
+                let negara_pengiriman = $('#negara_penerima_sub').val();
+                let kodepos_pengiriman = $('#kodepos_penerima_sub').val();
+
+                let detailId = $('#detail_id').val();
+
+                // Validasi required
+                if (!nama_penerima || !handphone_penerima || !alamat_pengiriman) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Please fill all required fields! (Recipient Name, Phone Number, and Address)',
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+
+                    return false;
+                }
+
+                // ==========================================
+                // VALIDASI DUPLIKASI
+                // ==========================================
+
+                let isDuplicate = false;
+
+                if (prDetailsData && prDetailsData.length > 0) {
+
+                    for (let i = 0; i < prDetailsData.length; i++) {
+
+                        // Lewati data yang sedang diedit
+                        if (detailId !== '' && i == detailId) {
+                            continue;
+                        }
+
+                        if (
+                            prDetailsData[i].nama_penerima === nama_penerima &&
+                            prDetailsData[i].alamat_pengiriman === alamat_pengiriman
+                        ) {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+                }
+
+                // ==========================================
+                // JIKA DUPLIKAT
+                // ==========================================
+
+                if (isDuplicate) {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Name Already Exists!',
+                        html: `
+                The recipient name 
+                <b>"${nama_penerima}"</b> 
+                with address 
+                <b>"${alamat_pengiriman}"</b> 
+                is already registered.
+                <br>
+                Please edit the item if you want to change it.
+              `,
+                        customClass: {
+                            confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    });
+
+                    return false;
+                }
+
+                // ==========================================
+                // DATA
+                // ==========================================
+
+                let itemData = {
+                    nama_penerima: nama_penerima,
+                    handphone_penerima: handphone_penerima,
+                    alamat_pengiriman: alamat_pengiriman,
+                    kota_pengiriman: kota_pengiriman,
+                    provinsi_pengiriman: provinsi_pengiriman,
+                    negara_pengiriman: negara_pengiriman,
+                    kodepos_pengiriman: kodepos_pengiriman
+                };
+
+                // ==========================================
+                // TAMBAH / UPDATE
+                // ==========================================
+
+                if (detailId === '') {
+
+                    // Tambah data baru
+                    prDetailsData.push(itemData);
+
+                } else {
+
+                    // Update data
+                    prDetailsData[detailId] = itemData;
+                }
+
+                // ==========================================
+                // REFRESH DATATABLE
+                // ==========================================
+
+                table.clear()
+                    .rows.add(prDetailsData)
+                    .draw();
+
+                // ==========================================
+                // CLOSE MODAL
+                // ==========================================
+
+                let modalElement = document.getElementById('modalsDelivery');
+                let modalInstance = bootstrap.Modal.getInstance(modalElement);
+
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
             });
         });
     </script>

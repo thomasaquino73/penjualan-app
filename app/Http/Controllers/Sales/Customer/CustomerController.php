@@ -156,21 +156,134 @@ class CustomerController extends Controller
         ]);
     }
 
+    // public function store(CustomerRequest $request)
+    // {
+    //     DB::beginTransaction();
+    //     try {
+    //         $data = $request->validated();
+    //         $itemsDetailRaw = $request->input('items_detail');
+    //         $data['created_by'] = Auth::id();
+    //         if (empty($data['id_customer'])) {
+    //             do {
+    //                 $data['id_customer'] = $this->generateCustomerId();
+    //                 $exists = Customer::where('id_customer', $data['id_customer'])->lockForUpdate()->exists();
+    //             } while ($exists);
+    //         } else {
+    //             $exists = Customer::where('id_customer', $data['id_customer'])->lockForUpdate()->exists();
+    //             if ($exists) {
+    //                 DB::rollBack();
+
+    //                 return response()->json([
+    //                     'error' => 'ID Customer sudah digunakan',
+    //                 ], 422);
+    //             }
+    //         }
+    //         $customer = Customer::create($data);
+    //         DB::table('customer_kontak')->insert([
+    //             'customer_id' => $customer->id,
+    //             'sapaan' => $request->sapaan,
+    //             'contact_person' => $request->contact_person,
+    //             'posisi_jabatan' => $request->posisi_jabatan,
+    //             'email_kontak' => $request->email_kontak,
+    //             'phone1_kontak' => $request->phone1_kontak,
+    //             'phone2_kontak' => $request->phone1_kontak,
+    //             'faximili_kontak' => $request->faximili_kontak,
+    //             'website_kontak' => $request->website_kontak,
+    //             'catatan' => $request->catatan,
+    //         ]);
+    //         DB::table('customer_pengiriman')->insert([
+    //             'customer_id' => $customer->id,
+    //             'default_pengiriman' => $request->has('default_pengiriman') ? 1 : 0,
+    //             'nama_penerima' => $request->nama_penerima,
+    //             'handphone_penerima' => $request->handphone_penerima,
+    //             'alamat_pengiriman' => $request->alamat_pengiriman,
+    //             'kota_pengiriman' => $request->kota_pengiriman,
+    //             'kodepos_pengiriman' => $request->kodepos_pengiriman,
+    //             'provinsi_pengiriman' => $request->provinsi_pengiriman,
+    //             'negara_pengiriman' => $request->negara_pengiriman,
+    //             'order' => 1,
+    //         ]);
+    //         DB::table('customer_pajak')->insert([
+    //             'customer_id' => $customer->id,
+    //             'default_pajak' => $request->has('default_pajak') ? 1 : 0,
+    //             'check_address' => $request->has('check_address') ? 1 : 0,
+    //             'tipe_id_pajak' => $request->tipe_id_pajak,
+    //             'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
+    //             'nama_wajib_pajak' => $request->nama_wajib_pajak,
+    //             'id_tku' => $request->id_tku,
+    //             'alamat_pajak' => $request->alamat_pajak,
+    //             'kota_pajak' => $request->kota_pajak,
+    //             'kodepos_pajak' => $request->kodepos_pajak,
+    //             'provinsi_pajak' => $request->provinsi_pajak,
+    //             'negara_pajak' => $request->negara_pajak,
+    //         ]);
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'action' => 'create',
+    //             'redirect' => route('customer.index'),
+    //             'message' => 'Data created successfully',
+    //         ], 201);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         throw $e;
+    //     }
+
+    // }
+
     public function store(CustomerRequest $request)
     {
         DB::beginTransaction();
+
         try {
+
+            // =========================
+            // DATA CUSTOMER
+            // =========================
             $data = $request->validated();
-            $itemsDetailRaw = $request->input('items_detail');
+
+            // Ambil data delivery tambahan
+            $prDetails = json_decode(
+                $request->input('pr_details'),
+                true
+            ) ?? [];
+
+            // Jangan masukkan pr_details ke tabel customer
+            unset($data['pr_details']);
+
             $data['created_by'] = Auth::id();
+            $data['created_at'] = now();
+
+            // =========================
+            // GENERATE ID CUSTOMER
+            // =========================
             if (empty($data['id_customer'])) {
+
                 do {
                     $data['id_customer'] = $this->generateCustomerId();
-                    $exists = Customer::where('id_customer', $data['id_customer'])->lockForUpdate()->exists();
+
+                    $exists = Customer::where(
+                        'id_customer',
+                        $data['id_customer']
+                    )
+                        ->lockForUpdate()
+                        ->exists();
+
                 } while ($exists);
+
             } else {
-                $exists = Customer::where('id_customer', $data['id_customer'])->lockForUpdate()->exists();
+
+                $exists = Customer::where(
+                    'id_customer',
+                    $data['id_customer']
+                )
+                    ->lockForUpdate()
+                    ->exists();
+
                 if ($exists) {
+
                     DB::rollBack();
 
                     return response()->json([
@@ -178,22 +291,41 @@ class CustomerController extends Controller
                     ], 422);
                 }
             }
+
+            // =========================
+            // CREATE CUSTOMER
+            // =========================
             $customer = Customer::create($data);
+
+            // =========================
+            // CUSTOMER KONTAK
+            // =========================
             DB::table('customer_kontak')->insert([
                 'customer_id' => $customer->id,
+
                 'sapaan' => $request->sapaan,
                 'contact_person' => $request->contact_person,
                 'posisi_jabatan' => $request->posisi_jabatan,
                 'email_kontak' => $request->email_kontak,
                 'phone1_kontak' => $request->phone1_kontak,
-                'phone2_kontak' => $request->phone1_kontak,
+                'phone2_kontak' => $request->phone2_kontak,
                 'faximili_kontak' => $request->faximili_kontak,
                 'website_kontak' => $request->website_kontak,
                 'catatan' => $request->catatan,
+
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
+
+            // =========================
+            // DELIVERY UTAMA
+            // ORDER = 1
+            // =========================
             DB::table('customer_pengiriman')->insert([
                 'customer_id' => $customer->id,
+
                 'default_pengiriman' => $request->has('default_pengiriman') ? 1 : 0,
+
                 'nama_penerima' => $request->nama_penerima,
                 'handphone_penerima' => $request->handphone_penerima,
                 'alamat_pengiriman' => $request->alamat_pengiriman,
@@ -201,22 +333,73 @@ class CustomerController extends Controller
                 'kodepos_pengiriman' => $request->kodepos_pengiriman,
                 'provinsi_pengiriman' => $request->provinsi_pengiriman,
                 'negara_pengiriman' => $request->negara_pengiriman,
+
+                'order' => 1,
+
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
+
+            // =========================
+            // DELIVERY TAMBAHAN
+            // ORDER = 2
+            // =========================
+            foreach ($prDetails as $detail) {
+
+                DB::table('customer_pengiriman')->insert([
+                    'customer_id' => $customer->id,
+
+                    'default_pengiriman' => 0,
+
+                    'nama_penerima' => $detail['nama_penerima'] ?? null,
+
+                    'handphone_penerima' => $detail['handphone_penerima'] ?? null,
+
+                    'alamat_pengiriman' => $detail['alamat_pengiriman'] ?? null,
+
+                    'kota_pengiriman' => $detail['kota_pengiriman'] ?? null,
+
+                    'kodepos_pengiriman' => $detail['kodepos_pengiriman'] ?? null,
+
+                    'provinsi_pengiriman' => $detail['provinsi_pengiriman'] ?? null,
+
+                    'negara_pengiriman' => $detail['negara_pengiriman'] ?? null,
+
+                    'order' => 2,
+
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // =========================
+            // CUSTOMER PAJAK
+            // =========================
             DB::table('customer_pajak')->insert([
                 'customer_id' => $customer->id,
+
                 'default_pajak' => $request->has('default_pajak') ? 1 : 0,
+
                 'check_address' => $request->has('check_address') ? 1 : 0,
+
                 'tipe_id_pajak' => $request->tipe_id_pajak,
                 'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
                 'nama_wajib_pajak' => $request->nama_wajib_pajak,
                 'id_tku' => $request->id_tku,
+
                 'alamat_pajak' => $request->alamat_pajak,
                 'kota_pajak' => $request->kota_pajak,
                 'kodepos_pajak' => $request->kodepos_pajak,
                 'provinsi_pajak' => $request->provinsi_pajak,
                 'negara_pajak' => $request->negara_pajak,
+
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
 
+            // =========================
+            // COMMIT
+            // =========================
             DB::commit();
 
             return response()->json([
@@ -226,10 +409,13 @@ class CustomerController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
 
+            DB::rollBack();
+
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function create()
@@ -250,7 +436,17 @@ class CustomerController extends Controller
 
     public function show(string $id)
     {
-        //
+        $x = [
+            'title' => 'Customer Detail ',
+            'breadcrumb' => [
+                ['label' => 'Dashboard', 'url' => route('dashboard')],
+                ['label' => 'Customer Detail ', 'url' => ''],
+            ],
+
+           
+        ];
+
+        return view('sales.customer.customer_show', $x);
     }
 
     public function edit($id)
@@ -259,18 +455,20 @@ class CustomerController extends Controller
         $customer = DB::table('customer')->where('id', $id)->first();
         $kontak = DB::table('customer_kontak')->where('customer_id', $id)->first();
         $pajak = DB::table('customer_pajak')->where('customer_id', $id)->first();
-        $pengiriman = DB::table('customer_pengiriman')->where('customer_id', $id)->first();
+        $pengiriman = DB::table('customer_pengiriman')->where('customer_id', $id)->where('order', 1)->first();
+        $CustomerDelivery = DB::table('customer_pengiriman')->where('customer_id', $id)->where('order', 2)->get();
 
         $x = [
-            'title' => 'Customer List New',
+            'title' => 'Edit Customer List ',
             'breadcrumb' => [
                 ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Customer New', 'url' => ''],
+                ['label' => 'Edit Customer ', 'url' => ''],
             ],
             'idNumber' => $this->generateNumberId(),
 
             // kirim data
             'customer' => $customer,
+            'CustomerDelivery' => $CustomerDelivery,
             'kontak' => $kontak,
             'pajak' => $pajak,
             'pengiriman' => $pengiriman,
@@ -283,26 +481,119 @@ class CustomerController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    // public function update(CustomerRequest $request, $id)
+    // {
+    //     DB::beginTransaction();
+    //     try {
+    //         $customer = Customer::findOrFail($id);
+
+    //         $data = $request->validated();
+    //         $data['updated_by'] = Auth::id();
+    //         unset($data['id_customer']);
+    //         $customer->update($data);
+    //         DB::table('customer_kontak')
+    //             ->updateOrInsert(
+    //                 ['customer_id' => $customer->id],
+    //                 [
+    //                     'sapaan' => $request->sapaan,
+    //                     'contact_person' => $request->contact_person,
+    //                     'posisi_jabatan' => $request->posisi_jabatan,
+    //                     'email_kontak' => $request->email_kontak,
+    //                     'phone1_kontak' => $request->phone1_kontak,
+    //                     'phone2_kontak' => $request->phone1_kontak,
+    //                     'faximili_kontak' => $request->faximili_kontak,
+    //                     'website_kontak' => $request->website_kontak,
+    //                     'catatan' => $request->catatan,
+    //                     'updated_at' => now(),
+    //                 ]
+    //             );
+
+    //         DB::table('customer_pengiriman')
+    //             ->updateOrInsert(
+    //                 ['customer_id' => $customer->id],
+    //                 [
+    //                     'default_pengiriman' => $request->default_pengiriman,
+    //                     'nama_penerima' => $request->nama_penerima,
+    //                     'handphone_penerima' => $request->default_pengiriman,
+    //                     'alamat_pengiriman' => $request->alamat_pengiriman,
+    //                     'kota_pengiriman' => $request->kota_pengiriman,
+    //                     'kodepos_pengiriman' => $request->kodepos_pengiriman,
+    //                     'provinsi_pengiriman' => $request->provinsi_pengiriman,
+    //                     'negara_pengiriman' => $request->negara_pengiriman,
+    //                     'order' => 1,
+    //                     'updated_at' => now(),
+    //                 ]
+    //             );
+
+    //         DB::table('customer_pajak')
+    //             ->updateOrInsert(
+    //                 ['customer_id' => $customer->id],
+    //                 ['default_pajak' => $request->has('default_pajak') ? 1 : 0,
+    //                     'check_address' => $request->has('check_address') ? 1 : 0,
+    //                     'tipe_id_pajak' => $request->tipe_id_pajak,
+    //                     'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
+    //                     'nama_wajib_pajak' => $request->nama_wajib_pajak,
+    //                     'id_tku' => $request->id_tku,
+    //                     'alamat_pajak' => $request->alamat_pajak,
+    //                     'kota_pajak' => $request->kota_pajak,
+    //                     'kodepos_pajak' => $request->kodepos_pajak,
+    //                     'provinsi_pajak' => $request->provinsi_pajak,
+    //                     'negara_pajak' => $request->negara_pajak,
+    //                     'updated_at' => now(),
+    //                 ]
+    //             );
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'action' => 'update',
+    //             'redirect' => route('customer.index'),
+    //             'message' => 'Data updated successfully',
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         throw $e;
+    //     }
+    // }
+
     public function update(CustomerRequest $request, $id)
     {
         DB::beginTransaction();
+
         try {
+
+            // =========================
+            // CUSTOMER
+            // =========================
             $customer = Customer::findOrFail($id);
 
             $data = $request->validated();
-            $data['updated_by'] = Auth::id();
+
+            // Jangan masukkan field yang bukan kolom customer
             unset($data['id_customer']);
+            unset($data['pr_details']);
+
+            $data['updated_by'] = Auth::id();
+            $data['updated_at'] = now();
+
             $customer->update($data);
+
+            // =========================
+            // CUSTOMER KONTAK
+            // =========================
             DB::table('customer_kontak')
                 ->updateOrInsert(
-                    ['customer_id' => $customer->id],
+                    [
+                        'customer_id' => $customer->id,
+                    ],
                     [
                         'sapaan' => $request->sapaan,
                         'contact_person' => $request->contact_person,
                         'posisi_jabatan' => $request->posisi_jabatan,
                         'email_kontak' => $request->email_kontak,
                         'phone1_kontak' => $request->phone1_kontak,
-                        'phone2_kontak' => $request->phone1_kontak,
+                        'phone2_kontak' => $request->phone2_kontak,
                         'faximili_kontak' => $request->faximili_kontak,
                         'website_kontak' => $request->website_kontak,
                         'catatan' => $request->catatan,
@@ -310,13 +601,19 @@ class CustomerController extends Controller
                     ]
                 );
 
+            // =========================
+            // DELIVERY UTAMA ORDER = 1
+            // =========================
             DB::table('customer_pengiriman')
                 ->updateOrInsert(
-                    ['customer_id' => $customer->id],
                     [
-                        'default_pengiriman' => $request->default_pengiriman,
+                        'customer_id' => $customer->id,
+                        'order' => 1,
+                    ],
+                    [
+                        'default_pengiriman' => $request->has('default_pengiriman') ? 1 : 0,
                         'nama_penerima' => $request->nama_penerima,
-                        'handphone_penerima' => $request->default_pengiriman,
+                        'handphone_penerima' => $request->handphone_penerima,
                         'alamat_pengiriman' => $request->alamat_pengiriman,
                         'kota_pengiriman' => $request->kota_pengiriman,
                         'kodepos_pengiriman' => $request->kodepos_pengiriman,
@@ -326,10 +623,53 @@ class CustomerController extends Controller
                     ]
                 );
 
+            // =========================
+            // DELIVERY TAMBAHAN ORDER = 2
+            // =========================
+
+            $prDetails = json_decode(
+                $request->input('pr_details'),
+                true
+            ) ?? [];
+
+            // Hapus data lama
+            DB::table('customer_pengiriman')
+                ->where('customer_id', $customer->id)
+                ->where('order', 2)
+                ->delete();
+
+            // Insert data dari DataTable
+            foreach ($prDetails as $detail) {
+
+                DB::table('customer_pengiriman')->insert([
+                    'customer_id' => $customer->id,
+                    'default_pengiriman' => 0,
+
+                    'nama_penerima' => $detail['nama_penerima'] ?? null,
+                    'handphone_penerima' => $detail['handphone_penerima'] ?? null,
+                    'alamat_pengiriman' => $detail['alamat_pengiriman'] ?? null,
+                    'kota_pengiriman' => $detail['kota_pengiriman'] ?? null,
+                    'kodepos_pengiriman' => $detail['kodepos_pengiriman'] ?? null,
+                    'provinsi_pengiriman' => $detail['provinsi_pengiriman'] ?? null,
+                    'negara_pengiriman' => $detail['negara_pengiriman'] ?? null,
+
+                    'order' => 2,
+
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // =========================
+            // CUSTOMER PAJAK
+            // =========================
             DB::table('customer_pajak')
                 ->updateOrInsert(
-                    ['customer_id' => $customer->id],
-                    ['default_pajak' => $request->has('default_pajak') ? 1 : 0,
+                    [
+                        'customer_id' => $customer->id,
+                    ],
+                    [
+                        'default_pajak' => $request->has('default_pajak') ? 1 : 0,
                         'check_address' => $request->has('check_address') ? 1 : 0,
                         'tipe_id_pajak' => $request->tipe_id_pajak,
                         'nomor_wajib_pajak' => $request->nomor_wajib_pajak,
@@ -353,8 +693,12 @@ class CustomerController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+
             DB::rollBack();
-            throw $e;
+
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
 

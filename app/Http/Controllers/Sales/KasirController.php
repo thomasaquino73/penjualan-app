@@ -64,7 +64,7 @@ class KasirController extends Controller
                         ->where('created_by', $userId);
                 });
         })->where('active', '<>', 0)
-            ->orderby('store_sales_code', 'desc');
+            ->orderby('created_at', 'desc');
 
         if ($r->filled('status')) {
             $data->where('status', $r->status);

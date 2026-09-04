@@ -53,7 +53,8 @@ class SalesOrder extends Model
     {
         return $this->belongsTo(User::class, 'pic_by');
     }
-     public function ship()
+
+    public function ship()
     {
         return $this->belongsTo(Shipping::class, 'jenis_pengiriman');
     }

@@ -70,7 +70,7 @@ class ProformaInvoiceController extends Controller
                                 ->where('created_by', $userId);
                         });
                 })
-                ->orderBy('proforma_invoice_code', 'desc');
+                ->orderBy('created_at', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);
             }

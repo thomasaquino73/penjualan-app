@@ -61,19 +61,6 @@ class DeliveryOrderController extends Controller
         if ($r->ajax()) {
             // Ambil ID user yang sedang login
             $userId = Auth::user()->id;
-
-            //        $query = SalesOrder::where('active', '<>', 0)
-            //     ->where(function ($q) use ($userId) {
-            //         $q->where('status', '<>', 'draft')
-            //             ->orWhere(function ($subQ) use ($userId) {
-            //                 $subQ->where('status', 'draft')
-            //                     ->where('created_by', $userId);
-            //             });
-            //     })
-            //     ->orderby('sales_order_code', 'desc');
-            // if ($r->status) {
-            //     $query->where('status', $r->status);
-            // }
             $query = DeliveryOrder::where('active', '<>', 0)
                 ->where(function ($q) use ($userId) {
                     $q->where('status', '<>', 'draft')
@@ -82,7 +69,7 @@ class DeliveryOrderController extends Controller
                                 ->where('created_by', $userId);
                         });
                 })
-                ->orderby('delivery_order_code', 'desc');
+                ->orderby('created_at', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);
             }

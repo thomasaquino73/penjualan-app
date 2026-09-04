@@ -69,7 +69,7 @@ class SalesOrderController extends Controller
                             ->where('created_by', $userId);
                     });
             })
-            ->orderby('sales_order_code', 'desc');
+            ->orderby('created_at', 'desc');
         if ($r->status) {
             $query->where('status', $r->status);
         }

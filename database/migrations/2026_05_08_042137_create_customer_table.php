@@ -56,6 +56,7 @@ return new class extends Migration
             $table->string('kodepos_pengiriman')->nullable();
             $table->string('provinsi_pengiriman')->nullable();
             $table->string('negara_pengiriman')->nullable();
+            $table->integer('order')->nullable();
             $table->timestamps();
         });
 

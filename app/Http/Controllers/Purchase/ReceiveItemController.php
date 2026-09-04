@@ -70,7 +70,7 @@ class ReceiveItemController extends Controller
                 //                 ->where('created_by', $userId);
                 //         });
                 // })
-                ->orderby('receive_item_code', 'desc');
+                ->orderby('created_at', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);
             }

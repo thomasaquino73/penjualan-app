@@ -65,7 +65,7 @@ class PurchaseRequisitionController extends Controller
                                 ->where('created_by', $userId);
                         });
                 })
-                ->orderby('code', 'desc');
+                ->orderby('created_at', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);
             }
