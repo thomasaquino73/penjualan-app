@@ -54,6 +54,7 @@ class PurchaseDownPaymentController extends Controller
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
             $query = PurchaseDownPayment::where('active', '<>', 0)
+                ->whereYear('created_at', now()->year)
                 ->orderBy('created_at', 'desc');
             if ($r->status) {
                 $query->where('status', $r->status);

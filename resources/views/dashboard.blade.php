@@ -64,64 +64,26 @@
                 </div>
             </div>
         </div>
+        <div class="col-sm-6 col-lg-3 mb-4">
+            <div class="card card-border-shadow-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2 pb-1">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-success">
+                                <i class="ti ti-moneybag ti-md"></i>
+                            </span>
+                        </div>
+                        <h4 class="ms-1 mb-0">{{ $TotalTransactions }}</h4>
+                    </div>
+                    <p class="mb-1">Sales Transactions</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="row">
-        <div class="col-sm-12 col-xl-5 mb-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between">
-                    <div class="card-title m-0 me-2">
-                        <h5 class="m-0 me-2">Sales Transactions</h5>
-                        <small class="text-muted">Total {{ $TotalTransactions }} Transactions done in this
-                            Month</small>
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn p-0" type="button" id="salesID" data-bs-toggle="dropdown" aria-haspopup="true"
-                            aria-expanded="false">
-                            <i class="ti ti-dots-vertical ti-sm text-muted"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="salesID">
-                            @can('sales_order-browse')
-                                <a class="dropdown-item " href="{{ route('sales-order.index') }}">
-                                    View All
-                                </a>
-                            @endcan
 
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <ul class="p-0 m-0">
-                        @foreach ($transaksiTerbanyak as $tranTer)
-                            <li class="d-flex mb-3 pb-1 align-items-center">
-                                <div class="badge bg-label-primary me-3 rounded p-2">
-                                    <img src="{{ !empty($tranTer->photo_filename) ? asset($tranTer->photo_filename) : asset('image/no-images.jpg') }}"
-                                        alt="{{ $tranTer->nama_barang }}" width="50">
-                                </div>
-
-                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="me-2">
-                                        <h6 class="mb-0">{{ $tranTer->nama_barang }}</h6>
-                                        <small class="text-muted d-block">
-                                            {{-- {{ $tranTer->total_transaksi }} kali penjualan --}}
-                                        </small>
-                                    </div>
-
-                                    <div class="user-progress d-flex align-items-center gap-1">
-                                        <span class="badge bg-label-success">
-                                            {{ number_format($tranTer->total_qty, 0) }} {{ $tranTer->unit_name }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </li>
-                        @endforeach
-
-                    </ul>
-                </div>
-            </div>
-
-        </div>
-        <div class="col-sm-12 col-xl-7 mb-4">
+        <div class="col-sm-12 col-xl-8 mb-4">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between">
                     <div class="card-title m-0 me-2">

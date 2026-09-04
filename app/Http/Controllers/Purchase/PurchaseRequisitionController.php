@@ -58,6 +58,7 @@ class PurchaseRequisitionController extends Controller
 
             // Query dengan kondisi: Aktif DAN (Status BUKAN draft ATAU Status ADALAH draft kepunyaan sendiri)
             $query = PurchaseRequisition::where('active', '<>', 0)
+                ->whereYear('created_at', now()->year)
                 ->where(function ($q) use ($userId) {
                     $q->where('status', '<>', 'draft')
                         ->orWhere(function ($subQ) use ($userId) {
@@ -65,7 +66,8 @@ class PurchaseRequisitionController extends Controller
                                 ->where('created_by', $userId);
                         });
                 })
-                ->orderby('created_at', 'desc');
+                ->orderBy('created_at', 'desc');
+
             if ($r->status) {
                 $query->where('status', $r->status);
             }
