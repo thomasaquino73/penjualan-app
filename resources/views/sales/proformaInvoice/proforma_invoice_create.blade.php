@@ -214,6 +214,7 @@
 @include('partials.button.btn_submitform')
 @include('partials.button.select2_modal')
 @include('partials.js.loadAvailableStock')
+@include('sales.proformaInvoice.part.loadCustomerAddress')
 
 @push('scripts')
     <script>

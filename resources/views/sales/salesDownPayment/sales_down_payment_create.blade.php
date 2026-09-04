@@ -138,8 +138,8 @@
                                     <span class="error text-danger" id="total_orderError"></span>
                                 </div>
                                 <div class="col-lg-6 col-sm-12 mb-3">
-                                <input type="text" name="total_payment" id="total_payment" class="form-control"
-                                            readonly>
+                                    <input type="text" name="total_payment" id="total_payment" class="form-control"
+                                        readonly>
                                 </div>
                                 <div class="col-lg-6 col-sm-12 mb-3">
                                     <label class="form-label">
@@ -208,12 +208,24 @@
                                             </div>
                                         </div>
                                         <div class="mb-3 row">
-                                            <label class="col-md-4 col-form-label">Address</label>
+                                            <label class="col-md-4 col-form-label">
+                                                Address
+                                                <span class="dropdown d-inline-block">
+                                                    <button class="btn btn-sm  dropdown-toggle no-caret" type="button"
+                                                        id="btn-history-address" data-bs-toggle="dropdown"
+                                                        aria-expanded="false">
+                                                        <i class="ti ti-map me-1"></i>Choose Address
+                                                    </button>
+                                                    <ul class="dropdown-menu shadow" id="address-dropdown-menu"
+                                                        style="min-width: 320px; max-height: 250px; overflow-y: auto; background-color: #ffffff !important;">
+                                                    </ul>
+                                                </span>
+                                            </label>
+
                                             <div class="col-md-8">
                                                 <div class="input-group input-group-merge">
-                                                    <span class="input-group-text"><i class="ti ti-map"></i>
-                                                    </span>
-                                                    <textarea name="address" id="address" class="form-control"></textarea>
+                                                    <span class="input-group-text"><i class="ti ti-map"></i></span>
+                                                    <textarea name="address" id="address" rows="3" class="form-control"></textarea>
                                                 </div>
                                                 <span class="error text-danger" id="addressError"></span>
                                             </div>
@@ -252,6 +264,7 @@
         </div>
     </div>
 @endsection
+@include('sales.salesDownPayment.part.loadCustomerAddress')
 @push('scripts')
     <script>
         $(function() {
