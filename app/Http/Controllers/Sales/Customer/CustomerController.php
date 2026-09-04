@@ -434,20 +434,26 @@ class CustomerController extends Controller
         return view('sales.customer.customer_create', $x);
     }
 
-    public function show(string $id)
-    {
-        $x = [
-            'title' => 'Customer Detail ',
-            'breadcrumb' => [
-                ['label' => 'Dashboard', 'url' => route('dashboard')],
-                ['label' => 'Customer Detail ', 'url' => ''],
-            ],
+  public function show(string $id)
+{
+    $customer = Customer::findOrFail($id);
 
-           
-        ];
+    $x = [
+        'title' => 'Customer Detail',
+        'breadcrumb' => [
+            ['label' => 'Dashboard', 'url' => route('dashboard')],
+            ['label' => 'Customer', 'url' => route('customer.index')],
+            ['label' => 'Customer Detail', 'url' => ''],
+        ],
 
-        return view('sales.customer.customer_show', $x);
-    }
+        'customer' => $customer,
+        'kontak' => DB::table('customer_kontak')->where('customer_id', $customer->id)->first(),
+        'delivery' => DB::table('customer_pengiriman')->where('customer_id', $customer->id)->get(),
+        'pajak' => DB::table('customer_pajak')->where('customer_id', $customer->id)->first(),
+    ];
+
+    return view('sales.customer.customer_show', $x);
+}
 
     public function edit($id)
     {
