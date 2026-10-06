@@ -739,42 +739,42 @@
             });
         });
 
-        $("#vehicle_id").select2({
-            placeholder: "Select Shipping",
-            tags: true,
-            width: "100%",
-            allowClear: true,
+        // $("#vehicle_id").select2({
+        //     placeholder: "Select Shipping",
+        //     tags: true,
+        //     width: "100%",
+        //     allowClear: true,
 
-            language: {
-                noResults: function(params) {
-                    let term = $.trim(params.term);
+        //     language: {
+        //         noResults: function(params) {
+        //             let term = $.trim(params.term);
 
-                    if (term === "") {
-                        return "No results found";
-                    }
+        //             if (term === "") {
+        //                 return "No results found";
+        //             }
 
-                    return 'Press ENTER to add "' + term + '"';
-                },
-            },
+        //             return 'Press ENTER to add "' + term + '"';
+        //         },
+        //     },
 
-            escapeMarkup: function(markup) {
-                return markup;
-            },
+        //     escapeMarkup: function(markup) {
+        //         return markup;
+        //     },
 
-            createTag: function(params) {
-                let term = $.trim(params.term);
+        //     createTag: function(params) {
+        //         let term = $.trim(params.term);
 
-                if (term === "") {
-                    return null;
-                }
+        //         if (term === "") {
+        //             return null;
+        //         }
 
-                return {
-                    id: term,
-                    text: term,
-                    newTag: true,
-                };
-            },
-        });
+        //         return {
+        //             id: term,
+        //             text: term,
+        //             newTag: true,
+        //         };
+        //     },
+        // });
 
         // ENTER KEY FIX
         $(document).on("keypress", ".select2-search__field", function(e) {
@@ -1153,7 +1153,6 @@
                                     // buka modal dulu
                                     $("#modalPrDetail").modal("show");
 
-                                    // terakhir trigger product agar Select2 membaca value product_id yang baru
                                     setTimeout(function() {
                                         $("#product_id")
                                             .val(data.product_id)
@@ -1337,7 +1336,6 @@
                 $("#modal_purchase_requisition_detail_id").val(
                     ""); // PENTING: Reset agar tidak terbawa ke item berikutnya
 
-                // Reset select2 jika digunakan
                 if ($.fn.select2) {
                     $("#product_id, #unit_id").val("").trigger("change.select2");
                 }
@@ -1585,13 +1583,6 @@
                     },
                 });
             });
-
-            $("#vehicle_id").select2({
-                placeholder: "Select Shipping",
-                width: "100%",
-            });
-
-
 
             $("#btnSubmitSelected").on("click", function() {
                 let checkedBoxes = $(".checkItem:checked");

@@ -111,9 +111,7 @@
                             {{ isset($model) ? format_uang(convert_currency($model->grand_total, $detail->currency_id ?? 1), 2) : '' }}
                         </td>
                     </tr>
-                    {{-- ============================================================
-    RIWAYAT DOWN PAYMENT
-============================================================= --}}
+                   
                     @if ($downPayments->count() > 0)
 
                         @foreach ($downPayments as $payment)
