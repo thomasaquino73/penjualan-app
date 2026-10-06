@@ -20,8 +20,7 @@
                     <span class="input-group-text">
                         <i class="ti ti-truck"></i>
                     </span>
-                    <select name="vehicle_id" id="vehicle_id" class="form-select select2">
-                        <option value="">Select Shipping</option>
+                    <select name="vehicle_id" id="vehicle_id" class="form-select ">
                         @foreach ($shipping as $item)
                             <option value="{{ $item->id }}" {{ $item->id == $model->vehicle_id ? 'selected' : '' }}>
                                 {{ $item->nama }}

@@ -538,7 +538,7 @@
         });
     </script>
     <script>
-        $("#vehicle_id").on("select2:select", function(e) {
+        $("#vehicle_id").on("select", function(e) {
             let data = e.params.data;
 
             if (data.newTag) {
@@ -739,42 +739,42 @@
             });
         });
 
-        $("#vehicle_id").select2({
-            placeholder: "Select Shipping",
-            tags: true,
-            width: "100%",
-            allowClear: true,
+        // $("#vehicle_id").select2({
+        //     placeholder: "Select Shipping",
+        //     tags: true,
+        //     width: "100%",
+        //     allowClear: true,
 
-            language: {
-                noResults: function(params) {
-                    let term = $.trim(params.term);
+        //     language: {
+        //         noResults: function(params) {
+        //             let term = $.trim(params.term);
 
-                    if (term === "") {
-                        return "No results found";
-                    }
+        //             if (term === "") {
+        //                 return "No results found";
+        //             }
 
-                    return 'Press ENTER to add "' + term + '"';
-                },
-            },
+        //             return 'Press ENTER to add "' + term + '"';
+        //         },
+        //     },
 
-            escapeMarkup: function(markup) {
-                return markup;
-            },
+        //     escapeMarkup: function(markup) {
+        //         return markup;
+        //     },
 
-            createTag: function(params) {
-                let term = $.trim(params.term);
+        //     createTag: function(params) {
+        //         let term = $.trim(params.term);
 
-                if (term === "") {
-                    return null;
-                }
+        //         if (term === "") {
+        //             return null;
+        //         }
 
-                return {
-                    id: term,
-                    text: term,
-                    newTag: true,
-                };
-            },
-        });
+        //         return {
+        //             id: term,
+        //             text: term,
+        //             newTag: true,
+        //         };
+        //     },
+        // });
 
         // ENTER KEY FIX
         $(document).on("keypress", ".select2-search__field", function(e) {
@@ -788,16 +788,16 @@
 
                     $("#vehicle_id").append(option).trigger("change");
 
-                    $("#vehicle_id").trigger({
-                        type: "select2:select",
-                        params: {
-                            data: {
-                                id: value,
-                                text: value,
-                                newTag: true,
-                            },
-                        },
-                    });
+                    // $("#vehicle_id").trigger({
+                    //     type: "select2:select",
+                    //     params: {
+                    //         data: {
+                    //             id: value,
+                    //             text: value,
+                    //             newTag: true,
+                    //         },
+                    //     },
+                    // });
                 }
             }
         });
@@ -1518,12 +1518,6 @@
                     },
                 });
             });
-
-            $("#vehicle_id").select2({
-                placeholder: "Select Shipping",
-                width: "100%",
-            });
-
 
 
             $("#btnSubmitSelected").on("click", function() {

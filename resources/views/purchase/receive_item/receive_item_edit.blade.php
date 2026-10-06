@@ -304,42 +304,42 @@
                     dropdownParent: $("#modalPrDetail"),
                 });
             });
-            $("#shipping_id").select2({
-                placeholder: "Select Shipping",
-                tags: true,
-                width: "100%",
-                allowClear: true,
+            // $("#shipping_id").select2({
+            //     placeholder: "Select Shipping",
+            //     tags: true,
+            //     width: "100%",
+            //     allowClear: true,
 
-                language: {
-                    noResults: function(params) {
-                        let term = $.trim(params.term);
+            //     language: {
+            //         noResults: function(params) {
+            //             let term = $.trim(params.term);
 
-                        if (term === "") {
-                            return "No results found";
-                        }
+            //             if (term === "") {
+            //                 return "No results found";
+            //             }
 
-                        return 'Press ENTER to add "' + term + '"';
-                    },
-                },
+            //             return 'Press ENTER to add "' + term + '"';
+            //         },
+            //     },
 
-                escapeMarkup: function(markup) {
-                    return markup;
-                },
+            //     escapeMarkup: function(markup) {
+            //         return markup;
+            //     },
 
-                createTag: function(params) {
-                    let term = $.trim(params.term);
+            //     createTag: function(params) {
+            //         let term = $.trim(params.term);
 
-                    if (term === "") {
-                        return null;
-                    }
+            //         if (term === "") {
+            //             return null;
+            //         }
 
-                    return {
-                        id: term,
-                        text: term,
-                        newTag: true,
-                    };
-                },
-            });
+            //         return {
+            //             id: term,
+            //             text: term,
+            //             newTag: true,
+            //         };
+            //     },
+            // });
 
             let table = new DataTable("#table", {
                 processing: true,
